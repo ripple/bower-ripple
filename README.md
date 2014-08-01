@@ -9,7 +9,7 @@ Please file issues and pull requests against that repo.
 Install with `bower`:
 
 ```shell
-bower install ripple-lib
+bower install ripple
 ```
 
 Add a `<script>` to your `index.html`:
