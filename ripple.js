@@ -902,47 +902,48 @@ var ripple =
 	};
 
 	/**
+	 * Get array of connected servers
+	 */
+
+	Remote.prototype.getConnectedServers = function() {
+	  var servers = [ ];
+	  for (var i=0; i<this._servers.length; i++) {
+	    if (this._servers[i].isConnected()) {
+	      servers.push(this._servers[i]);
+	    }
+	  }
+	  return servers;
+	};
+
+	/**
 	 * Select a server to handle a request. Servers are
 	 * automatically prioritized
 	 */
 
 	Remote.prototype._getServer =
 	Remote.prototype.getServer = function() {
-	  var result = void(0);
-
 	  if (this._primary_server && this._primary_server.isConnected()) {
 	    return this._primary_server;
 	  }
 
 	  if (!this._servers.length) {
-	    return result;
+	    return null;
 	  }
 
-	  function sortByScore(a, b) {
-	    var aScore = a._score + a._fee;
-	    var bScore = b._score + b._fee;
-	    if (aScore > bScore) {
-	      return 1;
-	    } else if (aScore < bScore) {
-	      return -1;
-	    } else {
-	      return 0;
-	    }
-	  };
+	  var connectedServers = this.getConnectedServers();
+	  var server = connectedServers[0];
+	  var cScore = server._score + server._fee;
 
-	  // Sort servers by score
-	  this._servers.sort(sortByScore);
-
-	  // First connected server
-	  for (var i=0; i<this._servers.length; i++) {
-	    var server = this._servers[i];
-	    if ((server instanceof Server) && server._connected) {
-	      result = server;
-	      break;
+	  for (var i=1; i<connectedServers.length; i++) {
+	    var _server = connectedServers[i];
+	    var bScore = _server._score + _server._fee;
+	    if (bScore < cScore) {
+	      server = _server;
+	      cScore = bScore;
 	    }
 	  }
 
-	  return result;
+	  return server;
 	};
 
 	/**
@@ -1592,18 +1593,18 @@ var ripple =
 	 */
 
 	Remote.prototype.requestBookOffers = function(gets, pays, taker, callback) {
-	  if (gets.hasOwnProperty('pays')) {
+	  var lastArg = arguments[arguments.length - 1];
+
+	  if (gets.hasOwnProperty('gets') || gets.hasOwnProperty('taker_gets')) {
 	    var options = gets;
 	    // This would mutate the `lastArg` in `arguments` to be `null` and is
 	    // redundant. Once upon a time, some awkward code was written f(g, null,
 	    // null, cb) ...
-	    // callback = pays;
+	    callback = pays;
 	    taker = options.taker;
-	    pays = options.pays;
-	    gets = options.gets;
+	    pays = options.pays || options.taker_pays;
+	    gets = options.gets || options.taker_gets;
 	  }
-
-	  var lastArg = arguments[arguments.length - 1];
 
 	  if (typeof lastArg === 'function') {
 	    callback = lastArg;
@@ -2488,23 +2489,27 @@ var ripple =
 	util.inherits(Request, EventEmitter);
 
 	Request.prototype.broadcast = function() {
-	  this._broadcast = true;
-	  return this.request();
+	  var connectedServers = this.remote.getConnectedServers();
+	  this.request(connectedServers);
+	  return connectedServers.length;
 	};
 
 	// Send the request to a remote.
-	Request.prototype.request = function(callback) {
+	Request.prototype.request = function(servers, callback) {
 	  if (this.requested) {
 	    return this;
 	  }
 
-	  this.requested = true;
+	  if (typeof servers === 'function') {
+	    callback = servers;
+	  }
 
+	  this.requested = true;
 	  this.on('error', function(){});
 	  this.emit('request', this.remote);
 
-	  if (this._broadcast) {
-	    this.remote._servers.forEach(function(server) {
+	  if (Array.isArray(servers)) {
+	    servers.forEach(function(server) {
 	      this.setServer(server);
 	      this.remote.request(this);
 	    }, this);
@@ -3047,149 +3052,54 @@ var ripple =
 	  return result;
 	};
 
-	/**
-	 * Turn this amount into its inverse.
-	 *
-	 * @private
-	 */
-	Amount.prototype._invert = function() {
-	  this._value = consts.bi_1e32.divide(this._value);
-	  this._offset = -32 - this._offset;
-	  this.canonicalize();
-
-	  return this;
+	// Result in terms of this currency and issuer.
+	Amount.prototype.subtract = function(v) {
+	  // Correctness over speed, less code has less bugs, reuse add code.
+	  return this.add(Amount.from_json(v).negate());
 	};
 
-	/**
-	 * Return the inverse of this amount.
-	 *
-	 * @return {Amount} New Amount object with same currency and issuer, but the
-	 *   inverse of the value.
-	 */
-	Amount.prototype.invert = function() {
-	  return this.copy()._invert();
-	};
-
-	Amount.prototype.canonicalize = function() {
-	  if (!(this._value instanceof BigInteger)) {
-	    // NaN.
-	    // nothing
-	  } else if (this._is_native) {
-	    // Native.
-	    if (this._value.equals(BigInteger.ZERO)) {
-	      this._offset      = 0;
-	      this._is_negative = false;
-	    } else {
-	      // Normalize _offset to 0.
-
-	      while (this._offset < 0) {
-	        this._value  = this._value.divide(consts.bi_10);
-	        this._offset += 1;
-	      }
-
-	      while (this._offset > 0) {
-	        this._value  = this._value.multiply(consts.bi_10);
-	        this._offset -= 1;
-	      }
-	    }
-
-	    // XXX Make sure not bigger than supported. Throw if so.
-	  } else if (this.is_zero()) {
-	    this._offset      = -100;
-	    this._is_negative = false;
-	  } else {
-	    // Normalize mantissa to valid range.
-
-	    while (this._value.compareTo(consts.bi_man_min_value) < 0) {
-	      this._value  = this._value.multiply(consts.bi_10);
-	      this._offset -= 1;
-	    }
-
-	    while (this._value.compareTo(consts.bi_man_max_value) > 0) {
-	      this._value  = this._value.divide(consts.bi_10);
-	      this._offset += 1;
-	    }
-	  }
-
-	  return this;
-	};
-
-	Amount.prototype.clone = function(negate) {
-	  return this.copyTo(new Amount(), negate);
-	};
-
-	Amount.prototype.compareTo = function(v) {
+	// Result in terms of this' currency and issuer.
+	// XXX Diverges from cpp.
+	Amount.prototype.multiply = function(v) {
 	  var result;
 
-	  if (!this.is_comparable(v)) {
-	    result  = Amount.NaN();
-	  } else if (this._is_negative !== v._is_negative) {
-	    // Different sign.
-	    result  = this._is_negative ? -1 : 1;
-	  } else if (this._value.equals(BigInteger.ZERO)) {
-	    // Same sign: positive.
-	    result  = v._value.equals(BigInteger.ZERO) ? 0 : -1;
-	  } else if (v._value.equals(BigInteger.ZERO)) {
-	    // Same sign: positive.
-	    result  = 1;
-	  } else if (!this._is_native && this._offset > v._offset) {
-	    result  = this._is_negative ? -1 : 1;
-	  } else if (!this._is_native && this._offset < v._offset) {
-	    result  = this._is_negative ? 1 : -1;
+	  v = Amount.from_json(v);
+
+	  if (this.is_zero()) {
+	    result = this;
+	  } else if (v.is_zero()) {
+	    result = this.clone();
+	    result._value = BigInteger.ZERO;
 	  } else {
-	    result  = this._value.compareTo(v._value);
-	    if (result > 0) {
-	      result  = this._is_negative ? -1 : 1;
-	    } else if (result < 0) {
-	      result  = this._is_negative ? 1 : -1;
+	    var v1 = this._value;
+	    var o1 = this._offset;
+	    var v2 = v._value;
+	    var o2 = v._offset;
+
+	    if (this.is_native()) {
+	      while (v1.compareTo(consts.bi_man_min_value) < 0) {
+	        v1 = v1.multiply(consts.bi_10);
+	        o1 -= 1;
+	      }
 	    }
+
+	    if (v.is_native()) {
+	      while (v2.compareTo(consts.bi_man_min_value) < 0) {
+	        v2 = v2.multiply(consts.bi_10);
+	        o2 -= 1;
+	      }
+	    }
+
+	    result              = new Amount();
+	    result._offset      = o1 + o2 + 14;
+	    result._value       = v1.multiply(v2).divide(consts.bi_1e14).add(consts.bi_7);
+	    result._is_native   = this._is_native;
+	    result._is_negative = this._is_negative !== v._is_negative;
+	    result._currency    = this._currency;
+	    result._issuer      = this._issuer;
+
+	    result.canonicalize();
 	  }
-
-	  return result;
-	};
-
-	// Make d a copy of this. Returns d.
-	// Modification of objects internally refered to is not allowed.
-	Amount.prototype.copyTo = function(d, negate) {
-	  if (typeof this._value === 'object') {
-	    this._value.copyTo(d._value);
-	  } else {
-	    d._value   = this._value;
-	  }
-
-	  d._offset = this._offset;
-	  d._is_native = this._is_native;
-	  d._is_negative  = negate
-	    ? !this._is_negative    // Negating.
-	    : this._is_negative;    // Just copying.
-
-	  d._currency     = this._currency;
-	  d._issuer       = this._issuer;
-
-	  // Prevent negative zero
-	  if (d.is_zero()) {
-	    d._is_negative = false;
-	  }
-
-	  return d;
-	};
-
-	Amount.prototype.currency = function() {
-	  return this._currency;
-	};
-
-	Amount.prototype.equals = function(d, ignore_issuer) {
-	  if (typeof d === 'string') {
-	    return this.equals(Amount.from_json(d));
-	  }
-
-	  var result = true;
-
-	  result = !((!this.is_valid() || !d.is_valid())
-	             || (this._is_native !== d._is_native)
-	             || (!this._value.equals(d._value) || this._offset !== d._offset)
-	             || (this._is_negative !== d._is_negative)
-	             || (!this._is_native && (!this._currency.equals(d._currency) || !ignore_issuer && !this._issuer.equals(d._issuer))));
 
 	  return result;
 	};
@@ -3197,6 +3107,8 @@ var ripple =
 	// Result in terms of this' currency and issuer.
 	Amount.prototype.divide = function(d) {
 	  var result;
+
+	  d = Amount.from_json(d);
 
 	  if (d.is_zero()) {
 	    throw new Error('divide by zero');
@@ -3246,8 +3158,6 @@ var ripple =
 	};
 
 	/**
-	 * Calculate a ratio between two amounts.
-	 *
 	 * This function calculates a ratio - such as a price - between two Amount
 	 * objects.
 	 *
@@ -3269,18 +3179,23 @@ var ripple =
 	Amount.prototype.ratio_human = function(denominator, opts) {
 	  opts = extend({ }, opts);
 
+	  var numerator = this;
+
 	  if (typeof denominator === 'number' && parseInt(denominator, 10) === denominator) {
 	    // Special handling of integer arguments
-	    denominator = Amount.from_json('' + denominator + '.0');
+	    denominator = Amount.from_json(String(denominator) + '.0');
 	  } else {
 	    denominator = Amount.from_json(denominator);
 	  }
 
-	  var numerator = this;
 	  denominator = Amount.from_json(denominator);
 
 	  // If either operand is NaN, the result is NaN.
 	  if (!numerator.is_valid() || !denominator.is_valid()) {
+	    return Amount.NaN();
+	  }
+
+	  if (denominator.is_zero()) {
 	    return Amount.NaN();
 	  }
 
@@ -3369,6 +3284,155 @@ var ripple =
 	  return product;
 	};
 
+	/**
+	 * Turn this amount into its inverse.
+	 *
+	 * @private
+	 */
+	Amount.prototype._invert = function() {
+	  this._value = consts.bi_1e32.divide(this._value);
+	  this._offset = -32 - this._offset;
+	  this.canonicalize();
+
+	  return this;
+	};
+
+	/**
+	 * Return the inverse of this amount.
+	 *
+	 * @return {Amount} New Amount object with same currency and issuer, but the
+	 *   inverse of the value.
+	 */
+	Amount.prototype.invert = function() {
+	  return this.copy()._invert();
+	};
+
+	Amount.prototype.canonicalize = function() {
+	  if (!(this._value instanceof BigInteger)) {
+	    // NaN.
+	    // nothing
+	  } else if (this._is_native) {
+	    // Native.
+	    if (this._value.equals(BigInteger.ZERO)) {
+	      this._offset      = 0;
+	      this._is_negative = false;
+	    } else {
+	      // Normalize _offset to 0.
+
+	      while (this._offset < 0) {
+	        this._value  = this._value.divide(consts.bi_10);
+	        this._offset += 1;
+	      }
+
+	      while (this._offset > 0) {
+	        this._value  = this._value.multiply(consts.bi_10);
+	        this._offset -= 1;
+	      }
+	    }
+
+	    // XXX Make sure not bigger than supported. Throw if so.
+	  } else if (this.is_zero()) {
+	    this._offset      = -100;
+	    this._is_negative = false;
+	  } else {
+	    // Normalize mantissa to valid range.
+
+	    while (this._value.compareTo(consts.bi_man_min_value) < 0) {
+	      this._value  = this._value.multiply(consts.bi_10);
+	      this._offset -= 1;
+	    }
+
+	    while (this._value.compareTo(consts.bi_man_max_value) > 0) {
+	      this._value  = this._value.divide(consts.bi_10);
+	      this._offset += 1;
+	    }
+	  }
+
+	  return this;
+	};
+
+	Amount.prototype.clone = function(negate) {
+	  return this.copyTo(new Amount(), negate);
+	};
+
+	Amount.prototype.compareTo = function(v) {
+	  var result;
+
+	  v = Amount.from_json(v);
+
+	  if (!this.is_comparable(v)) {
+	    result  = Amount.NaN();
+	  } else if (this._is_negative !== v._is_negative) {
+	    // Different sign.
+	    result  = this._is_negative ? -1 : 1;
+	  } else if (this._value.equals(BigInteger.ZERO)) {
+	    // Same sign: positive.
+	    result  = v._value.equals(BigInteger.ZERO) ? 0 : -1;
+	  } else if (v._value.equals(BigInteger.ZERO)) {
+	    // Same sign: positive.
+	    result  = 1;
+	  } else if (!this._is_native && this._offset > v._offset) {
+	    result  = this._is_negative ? -1 : 1;
+	  } else if (!this._is_native && this._offset < v._offset) {
+	    result  = this._is_negative ? 1 : -1;
+	  } else {
+	    result  = this._value.compareTo(v._value);
+	    if (result > 0) {
+	      result  = this._is_negative ? -1 : 1;
+	    } else if (result < 0) {
+	      result  = this._is_negative ? 1 : -1;
+	    }
+	  }
+
+	  return result;
+	};
+
+	// Make d a copy of this. Returns d.
+	// Modification of objects internally refered to is not allowed.
+	Amount.prototype.copyTo = function(d, negate) {
+	  if (typeof this._value === 'object') {
+	    this._value.copyTo(d._value);
+	  } else {
+	    d._value   = this._value;
+	  }
+
+	  d._offset = this._offset;
+	  d._is_native = this._is_native;
+	  d._is_negative  = negate
+	    ? !this._is_negative    // Negating.
+	    : this._is_negative;    // Just copying.
+
+	  d._currency     = this._currency;
+	  d._issuer       = this._issuer;
+
+	  // Prevent negative zero
+	  if (d.is_zero()) {
+	    d._is_negative = false;
+	  }
+
+	  return d;
+	};
+
+	Amount.prototype.currency = function() {
+	  return this._currency;
+	};
+
+	Amount.prototype.equals = function(d, ignore_issuer) {
+	  if (typeof d === 'string') {
+	    return this.equals(Amount.from_json(d));
+	  }
+
+	  var result = true;
+
+	  result = !((!this.is_valid() || !d.is_valid())
+	             || (this._is_native !== d._is_native)
+	             || (!this._value.equals(d._value) || this._offset !== d._offset)
+	             || (this._is_negative !== d._is_negative)
+	             || (!this._is_native && (!this._currency.equals(d._currency) || !ignore_issuer && !this._issuer.equals(d._issuer))));
+
+	  return result;
+	};
+
 	// True if Amounts are valid and both native or non-native.
 	Amount.prototype.is_comparable = function(v) {
 	  return this._value instanceof BigInteger
@@ -3405,50 +3469,6 @@ var ripple =
 
 	Amount.prototype.issuer = function() {
 	  return this._issuer;
-	};
-
-	// Result in terms of this' currency and issuer.
-	// XXX Diverges from cpp.
-	Amount.prototype.multiply = function(v) {
-	  var result;
-
-	  if (this.is_zero()) {
-	    result = this;
-	  } else if (v.is_zero()) {
-	    result = this.clone();
-	    result._value = BigInteger.ZERO;
-	  } else {
-	    var v1 = this._value;
-	    var o1 = this._offset;
-	    var v2 = v._value;
-	    var o2 = v._offset;
-
-	    if (this.is_native()) {
-	      while (v1.compareTo(consts.bi_man_min_value) < 0) {
-	        v1 = v1.multiply(consts.bi_10);
-	        o1 -= 1;
-	      }
-	    }
-
-	    if (v.is_native()) {
-	      while (v2.compareTo(consts.bi_man_min_value) < 0) {
-	        v2 = v2.multiply(consts.bi_10);
-	        o2 -= 1;
-	      }
-	    }
-
-	    result              = new Amount();
-	    result._offset      = o1 + o2 + 14;
-	    result._value       = v1.multiply(v2).divide(consts.bi_1e14).add(consts.bi_7);
-	    result._is_native   = this._is_native;
-	    result._is_negative = this._is_negative !== v._is_negative;
-	    result._currency    = this._currency;
-	    result._issuer      = this._issuer;
-
-	    result.canonicalize();
-	  }
-
-	  return result;
 	};
 
 	// Return a new value.
@@ -3838,12 +3858,6 @@ var ripple =
 	  }
 
 	  return this;
-	};
-
-	// Result in terms of this' currency and issuer.
-	Amount.prototype.subtract = function(v) {
-	  // Correctness over speed, less code has less bugs, reuse add code.
-	  return this.add(Amount.from_json(v).negate());
 	};
 
 	Amount.prototype.to_number = function(allow_nan) {
@@ -4584,7 +4598,7 @@ var ripple =
 	var Seed             = __webpack_require__(10).Seed;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
-	var hashprefixes     = __webpack_require__(26);
+	var hashprefixes     = __webpack_require__(28);
 	var config           = __webpack_require__(21);
 
 	function Transaction(remote) {
@@ -5726,7 +5740,6 @@ var ripple =
 
 	  if (referenceDate instanceof Date) {
 	    referenceDate = utils.fromTimestamp(referenceDate.getTime());
-	    console.log("referenceDate", referenceDate);
 	  }
 
 	  // calculate interest by e-fold number
@@ -5988,7 +6001,7 @@ var ripple =
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = __webpack_require__(28).UInt;
+	var UInt = __webpack_require__(26).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6095,7 +6108,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(43);
-	var UInt   = __webpack_require__(28).UInt;
+	var UInt   = __webpack_require__(26).UInt;
 
 	//
 	// UInt256 support
@@ -6133,7 +6146,7 @@ var ripple =
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(28).UInt;
+	var UInt    = __webpack_require__(26).UInt;
 	var UInt256 = __webpack_require__(9).UInt256;
 	var UInt160 = __webpack_require__(8).UInt160;
 	var KeyPair = __webpack_require__(29).KeyPair;
@@ -6284,52 +6297,113 @@ var ripple =
 
 	/**
 	 * Meta data processing facility
+	 *
+	 * @constructor
+	 * @param {Object} transaction metadata
 	 */
 
-	function Meta(raw_data) {
+	function Meta(data) {
 	  var self = this;
 
 	  this.nodes = [ ];
 
-	  raw_data.AffectedNodes.forEach(function(an) {
-	    var result = { };
+	  if (typeof data !== 'object') {
+	    throw new TypeError('Missing metadata');
+	  }
 
-	    if ((result.diffType = self.diffType(an))) {
-	      an = an[result.diffType];
+	  if (!Array.isArray(data.AffectedNodes)) {
+	    throw new TypeError('Metadata missing AffectedNodes');
+	  }
 
-	      result.entryType   = an.LedgerEntryType;
-	      result.ledgerIndex = an.LedgerIndex;
-	      result.fields      = extend({}, an.PreviousFields, an.NewFields, an.FinalFields);
-	      result.fieldsPrev  = an.PreviousFields || {};
-	      result.fieldsNew   = an.NewFields || {};
-	      result.fieldsFinal = an.FinalFields || {};
-
-	      // getAffectedBooks will set this
-	      // result.bookKey   = undefined;
-
-	      self.nodes.push(result);
-	    }
-	  });
+	  data.AffectedNodes.forEach(this.addNode, this);
 	};
 
-	Meta.node_types = [
+	Meta.nodeTypes = [
 	  'CreatedNode',
 	  'ModifiedNode',
 	  'DeletedNode'
 	];
 
-	Meta.prototype.diffType = function(an) {
-	  var result = false;
+	Meta.amountFieldsAffectingIssuer = [
+	  'LowLimit',
+	  'HighLimit',
+	  'TakerPays',
+	  'TakerGets'
+	];
 
-	  for (var i=0; i<Meta.node_types.length; i++) {
-	    var x = Meta.node_types[i];
-	    if (an.hasOwnProperty(x)) {
-	      result = x;
+	/**
+	 * @api private
+	 */
+
+	Meta.prototype.getNodeType = function(node) {
+	  var result = null;
+
+	  for (var i=0; i<Meta.nodeTypes.length; i++) {
+	    var type = Meta.nodeTypes[i];
+	    if (node.hasOwnProperty(type)) {
+	      result = type;
 	      break;
 	    }
 	  }
 
 	  return result;
+	};
+
+	/**
+	 * Add node to metadata
+	 *
+	 * @param {Object} node
+	 * @api private
+	 */
+
+	Meta.prototype.addNode = function(node) {
+	  this._affectedAccounts = void(0);
+	  this._affectedBooks = void(0);
+
+	  var result = { };
+
+	  if ((result.nodeType = this.getNodeType(node))) {
+	    node = node[result.nodeType];
+
+	    result.diffType    = result.nodeType;
+	    result.entryType   = node.LedgerEntryType;
+	    result.ledgerIndex = node.LedgerIndex;
+	    result.fields      = extend({ }, node.PreviousFields, node.NewFields, node.FinalFields);
+	    result.fieldsPrev  = node.PreviousFields || { };
+	    result.fieldsNew   = node.NewFields || { };
+	    result.fieldsFinal = node.FinalFields || { };
+
+	    // getAffectedBooks will set this
+	    // result.bookKey   = undefined;
+
+	    this.nodes.push(result);
+	  }
+	};
+
+	/**
+	 * Get affected nodes array
+	 *
+	 * @param {Object} filter options
+	 * @return {Array} nodes
+	 */
+
+	Meta.prototype.getNodes = function(options) {
+	  if (typeof options === 'object') {
+	    return this.nodes.filter(function(node) {
+	      if (options.nodeType && options.nodeType !== node.nodeType) {
+	        return false;
+	      }
+	      if (options.entryType && options.entryType !== node.entryType) {
+	        return false;
+	      }
+	      if (options.bookKey && options.bookKey !== node.bookKey) {
+	        return false;
+	      }
+	      return true;
+	    });
+	  } else {
+	    return this.nodes;
+	  }
 	};
 
 	/**
@@ -6340,7 +6414,7 @@ var ripple =
 	 *
 	 *   {
 	 *     // Type of diff, e.g. CreatedNode, ModifiedNode
-	 *     diffType: 'CreatedNode'
+	 *     nodeType: 'CreatedNode'
 	 *
 	 *     // Type of node affected, e.g. RippleState, AccountRoot
 	 *     entryType: 'RippleState',
@@ -6351,7 +6425,7 @@ var ripple =
 	 *     // Contains all fields with later versions taking precedence
 	 *     //
 	 *     // This is a shorthand for doing things like checking which account
-	 *     // this affected without having to check the diffType.
+	 *     // this affected without having to check the nodeType.
 	 *     fields: {...},
 	 *
 	 *     // Old fields (before the change)
@@ -6367,43 +6441,39 @@ var ripple =
 	 * The second parameter to the callback is the index of the node in the metadata
 	 * (first entry is index 0).
 	 */
-	Meta.prototype.each = function(fn) {
-	  for (var i = 0, l = this.nodes.length; i < l; i++) {
-	    fn(this.nodes[i], i);
-	  }
-	};
 
-	([
+	[
 	 'forEach',
 	 'map',
 	 'filter',
 	 'every',
+	 'some',
 	 'reduce'
-	]).forEach(function(fn) {
+	].forEach(function(fn) {
 	  Meta.prototype[fn] = function() {
 	    return Array.prototype[fn].apply(this.nodes, arguments);
 	  };
 	});
 
-	var amountFieldsAffectingIssuer = [
-	  'LowLimit',
-	  'HighLimit',
-	  'TakerPays',
-	  'TakerGets'
-	];
+	Meta.prototype.each = Meta.prototype.forEach;
 
-	Meta.prototype.getAffectedAccounts = function() {
+	Meta.prototype.getAffectedAccounts = function(from) {
+	  if (this._affectedAccounts) {
+	    return this._affectedAccounts;
+	  }
+
 	  var accounts = [ ];
 
 	  // This code should match the behavior of the C++ method:
 	  // TransactionMetaSet::getAffectedAccounts
-	  this.nodes.forEach(function(an) {
-	    var fields = (an.diffType === 'CreatedNode') ? an.fieldsNew : an.fieldsFinal;
-	    for (var i in fields) {
-	      var field = fields[i];
+	  for (var i=0; i<this.nodes.length; i++) {
+	    var node = this.nodes[i];
+	    var fields = (node.nodeType === 'CreatedNode') ? node.fieldsNew : node.fieldsFinal;
+	    for (var fieldName in fields) {
+	      var field = fields[fieldName];
 	      if (typeof field === 'string' && UInt160.is_valid(field)) {
 	        accounts.push(field);
-	      } else if (amountFieldsAffectingIssuer.indexOf(i) !== -1) {
+	      } else if (~Meta.amountFieldsAffectingIssuer.indexOf(fieldName)) {
 	        var amount = Amount.from_json(field);
 	        var issuer = amount.issuer();
 	        if (issuer.is_valid() && !issuer.is_zero()) {
@@ -6411,43 +6481,53 @@ var ripple =
 	        }
 	      }
 	    }
-	  });
+	  }
 
-	  return utils.arrayUnique(accounts);
+	  this._affectedAccounts = utils.arrayUnique(accounts);
+
+	  return  this._affectedAccounts;
 	};
 
 	Meta.prototype.getAffectedBooks = function() {
+	  if (this._affectedBooks) {
+	    return this._affectedBooks;
+	  }
+
 	  var books = [ ];
 
-	  this.nodes.forEach(function(an) {
-	    if (an.entryType !== 'Offer') {
-	      return;
+	  for (var i=0; i<this.nodes.length; i++) {
+	    var node = this.nodes[i];
+
+	    if (node.entryType !== 'Offer') {
+	      continue;
 	    }
 
-	    var gets = Amount.from_json(an.fields.TakerGets);
-	    var pays = Amount.from_json(an.fields.TakerPays);
-
+	    var gets = Amount.from_json(node.fields.TakerGets);
+	    var pays = Amount.from_json(node.fields.TakerPays);
 	    var getsKey = gets.currency().to_json();
+	    var paysKey = pays.currency().to_json();
+
 	    if (getsKey !== 'XRP') {
 	      getsKey += '/' + gets.issuer().to_json();
 	    }
 
-	    var paysKey = pays.currency().to_json();
 	    if (paysKey !== 'XRP') {
 	      paysKey += '/' + pays.issuer().to_json();
 	    }
 
-	    var key = [ getsKey, paysKey ].join(':');
+	    var key = getsKey + ':' + paysKey;
 
 	    // Hell of a lot of work, so we are going to cache this. We can use this
 	    // later to good effect in OrderBook.notify to make sure we only process
 	    // pertinent offers.
-	    an.bookKey = key;
+	    node.bookKey = key;
 
 	    books.push(key);
-	  });
+	  }
 
-	  return utils.arrayUnique(books);
+	  this._affectedBooks = utils.arrayUnique(books);
+
+	  return this._affectedBooks;
 	};
 
 	exports.Meta = Meta;
@@ -8468,26 +8548,26 @@ var ripple =
 	  }
 
 	  this._remote = remote;
-	  this._opts   = opts;
-	  this._ws     = void(0);
+	  this._opts = opts;
+	  this._ws = void(0);
 
-	  this._connected     = false;
+	  this._connected = false;
 	  this._shouldConnect = false;
-	  this._state         = 'offline';
+	  this._state = 'offline';
 
-	  this._id       = 0;
-	  this._retry    = 0;
+	  this._id = 0; // request ID
+	  this._retry = 0;
 	  this._requests = { };
 
-	  this._load_base   = 256;
+	  this._load_base = 256;
 	  this._load_factor = 256;
 
-	  this._fee          = 10;
-	  this._fee_ref      = 10;
-	  this._fee_base     = 10;
+	  this._fee = 10;
+	  this._fee_ref = 10;
+	  this._fee_base = 10;
 	  this._reserve_base = void(0);
-	  this._reserve_inc  = void(0);
-	  this._fee_cushion  = this._remote.fee_cushion;
+	  this._reserve_inc = void(0);
+	  this._fee_cushion = this._remote.fee_cushion;
 
 	  this._lastLedgerIndex = NaN;
 	  this._lastLedgerClose = NaN;
@@ -8499,22 +8579,18 @@ var ripple =
 	    response: 1
 	  };
 
+	  this._pubkey_node = '';
+
 	  this._url = this._opts.url = (this._opts.secure ? 'wss://' : 'ws://')
 	      + this._opts.host + ':' + this._opts.port;
 
-	  this._hostid = '';
-
-	  function onMessage(message) {
+	  this.on('message', function onMessage(message) {
 	    self._handleMessage(message);
-	  };
+	  });
 
-	  this.on('message', onMessage);
-
-	  function onSubscribeResponse(message) {
+	  this.on('response_subscribe', function onSubscribe(message) {
 	    self._handleResponseSubscribe(message);
-	  };
-
-	  this.on('response_subscribe', onSubscribeResponse);
+	  });
 
 	  function setActivityInterval() {
 	    var interval = self._checkActivity.bind(self);
@@ -8528,26 +8604,34 @@ var ripple =
 
 	  this.once('ledger_closed', setActivityInterval);
 
-	  this._remote.on('ledger_closed', function(ledger) {
+	  this._remote.on('ledger_closed', function onRemoteLedgerClose(ledger) {
 	    self._updateScore('ledgerclose', ledger);
 	  });
 
-	  this.on('response_ping', function(message, request) {
+	  this.on('response_ping', function onPingResponse(message, request) {
 	    self._updateScore('response', request);
 	  });
 
-	  this.on('load_changed', function(load) {
+	  this.on('load_changed', function onLoadChange(load) {
 	    self._updateScore('loadchange', load);
 	  });
 
-	  this.on('response_server_info', function(message) {
-	    try {
-	      self._hostid = '(' +  message.info.pubkey_node + ')';
-	    } catch (e) {
+	  // If server is not up-to-date, request server_info
+	  // for getting pubkey_node & hostid information.
+	  // Otherwise this information is available on the
+	  // initial server subscribe response
+	  this.on('connect', function requestServerID() {
+	    if (self._pubkey_node) {
+	      return;
 	    }
-	  });
 
-	  this.on('connect', function() {
+	    self.on('response_server_info', function setServerID(message) {
+	      try {
+	        self._pubkey_node = message.info.pubkey_node;
+	      } catch (e) {
+	      }
+	    });
+
 	    self._request(self._remote.requestServerInfo());
 	  });
 	};
@@ -8598,7 +8682,7 @@ var ripple =
 	Server.prototype._setState = function(state) {
 	  if (state !== this._state) {
 	    if (this._remote.trace) {
-	      log.info('set_state:', this._opts.url, this._hostid, state);
+	      log.info(this.getHostID(), 'set_state:', state);
 	    }
 
 	    this._state = state;
@@ -8630,7 +8714,7 @@ var ripple =
 	 */
 
 	Server.prototype._checkActivity = function() {
-	  if (!this._connected) {
+	  if (!this.isConnected()) {
 	    return;
 	  }
 
@@ -8641,7 +8725,9 @@ var ripple =
 	  var delta = (Date.now() - this._lastLedgerClose);
 
 	  if (delta > (1000 * 25)) {
-	    log.info('reconnect: activity delta:', delta);
+	    if (this._remote.trace) {
+	      log.info(this.getHostID(), 'reconnect: activity delta:', delta);
+	    }
 	    this.reconnect();
 	  }
 	};
@@ -8659,7 +8745,7 @@ var ripple =
 	 */
 
 	Server.prototype._updateScore = function(type, data) {
-	  if (!this._connected) {
+	  if (!this.isConnected()) {
 	    return;
 	  }
 
@@ -8685,7 +8771,9 @@ var ripple =
 	  }
 
 	  if (this._score > 1e3) {
-	    log.info('reconnect: score:', this._score);
+	    if (this._remote.trace) {
+	      log.info(this.getHostID(), 'reconnect: score:', this._score);
+	    }
 	    this.reconnect();
 	  }
 	};
@@ -8710,8 +8798,9 @@ var ripple =
 	 * Get the server's hostid
 	 */
 
-	Server.prototype.getHostID = function() {
-	  return this._hostid;
+	Server.prototype.getHostID =
+	Server.prototype.getServerID = function() {
+	  return this._url + ' (' + (this._pubkey_node ? this._pubkey_node : '') + ')';
 	};
 
 	/**
@@ -8723,7 +8812,7 @@ var ripple =
 	Server.prototype.disconnect = function() {
 	  var self = this;
 
-	  if (!this._connected) {
+	  if (!this.isConnected()) {
 	    this.once('socket_open', function() {
 	      self.disconnect();
 	    });
@@ -8789,7 +8878,7 @@ var ripple =
 	  // recently received a message from the server and the WebSocket has not
 	  // reported any issues either. If we do fail to ping or the connection drops,
 	  // we will automatically reconnect.
-	  if (this._connected) {
+	  if (this.isConnected()) {
 	    return;
 	  }
 
@@ -8799,7 +8888,7 @@ var ripple =
 	  }
 
 	  if (this._remote.trace) {
-	    log.info('connect:', this._opts.url, this._hostid);
+	    log.info(this.getServerID(), 'connect');
 	  }
 
 	  var ws = this._ws = new WebSocket(this._opts.url);
@@ -8825,7 +8914,7 @@ var ripple =
 	      self.emit('socket_error');
 
 	      if (self._remote.trace) {
-	        log.info('onerror:', self._opts.url, self._hostid, e.data || e);
+	        log.info(self.getServerID(), 'onerror:',  e.data || e);
 	      }
 
 	      // Most connection errors for WebSockets are conveyed as 'close' events with
@@ -8849,7 +8938,7 @@ var ripple =
 	  ws.onclose = function onClose() {
 	    if (ws === self._ws) {
 	      if (self._remote.trace) {
-	        log.info('onclose:', self._opts.url, self._hostid, ws.readyState);
+	        log.info(self.getServerID(), 'onclose:', ws.readyState);
 	      }
 	      self._handleClose();
 	    }
@@ -8882,7 +8971,7 @@ var ripple =
 	  function connectionRetry() {
 	    if (self._shouldConnect) {
 	      if (self._remote.trace) {
-	        log.info('retry', self._opts.url, self._hostid);
+	        log.info(self.getServerID(), 'retry', self._retry);
 	      }
 	      self.connect();
 	    }
@@ -8960,6 +9049,7 @@ var ripple =
 	  // This message is only received when online.
 	  // As we are connected, it is the definitive final state.
 	  var isOnline = ~Server.onlineStates.indexOf(message.server_status);
+
 	  this._setState(isOnline ? 'online' : 'offline');
 
 	  if (!Server.isLoadStatus(message)) {
@@ -8988,14 +9078,14 @@ var ripple =
 
 	  if (!request) {
 	    if (this._remote.trace) {
-	      log.info('UNEXPECTED:', this._opts.url, this._hostid, message);
+	      log.info(this.getServerID(), 'UNEXPECTED:', message);
 	    }
 	    return;
 	  }
 
 	  if (message.status === 'success') {
 	    if (this._remote.trace) {
-	      log.info('response:', this._opts.url, this._hostid, message);
+	      log.info(this.getServerID(), 'response:', message);
 	    }
 
 	    var command = request.message.command;
@@ -9009,22 +9099,20 @@ var ripple =
 	    });
 	  } else if (message.error) {
 	    if (this._remote.trace) {
-	      log.info('error:', this._opts.url, this._hostid,  message);
+	      log.info(this.getServerID(), 'error:', message);
 	    }
 
-	    var error = {
+	    request.emit('error', {
 	      error: 'remoteError',
 	      error_message: 'Remote reported an error.',
 	      remote: message
-	    };
-
-	    request.emit('error', error);
+	    });
 	  }
 	};
 
 	Server.prototype._handlePathFind = function(message) {
 	  if (this._remote.trace) {
-	    log.info('path_find:', this._opts.url, this._hostid,  message);
+	    log.info(this.getServerID(), 'path_find:', message);
 	  }
 	};
 
@@ -9036,9 +9124,6 @@ var ripple =
 	 */
 
 	Server.prototype._handleResponseSubscribe = function(message) {
-	  if (~(Server.onlineStates.indexOf(message.server_status))) {
-	    this._setState('online');
-	  }
 	  if (Server.isLoadStatus(message)) {
 	    this._load_base    = message.load_base || 256;
 	    this._load_factor  = message.load_factor || 256;
@@ -9046,6 +9131,12 @@ var ripple =
 	    this._fee_base     = message.fee_base;
 	    this._reserve_base = message.reserve_base;
 	    this._reserve_inc  = message.reserve_inc;
+	  }
+	  if (message.pubkey_node) {
+	    this._pubkey_node = message.pubkey_node;
+	  }
+	  if (~(Server.onlineStates.indexOf(message.server_status))) {
+	    this._setState('online');
 	  }
 	};
 
@@ -9082,7 +9173,7 @@ var ripple =
 	Server.prototype._sendMessage = function(message) {
 	  if (this._ws) {
 	    if (this._remote.trace) {
-	      log.info('request:', this._opts.url, this._hostid, message);
+	      log.info(this.getServerID(), 'request:', message);
 	    }
 	    this._ws.send(JSON.stringify(message));
 	  }
@@ -9104,7 +9195,7 @@ var ripple =
 	  // Only bother if we are still connected.
 	  if (!this._ws) {
 	    if (this._remote.trace) {
-	      log.info('request: DROPPING:', self._opts.url, self._hostid, request.message);
+	      log.info(this.getServerID(), 'request: DROPPING:', request.message);
 	    }
 	    return;
 	  }
@@ -9243,72 +9334,105 @@ var ripple =
 	// asks) Which one depends on the ordering of the parameters.
 	//
 	// Events:
-	//  - transaction   A transaction that affects the order book.
-
-	// var network = require("./network.js");
+	//  - model
+	//  - trade
+	//  - transaction
 
 	var util         = __webpack_require__(37);
-	var EventEmitter = __webpack_require__(36).EventEmitter;
 	var extend       = __webpack_require__(43);
+	var assert       = __webpack_require__(39);
+	var async        = __webpack_require__(48);
+	var EventEmitter = __webpack_require__(36).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
+	var log          = __webpack_require__(24).internal.sub('orderbook');
 
-	function OrderBook(remote, currency_gets, issuer_gets, currency_pays, issuer_pays, key) {
+	/**
+	 * @constructor OrderBook
+	 * @param {Remote} remote
+	 * @param {String} ask currency
+	 * @param {String} ask issuer
+	 * @param {String} bid currency
+	 * @param {String} bid issuer
+	 * @param {String} orderbook key
+	 */
+
+	function OrderBook(remote, getsC, getsI, paysC, paysI, key) {
 	  EventEmitter.call(this);
 
 	  var self = this;
 
-	  this._remote        = remote;
-	  this._currency_gets = Currency.from_json(currency_gets);
-	  this._issuer_gets   = issuer_gets;
-	  this._currency_pays = Currency.from_json(currency_pays);
-	  this._issuer_pays   = issuer_pays;
-	  this._subs          = 0;
-	  this._key           = key;
-
-	  // We consider ourselves synchronized if we have a current copy of the offers,
-	  // we are online and subscribed to updates.
-	  this._sync = false;
-
-	  // Offers
+	  this._remote = remote;
+	  this._currencyGets = Currency.from_json(getsC);
+	  this._issuerGets = getsI;
+	  this._currencyPays = Currency.from_json(paysC);
+	  this._issuerPays = paysI;
+	  this._key = key;
+	  this._subscribed = false;
+	  this._shouldSubscribe = true;
+	  this._listeners = 0;
 	  this._offers = [ ];
+	  this._ownerFunds = { };
+	  this._offerCounts = { };
 
-	  function listenerAdded(type, listener) {
-	    if (~OrderBook.subscribe_events.indexOf(type)) {
-	      self._subs += 1;
-	      if (self._subs === 1 && self._remote._connected) {
-	        self._subscribe();
+	  // We consider ourselves synchronized if we have a current
+	  // copy of the offers, we are online and subscribed to updates.
+	  this._synchronized = false;
+
+	  function listenersModified(action, event) {
+	    // Automatically subscribe and unsubscribe to orderbook
+	    // on the basis of existing event listeners
+	    if (~OrderBook.EVENTS.indexOf(event)) {
+	      switch (action) {
+	        case 'add':
+	          if (++self._listeners === 1) {
+	            self.subscribe();
+	          }
+	          break;
+	        case 'remove':
+	          if (--self._listeners === 0) {
+	            self.unsubscribe();
+	          }
+	          break;
 	      }
 	    }
 	  };
 
-	  this.on('newListener', listenerAdded);
-
-	  function listenerRemoved(type, listener) {
-	    if (~OrderBook.subscribe_events.indexOf(type)) {
-	      self._subs -= 1;
-	      if (!self._subs && self._remote._connected) {
-	        self._sync = false;
-	        self._remote.request_unsubscribe()
-	        .books([self.to_json()])
-	        .request();
-	      }
-	    }
-	  };
-
-	  this.on('removeListener', listenerRemoved);
-
-	  // ST: This *should* call _prepareSubscribe.
-	  this._remote.on('prepare_subscribe', function(request) {
-	    self._subscribe(request);
+	  this.on('newListener', function(event) {
+	    listenersModified('add', event);
 	  });
 
-	  function remoteDisconnected() {
-	    self._sync = false;
+	  this.on('removeListener', function(event) {
+	    listenersModified('remove', event);
+	  });
+
+	  this.on('unsubscribe', function() {
+	    self._ownerFunds = { };
+	    self._remote.removeListener('transaction', updateFundedAmounts);
+	    self._remote.removeListener('transaction', updateTransferRate);
+	  });
+
+	  this._remote.on('prepare_subscribe', function() {
+	    self.subscribe();
+	  });
+
+	  this._remote.on('disconnect', function() {
+	    self._ownerFunds = { };
+	    self._synchronized = false;
+	  });
+
+	  function updateFundedAmounts(message) {
+	    self.updateFundedAmounts(message);
 	  };
 
-	  this._remote.on('disconnect', remoteDisconnected);
+	  this._remote.on('transaction', updateFundedAmounts);
+
+	  function updateTransferRate(message) {
+	    self.updateTransferRate(message);
+	  };
+
+	  this._remote.on('transaction', updateTransferRate);
 
 	  return this;
 	};
@@ -9316,198 +9440,629 @@ var ripple =
 	util.inherits(OrderBook, EventEmitter);
 
 	/**
-	 * List of events that require a remote subscription to the orderbook.
-	 */
-	OrderBook.subscribe_events = ['transaction', 'model', 'trade'];
-
-	/**
-	 * Subscribes to orderbook.
-	 *
-	 * @private
-	 */
-	OrderBook.prototype._subscribe = function (request) {
-	  var self = this;
-
-	  if (self.is_valid() && self._subs) {
-	    var request = this._remote.request_subscribe();
-	    request.addBook(self.to_json(), true);
-
-	    request.once('success', function(res) {
-	      self._sync   = true;
-	      self._offers = res.offers;
-	      self.emit('model', self._offers);
-	    });
-
-	    request.once('error', function(err) {
-	      // XXX What now?
-	    });
-
-	    request.request();
-	  }
-	};
-
-	/**
-	 * Adds this orderbook to a subscription request.
-
-	// ST: Currently this is not working because the server cannot give snapshots
-	//     for more than one order book in the same subscribe message.
-
-	OrderBook.prototype._prepareSubscribe = function (request) {
-	  var self = this;
-	  if (self.is_valid() && self._subs) {
-	    request.addBook(self.to_json(), true);
-	    request.once('success', function(res) {
-	      self._sync   = true;
-	      self._offers = res.offers;
-	      self.emit('model', self._offers);
-	    });
-	    request.once('error', function(err) {
-	      // XXX What now?
-	    });
-	  }
-	};
+	 * Events emitted from OrderBook
 	 */
 
-	OrderBook.prototype.to_json = function () {
-	  var json = {
-	    taker_gets: {
-	      currency: this._currency_gets.to_hex()
-	    },
-	    taker_pays: {
-	      currency: this._currency_pays.to_hex()
-	    }
-	  };
+	OrderBook.EVENTS = [ 'transaction', 'model', 'trade', 'offer' ];
 
-	  if (!this._currency_gets.is_native()) {
-	    json.taker_gets.issuer = this._issuer_gets;
-	  }
-
-	  if (!this._currency_pays.is_native()) {
-	    json.taker_pays.issuer = this._issuer_pays;
-	  }
-
-	  return json;
-	};
+	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
 
 	/**
 	 * Whether the OrderBook is valid.
 	 *
 	 * Note: This only checks whether the parameters (currencies and issuer) are
 	 *       syntactically valid. It does not check anything against the ledger.
+	 *
+	 * @return {Boolean} is valid
 	 */
-	OrderBook.prototype.is_valid = function () {
+
+	OrderBook.prototype.isValid =
+	OrderBook.prototype.is_valid = function() {
 	  // XXX Should check for same currency (non-native) && same issuer
 	  return (
-	    this._currency_pays && this._currency_pays.is_valid() &&
-	    (this._currency_pays.is_native() || UInt160.is_valid(this._issuer_pays)) &&
-
-	    this._currency_gets && this._currency_gets.is_valid() &&
-	    (this._currency_gets.is_native() || UInt160.is_valid(this._issuer_gets)) &&
-
-	    !(this._currency_pays.is_native() && this._currency_gets.is_native())
+	    this._currencyPays && this._currencyPays.is_valid() &&
+	    (this._currencyPays.is_native() || UInt160.is_valid(this._issuerPays)) &&
+	    this._currencyGets && this._currencyGets.is_valid() &&
+	    (this._currencyGets.is_native() || UInt160.is_valid(this._issuerGets)) &&
+	    !(this._currencyPays.is_native() && this._currencyGets.is_native())
 	  );
 	};
 
-	OrderBook.prototype.trade = function(type) {
-	  var tradeStr = '0'
-	  + ((Currency.from_json(this['_currency_' + type]).is_native()) ? '' : '/'
-	     + this['_currency_' + type ] + '/'
-	     + this['_issuer_' + type]);
-	  return Amount.from_json(tradeStr);
+	/**
+	 * Initialize orderbook. Get orderbook offers and subscribe to transactions
+	 */
+
+	OrderBook.prototype.subscribe = function() {
+	  var self = this;
+
+	  if (!this._shouldSubscribe) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('subscribing', this._key);
+	  }
+
+	  this.requestTransferRate();
+
+	  this.requestOffers().once('success', function() {
+	    self.subscribeTransactions();
+	  });
 	};
 
 	/**
-	 * Notify object of a relevant transaction.
-	 *
-	 * This is only meant to be called by the Remote class. You should never have to
-	 * call this yourself.
+	 * Unhook event listeners and prevent ripple-lib from further work on this
+	 * orderbook. There is no more orderbook stream, so "unsubscribe" is nominal
 	 */
-	OrderBook.prototype.notify = function (message) {
-	  var self       = this;
-	  var changed    = false;
-	  var trade_gets = this.trade('gets');
-	  var trade_pays = this.trade('pays');
 
-	  function handleTransaction(an) {
-	    if (an.entryType !== 'Offer' || an.bookKey !== self._key) {
-	      return;
+	OrderBook.prototype.unsubscribe = function() {
+	  var self = this;
+
+	  if (this._remote.trace) {
+	    log.info('unsubscribing', this._key);
+	  }
+
+	  this._subscribed = false;
+	  this._shouldSubscribe = false;
+
+	  OrderBook.EVENTS.forEach(function(event) {
+	    this.removeAllListeners(event);
+	  }, this);
+
+	  this.emit('unsubscribe');
+	};
+
+	/**
+	 * Check that the funds for offer owner have been cached
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.hasCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._ownerFunds[account] !== void(0);
+	};
+
+	/**
+	 * Add cached offer owner funds
+	 *
+	 * @param {String} account address
+	 * @param {String} funded amount
+	 */
+
+	OrderBook.prototype.addCachedFunds = function(account, fundedAmount) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(!isNaN(fundedAmount), 'Funded amount is invalid');
+	  this._ownerFunds[account] = fundedAmount;
+	};
+
+	/**
+	 * Get cached offer owner funds
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.getCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._ownerFunds[account];
+	};
+
+	/**
+	 * Remove cached offer owner funds
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.removeCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  this._ownerFunds[account] = void(0);
+	};
+
+	/**
+	 * Get offer count for offer owner
+	 */
+
+	OrderBook.prototype.getOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._offerCounts[account] || 0;
+	};
+
+	/**
+	 * Increment offer count for offer owner
+	 */
+
+	OrderBook.prototype.incrementOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  var result = (this._offerCounts[account] || 0) + 1;
+	  this._offerCounts[account] = result;
+	  return result;
+	};
+
+	/**
+	 * Decrement offer count for offer owner
+	 */
+
+	OrderBook.prototype.decrementOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  var result = (this._offerCounts[account] || 1) - 1;
+	  this._offerCounts[account] = result;
+	  return result;
+	};
+
+	/**
+	 * Compute funded amount for a balance/transferRate
+	 *
+	 * @param {String} balance
+	 * @param [String] transferRate
+	 * @return {Amount} funded amount
+	 */
+
+	OrderBook.prototype.applyTransferRate = function(balance, transferRate) {
+	  assert(!isNaN(balance), 'Balance is invalid');
+
+	  if (this._currencyGets.is_native()) {
+	    return balance;
+	  }
+
+	  if (transferRate === void(0)) {
+	    transferRate = this._issuerTransferRate;
+	  }
+
+	  assert(!isNaN(transferRate), 'Transfer rate is invalid');
+
+	  if (transferRate === OrderBook.DEFAULT_TRANSFER_RATE) {
+	    return balance;
+	  }
+
+	  var adjustedBalance = Amount.from_json(balance
+	   + '/' + this._currencyGets.to_json()
+	   + '/' + this._issuerGets
+	  )
+	  .divide(transferRate)
+	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
+	  .to_json()
+	  .value;
+
+	  return adjustedBalance;
+	};
+
+	/**
+	 * Request transfer rate for this orderbook's issuer
+	 *
+	 * @param [Function] calback
+	 */
+
+	OrderBook.prototype.requestTransferRate = function(callback) {
+	  var self = this;
+
+	  var issuer = this._issuerGets;
+
+	  this.once('transfer_rate', function(rate) {
+	    if (typeof callback === 'function') {
+	      callback(null, rate);
+	    }
+	  });
+
+	  if (this._currencyGets.is_native()) {
+	    // Transfer rate is default
+	    return this.emit('transfer_rate', OrderBook.DEFAULT_TRANSFER_RATE);
+	  }
+
+	  if (this._issuerTransferRate) {
+	    // Transfer rate has been cached
+	    return this.emit('transfer_rate', this._issuerTransferRate);
+	  }
+
+	  this._remote.requestAccountInfo(issuer, function(err, info) {
+	    if (err) {
+	      // XXX What now?
+	      return callback(err);
 	    }
 
-	    var i, l, offer;
+	    var transferRate = info.account_data.TransferRate
+	    || OrderBook.DEFAULT_TRANSFER_RATE;
 
-	    switch(an.diffType) {
-	      case 'DeletedNode':
-	      case 'ModifiedNode':
-	        var deletedNode = an.diffType === 'DeletedNode';
+	    self._issuerTransferRate = transferRate;
+	    self.emit('transfer_rate', transferRate);
+	  });
+	};
 
-	        for (i=0, l=self._offers.length; i<l; i++) {
-	          offer = self._offers[i];
+	/**
+	 * Set funded amount on offer. All offers have taker_gets_funded property,
+	 * which reflects the amount this account can afford to offer. All offers have
+	 * is_fully_funded property, indicating whether these funds are sufficient for
+	 * the offer placed.
+	 *
+	 * @param {Object} offer
+	 * @param {String} funds
+	 * @return offer
+	 */
 
-	          if (offer.index === an.ledgerIndex) {
-	            if (deletedNode) {
-	              self._offers.splice(i, 1);
-	            } else {
-	              // TODO: This assumes no fields are deleted, which is probably a
-	              // safe assumption, but should be checked.
-	              extend(offer, an.fieldsFinal);
-	            }
+	OrderBook.prototype.setFundedAmount = function(offer, fundedAmount) {
+	  assert.strictEqual(typeof offer, 'object', 'Offer is invalid');
+	  assert(!isNaN(fundedAmount), 'Funds is invalid');
 
-	            changed = true;
-	            break;
-	          }
-	        }
+	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
 
-	        // We don't want to count a OfferCancel as a trade
-	        if (message.transaction.TransactionType === 'OfferCancel') {
-	          return;
-	        }
+	  var takerGetsValue = (typeof offer.TakerGets === 'object')
+	  ? offer.TakerGets.value
+	  : offer.TakerGets;
 
-	        trade_gets = trade_gets.add(an.fieldsPrev.TakerGets);
-	        trade_pays = trade_pays.add(an.fieldsPrev.TakerPays);
+	  var takerGets = Amount.from_json(takerGetsValue + iouSuffix);
 
-	        if (!deletedNode) {
-	          trade_gets = trade_gets.subtract(an.fieldsFinal.TakerGets);
-	          trade_pays = trade_pays.subtract(an.fieldsFinal.TakerPays);
-	        }
-	        break;
+	  offer.is_fully_funded = Amount.from_json(
+	    fundedAmount + iouSuffix
+	  ).compareTo(takerGets) >= 0;
 
-	      case 'CreatedNode':
-	        // XXX Should use Amount#from_quality
-	        var price = Amount.from_json(an.fields.TakerPays).ratio_human(an.fields.TakerGets, {reference_date: new Date()});
+	  if (offer.is_fully_funded) {
+	    offer.taker_gets_funded = takerGetsValue;
+	  } else {
+	    offer.taker_gets_funded = fundedAmount;
+	  }
 
-	        for (i = 0, l = self._offers.length; i < l; i++) {
-	          offer = self._offers[i];
-	          var priceItem = Amount.from_json(offer.TakerPays).ratio_human(offer.TakerGets, {reference_date: new Date()});
+	  return offer;
+	};
 
-	          if (price.compareTo(priceItem) <= 0) {
-	            var obj   = an.fields;
-	            obj.index = an.ledgerIndex;
-	            self._offers.splice(i, 0, an.fields);
-	            changed = true;
-	            break;
-	          }
-	        }
-	        break;
-	    }
+	/**
+	 * Determine what an account is funded to offer for orderbook's
+	 * currency/issuer
+	 *
+	 * @param {String} account
+	 * @param {Function} callback
+	 */
+
+	OrderBook.prototype.requestFundedAmount = function(account, callback) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert.strictEqual(typeof callback, 'function', 'Callback is invalid');
+
+	  var self = this;
+
+	  if (self._remote.trace) {
+	    log.info('requesting funds', account);
+	  }
+
+	  function requestNativeBalance(callback) {
+	    self._remote.requestAccountInfo(account, function(err, info) {
+	      if (err) {
+	        callback(err);
+	      } else {
+	        callback(null, String(info.account_data.Balance));
+	      }
+	    });
 	  };
 
-	  message.mmeta.each(handleTransaction);
+	  function requestLineBalance(callback) {
+	    var request = self._remote.requestAccountLines(
+	      account, // account
+	      void(0), // account index
+	      'VALIDATED', // ledger
+	      self._issuerGets //peer
+	    );
 
-	  // Only trigger the event if the account object is actually
-	  // subscribed - this prevents some weird phantom events from
-	  // occurring.
-	  if (this._subs) {
-	    this.emit('transaction', message);
-	    if (changed) {
-	      this.emit('model', this._offers);
+	    request.request(function(err, res) {
+	      if (err) {
+	        return callback(err);
+	      }
+
+	      var currency = self._currencyGets.to_json();
+	      var balance = '0';
+
+	      for (var i=0, line; (line=res.lines[i]); i++) {
+	        if (line.currency === currency) {
+	          balance = line.balance;
+	          break;
+	        }
+	      }
+
+	      callback(null, balance);
+	    });
+	  };
+
+	  function computeFundedAmount(err, results) {
+	    if (err) {
+	      if (self._remote.trace) {
+	        log.info('failed to request funds', err);
+	      }
+	      //XXX What now?
+	      return callback(err);
 	    }
-	    if (!trade_gets.is_zero()) {
-	      this.emit('trade', trade_pays, trade_gets);
+
+	    if (self._remote.trace) {
+	      log.info('requested funds', account, results);
+	    }
+
+	    var balance;
+	    var fundedAmount;
+
+	    if (self._currencyGets.is_native()) {
+	      balance = results[0];
+	      fundedAmount = balance;
+	    } else {
+	      balance = results[1];
+	      fundedAmount = self.applyTransferRate(balance, results[0]);
+	    }
+
+	    callback(null, fundedAmount);
+	  };
+
+	  var steps = [ ];
+
+	  if (this._currencyGets.is_native()) {
+	    steps.push(requestNativeBalance);
+	  } else {
+	    steps.push(this.requestTransferRate.bind(this));
+	    steps.push(requestLineBalance);
+	  }
+
+	  async.parallel(steps, computeFundedAmount);
+	};
+
+	/**
+	 * Get changed balance of an affected node
+	 *
+	 * @param {Object} RippleState or AccountRoot node
+	 * @return {Object} { account, balance }
+	 */
+
+	OrderBook.prototype.getBalanceChange = function(node) {
+	  var result = {
+	    account: void(0),
+	    balance: void(0)
+	  };
+
+	  switch (node.entryType) {
+	    case 'AccountRoot':
+	      result.account = node.fields.Account;
+	      result.balance = node.fieldsFinal.Balance;
+	      break;
+
+	    case 'RippleState':
+	      if (node.fields.HighLimit.issuer === this._issuerGets) {
+	        result.account = node.fields.LowLimit.issuer;
+	        result.balance = node.fieldsFinal.Balance.value;
+	      } else if (node.fields.LowLimit.issuer === this._issuerGets) {
+	        // Negate balance
+	        result.account = node.fields.HighLimit.issuer;
+	        result.balance = Amount.from_json(
+	          node.fieldsFinal.Balance
+	        ).negate().to_json().value;
+	      }
+	      break;
+	  }
+
+	  result.isValid = !isNaN(result.balance)
+	                && UInt160.is_valid(result.account);
+
+	  return result;
+	};
+
+	/**
+	 * Check that affected node represents a balance change
+	 *
+	 * @param {Object} RippleState or AccountRoot node
+	 * @return {Boolean}
+	 */
+
+	OrderBook.prototype.isBalanceChange = function(node) {
+	  // Check balance change
+	  if (!(node.fields && node.fields.Balance
+	  && node.fieldsPrev && node.fieldsFinal
+	  && node.fieldsPrev.Balance && node.fieldsFinal.Balance)) {
+	    return false;
+	  }
+
+	  // Check currency
+	  if (this._currencyGets.is_native()) {
+	    return !isNaN(node.fields.Balance);
+	  }
+
+	  if (node.fields.Balance.currency !== this._currencyGets.to_json()) {
+	    return false;
+	  }
+
+	  // Check issuer
+	  if (!(node.fields.HighLimit.issuer === this._issuerGets
+	     || node.fields.LowLimit.issuer === this._issuerGets)) {
+	     return false;
+	   }
+
+	   return true;
+	};
+
+	/**
+	 * Update funded amounts for offers in the orderbook as new transactions are
+	 * streamed from server
+	 *
+	 * @param {Object} transaction
+	 */
+
+	OrderBook.prototype.updateFundedAmounts = function(message) {
+	  var self = this;
+
+	  var affectedAccounts = message.mmeta.getAffectedAccounts();
+
+	  var isOwnerAffected = affectedAccounts.some(function(account) {
+	    return self.hasCachedFunds(account);
+	  });
+
+	  if (!isOwnerAffected) {
+	    return;
+	  }
+
+	  if (!this._currencyGets.is_native() && !this._issuerTransferRate) {
+	    // Defer until transfer rate is requested
+	    if (self._remote.trace) {
+	      log.info('waiting for transfer rate');
+	    }
+
+	    this.once('transfer_rate', function() {
+	      self.updateFundedAmounts(message);
+	    });
+	    return;
+	  }
+
+	  var nodes = message.mmeta.getNodes({
+	    nodeType: 'ModifiedNode',
+	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
+	  });
+
+	  for (var i=0; i<nodes.length; i++) {
+	    var node = nodes[i];
+
+	    if (!this.isBalanceChange(node)) {
+	      continue;
+	    }
+
+	    var result = this.getBalanceChange(node);
+
+	    if (result.isValid) {
+	      var account = result.account;
+	      var balance = result.balance;
+
+	      if (this.hasCachedFunds(account)) {
+	        var fundedAmount = this.applyTransferRate(balance);
+	        this.updateOfferFunds(account, fundedAmount);
+	      }
 	    }
 	  }
 	};
 
-	OrderBook.prototype.notifyTx = OrderBook.prototype.notify;
+	/**
+	 * Update issuer's TransferRate as it changes
+	 *
+	 * @param {Object} transaction
+	 */
+
+	OrderBook.prototype.updateTransferRate = function(message) {
+	  var self = this;
+
+	  var affectedAccounts = message.mmeta.getAffectedAccounts();
+
+	  var isIssuerAffected = affectedAccounts.some(function(account) {
+	    return account === self._issuerGets;
+	  });
+
+	  if (!isIssuerAffected) {
+	    return;
+	  }
+
+	  // XXX Update transfer rate
+	  //
+	  //  var nodes = message.mmeta.getNodes({
+	  //    nodeType: 'ModifiedNode',
+	  //    entryType: 'AccountRoot'
+	  //  });
+	};
+
+	/**
+	 * Request orderbook entries from server
+	 */
+
+	OrderBook.prototype.requestOffers = function() {
+	  var self = this;
+
+	  if (!this._shouldSubscribe) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('requesting offers', this._key);
+	  }
+
+	  function handleOffers(res) {
+	    if (!Array.isArray(res.offers)) {
+	      // XXX What now?
+	      return;
+	    }
+
+	    if (!self._currencyGets.is_native() && !self._issuerTransferRate) {
+	      // Defer until transfer rate is requested
+	      if (self._remote.trace) {
+	        log.info('waiting for transfer rate');
+	      }
+
+	      self.once('transfer_rate', function() {
+	        handleOffers(res);
+	      });
+	      return;
+	    }
+
+	    if (self._remote.trace) {
+	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
+	    }
+
+	    self._offers = res.offers.map(function addOffer(offer) {
+	      var fundedAmount;
+
+	      if (self.hasCachedFunds(offer.Account)) {
+	        fundedAmount = self.getCachedFunds(offer.Account);
+	      } else if (offer.hasOwnProperty('owner_funds')) {
+	        fundedAmount = self.applyTransferRate(offer.owner_funds);
+	        self.addCachedFunds(offer.Account, fundedAmount);
+	      }
+
+	      self.setFundedAmount(offer, fundedAmount);
+	      self.incrementOfferCount(offer.Account);
+
+	      return offer;
+	    });
+
+	    self._synchronized = true;
+
+	    self.emit('model', self._offers);
+	  };
+
+	  function handleError(err) {
+	    // XXX What now?
+	    if (self._remote.trace) {
+	      log.info('failed to request offers', self._key, err);
+	    }
+	  };
+
+	  var request = this._remote.requestBookOffers(this.toJSON());
+	  request.once('success', handleOffers);
+	  request.once('error', handleError);
+	  request.request();
+
+	  return request;
+	};
+
+	/**
+	 * Subscribe to transactions stream
+	 */
+
+	OrderBook.prototype.subscribeTransactions = function() {
+	  var self = this;
+
+	  if (!this._shouldSubscribe) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('subscribing to transactions');
+	  }
+
+	  function handleSubscribed() {
+	    self._subscribed = true;
+	    if (self._remote.trace) {
+	      log.info('subscribed to transactions');
+	    }
+	  };
+
+	  function handleError(err) {
+	    if (self._remote.trace) {
+	      log.info('failed to subscribe to transactions', self._key, err);
+	    }
+	  };
+
+	  var request = this._remote.requestSubscribe();
+	  request.addStream('transactions');
+	  request.once('success', handleSubscribed);
+	  request.once('error', handleError);
+	  request.request();
+
+	  return request;
+	};
 
 	/**
 	 * Get offers model asynchronously.
@@ -9515,30 +10070,286 @@ var ripple =
 	 * This function takes a callback and calls it with an array containing the
 	 * current set of offers in this order book.
 	 *
-	 * If the data is available immediately, the callback may be called synchronously.
+	 * If the data is available immediately, the callback may be called
+	 * synchronously.
+	 *
+	 * @param {Function} callback
 	 */
-	OrderBook.prototype.offers = function (callback) {
+
+	OrderBook.prototype.offers =
+	OrderBook.prototype.getOffers = function(callback) {
+	  assert.strictEqual(typeof callback, 'function', 'Callback missing');
+
 	  var self = this;
 
-	  if (typeof callback === 'function') {
-	    if (this._sync) {
-	      callback(this._offers);
-	    } else {
-	      this.once('model', callback);
-	    }
+	  if (this._synchronized) {
+	    callback(null, this._offers);
+	  } else {
+	    this.once('model', function(m) {
+	      callback(null, m);
+	    });
 	  }
 
 	  return this;
 	};
 
 	/**
-	 * Return latest known offers.
+	 * Return latest known offers
 	 *
 	 * Usually, this will just be an empty array if the order book hasn't been
 	 * loaded yet. But this accessor may be convenient in some circumstances.
+	 *
+	 * @return {Array} offers
 	 */
-	OrderBook.prototype.offersSync = function () {
+
+	OrderBook.prototype.offersSync =
+	OrderBook.prototype.getOffersSync = function() {
 	  return this._offers;
+	};
+
+	/**
+	 * Insert an offer into the orderbook
+	 *
+	 * @param {Object} node
+	 */
+
+	OrderBook.prototype.insertOffer = function(node, fundedAmount) {
+	  if (this._remote.trace) {
+	    log.info('inserting offer', this._key, node.fields);
+	  }
+
+	  var nodeFields = node.fields;
+
+	  nodeFields.index = node.ledgerIndex;
+
+	  if (!isNaN(fundedAmount)) {
+	    this.setFundedAmount(nodeFields, fundedAmount);
+	    this.addCachedFunds(nodeFields.Account, fundedAmount);
+	  }
+
+	  var DATE_REF = {
+	    reference_date: new Date()
+	  };
+
+	  // XXX Should use Amount#from_quality
+	  var price = Amount.from_json(
+	    nodeFields.TakerPays
+	  ).ratio_human(node.fields.TakerGets, DATE_REF);
+
+	  for (var i=0, l=this._offers.length; i<l; i++) {
+	    var offer = this._offers[i];
+
+	    var priceItem = Amount.from_json(
+	      offer.TakerPays
+	    ).ratio_human(offer.TakerGets, DATE_REF);
+
+	    if (price.compareTo(priceItem) <= 0) {
+	      this._offers.splice(i, 0, nodeFields);
+	      break;
+	    } else if (i === (l - 1)) {
+	      this._offers.push(nodeFields);
+	    }
+	  }
+
+	  this.emit('offer_added', nodeFields);
+	};
+
+	/**
+	 * Modify an existing offer in the orderbook
+	 *
+	 * @param {Object} node
+	 * @param {Boolean} isDeletedNode
+	 */
+
+	OrderBook.prototype.modifyOffer = function(node, isDeletedNode) {
+	  if (this._remote.trace) {
+	    if (isDeletedNode) {
+	      log.info('deleting offer', this._key, node.fields);
+	    } else {
+	      log.info('modifying offer', this._key, node.fields);
+	    }
+	  }
+
+	  for (var i=0; i<this._offers.length; i++) {
+	    var offer = this._offers[i];
+	    if (offer.index === node.ledgerIndex) {
+	      if (isDeletedNode) {
+	        // Multiple offers same account?
+	        this._offers.splice(i, 1);
+	        this.emit('offer_removed', offer);
+	      } else {
+	        // TODO: This assumes no fields are deleted, which is
+	        // probably a safe assumption, but should be checked.
+	        var previousOffer = extend({}, offer);
+	        extend(offer, node.fieldsFinal);
+	        this.emit('offer_changed', previousOffer, offer);
+	      }
+	      break;
+	    }
+	  }
+	};
+
+	/**
+	 * Update funded status on offers whose account's balance has changed
+	 *
+	 * Update cached account funds
+	 *
+	 * @param {String} account address
+	 * @param {String|Object} offer funds
+	 */
+
+	OrderBook.prototype.updateOfferFunds = function(account, fundedAmount) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(!isNaN(fundedAmount), 'Funded amount is invalid');
+
+	  if (this._remote.trace) {
+	    log.info('updating offer funds', this._key, account, fundedAmount);
+	  }
+
+	  // Update cached account funds
+	  this.addCachedFunds(account, fundedAmount);
+
+	  for (var i=0; i<this._offers.length; i++) {
+	    var offer = this._offers[i];
+
+	    if (offer.Account === account) {
+	      // Update funds for account's offer
+	      var previousOffer = extend({}, offer);
+	      var previousAmount = offer.taker_gets_funded;
+
+	      this.setFundedAmount(offer, fundedAmount);
+
+	      this.emit('offer_changed', previousOffer, offer);
+	      this.emit('offer_funds_changed', offer, previousAmount, fundedAmount);
+	    }
+	  }
+	};
+
+	/**
+	 * Notify orderbook of a relevant transaction
+	 *
+	 * @param {Object} transaction
+	 * @api private
+	 */
+
+	OrderBook.prototype.notify = function(message) {
+	  var self = this;
+
+	  // Unsubscribed from OrderBook
+	  if (!this._subscribed) {
+	    return;
+	  }
+
+	  var affectedNodes = message.mmeta.getNodes({
+	    entryType: 'Offer',
+	    bookKey: this._key
+	  });
+
+	  if (affectedNodes.length < 1) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('notifying', this._key, message.transaction.hash);
+	  }
+
+	  var tradeGets = Amount.from_json(
+	    '0' + ((Currency.from_json(this._currencyGets).is_native())
+	           ? ''
+	           : ('/' + this._currencyGets + '/' + this._issuerGets))
+	  );
+
+	  var tradePays = Amount.from_json(
+	    '0' + ((Currency.from_json(this._currencyPays).is_native())
+	           ? ''
+	           : ('/' + this._currencyPays + '/' + this._issuerPays))
+	  );
+
+	  function handleNode(node, callback) {
+	    var isDeletedNode = node.nodeType === 'DeletedNode';
+	    var isOfferCancel = message.transaction.TransactionType === 'OfferCancel';
+
+	    switch (node.nodeType) {
+	      case 'DeletedNode':
+	      case 'ModifiedNode':
+	         self.modifyOffer(node, isDeletedNode);
+
+	        // We don't want to count an OfferCancel as a trade
+	        if (!isOfferCancel) {
+	          tradeGets = tradeGets.add(node.fieldsPrev.TakerGets);
+	          tradePays = tradePays.add(node.fieldsPrev.TakerPays);
+
+	          if (isDeletedNode) {
+	            if (self.decrementOfferCount(node.fields.Account) < 1) {
+	              self.removeCachedFunds(node.fields.Account);
+	            }
+	          } else {
+	            tradeGets = tradeGets.subtract(node.fieldsFinal.TakerGets);
+	            tradePays = tradePays.subtract(node.fieldsFinal.TakerPays);
+	          }
+	        }
+	        callback();
+	        break;
+
+	      case 'CreatedNode':
+	        self.incrementOfferCount(node.fields.Account);
+
+	        var fundedAmount = message.transaction.owner_funds;
+
+	        if (!isNaN(fundedAmount)) {
+	          self.insertOffer(node, fundedAmount);
+	          return callback();
+	        }
+
+	        // Get the offer account's balance from server
+	        self.requestFundedAmount(
+	          node.fields.Account, function(err, fundedAmount) {
+	          if (err) {
+	            // XXX Now what?
+	          } else {
+	            self.insertOffer(node, fundedAmount);
+	          }
+	          callback();
+	        });
+	        break;
+	    }
+	  };
+
+	  async.eachSeries(affectedNodes, handleNode, function() {
+	    self.emit('transaction', message);
+	    self.emit('model', self._offers);
+	    if (!tradeGets.is_zero()) {
+	      self.emit('trade', tradePays, tradeGets);
+	    }
+	  });
+	};
+
+	/**
+	 * Get request-representation of orderbook
+	 *
+	 * @return {Object} json
+	 */
+
+	OrderBook.prototype.toJSON =
+	OrderBook.prototype.to_json = function() {
+	  var json = {
+	    taker_gets: {
+	      currency: this._currencyGets.to_hex()
+	    },
+	    taker_pays: {
+	      currency: this._currencyPays.to_hex()
+	    }
+	  };
+
+	  if (!this._currencyGets.is_native()) {
+	    json.taker_gets.issuer = this._issuerGets;
+	  }
+
+	  if (!this._currencyPays.is_native()) {
+	    json.taker_pays.issuer = this._issuerPays;
+	  }
+
+	  return json;
 	};
 
 	exports.OrderBook = OrderBook;
@@ -10067,6 +10878,13 @@ var ripple =
 	      case 'tefPAST_SEQ':
 	        self._resubmit(1, tx);
 	        break;
+	      case 'tefALREADY':
+	        if (tx.responses === tx.submissions) {
+	          tx.emit('error', message);
+	        } else {
+	          submitRequest.once('success', submitted);
+	        }
+	        break;
 	      default:
 	        tx.emit('error', message);
 	    }
@@ -10131,6 +10949,7 @@ var ripple =
 	    message.result = message.engine_result || '';
 
 	    tx.result = message;
+	    tx.responses += 1;
 
 	    if (remote.trace) {
 	      log.info('submit response:', message);
@@ -10224,7 +11043,7 @@ var ripple =
 	    }
 
 	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
-	    submitRequest.broadcast();
+	    tx.submissions = submitRequest.broadcast();
 
 	    tx.attempts++;
 	    tx.emit('postsubmit');
@@ -10337,6 +11156,8 @@ var ripple =
 	  }
 
 	  tx.attempts = 0;
+	  tx.submissions = 0;
+	  tx.responses = 0;
 
 	  // ND: this is the ONLY place we put the tx into the queue. The
 	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
@@ -10351,149 +11172,6 @@ var ripple =
 
 /***/ },
 /* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// leaf node in tree
-	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Convert a JavaScript number to IEEE-754 Double Precision
-	// value represented as an array of 8 bytes (octets)
-	//
-	// Based on:
-	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
-	//
-	// Found and modified from:
-	// https://gist.github.com/bartaz/1119041
-
-	var Float = exports.Float = {};
-
-	Float.toIEEE754 = function(v, ebits, fbits) {
-
-	  var bias = (1 << (ebits - 1)) - 1;
-
-	  // Compute sign, exponent, fraction
-	  var s, e, f;
-	  if (isNaN(v)) {
-	    e = (1 << bias) - 1; f = 1; s = 0;
-	  }
-	  else if (v === Infinity || v === -Infinity) {
-	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
-	  }
-	  else if (v === 0) {
-	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
-	  }
-	  else {
-	    s = v < 0;
-	    v = Math.abs(v);
-
-	    if (v >= Math.pow(2, 1 - bias)) {
-	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
-	      e = ln + bias;
-	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
-	    }
-	    else {
-	      e = 0;
-	      f = v / Math.pow(2, 1 - bias - fbits);
-	    }
-	  }
-
-	  // Pack sign, exponent, fraction
-	  var i, bits = [];
-	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
-	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
-	  bits.push(s ? 1 : 0);
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Bits to bytes
-	  var bytes = [];
-	  while (str.length) {
-	    bytes.push(parseInt(str.substring(0, 8), 2));
-	    str = str.substring(8);
-	  }
-	  return bytes;
-	}
-
-	Float.fromIEEE754 = function(bytes, ebits, fbits) {
-
-	  // Bytes to bits
-	  var bits = [];
-	  for (var i = bytes.length; i; i -= 1) {
-	    var byte = bytes[i - 1];
-	    for (var j = 8; j; j -= 1) {
-	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
-	    }
-	  }
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Unpack sign, exponent, fraction
-	  var bias = (1 << (ebits - 1)) - 1;
-	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
-	  var e = parseInt(str.substring(1, 1 + ebits), 2);
-	  var f = parseInt(str.substring(1 + ebits), 2);
-
-	  // Produce number
-	  if (e === (1 << ebits) - 1) {
-	    return f !== 0 ? NaN : s * Infinity;
-	  }
-	  else if (e > 0) {
-	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
-	  }
-	  else if (f !== 0) {
-	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
-	  }
-	  else {
-	    return s * 0;
-	  }
-	}
-
-	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
-	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
-	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
-	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
-
-
-	// Convert array of octets to string binary representation
-	// by bartaz
-
-	Float.toIEEE754DoubleString = function(v) {
-	  return exports.toIEEE754Double(v)
-	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
-	    .join('')
-	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
-	}
-
-/***/ },
-/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils   = __webpack_require__(19);
@@ -10792,6 +11470,149 @@ var ripple =
 	exports.UInt = UInt;
 
 	// vim:sw=2:sts=2:ts=8:et
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Convert a JavaScript number to IEEE-754 Double Precision
+	// value represented as an array of 8 bytes (octets)
+	//
+	// Based on:
+	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
+	//
+	// Found and modified from:
+	// https://gist.github.com/bartaz/1119041
+
+	var Float = exports.Float = {};
+
+	Float.toIEEE754 = function(v, ebits, fbits) {
+
+	  var bias = (1 << (ebits - 1)) - 1;
+
+	  // Compute sign, exponent, fraction
+	  var s, e, f;
+	  if (isNaN(v)) {
+	    e = (1 << bias) - 1; f = 1; s = 0;
+	  }
+	  else if (v === Infinity || v === -Infinity) {
+	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
+	  }
+	  else if (v === 0) {
+	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
+	  }
+	  else {
+	    s = v < 0;
+	    v = Math.abs(v);
+
+	    if (v >= Math.pow(2, 1 - bias)) {
+	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
+	      e = ln + bias;
+	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
+	    }
+	    else {
+	      e = 0;
+	      f = v / Math.pow(2, 1 - bias - fbits);
+	    }
+	  }
+
+	  // Pack sign, exponent, fraction
+	  var i, bits = [];
+	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
+	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
+	  bits.push(s ? 1 : 0);
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Bits to bytes
+	  var bytes = [];
+	  while (str.length) {
+	    bytes.push(parseInt(str.substring(0, 8), 2));
+	    str = str.substring(8);
+	  }
+	  return bytes;
+	}
+
+	Float.fromIEEE754 = function(bytes, ebits, fbits) {
+
+	  // Bytes to bits
+	  var bits = [];
+	  for (var i = bytes.length; i; i -= 1) {
+	    var byte = bytes[i - 1];
+	    for (var j = 8; j; j -= 1) {
+	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
+	    }
+	  }
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Unpack sign, exponent, fraction
+	  var bias = (1 << (ebits - 1)) - 1;
+	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
+	  var e = parseInt(str.substring(1, 1 + ebits), 2);
+	  var f = parseInt(str.substring(1 + ebits), 2);
+
+	  // Produce number
+	  if (e === (1 << ebits) - 1) {
+	    return f !== 0 ? NaN : s * Infinity;
+	  }
+	  else if (e > 0) {
+	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
+	  }
+	  else if (f !== 0) {
+	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
+	  }
+	  else {
+	    return s * 0;
+	  }
+	}
+
+	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
+	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
+	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
+	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
+
+
+	// Convert array of octets to string binary representation
+	// by bartaz
+
+	Float.toIEEE754DoubleString = function(v) {
+	  return exports.toIEEE754Double(v)
+	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
+	    .join('')
+	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
+	}
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// leaf node in tree
+	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
 
 
 /***/ },
@@ -20550,7 +21371,7 @@ var ripple =
 	 */
 
 	var base64 = __webpack_require__(65)
-	var ieee754 = __webpack_require__(59)
+	var ieee754 = __webpack_require__(60)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = Buffer
@@ -21744,7 +22565,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(63);
+	var punycode = __webpack_require__(64);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -21812,7 +22633,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(64);
+	    querystring = __webpack_require__(63);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && typeof(url) === 'object' && url.href) return url;
@@ -22551,7 +23372,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(43);
-	var UInt   = __webpack_require__(28).UInt;
+	var UInt   = __webpack_require__(26).UInt;
 
 	//
 	// UInt128 support
@@ -25215,9 +26036,9 @@ var ripple =
 /* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(68)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(69)
 
-	var md5 = toConstructor(__webpack_require__(60))
+	var md5 = toConstructor(__webpack_require__(59))
 	var rmd160 = toConstructor(__webpack_require__(70))
 
 	function toConstructor (fn) {
@@ -25647,96 +26468,6 @@ var ripple =
 /* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-	  var e, m,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      nBits = -7,
-	      i = isLE ? (nBytes - 1) : 0,
-	      d = isLE ? -1 : 1,
-	      s = buffer[offset + i];
-
-	  i += d;
-
-	  e = s & ((1 << (-nBits)) - 1);
-	  s >>= (-nBits);
-	  nBits += eLen;
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  m = e & ((1 << (-nBits)) - 1);
-	  e >>= (-nBits);
-	  nBits += mLen;
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  if (e === 0) {
-	    e = 1 - eBias;
-	  } else if (e === eMax) {
-	    return m ? NaN : ((s ? -1 : 1) * Infinity);
-	  } else {
-	    m = m + Math.pow(2, mLen);
-	    e = e - eBias;
-	  }
-	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-	};
-
-	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-	  var e, m, c,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-	      i = isLE ? 0 : (nBytes - 1),
-	      d = isLE ? 1 : -1,
-	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-	  value = Math.abs(value);
-
-	  if (isNaN(value) || value === Infinity) {
-	    m = isNaN(value) ? 1 : 0;
-	    e = eMax;
-	  } else {
-	    e = Math.floor(Math.log(value) / Math.LN2);
-	    if (value * (c = Math.pow(2, -e)) < 1) {
-	      e--;
-	      c *= 2;
-	    }
-	    if (e + eBias >= 1) {
-	      value += rt / c;
-	    } else {
-	      value += rt * Math.pow(2, 1 - eBias);
-	    }
-	    if (value * c >= 2) {
-	      e++;
-	      c /= 2;
-	    }
-
-	    if (e + eBias >= eMax) {
-	      m = 0;
-	      e = eMax;
-	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen);
-	      e = e + eBias;
-	    } else {
-	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-	      e = 0;
-	    }
-	  }
-
-	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-	  e = (e << mLen) | m;
-	  eLen += mLen;
-	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-	  buffer[offset + i - d] |= s * 128;
-	};
-
-
-/***/ },
-/* 60 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -25746,7 +26477,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(69);
+	var helpers = __webpack_require__(68);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -25891,6 +26622,96 @@ var ripple =
 
 	module.exports = function md5(buf) {
 	  return helpers.hash(buf, core_md5, 16);
+	};
+
+
+/***/ },
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+	  var e, m,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      nBits = -7,
+	      i = isLE ? (nBytes - 1) : 0,
+	      d = isLE ? -1 : 1,
+	      s = buffer[offset + i];
+
+	  i += d;
+
+	  e = s & ((1 << (-nBits)) - 1);
+	  s >>= (-nBits);
+	  nBits += eLen;
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  m = e & ((1 << (-nBits)) - 1);
+	  e >>= (-nBits);
+	  nBits += mLen;
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  if (e === 0) {
+	    e = 1 - eBias;
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity);
+	  } else {
+	    m = m + Math.pow(2, mLen);
+	    e = e - eBias;
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+	};
+
+	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+	  var e, m, c,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+	      i = isLE ? 0 : (nBytes - 1),
+	      d = isLE ? 1 : -1,
+	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+	  value = Math.abs(value);
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0;
+	    e = eMax;
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2);
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--;
+	      c *= 2;
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c;
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias);
+	    }
+	    if (value * c >= 2) {
+	      e++;
+	      c /= 2;
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0;
+	      e = eMax;
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen);
+	      e = e + eBias;
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+	      e = 0;
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+	  e = (e << mLen) | m;
+	  eLen += mLen;
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+	  buffer[offset + i - d] |= s * 128;
 	};
 
 
@@ -26520,6 +27341,120 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// Query String Utilities
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = (function(require, exports, module, undefined) {
+	"use strict";
+
+	var QueryString = exports;
+
+	function charCode(c) {
+	  return c.charCodeAt(0);
+	}
+
+	QueryString.unescape = decodeURIComponent;
+	QueryString.escape = encodeURIComponent;
+
+	var stringifyPrimitive = function(v) {
+	  switch (typeof v) {
+	    case 'string':
+	      return v;
+
+	    case 'boolean':
+	      return v ? 'true' : 'false';
+
+	    case 'number':
+	      return isFinite(v) ? v : '';
+
+	    default:
+	      return '';
+	  }
+	};
+
+
+	QueryString.stringify = QueryString.encode = function(obj, sep, eq, name) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  obj = (obj === null) ? undefined : obj;
+
+	  switch (typeof obj) {
+	    case 'object':
+	      return Object.keys(obj).map(function(k) {
+	        if (Array.isArray(obj[k])) {
+	          return obj[k].map(function(v) {
+	            return QueryString.escape(stringifyPrimitive(k)) +
+	                   eq +
+	                   QueryString.escape(stringifyPrimitive(v));
+	          }).join(sep);
+	        } else {
+	          return QueryString.escape(stringifyPrimitive(k)) +
+	                 eq +
+	                 QueryString.escape(stringifyPrimitive(obj[k]));
+	        }
+	      }).join(sep);
+
+	    default:
+	      if (!name) return '';
+	      return QueryString.escape(stringifyPrimitive(name)) + eq +
+	             QueryString.escape(stringifyPrimitive(obj));
+	  }
+	};
+
+	// Parse a key=val string.
+	QueryString.parse = QueryString.decode = function(qs, sep, eq) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  var obj = {};
+
+	  if (typeof qs !== 'string' || qs.length === 0) {
+	    return obj;
+	  }
+
+	  qs.split(sep).forEach(function(kvp) {
+	    var x = kvp.split(eq);
+	    var k = QueryString.unescape(x[0], true);
+	    var v = QueryString.unescape(x.slice(1).join(eq), true);
+
+	    if (!(k in obj)) {
+	      obj[k] = v;
+	    } else if (!Array.isArray(obj[k])) {
+	      obj[k] = [obj[k], v];
+	    } else {
+	      obj[k].push(v);
+	    }
+	  });
+
+	  return obj;
+	};
+
+	}.call(exports, __webpack_require__, exports, module)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var require;/* WEBPACK VAR INJECTION */(function(module) {/*! http://mths.be/punycode by @mathias */
 	;(function(root) {
 
@@ -27034,120 +27969,6 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(76)(module)))
 
 /***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// Query String Utilities
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = (function(require, exports, module, undefined) {
-	"use strict";
-
-	var QueryString = exports;
-
-	function charCode(c) {
-	  return c.charCodeAt(0);
-	}
-
-	QueryString.unescape = decodeURIComponent;
-	QueryString.escape = encodeURIComponent;
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-
-	QueryString.stringify = QueryString.encode = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  obj = (obj === null) ? undefined : obj;
-
-	  switch (typeof obj) {
-	    case 'object':
-	      return Object.keys(obj).map(function(k) {
-	        if (Array.isArray(obj[k])) {
-	          return obj[k].map(function(v) {
-	            return QueryString.escape(stringifyPrimitive(k)) +
-	                   eq +
-	                   QueryString.escape(stringifyPrimitive(v));
-	          }).join(sep);
-	        } else {
-	          return QueryString.escape(stringifyPrimitive(k)) +
-	                 eq +
-	                 QueryString.escape(stringifyPrimitive(obj[k]));
-	        }
-	      }).join(sep);
-
-	    default:
-	      if (!name) return '';
-	      return QueryString.escape(stringifyPrimitive(name)) + eq +
-	             QueryString.escape(stringifyPrimitive(obj));
-	  }
-	};
-
-	// Parse a key=val string.
-	QueryString.parse = QueryString.decode = function(qs, sep, eq) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  qs.split(sep).forEach(function(kvp) {
-	    var x = kvp.split(eq);
-	    var k = QueryString.unescape(x[0], true);
-	    var v = QueryString.unescape(x.slice(1).join(eq), true);
-
-	    if (!(k in obj)) {
-	      obj[k] = v;
-	    } else if (!Array.isArray(obj[k])) {
-	      obj[k] = [obj[k], v];
-	    } else {
-	      obj[k].push(v);
-	    }
-	  });
-
-	  return obj;
-	};
-
-	}.call(exports, __webpack_require__, exports, module)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -27476,24 +28297,6 @@ var ripple =
 /* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var exports = module.exports = function (alg) {
-	  var Alg = exports[alg]
-	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
-	  return new Alg()
-	}
-
-	var Buffer = __webpack_require__(78).Buffer
-	var Hash   = __webpack_require__(72)(Buffer)
-
-	exports.sha =
-	exports.sha1 = __webpack_require__(73)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(74)(Buffer, Hash)
-
-
-/***/ },
-/* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
 	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
 	var chrsz = 8;
@@ -27530,6 +28333,24 @@ var ripple =
 	module.exports = { hash: hash };
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(40).Buffer))
+
+/***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(79).Buffer
+	var Hash   = __webpack_require__(72)(Buffer)
+
+	exports.sha =
+	exports.sha1 = __webpack_require__(73)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(74)(Buffer, Hash)
+
 
 /***/ },
 /* 70 */
@@ -27758,7 +28579,7 @@ var ripple =
 /* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var u = __webpack_require__(79)
+	var u = __webpack_require__(78)
 	var write = u.write
 	var fill = u.zeroFill
 
@@ -28039,7 +28860,7 @@ var ripple =
 	var inherits = __webpack_require__(37).inherits
 	var BE       = false
 	var LE       = true
-	var u        = __webpack_require__(79)
+	var u        = __webpack_require__(78)
 
 	module.exports = function (Buffer, Hash) {
 
@@ -28246,6 +29067,48 @@ var ripple =
 
 /***/ },
 /* 78 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.write = write
+	exports.zeroFill = zeroFill
+
+	exports.toString = toString
+
+	function write (buffer, string, enc, start, from, to, LE) {
+	  var l = (to - from)
+	  if(enc === 'ascii' || enc === 'binary') {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string.charCodeAt(i + from)
+	    }
+	  }
+	  else if(enc == null) {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string[i + from]
+	    }
+	  }
+	  else if(enc === 'hex') {
+	    for(var i = 0; i < l; i++) {
+	      var j = from + i
+	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
+	    }
+	  }
+	  else if(enc === 'base64') {
+	    throw new Error('base64 encoding not yet supported')
+	  }
+	  else
+	    throw new Error(enc +' encoding not yet supported')
+	}
+
+	//always fill to the end!
+	function zeroFill(buf, from) {
+	  for(var i = from; i < buf.length; i++)
+	    buf[i] = 0
+	}
+
+
+
+/***/ },
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -29406,48 +30269,6 @@ var ripple =
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(40).Buffer))
-
-/***/ },
-/* 79 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.write = write
-	exports.zeroFill = zeroFill
-
-	exports.toString = toString
-
-	function write (buffer, string, enc, start, from, to, LE) {
-	  var l = (to - from)
-	  if(enc === 'ascii' || enc === 'binary') {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string.charCodeAt(i + from)
-	    }
-	  }
-	  else if(enc == null) {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string[i + from]
-	    }
-	  }
-	  else if(enc === 'hex') {
-	    for(var i = 0; i < l; i++) {
-	      var j = from + i
-	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
-	    }
-	  }
-	  else if(enc === 'base64') {
-	    throw new Error('base64 encoding not yet supported')
-	  }
-	  else
-	    throw new Error(enc +' encoding not yet supported')
-	}
-
-	//always fill to the end!
-	function zeroFill(buf, from) {
-	  for(var i = from; i < buf.length; i++)
-	    buf[i] = 0
-	}
-
-
 
 /***/ },
 /* 80 */

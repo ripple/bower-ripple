@@ -1,9 +1,8 @@
 {
   "name": "ripple",
-  "version": "0.7.39",
+  "version": "0.8.0-beta",
   "homepage": "https://github.com/ripple/ripple-lib",
   "description": "The Ripple JavaScript Library. Connect and interact to the Ripple network using the WebSocket protocol",
   "main": "./ripple.js",
-  "dependencies": {
-  }
+  "dependencies": {}
 }
