@@ -196,6 +196,7 @@ var ripple =
 	  this.trusted = Boolean(opts.trusted);
 	  this.state = 'offline'; // 'online', 'offline'
 	  this._server_fatal = false; // True, if we know server exited.
+	  this._allow_partial_history = (typeof opts.allow_partial_history === 'boolean') ? opts.allow_partial_history : true;
 
 	  this.local_sequence = Boolean(opts.local_sequence); // Locally track sequence numbers
 	  this.local_fee = (typeof opts.local_fee === 'boolean') ? opts.local_fee : true;// Locally set fees
@@ -2149,7 +2150,7 @@ var ripple =
 	  }
 
 	  if (currency.hasOwnProperty('currency')) {
-	    newCurrency.currency = Currency.json_rewrite(currency.currency);
+	    newCurrency.currency = Currency.json_rewrite(currency.currency, {force_hex:true});
 	  }
 
 	  return newCurrency;
@@ -2925,6 +2926,10 @@ var ripple =
 
 	  cMinOffset:        -96,
 	  cMaxOffset:        80,
+
+	  // Maximum possible amount for non-XRP currencies using the maximum mantissa
+	  // with maximum exponent. Corresponds to hex 0xEC6386F26FC0FFFF.
+	  max_value:         '9999999999999999e80'
 	};
 
 
@@ -4598,7 +4603,7 @@ var ripple =
 	var Seed             = __webpack_require__(10).Seed;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
-	var hashprefixes     = __webpack_require__(28);
+	var hashprefixes     = __webpack_require__(27);
 	var config           = __webpack_require__(21);
 
 	function Transaction(remote) {
@@ -4711,6 +4716,9 @@ var ripple =
 	    asfNoFreeze:       6,
 	    asfGlobalFreeze:   7
 	  }
+	};
+
+	Transaction.MEMO_TYPES = {
 	};
 
 	Transaction.formats = __webpack_require__(18).tx;
@@ -5141,6 +5149,48 @@ var ripple =
 	  return this;
 	};
 
+	/**
+	 * Add a Memo to transaction. Memos can be used as key-value,
+	 * using the MemoType as a key
+	 *
+	 * @param {String} type
+	 * @param {String} data
+	 */
+
+	Transaction.prototype.addMemo = function(type, data) {
+	  if (!/(undefined|string)/.test(typeof type)) {
+	    throw new Error('MemoType must be a string');
+	  }
+
+	  if (!/(undefined|string)/.test(typeof data)) {
+	    throw new Error('MemoData must be a string');
+	  }
+
+	  function toHex(str) {
+	    return sjcl.codec.hex.fromBits(sjcl.codec.utf8String.toBits(str));
+	  };
+
+	  var memo = { };
+
+	  if (type) {
+	    if (Transaction.MEMO_TYPES[type]) {
+	      //XXX Maybe in the future we want a schema validator for
+	      //memo types
+	      memo.MemoType = Transaction.MEMO_TYPES[type];
+	    } else {
+	      memo.MemoType = toHex(type);
+	    }
+	  }
+
+	  if (data) {
+	    memo.MemoData = toHex(data);
+	  }
+
+	  this.tx_json.Memos = (this.tx_json.Memos || []).concat({ Memo: memo });
+
+	  return this;
+	};
+
 	// Options:
 	//  .domain()           NYI
 	//  .flags()
@@ -5460,7 +5510,7 @@ var ripple =
 	var extend    = __webpack_require__(43);
 	var UInt160 = __webpack_require__(8).UInt160;
 	var utils = __webpack_require__(19);
-	var Float = __webpack_require__(27).Float;
+	var Float = __webpack_require__(26).Float;
 
 	//
 	// Currency support
@@ -6001,7 +6051,7 @@ var ripple =
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = __webpack_require__(26).UInt;
+	var UInt = __webpack_require__(28).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6108,7 +6158,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(43);
-	var UInt   = __webpack_require__(26).UInt;
+	var UInt   = __webpack_require__(28).UInt;
 
 	//
 	// UInt256 support
@@ -6146,7 +6196,7 @@ var ripple =
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(26).UInt;
+	var UInt    = __webpack_require__(28).UInt;
 	var UInt256 = __webpack_require__(9).UInt256;
 	var UInt160 = __webpack_require__(8).UInt160;
 	var KeyPair = __webpack_require__(29).KeyPair;
@@ -8573,7 +8623,6 @@ var ripple =
 	  this._lastLedgerClose = NaN;
 
 	  this._score = 0;
-
 	  this._scoreWeights = {
 	    ledgerclose: 5,
 	    response: 1
@@ -8851,7 +8900,7 @@ var ripple =
 	    if (this.isConnected()) {
 	      this.once('disconnect', reconnect);
 	      this.disconnect();
-	    } else  {
+	    } else {
 	      reconnect();
 	    }
 	  }
@@ -9124,6 +9173,12 @@ var ripple =
 	 */
 
 	Server.prototype._handleResponseSubscribe = function(message) {
+	  if (!this._remote._allow_partial_history
+	      && !Server.hasFullLedgerHistory(message)) {
+	    // Server has partial history and Remote has been configured to disallow
+	    // servers with incomplete history
+	    return this.reconnect();
+	  }
 	  if (Server.isLoadStatus(message)) {
 	    this._load_base    = message.load_base || 256;
 	    this._load_factor  = message.load_factor || 256;
@@ -9141,9 +9196,24 @@ var ripple =
 	};
 
 	/**
+	 * Check that server message indicates that server has complete ledger history
+	 *
+	 * @param {Object} message
+	 * @return {Boolean}
+	 */
+
+	Server.hasFullLedgerHistory = function(message) {
+	  return (typeof message === 'object')
+	  && (message.server_status === 'full')
+	  && (typeof message.validated_ledgers === 'string')
+	  && (message.validated_ledgers.split('-').length === 2);
+	};
+
+	/**
 	 * Check that received message from rippled is valid
 	 *
-	 * @api private
+	 * @param {Object} message
+	 * @return {Boolean}
 	 */
 
 	Server.isValidMessage = function(message) {
@@ -9152,14 +9222,15 @@ var ripple =
 	};
 
 	/**
-	 * Check that received serverStatus message contains
-	 * load status information
+	 * Check that received serverStatus message contains load status information
 	 *
-	 * @api private
+	 * @param {Object} message
+	 * @return {Boolean}
 	 */
 
 	Server.isLoadStatus = function(message) {
-	  return (typeof message.load_base === 'number')
+	  return (typeof message === 'object')
+	      && (typeof message.load_base === 'number')
 	      && (typeof message.load_factor === 'number');
 	};
 
@@ -9180,10 +9251,10 @@ var ripple =
 	};
 
 	/**
-	 * Submit a Request object.
+	 * Submit a Request object
 	 *
-	 * Requests are indexed by message ID, which is repeated
-	 * in the response from rippled WebSocket server
+	 * Requests are indexed by message ID, which is repeated in the response from
+	 * rippled WebSocket server
 	 *
 	 * @param {Request} request
 	 * @api private
@@ -9419,6 +9490,7 @@ var ripple =
 
 	  this._remote.on('disconnect', function() {
 	    self._ownerFunds = { };
+	    self._offerCounts = { };
 	    self._synchronized = false;
 	  });
 
@@ -9483,10 +9555,20 @@ var ripple =
 	    log.info('subscribing', this._key);
 	  }
 
-	  this.requestTransferRate();
+	  var steps = [
+	    function(callback) {
+	      self.requestTransferRate(callback);
+	    },
+	    function(callback) {
+	      self.requestOffers(callback);
+	    },
+	    function(callback) {
+	      self.subscribeTransactions(callback);
+	    }
+	  ];
 
-	  this.requestOffers().once('success', function() {
-	    self.subscribeTransactions();
+	  async.series(steps, function(err) {
+	    //XXX What now?
 	  });
 	};
 
@@ -9506,8 +9588,10 @@ var ripple =
 	  this._shouldSubscribe = false;
 
 	  OrderBook.EVENTS.forEach(function(event) {
-	    this.removeAllListeners(event);
-	  }, this);
+	    if (self.listeners(event).length > 0) {
+	      self.removeAllListeners(event);
+	    }
+	  });
 
 	  this.emit('unsubscribe');
 	};
@@ -9614,10 +9698,8 @@ var ripple =
 	    return balance;
 	  }
 
-	  var adjustedBalance = Amount.from_json(balance
-	   + '/' + this._currencyGets.to_json()
-	   + '/' + this._issuerGets
-	  )
+	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
+	  var adjustedBalance = Amount.from_json(balance + iouSuffix)
 	  .divide(transferRate)
 	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
 	  .to_json()
@@ -9634,7 +9716,6 @@ var ripple =
 
 	OrderBook.prototype.requestTransferRate = function(callback) {
 	  var self = this;
-
 	  var issuer = this._issuerGets;
 
 	  this.once('transfer_rate', function(rate) {
@@ -9682,22 +9763,56 @@ var ripple =
 	  assert.strictEqual(typeof offer, 'object', 'Offer is invalid');
 	  assert(!isNaN(fundedAmount), 'Funds is invalid');
 
-	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
+	  if (fundedAmount === '0') {
+	    offer.taker_gets_funded = '0';
+	    offer.taker_pays_funded = '0';
+	    offer.is_fully_funded = false;
+	    return offer;
+	  }
 
-	  var takerGetsValue = (typeof offer.TakerGets === 'object')
+	  var iouSuffix = '/' + this._currencyGets.to_json()
+	                + '/' + this._issuerGets;
+
+	  offer.is_fully_funded = Amount.from_json(
+	    this._currencyGets.is_native() ? fundedAmount : fundedAmount + iouSuffix
+	  ).compareTo(Amount.from_json(offer.TakerGets)) >= 0;
+
+	  if (offer.is_fully_funded) {
+	    offer.taker_gets_funded = Amount.from_json(offer.TakerGets).to_text();
+	    offer.taker_pays_funded = Amount.from_json(offer.TakerPays).to_text();
+	    return offer;
+	  }
+
+	  offer.taker_gets_funded = fundedAmount;
+
+	  var takerPaysValue = typeof offer.TakerPays === 'object'
+	  ? offer.TakerPays.value
+	  : offer.TakerPays;
+
+	  var takerGetsValue = typeof offer.TakerGets === 'object'
 	  ? offer.TakerGets.value
 	  : offer.TakerGets;
 
-	  var takerGets = Amount.from_json(takerGetsValue + iouSuffix);
+	  var takerPays = Amount.from_json(
+	    takerPaysValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
 
-	  offer.is_fully_funded = Amount.from_json(
-	    fundedAmount + iouSuffix
-	  ).compareTo(takerGets) >= 0;
+	  var takerGets = Amount.from_json(
+	    takerGetsValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
 
-	  if (offer.is_fully_funded) {
-	    offer.taker_gets_funded = takerGetsValue;
+	  var fundedPays = Amount.from_json(
+	    fundedAmount + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
+
+	  var rate = takerPays.divide(takerGets);
+
+	  fundedPays = fundedPays.multiply(rate);
+
+	  if (fundedPays.compareTo(takerPays) < 0) {
+	    offer.taker_pays_funded = fundedPays.to_json().value;
 	  } else {
-	    offer.taker_gets_funded = fundedAmount;
+	    offer.taker_pays_funded = takerPays.to_json().value;
 	  }
 
 	  return offer;
@@ -9898,6 +10013,8 @@ var ripple =
 	    this.once('transfer_rate', function() {
 	      self.updateFundedAmounts(message);
 	    });
+
+	    this.requestTransferRate();
 	    return;
 	  }
 
@@ -9916,12 +10033,8 @@ var ripple =
 	    var result = this.getBalanceChange(node);
 
 	    if (result.isValid) {
-	      var account = result.account;
-	      var balance = result.balance;
-
-	      if (this.hasCachedFunds(account)) {
-	        var fundedAmount = this.applyTransferRate(balance);
-	        this.updateOfferFunds(account, fundedAmount);
+	      if (this.hasCachedFunds(result.account)) {
+	        this.updateOfferFunds(result.account, result.balance);
 	      }
 	    }
 	  }
@@ -9958,11 +10071,15 @@ var ripple =
 	 * Request orderbook entries from server
 	 */
 
-	OrderBook.prototype.requestOffers = function() {
+	OrderBook.prototype.requestOffers = function(callback) {
 	  var self = this;
 
+	  if (typeof callback !== 'function') {
+	    callback = function(){};
+	  }
+
 	  if (!this._shouldSubscribe) {
-	    return;
+	    return callback(new Error('Should not request offers'));
 	  }
 
 	  if (this._remote.trace) {
@@ -9972,26 +10089,15 @@ var ripple =
 	  function handleOffers(res) {
 	    if (!Array.isArray(res.offers)) {
 	      // XXX What now?
-	      return;
-	    }
-
-	    if (!self._currencyGets.is_native() && !self._issuerTransferRate) {
-	      // Defer until transfer rate is requested
-	      if (self._remote.trace) {
-	        log.info('waiting for transfer rate');
-	      }
-
-	      self.once('transfer_rate', function() {
-	        handleOffers(res);
-	      });
-	      return;
+	      return callback(new Error('Invalid response'));
 	    }
 
 	    if (self._remote.trace) {
 	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
 	    }
 
-	    self._offers = res.offers.map(function addOffer(offer) {
+	    for (var i=0, l=res.offers.length; i<l; i++) {
+	      var offer = res.offers[i];
 	      var fundedAmount;
 
 	      if (self.hasCachedFunds(offer.Account)) {
@@ -10003,13 +10109,14 @@ var ripple =
 
 	      self.setFundedAmount(offer, fundedAmount);
 	      self.incrementOfferCount(offer.Account);
-
-	      return offer;
-	    });
+	      self._offers.push(offer);
+	    }
 
 	    self._synchronized = true;
 
 	    self.emit('model', self._offers);
+
+	    callback(null, self._offers);
 	  };
 
 	  function handleError(err) {
@@ -10017,6 +10124,8 @@ var ripple =
 	    if (self._remote.trace) {
 	      log.info('failed to request offers', self._key, err);
 	    }
+
+	    callback(err);
 	  };
 
 	  var request = this._remote.requestBookOffers(this.toJSON());
@@ -10031,28 +10140,37 @@ var ripple =
 	 * Subscribe to transactions stream
 	 */
 
-	OrderBook.prototype.subscribeTransactions = function() {
+	OrderBook.prototype.subscribeTransactions = function(callback) {
 	  var self = this;
 
+	  if (typeof callback !== 'function') {
+	    callback = function(){};
+	  }
+
 	  if (!this._shouldSubscribe) {
-	    return;
+	    return callback('Should not subscribe');
 	  }
 
 	  if (this._remote.trace) {
 	    log.info('subscribing to transactions');
 	  }
 
-	  function handleSubscribed() {
-	    self._subscribed = true;
+	  function handleSubscribed(res) {
 	    if (self._remote.trace) {
 	      log.info('subscribed to transactions');
 	    }
+
+	    self._subscribed = true;
+
+	    callback(null, res);
 	  };
 
 	  function handleError(err) {
 	    if (self._remote.trace) {
 	      log.info('failed to subscribe to transactions', self._key, err);
 	    }
+
+	    callback(err);
 	  };
 
 	  var request = this._remote.requestSubscribe();
@@ -10198,13 +10316,15 @@ var ripple =
 	 * @param {String|Object} offer funds
 	 */
 
-	OrderBook.prototype.updateOfferFunds = function(account, fundedAmount) {
+	OrderBook.prototype.updateOfferFunds = function(account, balance) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(!isNaN(fundedAmount), 'Funded amount is invalid');
+	  assert(!isNaN(balance), 'Funded amount is invalid');
 
 	  if (this._remote.trace) {
 	    log.info('updating offer funds', this._key, account, fundedAmount);
 	  }
+
+	  var fundedAmount = this.applyTransferRate(balance);
 
 	  // Update cached account funds
 	  this.addCachedFunds(account, fundedAmount);
@@ -10212,15 +10332,28 @@ var ripple =
 	  for (var i=0; i<this._offers.length; i++) {
 	    var offer = this._offers[i];
 
-	    if (offer.Account === account) {
-	      // Update funds for account's offer
-	      var previousOffer = extend({}, offer);
-	      var previousAmount = offer.taker_gets_funded;
+	    if (offer.Account !== account) {
+	      continue;
+	    }
 
-	      this.setFundedAmount(offer, fundedAmount);
+	    var suffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
+	    var previousOffer = extend({}, offer);
+	    var previousFundedGets = Amount.from_json(offer.taker_gets_funded + suffix);
 
+	    offer.owner_funds = balance;
+	    this.setFundedAmount(offer, fundedAmount);
+
+	    var hasChangedFunds = !previousFundedGets.equals(
+	      Amount.from_json(offer.taker_gets_funded + suffix)
+	    );
+
+	    if (hasChangedFunds) {
 	      this.emit('offer_changed', previousOffer, offer);
-	      this.emit('offer_funds_changed', offer, previousAmount, fundedAmount);
+	      this.emit(
+	        'offer_funds_changed', offer,
+	        previousOffer.taker_gets_funded,
+	        offer.taker_gets_funded
+	      );
 	    }
 	  }
 	};
@@ -11174,6 +11307,149 @@ var ripple =
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Convert a JavaScript number to IEEE-754 Double Precision
+	// value represented as an array of 8 bytes (octets)
+	//
+	// Based on:
+	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
+	//
+	// Found and modified from:
+	// https://gist.github.com/bartaz/1119041
+
+	var Float = exports.Float = {};
+
+	Float.toIEEE754 = function(v, ebits, fbits) {
+
+	  var bias = (1 << (ebits - 1)) - 1;
+
+	  // Compute sign, exponent, fraction
+	  var s, e, f;
+	  if (isNaN(v)) {
+	    e = (1 << bias) - 1; f = 1; s = 0;
+	  }
+	  else if (v === Infinity || v === -Infinity) {
+	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
+	  }
+	  else if (v === 0) {
+	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
+	  }
+	  else {
+	    s = v < 0;
+	    v = Math.abs(v);
+
+	    if (v >= Math.pow(2, 1 - bias)) {
+	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
+	      e = ln + bias;
+	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
+	    }
+	    else {
+	      e = 0;
+	      f = v / Math.pow(2, 1 - bias - fbits);
+	    }
+	  }
+
+	  // Pack sign, exponent, fraction
+	  var i, bits = [];
+	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
+	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
+	  bits.push(s ? 1 : 0);
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Bits to bytes
+	  var bytes = [];
+	  while (str.length) {
+	    bytes.push(parseInt(str.substring(0, 8), 2));
+	    str = str.substring(8);
+	  }
+	  return bytes;
+	}
+
+	Float.fromIEEE754 = function(bytes, ebits, fbits) {
+
+	  // Bytes to bits
+	  var bits = [];
+	  for (var i = bytes.length; i; i -= 1) {
+	    var byte = bytes[i - 1];
+	    for (var j = 8; j; j -= 1) {
+	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
+	    }
+	  }
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Unpack sign, exponent, fraction
+	  var bias = (1 << (ebits - 1)) - 1;
+	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
+	  var e = parseInt(str.substring(1, 1 + ebits), 2);
+	  var f = parseInt(str.substring(1 + ebits), 2);
+
+	  // Produce number
+	  if (e === (1 << ebits) - 1) {
+	    return f !== 0 ? NaN : s * Infinity;
+	  }
+	  else if (e > 0) {
+	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
+	  }
+	  else if (f !== 0) {
+	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
+	  }
+	  else {
+	    return s * 0;
+	  }
+	}
+
+	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
+	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
+	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
+	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
+
+
+	// Convert array of octets to string binary representation
+	// by bartaz
+
+	Float.toIEEE754DoubleString = function(v) {
+	  return exports.toIEEE754Double(v)
+	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
+	    .join('')
+	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
+	}
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// leaf node in tree
+	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var utils   = __webpack_require__(19);
 	var sjcl    = utils.sjcl;
 	var config  = __webpack_require__(21);
@@ -11470,149 +11746,6 @@ var ripple =
 	exports.UInt = UInt;
 
 	// vim:sw=2:sts=2:ts=8:et
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Convert a JavaScript number to IEEE-754 Double Precision
-	// value represented as an array of 8 bytes (octets)
-	//
-	// Based on:
-	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
-	//
-	// Found and modified from:
-	// https://gist.github.com/bartaz/1119041
-
-	var Float = exports.Float = {};
-
-	Float.toIEEE754 = function(v, ebits, fbits) {
-
-	  var bias = (1 << (ebits - 1)) - 1;
-
-	  // Compute sign, exponent, fraction
-	  var s, e, f;
-	  if (isNaN(v)) {
-	    e = (1 << bias) - 1; f = 1; s = 0;
-	  }
-	  else if (v === Infinity || v === -Infinity) {
-	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
-	  }
-	  else if (v === 0) {
-	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
-	  }
-	  else {
-	    s = v < 0;
-	    v = Math.abs(v);
-
-	    if (v >= Math.pow(2, 1 - bias)) {
-	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
-	      e = ln + bias;
-	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
-	    }
-	    else {
-	      e = 0;
-	      f = v / Math.pow(2, 1 - bias - fbits);
-	    }
-	  }
-
-	  // Pack sign, exponent, fraction
-	  var i, bits = [];
-	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
-	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
-	  bits.push(s ? 1 : 0);
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Bits to bytes
-	  var bytes = [];
-	  while (str.length) {
-	    bytes.push(parseInt(str.substring(0, 8), 2));
-	    str = str.substring(8);
-	  }
-	  return bytes;
-	}
-
-	Float.fromIEEE754 = function(bytes, ebits, fbits) {
-
-	  // Bytes to bits
-	  var bits = [];
-	  for (var i = bytes.length; i; i -= 1) {
-	    var byte = bytes[i - 1];
-	    for (var j = 8; j; j -= 1) {
-	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
-	    }
-	  }
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Unpack sign, exponent, fraction
-	  var bias = (1 << (ebits - 1)) - 1;
-	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
-	  var e = parseInt(str.substring(1, 1 + ebits), 2);
-	  var f = parseInt(str.substring(1 + ebits), 2);
-
-	  // Produce number
-	  if (e === (1 << ebits) - 1) {
-	    return f !== 0 ? NaN : s * Infinity;
-	  }
-	  else if (e > 0) {
-	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
-	  }
-	  else if (f !== 0) {
-	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
-	  }
-	  else {
-	    return s * 0;
-	  }
-	}
-
-	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
-	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
-	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
-	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
-
-
-	// Convert array of octets to string binary representation
-	// by bartaz
-
-	Float.toIEEE754DoubleString = function(v) {
-	  return exports.toIEEE754Double(v)
-	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
-	    .join('')
-	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
-	}
-
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// leaf node in tree
-	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
 
 
 /***/ },
@@ -12070,7 +12203,7 @@ var ripple =
 
 	        // Next eight bits: offset/exponent
 	        hi |= ((97 + amount._offset) & 0xff) << 22;
-	        // Remaining 52 bits: mantissa
+	        // Remaining 54 bits: mantissa
 	        hi |= amount._value.shiftRight(32).intValue() & 0x3fffff;
 	        lo = amount._value.intValue() & 0xffffffff;
 	      }
@@ -12536,6 +12669,18 @@ var ripple =
 	  return sjcl.codec.hex.fromBits(sjcl.bitArray.bitSlice(hmac.encrypt(token), 0, 256));
 	};
 
+	/**
+	 * add entropy at each call to get random words
+	 * @param {number} nWords
+	 */
+	function randomWords (nWords) {
+	  for (var i = 0; i < 8; i++) {
+	    sjcl.random.addEntropy(Math.random(), 32, "Math.random()");
+	  }  
+	  
+	  return sjcl.random.randomWords(nWords);  
+	}
+
 	/****** exposed functions ******/
 
 	/**
@@ -12693,7 +12838,7 @@ var ripple =
 	 */
 
 	Crypt.createSecret = function (nWords) {
-	  return sjcl.codec.hex.fromBits(sjcl.random.randomWords(nWords));
+	  return sjcl.codec.hex.fromBits(randomWords(nWords));
 	};
 
 	/**
@@ -12701,7 +12846,7 @@ var ripple =
 	 */
 
 	Crypt.createMaster = function () {
-	  return base.encode_check(33, sjcl.codec.bytes.fromBits(sjcl.random.randomWords(4)));
+	  return base.encode_check(33, sjcl.codec.bytes.fromBits(randomWords(4)));
 	};
 
 
@@ -13326,17 +13471,17 @@ var ripple =
 	};
 
 	/**
-	 * get2FA - ECDSA signed request
+	 * get2FA - HMAC signed request
 	 */
 
-	BlobObj.prototype.get2FA = function (masterkey, fn) {
+	BlobObj.prototype.get2FA = function (fn) {
 	  var config = {
 	    method : 'GET',
 	    url    : this.url + '/v1/blob/' + this.id + '/2FA?device_id=' + this.device_id,
 	  };
 	  
 	  var signedRequest = new SignedRequest(config);
-	  var signed = signedRequest.signAsymmetric(masterkey, this.data.account_id, this.id);
+	  var signed = signedRequest.signHmac(this.data.auth_secret, this.id);  
 
 	  request.get(signed.url)
 	    .end(function(err, resp) { 
@@ -13715,13 +13860,21 @@ var ripple =
 	 * request new token to be sent for 2FA
 	 * @param {string} url
 	 * @param {string} id
+	 * @param {string} force_sms
 	 */
 
-	BlobClient.requestToken = function (url, id, fn) {
+	BlobClient.requestToken = function (url, id, force_sms, fn) {
 	  var config = {
 	    method : 'GET',
 	    url    : url + '/v1/blob/' + id + '/2FA/requestToken'
 	  };
+	  
+	  
+	  if (force_sms && force_sms instanceof Function) {
+	    fn = force_sms;
+	  } else if (force_sms) {
+	    config.url += "?force_sms=true";
+	  }
 	  
 	  request.get(config.url)
 	    .end(function(err, resp) { 
@@ -21371,7 +21524,7 @@ var ripple =
 	 */
 
 	var base64 = __webpack_require__(65)
-	var ieee754 = __webpack_require__(60)
+	var ieee754 = __webpack_require__(59)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = Buffer
@@ -23372,7 +23525,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(43);
-	var UInt   = __webpack_require__(26).UInt;
+	var UInt   = __webpack_require__(28).UInt;
 
 	//
 	// UInt128 support
@@ -26036,9 +26189,9 @@ var ripple =
 /* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(69)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(68)
 
-	var md5 = toConstructor(__webpack_require__(59))
+	var md5 = toConstructor(__webpack_require__(60))
 	var rmd160 = toConstructor(__webpack_require__(70))
 
 	function toConstructor (fn) {
@@ -26468,6 +26621,96 @@ var ripple =
 /* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
+	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+	  var e, m,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      nBits = -7,
+	      i = isLE ? (nBytes - 1) : 0,
+	      d = isLE ? -1 : 1,
+	      s = buffer[offset + i];
+
+	  i += d;
+
+	  e = s & ((1 << (-nBits)) - 1);
+	  s >>= (-nBits);
+	  nBits += eLen;
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  m = e & ((1 << (-nBits)) - 1);
+	  e >>= (-nBits);
+	  nBits += mLen;
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  if (e === 0) {
+	    e = 1 - eBias;
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity);
+	  } else {
+	    m = m + Math.pow(2, mLen);
+	    e = e - eBias;
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+	};
+
+	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+	  var e, m, c,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+	      i = isLE ? 0 : (nBytes - 1),
+	      d = isLE ? 1 : -1,
+	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+	  value = Math.abs(value);
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0;
+	    e = eMax;
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2);
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--;
+	      c *= 2;
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c;
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias);
+	    }
+	    if (value * c >= 2) {
+	      e++;
+	      c /= 2;
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0;
+	      e = eMax;
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen);
+	      e = e + eBias;
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+	      e = 0;
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+	  e = (e << mLen) | m;
+	  eLen += mLen;
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+	  buffer[offset + i - d] |= s * 128;
+	};
+
+
+/***/ },
+/* 60 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -26477,7 +26720,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(68);
+	var helpers = __webpack_require__(69);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -26622,96 +26865,6 @@ var ripple =
 
 	module.exports = function md5(buf) {
 	  return helpers.hash(buf, core_md5, 16);
-	};
-
-
-/***/ },
-/* 60 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-	  var e, m,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      nBits = -7,
-	      i = isLE ? (nBytes - 1) : 0,
-	      d = isLE ? -1 : 1,
-	      s = buffer[offset + i];
-
-	  i += d;
-
-	  e = s & ((1 << (-nBits)) - 1);
-	  s >>= (-nBits);
-	  nBits += eLen;
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  m = e & ((1 << (-nBits)) - 1);
-	  e >>= (-nBits);
-	  nBits += mLen;
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  if (e === 0) {
-	    e = 1 - eBias;
-	  } else if (e === eMax) {
-	    return m ? NaN : ((s ? -1 : 1) * Infinity);
-	  } else {
-	    m = m + Math.pow(2, mLen);
-	    e = e - eBias;
-	  }
-	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-	};
-
-	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-	  var e, m, c,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-	      i = isLE ? 0 : (nBytes - 1),
-	      d = isLE ? 1 : -1,
-	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-	  value = Math.abs(value);
-
-	  if (isNaN(value) || value === Infinity) {
-	    m = isNaN(value) ? 1 : 0;
-	    e = eMax;
-	  } else {
-	    e = Math.floor(Math.log(value) / Math.LN2);
-	    if (value * (c = Math.pow(2, -e)) < 1) {
-	      e--;
-	      c *= 2;
-	    }
-	    if (e + eBias >= 1) {
-	      value += rt / c;
-	    } else {
-	      value += rt * Math.pow(2, 1 - eBias);
-	    }
-	    if (value * c >= 2) {
-	      e++;
-	      c /= 2;
-	    }
-
-	    if (e + eBias >= eMax) {
-	      m = 0;
-	      e = eMax;
-	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen);
-	      e = e + eBias;
-	    } else {
-	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-	      e = 0;
-	    }
-	  }
-
-	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-	  e = (e << mLen) | m;
-	  eLen += mLen;
-	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-	  buffer[offset + i - d] |= s * 128;
 	};
 
 
@@ -28297,6 +28450,24 @@ var ripple =
 /* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(78).Buffer
+	var Hash   = __webpack_require__(72)(Buffer)
+
+	exports.sha =
+	exports.sha1 = __webpack_require__(73)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(74)(Buffer, Hash)
+
+
+/***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
 	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
 	var chrsz = 8;
@@ -28333,24 +28504,6 @@ var ripple =
 	module.exports = { hash: hash };
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(40).Buffer))
-
-/***/ },
-/* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var exports = module.exports = function (alg) {
-	  var Alg = exports[alg]
-	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
-	  return new Alg()
-	}
-
-	var Buffer = __webpack_require__(79).Buffer
-	var Hash   = __webpack_require__(72)(Buffer)
-
-	exports.sha =
-	exports.sha1 = __webpack_require__(73)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(74)(Buffer, Hash)
-
 
 /***/ },
 /* 70 */
@@ -28579,7 +28732,7 @@ var ripple =
 /* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var u = __webpack_require__(78)
+	var u = __webpack_require__(79)
 	var write = u.write
 	var fill = u.zeroFill
 
@@ -28860,7 +29013,7 @@ var ripple =
 	var inherits = __webpack_require__(37).inherits
 	var BE       = false
 	var LE       = true
-	var u        = __webpack_require__(78)
+	var u        = __webpack_require__(79)
 
 	module.exports = function (Buffer, Hash) {
 
@@ -29067,48 +29220,6 @@ var ripple =
 
 /***/ },
 /* 78 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.write = write
-	exports.zeroFill = zeroFill
-
-	exports.toString = toString
-
-	function write (buffer, string, enc, start, from, to, LE) {
-	  var l = (to - from)
-	  if(enc === 'ascii' || enc === 'binary') {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string.charCodeAt(i + from)
-	    }
-	  }
-	  else if(enc == null) {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string[i + from]
-	    }
-	  }
-	  else if(enc === 'hex') {
-	    for(var i = 0; i < l; i++) {
-	      var j = from + i
-	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
-	    }
-	  }
-	  else if(enc === 'base64') {
-	    throw new Error('base64 encoding not yet supported')
-	  }
-	  else
-	    throw new Error(enc +' encoding not yet supported')
-	}
-
-	//always fill to the end!
-	function zeroFill(buf, from) {
-	  for(var i = from; i < buf.length; i++)
-	    buf[i] = 0
-	}
-
-
-
-/***/ },
-/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -30269,6 +30380,48 @@ var ripple =
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(40).Buffer))
+
+/***/ },
+/* 79 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.write = write
+	exports.zeroFill = zeroFill
+
+	exports.toString = toString
+
+	function write (buffer, string, enc, start, from, to, LE) {
+	  var l = (to - from)
+	  if(enc === 'ascii' || enc === 'binary') {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string.charCodeAt(i + from)
+	    }
+	  }
+	  else if(enc == null) {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string[i + from]
+	    }
+	  }
+	  else if(enc === 'hex') {
+	    for(var i = 0; i < l; i++) {
+	      var j = from + i
+	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
+	    }
+	  }
+	  else if(enc === 'base64') {
+	    throw new Error('base64 encoding not yet supported')
+	  }
+	  else
+	    throw new Error(enc +' encoding not yet supported')
+	}
+
+	//always fill to the end!
+	function zeroFill(buf, from) {
+	  for(var i = from; i < buf.length; i++)
+	    buf[i] = 0
+	}
+
+
 
 /***/ },
 /* 80 */
