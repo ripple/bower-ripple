@@ -1732,6 +1732,12 @@ var ripple =
 	    self.emit('subscribed');
 	  };
 
+	  request.on('error', function(err) {
+	    if (self.trace) {
+	      log.info('Initial server subscribe failed', err);
+	    }
+	  });
+
 	  request.once('success', serverSubscribed);
 
 	  self.emit('prepare_subscribe', request);
@@ -5540,7 +5546,7 @@ var ripple =
 	 *  \s*$                      // end with any amount of whitespace
 	 *
 	 */
-	Currency.prototype.human_RE = /^\s*([a-zA-Z]{3}|[0-9]{3})(\s*-\s*[- \w]+)?(\s*\(-?\d+\.?\d*%pa\))?\s*$/;
+	Currency.prototype.human_RE = /^\s*([a-zA-Z0-9]{3})(\s*-\s*[- \w]+)?(\s*\(-?\d+\.?\d*%pa\))?\s*$/;
 
 	Currency.from_json = function(j, shouldInterpretXrpAsIou) {
 	  if (j instanceof this) {
@@ -8662,7 +8668,9 @@ var ripple =
 	      }
 	    });
 
-	    self._request(self._remote.requestServerInfo());
+	    var serverInfoRequest = self._remote.requestServerInfo();
+	    serverInfoRequest.on('error', function() { });
+	    self._request(serverInfoRequest);
 	  });
 	};
 
@@ -9476,19 +9484,20 @@ var ripple =
 	  });
 
 	  this.on('unsubscribe', function() {
-	    self._ownerFunds = { };
+	    self.resetCache();
 	    self._remote.removeListener('transaction', updateFundedAmounts);
 	    self._remote.removeListener('transaction', updateTransferRate);
 	  });
 
-	  this._remote.on('prepare_subscribe', function() {
+	  this._remote.once('prepare_subscribe', function() {
 	    self.subscribe();
 	  });
 
 	  this._remote.on('disconnect', function() {
-	    self._ownerFunds = { };
-	    self._offerCounts = { };
-	    self._synchronized = false;
+	    self.resetCache();
+	    self._remote.once('prepare_subscribe', function() {
+	      self.subscribe();
+	    });
 	  });
 
 	  function updateFundedAmounts(message) {
@@ -9591,6 +9600,16 @@ var ripple =
 	  });
 
 	  this.emit('unsubscribe');
+	};
+
+	/**
+	 * Reset cached owner funds, offer counts
+	 */
+
+	OrderBook.prototype.resetCache = function() {
+	  this._ownerFunds = { };
+	  this._offerCounts = { };
+	  this._synchronized = false;
 	};
 
 	/**
@@ -10092,6 +10111,9 @@ var ripple =
 	    if (self._remote.trace) {
 	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
 	    }
+
+	    // Reset offers
+	    self._offers = [ ];
 
 	    for (var i=0, l=res.offers.length; i<l; i++) {
 	      var offer = res.offers[i];
