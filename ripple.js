@@ -127,9 +127,9 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter     = __webpack_require__(37).EventEmitter;
-	var util             = __webpack_require__(43);
-	var assert           = __webpack_require__(38);
+	var EventEmitter     = __webpack_require__(38).EventEmitter;
+	var util             = __webpack_require__(37);
+	var assert           = __webpack_require__(39);
 	var LRU              = __webpack_require__(48);
 	var Server           = __webpack_require__(20).Server;
 	var Request          = __webpack_require__(2).Request;
@@ -207,6 +207,8 @@ var ripple =
 
 	  this.fee_cushion = (typeof opts.fee_cushion === 'number') ? opts.fee_cushion : 1.2;
 	  this.max_fee = (typeof opts.max_fee === 'number') ? opts.max_fee : Infinity;
+
+	  this.max_attempts = (typeof opts.max_attempts === 'number') ? opts.max_attempts : 10;
 
 	  this._ledger_current_index = void(0);
 	  this._ledger_hash = void(0);
@@ -1063,10 +1065,19 @@ var ripple =
 	          case 'expand':
 	          case 'transactions':
 	          case 'accounts':
-	          case 'ledger_index':
-	          case 'ledger_hash':
 	            request.message[o] = true;
 	            break;
+	            
+	          case 'ledger_index':
+	          case 'ledger_hash':
+	            request.message[o] = options[o];
+	            break;  
+	            
+	          case 'closed' :
+	          case 'current' :
+	          case 'validated' :
+	            request.message.ledger_index = o;
+	            break;  
 	        }
 	      }, options);
 	      break;
@@ -2368,8 +2379,8 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var util         = __webpack_require__(43);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(37);
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(13).RippleError;
@@ -4078,9 +4089,9 @@ var ripple =
 
 	// var network = require('./network.js');
 	var async              = __webpack_require__(49);
-	var util               = __webpack_require__(43);
+	var util               = __webpack_require__(37);
 	var extend             = __webpack_require__(44);
-	var EventEmitter       = __webpack_require__(37).EventEmitter;
+	var EventEmitter       = __webpack_require__(38).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(8).UInt160;
 	var TransactionManager = __webpack_require__(26).TransactionManager;
@@ -4511,8 +4522,8 @@ var ripple =
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = __webpack_require__(37).EventEmitter;
-	var util             = __webpack_require__(43);
+	var EventEmitter     = __webpack_require__(38).EventEmitter;
+	var util             = __webpack_require__(37);
 	var utils            = __webpack_require__(19);
 	var sjcl             = __webpack_require__(19).sjcl;
 	var Amount           = __webpack_require__(3).Amount;
@@ -6505,7 +6516,7 @@ var ripple =
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var assert    = __webpack_require__(38);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var assert    = __webpack_require__(39);
 	var extend    = __webpack_require__(44);
 	var binformat = __webpack_require__(18);
 	var stypes    = __webpack_require__(31);
@@ -6836,13 +6847,13 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(43);
+	var util   = __webpack_require__(37);
 	var extend = __webpack_require__(44);
 
 	function RippleError(code, message) {
@@ -6882,7 +6893,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var async              = __webpack_require__(49);
-	var crypto             = __webpack_require__(40);
+	var crypto             = __webpack_require__(41);
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
 	var Seed               = __webpack_require__(10).Seed;
@@ -7667,8 +7678,6 @@ var ripple =
 
 	VaultClient.prototype.resendEmail   = blobClient.resendEmail;
 
-	VaultClient.prototype.updateProfile = blobClient.updateProfile;
-
 	VaultClient.prototype.recoverBlob   = blobClient.recoverBlob;
 
 	VaultClient.prototype.deleteBlob    = blobClient.deleteBlob;
@@ -7676,6 +7685,12 @@ var ripple =
 	VaultClient.prototype.requestToken  = blobClient.requestToken;
 
 	VaultClient.prototype.verifyToken   = blobClient.verifyToken;
+
+	VaultClient.prototype.getAttestation = blobClient.getAttestation;
+
+	VaultClient.prototype.updateAttestation = blobClient.updateAttestation;
+
+	VaultClient.prototype.getAttestationSummary = blobClient.getAttestationSummary;
 
 	//export by name
 	exports.VaultClient = VaultClient;
@@ -8463,9 +8478,9 @@ var ripple =
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(43);
-	var url          = __webpack_require__(42);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var util         = __webpack_require__(37);
+	var url          = __webpack_require__(43);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var Transaction  = __webpack_require__(5).Transaction;
 	var log          = __webpack_require__(25).internal.sub('server');
@@ -9345,11 +9360,11 @@ var ripple =
 	//  - trade
 	//  - transaction
 
-	var util         = __webpack_require__(43);
+	var util         = __webpack_require__(37);
 	var extend       = __webpack_require__(44);
-	var assert       = __webpack_require__(38);
+	var assert       = __webpack_require__(39);
 	var async        = __webpack_require__(49);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
@@ -10444,8 +10459,8 @@ var ripple =
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var util         = __webpack_require__(43);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(37);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(44);
 
@@ -10536,7 +10551,7 @@ var ripple =
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var exports = module.exports = __webpack_require__(39);
+	var exports = module.exports = __webpack_require__(40);
 
 	/**
 	 * Log engine for browser consoles.
@@ -10573,8 +10588,8 @@ var ripple =
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(43);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var util         = __webpack_require__(37);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Transaction  = __webpack_require__(5).Transaction;
 	var RippleError  = __webpack_require__(13).RippleError;
 	var PendingQueue = __webpack_require__(45).TransactionQueue;
@@ -10595,6 +10610,7 @@ var ripple =
 	  this._remote            = account._remote;
 	  this._nextSequence      = void(0);
 	  this._maxFee            = this._remote.max_fee;
+	  this._maxAttempts       = this._remote.max_attempts;
 	  this._submissionTimeout = this._remote._submission_timeout;
 	  this._pending           = new PendingQueue();
 
@@ -10919,7 +10935,7 @@ var ripple =
 	  var self   = this;
 	  var remote = this._remote;
 
-	  if (tx.attempts > 10) {
+	  if (tx.attempts > this._maxAttempts) {
 	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
 	  }
 
@@ -11814,7 +11830,7 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = __webpack_require__(38);
+	var assert    = __webpack_require__(39);
 	var extend    = __webpack_require__(44);
 	var binformat = __webpack_require__(18);
 	var utils     = __webpack_require__(19);
@@ -12573,9 +12589,9 @@ var ripple =
 	var UInt160     = __webpack_require__(8).UInt160;
 	var UInt256     = __webpack_require__(9).UInt256;
 	var request     = __webpack_require__(51);
-	var querystring = __webpack_require__(52);
+	var querystring = __webpack_require__(56);
 	var extend      = __webpack_require__(44);
-	var parser      = __webpack_require__(42);
+	var parser      = __webpack_require__(43);
 	var Crypt       = { };
 
 	var cryptConfig = {
@@ -12891,6 +12907,14 @@ var ripple =
 	  return encodedData;
 	};
 
+	/**
+	 * base64 to UTF8
+	 */
+
+	Crypt.decodeBase64 = function (data) {
+	  return sjcl.codec.utf8String.fromBits(sjcl.codec.base64.toBits(data));
+	}
+
 	exports.Crypt = Crypt;
 
 
@@ -13019,7 +13043,9 @@ var ripple =
 	    
 	    self.revision         = resp.body.revision;
 	    self.encrypted_secret = resp.body.encrypted_secret;
+	    self.identity_id      = resp.body.identity_id;
 	    self.missing_fields   = resp.body.missing_fields;
+	    //self.attestations     = resp.body.attestation_summary;
 	    
 	    if (!self.decrypt(resp.body.blob)) {
 	      return fn(new Error('Error while decrypting blob'));
@@ -13461,7 +13487,6 @@ var ripple =
 	 * @params {boolean} options.enabled
 	 * @params {string}  options.phone
 	 * @params {string}  options.country_code
-	 * @params {string}  options.via    //sms, etc
 	 */
 
 	BlobObj.prototype.set2FA = function(options, fn) {
@@ -13472,8 +13497,7 @@ var ripple =
 	    data   : {
 	      enabled      : options.enabled,
 	      phone        : options.phone,
-	      country_code : options.country_code,
-	      via          : options.via
+	      country_code : options.country_code
 	    }
 	  };
 
@@ -14015,48 +14039,6 @@ var ripple =
 	  };
 	};
 
-	/**
-	 * updateProfile
-	 * update information stored outside the blob - HMAC signed
-	 * @param {object}
-	 * @param {string} opts.url
-	 * @param {string} opts.username
-	 * @param {string} opts.auth_secret
-	 * @param {srring} opts.blob_id
-	 * @param {object} opts.profile
-	 * @param {string} opts.profile.phone - optional
-	 * @param {string} opts.profile.country - optional
-	 * @param {string} opts.profile.region - optional
-	 * @param {string} opts.profile.city - optional
-	 */
-
-	BlobClient.updateProfile = function (opts, fn) {
-	  var config = {
-	    method: 'POST',
-	    url: opts.url + '/v1/user/' + opts.username + '/profile',
-	    dataType: 'json',
-	    data: opts.profile
-	  };
-
-	  var signedRequest = new SignedRequest(config);
-	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
-	  
-	  request.post(signed.url)
-	    .send(signed.data)
-	    .end(function(err, resp) {
-	      if (err) {
-	        log.error('updateProfile:', err);
-	        fn(new Error('Failed to update profile - XHR error'));
-	      } else if (resp.body && resp.body.result === 'success') {
-	        fn(null, resp.body);
-	      } else if (resp.body) {
-	        log.error('updateProfile:', resp.body);
-	      } else {
-	        fn(new Error('Failed to update profile'));
-	      }
-	    });
-	  
-	};
 
 	/**
 	 * updateKeys
@@ -14220,6 +14202,7 @@ var ripple =
 	      if (err) {
 	        fn(err);
 	      } else if (resp.body && resp.body.result === 'success') {
+	        blob.identity_id = resp.body.identity_id;
 	        fn(null, blob, resp.body);
 	      } else if (resp.body && resp.body.result === 'error') {
 	        fn(new Error(resp.body.message)); 
@@ -14261,6 +14244,265 @@ var ripple =
 	        fn(new Error('Could not delete blob'));
 	      }
 	    });  
+	};
+
+	/*** identity related functions ***/
+
+	/**
+	 * updateProfile
+	 * update information stored outside the blob - HMAC signed
+	 * @param {object}
+	 * @param {string} opts.url
+	 * @param {string} opts.auth_secret
+	 * @param {srring} opts.blob_id
+	 * @param {object} opts.profile 
+	 * @param {array}  opts.profile.attributes (optional, array of attribute objects)
+	 * @param {array}  opts.profile.addresses (optional, array of address objects)
+	 * 
+	 * @param {string} attribute.id ... id of existing attribute
+	 * @param {string} attribute.name ... attribute name i.e. ripple_address
+	 * @param {string} attribute.type ... optional, sub-type of attribute
+	 * @param {string} attribute.value ... value of attribute
+	 * @param {string} attribute.domain ... corresponding domain
+	 * @param {string} attribute.status ... “current”, “removed”, etc.
+	 * @param {string} attribute.visibitlity ... “public”, ”private”
+	 */
+
+	BlobClient.updateProfile = function (opts, fn) {
+	  var config = {
+	    method: 'POST',
+	    url: opts.url + '/v1/profile/',
+	    dataType: 'json',
+	    data: opts.profile
+	  };
+
+	  var signedRequest = new SignedRequest(config);
+	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
+	  
+	  request.post(signed.url)
+	    .send(signed.data)
+	    .end(function(err, resp) {
+	      
+	      if (err) {
+	        log.error('updateProfile:', err);
+	        fn(new Error('Failed to update profile - XHR error'));
+	      } else if (resp.body && resp.body.result === 'success') {
+	        fn(null, resp.body);
+	      } else if (resp.body) {
+	        log.error('updateProfile:', resp.body);
+	        fn(new Error('Failed to update profile'));
+	      } else {
+	        fn(new Error('Failed to update profile'));
+	      } 
+	    });
+	};
+
+	/**
+	 * getProfile
+	 * @param {Object} opts
+	 * @param {string} opts.url
+	 * @param {string} opts.auth_secret
+	 * @param {srring} opts.blob_id
+	 */
+
+	BlobClient.getProfile = function (opts, fn) {
+	  var config = {
+	    method: 'GET',
+	    url: opts.url + '/v1/profile/'
+	  };
+
+	  var signedRequest = new SignedRequest(config);
+	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
+	  
+	  request.get(signed.url)
+	    .send(signed.data)
+	    .end(function(err, resp) {
+	      
+	      if (err) {
+	        log.error('getProfile:', err);
+	        fn(new Error('Failed to get profile - XHR error'));
+	      } else if (resp.body && resp.body.result === 'success') {
+	        fn(null, resp.body);
+	      } else if (resp.body) {
+	        log.error('getProfile:', resp.body);
+	        fn(new Error('Failed to get profile'));
+	      } else {
+	        fn(new Error('Failed to get profile'));
+	      } 
+	    });
+	};
+
+	/**
+	 * getAttestation
+	 * @param {Object} opts
+	 * @param {string} opts.url
+	 * @param {string} opts.auth_secret
+	 * @param {string} opts.blob_id
+	 * @param {string} opts.type (email,phone,basic_identity)
+	 * @param {object} opts.phone (required for type 'phone')
+	 * @param {string} opts.email (required for type 'email')
+	 */
+
+	BlobClient.getAttestation = function (opts, fn) {
+	  var params = { };
+	  
+	  if (opts.phone) params.phone = opts.phone;
+	  if (opts.email) params.email = opts.email;
+	      
+	  var config = {
+	    method: 'POST',
+	    url: opts.url + '/v1/attestation/' + opts.type,
+	    dataType: 'json',
+	    data: params
+	  };
+	  
+	  var signedRequest = new SignedRequest(config);
+	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
+	  
+	  request.post(signed.url)
+	    .send(signed.data)
+	    .end(function(err, resp) {
+	      
+	      if (err) {
+	        log.error('attest:', err);
+	        fn(new Error('attestation error - XHR error'));
+	      } else if (resp.body && resp.body.result === 'success') {
+	        if (resp.body.attestation) {
+	          resp.body.decoded = BlobClient.parseAttestation(resp.body.attestation);
+	        }
+	        
+	        fn(null, resp.body);
+	      } else if (resp.body) {
+	        log.error('attestation:', resp.body);
+	        fn(new Error('attestation error: ' + resp.body.message || ""));
+	      } else {
+	        fn(new Error('attestation error'));
+	      } 
+	    });
+	};  
+
+	/**
+	 * getAttestationSummary
+	 * @param {Object} opts
+	 * @param {string} opts.url
+	 * @param {string} opts.auth_secret
+	 * @param {string} opts.blob_id
+	 */
+
+	BlobClient.getAttestationSummary = function (opts, fn) {
+
+
+	  var config = {
+	    method: 'GET',
+	    url: opts.url + '/v1/attestation/summary',
+	    dataType: 'json'
+	  };
+	  
+	  if (opts.full) config.url += '?full=true';
+	  
+	  var signedRequest = new SignedRequest(config);
+	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
+	  
+	  request.get(signed.url)
+	    .send(signed.data)
+	    .end(function(err, resp) {
+	      
+	      if (err) {
+	        log.error('attest:', err);
+	        fn(new Error('attestation error - XHR error'));
+	      } else if (resp.body && resp.body.result === 'success') {
+	        if (resp.body.attestation) {
+	          resp.body.decoded = BlobClient.parseAttestation(resp.body.attestation);
+	        }
+	        
+	        fn(null, resp.body);
+	      } else if (resp.body) {
+	        log.error('attestation:', resp.body);
+	        fn(new Error('attestation error: ' + resp.body.message || ""));
+	      } else {
+	        fn(new Error('attestation error'));
+	      } 
+	    });
+	};  
+
+	/**
+	 * updateAttestation
+	 * @param {Object} opts
+	 * @param {string} opts.url
+	 * @param {string} opts.auth_secret
+	 * @param {string} opts.blob_id
+	 * @param {string} opts.type (email,phone,profile,identity)
+	 * @param {object} opts.phone (required for type 'phone')
+	 * @param {object} opts.profile (required for type 'profile')
+	 * @param {string} opts.email (required for type 'email')
+	 * @param {string} opts.answers (required for type 'identity')
+	 * @param {string} opts.token (required for completing email or phone attestations)
+	 */
+
+	BlobClient.updateAttestation = function (opts, fn) {
+
+	  var params = { };
+	  
+	  if (opts.phone)    params.phone   = opts.phone;
+	  if (opts.profile)  params.profile = opts.profile;
+	  if (opts.email)    params.email   = opts.email;
+	  if (opts.token)    params.token   = opts.token;
+	  if (opts.answers)  params.answers = opts.answers;
+	      
+	  var config = {
+	    method: 'POST',
+	    url: opts.url + '/v1/attestation/' + opts.type + '/update',
+	    dataType: 'json',
+	    data: params
+	  };
+
+	  var signedRequest = new SignedRequest(config);
+	  var signed = signedRequest.signHmac(opts.auth_secret, opts.blob_id);  
+	  
+	  request.post(signed.url)
+	    .send(signed.data)
+	    .end(function(err, resp) {
+	      
+	      if (err) {
+	        log.error('attest:', err);
+	        fn(new Error('attestation error - XHR error'));
+	      } else if (resp.body && resp.body.result === 'success') {
+	        if (resp.body.attestation) {
+	          resp.body.decoded = BlobClient.parseAttestation(resp.body.attestation);
+	        }
+	        
+	        fn(null, resp.body);
+	      } else if (resp.body) {
+	        log.error('attestation:', resp.body);
+	        fn(new Error('attestation error: ' + resp.body.message || ""));
+	      } else {
+	        fn(new Error('attestation error'));
+	      } 
+	    });
+	};
+
+	/**
+	 * parseAttestation
+	 * @param {Object} attestation
+	 */
+
+	BlobClient.parseAttestation = function (attestation) {
+	  var segments =  attestation.split('.');
+	  var decoded;
+	  
+	  // base64 decode and parse JSON
+	  try {
+	    decoded = {
+	      header    : JSON.parse(crypt.decodeBase64(segments[0])),
+	      payload   : JSON.parse(crypt.decodeBase64(segments[1])),
+	      signature : segments[2]
+	    }; 
+	    
+	  } catch (e) {
+	    console.log("invalid attestation:", e);
+	  }
+	  
+	  return decoded;
 	};
 
 	exports.BlobClient = BlobClient;
@@ -20088,6 +20330,599 @@ var ripple =
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	var formatRegExp = /%[sdj%]/g;
+	exports.format = function(f) {
+	  if (!isString(f)) {
+	    var objects = [];
+	    for (var i = 0; i < arguments.length; i++) {
+	      objects.push(inspect(arguments[i]));
+	    }
+	    return objects.join(' ');
+	  }
+
+	  var i = 1;
+	  var args = arguments;
+	  var len = args.length;
+	  var str = String(f).replace(formatRegExp, function(x) {
+	    if (x === '%%') return '%';
+	    if (i >= len) return x;
+	    switch (x) {
+	      case '%s': return String(args[i++]);
+	      case '%d': return Number(args[i++]);
+	      case '%j':
+	        try {
+	          return JSON.stringify(args[i++]);
+	        } catch (_) {
+	          return '[Circular]';
+	        }
+	      default:
+	        return x;
+	    }
+	  });
+	  for (var x = args[i]; i < len; x = args[++i]) {
+	    if (isNull(x) || !isObject(x)) {
+	      str += ' ' + x;
+	    } else {
+	      str += ' ' + inspect(x);
+	    }
+	  }
+	  return str;
+	};
+
+
+	// Mark that a method should not be used.
+	// Returns a modified function which warns once by default.
+	// If --no-deprecation is set, then it is a no-op.
+	exports.deprecate = function(fn, msg) {
+	  // Allow for deprecating things in the process of starting up.
+	  if (isUndefined(global.process)) {
+	    return function() {
+	      return exports.deprecate(fn, msg).apply(this, arguments);
+	    };
+	  }
+
+	  if (process.noDeprecation === true) {
+	    return fn;
+	  }
+
+	  var warned = false;
+	  function deprecated() {
+	    if (!warned) {
+	      if (process.throwDeprecation) {
+	        throw new Error(msg);
+	      } else if (process.traceDeprecation) {
+	        console.trace(msg);
+	      } else {
+	        console.error(msg);
+	      }
+	      warned = true;
+	    }
+	    return fn.apply(this, arguments);
+	  }
+
+	  return deprecated;
+	};
+
+
+	var debugs = {};
+	var debugEnviron;
+	exports.debuglog = function(set) {
+	  if (isUndefined(debugEnviron))
+	    debugEnviron = process.env.NODE_DEBUG || '';
+	  set = set.toUpperCase();
+	  if (!debugs[set]) {
+	    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+	      var pid = process.pid;
+	      debugs[set] = function() {
+	        var msg = exports.format.apply(exports, arguments);
+	        console.error('%s %d: %s', set, pid, msg);
+	      };
+	    } else {
+	      debugs[set] = function() {};
+	    }
+	  }
+	  return debugs[set];
+	};
+
+
+	/**
+	 * Echos the value of a value. Trys to print the value out
+	 * in the best way possible given the different types.
+	 *
+	 * @param {Object} obj The object to print out.
+	 * @param {Object} opts Optional options object that alters the output.
+	 */
+	/* legacy: obj, showHidden, depth, colors*/
+	function inspect(obj, opts) {
+	  // default options
+	  var ctx = {
+	    seen: [],
+	    stylize: stylizeNoColor
+	  };
+	  // legacy...
+	  if (arguments.length >= 3) ctx.depth = arguments[2];
+	  if (arguments.length >= 4) ctx.colors = arguments[3];
+	  if (isBoolean(opts)) {
+	    // legacy...
+	    ctx.showHidden = opts;
+	  } else if (opts) {
+	    // got an "options" object
+	    exports._extend(ctx, opts);
+	  }
+	  // set default options
+	  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+	  if (isUndefined(ctx.depth)) ctx.depth = 2;
+	  if (isUndefined(ctx.colors)) ctx.colors = false;
+	  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+	  if (ctx.colors) ctx.stylize = stylizeWithColor;
+	  return formatValue(ctx, obj, ctx.depth);
+	}
+	exports.inspect = inspect;
+
+
+	// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+	inspect.colors = {
+	  'bold' : [1, 22],
+	  'italic' : [3, 23],
+	  'underline' : [4, 24],
+	  'inverse' : [7, 27],
+	  'white' : [37, 39],
+	  'grey' : [90, 39],
+	  'black' : [30, 39],
+	  'blue' : [34, 39],
+	  'cyan' : [36, 39],
+	  'green' : [32, 39],
+	  'magenta' : [35, 39],
+	  'red' : [31, 39],
+	  'yellow' : [33, 39]
+	};
+
+	// Don't use 'blue' not visible on cmd.exe
+	inspect.styles = {
+	  'special': 'cyan',
+	  'number': 'yellow',
+	  'boolean': 'yellow',
+	  'undefined': 'grey',
+	  'null': 'bold',
+	  'string': 'green',
+	  'date': 'magenta',
+	  // "name": intentionally not styling
+	  'regexp': 'red'
+	};
+
+
+	function stylizeWithColor(str, styleType) {
+	  var style = inspect.styles[styleType];
+
+	  if (style) {
+	    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+	           '\u001b[' + inspect.colors[style][1] + 'm';
+	  } else {
+	    return str;
+	  }
+	}
+
+
+	function stylizeNoColor(str, styleType) {
+	  return str;
+	}
+
+
+	function arrayToHash(array) {
+	  var hash = {};
+
+	  array.forEach(function(val, idx) {
+	    hash[val] = true;
+	  });
+
+	  return hash;
+	}
+
+
+	function formatValue(ctx, value, recurseTimes) {
+	  // Provide a hook for user-specified inspect functions.
+	  // Check that value is an object with an inspect function on it
+	  if (ctx.customInspect &&
+	      value &&
+	      isFunction(value.inspect) &&
+	      // Filter out the util module, it's inspect function is special
+	      value.inspect !== exports.inspect &&
+	      // Also filter out any prototype objects using the circular check.
+	      !(value.constructor && value.constructor.prototype === value)) {
+	    var ret = value.inspect(recurseTimes, ctx);
+	    if (!isString(ret)) {
+	      ret = formatValue(ctx, ret, recurseTimes);
+	    }
+	    return ret;
+	  }
+
+	  // Primitive types cannot have properties
+	  var primitive = formatPrimitive(ctx, value);
+	  if (primitive) {
+	    return primitive;
+	  }
+
+	  // Look up the keys of the object.
+	  var keys = Object.keys(value);
+	  var visibleKeys = arrayToHash(keys);
+
+	  if (ctx.showHidden) {
+	    keys = Object.getOwnPropertyNames(value);
+	  }
+
+	  // IE doesn't make error fields non-enumerable
+	  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
+	  if (isError(value)
+	      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+	    return formatError(value);
+	  }
+
+	  // Some type of object without properties can be shortcutted.
+	  if (keys.length === 0) {
+	    if (isFunction(value)) {
+	      var name = value.name ? ': ' + value.name : '';
+	      return ctx.stylize('[Function' + name + ']', 'special');
+	    }
+	    if (isRegExp(value)) {
+	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+	    }
+	    if (isDate(value)) {
+	      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+	    }
+	    if (isError(value)) {
+	      return formatError(value);
+	    }
+	  }
+
+	  var base = '', array = false, braces = ['{', '}'];
+
+	  // Make Array say that they are Array
+	  if (isArray(value)) {
+	    array = true;
+	    braces = ['[', ']'];
+	  }
+
+	  // Make functions say that they are functions
+	  if (isFunction(value)) {
+	    var n = value.name ? ': ' + value.name : '';
+	    base = ' [Function' + n + ']';
+	  }
+
+	  // Make RegExps say that they are RegExps
+	  if (isRegExp(value)) {
+	    base = ' ' + RegExp.prototype.toString.call(value);
+	  }
+
+	  // Make dates with properties first say the date
+	  if (isDate(value)) {
+	    base = ' ' + Date.prototype.toUTCString.call(value);
+	  }
+
+	  // Make error with message first say the error
+	  if (isError(value)) {
+	    base = ' ' + formatError(value);
+	  }
+
+	  if (keys.length === 0 && (!array || value.length == 0)) {
+	    return braces[0] + base + braces[1];
+	  }
+
+	  if (recurseTimes < 0) {
+	    if (isRegExp(value)) {
+	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+	    } else {
+	      return ctx.stylize('[Object]', 'special');
+	    }
+	  }
+
+	  ctx.seen.push(value);
+
+	  var output;
+	  if (array) {
+	    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+	  } else {
+	    output = keys.map(function(key) {
+	      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+	    });
+	  }
+
+	  ctx.seen.pop();
+
+	  return reduceToSingleString(output, base, braces);
+	}
+
+
+	function formatPrimitive(ctx, value) {
+	  if (isUndefined(value))
+	    return ctx.stylize('undefined', 'undefined');
+	  if (isString(value)) {
+	    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+	                                             .replace(/'/g, "\\'")
+	                                             .replace(/\\"/g, '"') + '\'';
+	    return ctx.stylize(simple, 'string');
+	  }
+	  if (isNumber(value))
+	    return ctx.stylize('' + value, 'number');
+	  if (isBoolean(value))
+	    return ctx.stylize('' + value, 'boolean');
+	  // For some reason typeof null is "object", so special case here.
+	  if (isNull(value))
+	    return ctx.stylize('null', 'null');
+	}
+
+
+	function formatError(value) {
+	  return '[' + Error.prototype.toString.call(value) + ']';
+	}
+
+
+	function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+	  var output = [];
+	  for (var i = 0, l = value.length; i < l; ++i) {
+	    if (hasOwnProperty(value, String(i))) {
+	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+	          String(i), true));
+	    } else {
+	      output.push('');
+	    }
+	  }
+	  keys.forEach(function(key) {
+	    if (!key.match(/^\d+$/)) {
+	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+	          key, true));
+	    }
+	  });
+	  return output;
+	}
+
+
+	function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+	  var name, str, desc;
+	  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+	  if (desc.get) {
+	    if (desc.set) {
+	      str = ctx.stylize('[Getter/Setter]', 'special');
+	    } else {
+	      str = ctx.stylize('[Getter]', 'special');
+	    }
+	  } else {
+	    if (desc.set) {
+	      str = ctx.stylize('[Setter]', 'special');
+	    }
+	  }
+	  if (!hasOwnProperty(visibleKeys, key)) {
+	    name = '[' + key + ']';
+	  }
+	  if (!str) {
+	    if (ctx.seen.indexOf(desc.value) < 0) {
+	      if (isNull(recurseTimes)) {
+	        str = formatValue(ctx, desc.value, null);
+	      } else {
+	        str = formatValue(ctx, desc.value, recurseTimes - 1);
+	      }
+	      if (str.indexOf('\n') > -1) {
+	        if (array) {
+	          str = str.split('\n').map(function(line) {
+	            return '  ' + line;
+	          }).join('\n').substr(2);
+	        } else {
+	          str = '\n' + str.split('\n').map(function(line) {
+	            return '   ' + line;
+	          }).join('\n');
+	        }
+	      }
+	    } else {
+	      str = ctx.stylize('[Circular]', 'special');
+	    }
+	  }
+	  if (isUndefined(name)) {
+	    if (array && key.match(/^\d+$/)) {
+	      return str;
+	    }
+	    name = JSON.stringify('' + key);
+	    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+	      name = name.substr(1, name.length - 2);
+	      name = ctx.stylize(name, 'name');
+	    } else {
+	      name = name.replace(/'/g, "\\'")
+	                 .replace(/\\"/g, '"')
+	                 .replace(/(^"|"$)/g, "'");
+	      name = ctx.stylize(name, 'string');
+	    }
+	  }
+
+	  return name + ': ' + str;
+	}
+
+
+	function reduceToSingleString(output, base, braces) {
+	  var numLinesEst = 0;
+	  var length = output.reduce(function(prev, cur) {
+	    numLinesEst++;
+	    if (cur.indexOf('\n') >= 0) numLinesEst++;
+	    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+	  }, 0);
+
+	  if (length > 60) {
+	    return braces[0] +
+	           (base === '' ? '' : base + '\n ') +
+	           ' ' +
+	           output.join(',\n  ') +
+	           ' ' +
+	           braces[1];
+	  }
+
+	  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+	}
+
+
+	// NOTE: These type checking functions intentionally don't use `instanceof`
+	// because it is fragile and can be easily faked with `Object.create()`.
+	function isArray(ar) {
+	  return Array.isArray(ar);
+	}
+	exports.isArray = isArray;
+
+	function isBoolean(arg) {
+	  return typeof arg === 'boolean';
+	}
+	exports.isBoolean = isBoolean;
+
+	function isNull(arg) {
+	  return arg === null;
+	}
+	exports.isNull = isNull;
+
+	function isNullOrUndefined(arg) {
+	  return arg == null;
+	}
+	exports.isNullOrUndefined = isNullOrUndefined;
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+	exports.isNumber = isNumber;
+
+	function isString(arg) {
+	  return typeof arg === 'string';
+	}
+	exports.isString = isString;
+
+	function isSymbol(arg) {
+	  return typeof arg === 'symbol';
+	}
+	exports.isSymbol = isSymbol;
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+	exports.isUndefined = isUndefined;
+
+	function isRegExp(re) {
+	  return isObject(re) && objectToString(re) === '[object RegExp]';
+	}
+	exports.isRegExp = isRegExp;
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+	exports.isObject = isObject;
+
+	function isDate(d) {
+	  return isObject(d) && objectToString(d) === '[object Date]';
+	}
+	exports.isDate = isDate;
+
+	function isError(e) {
+	  return isObject(e) &&
+	      (objectToString(e) === '[object Error]' || e instanceof Error);
+	}
+	exports.isError = isError;
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+	exports.isFunction = isFunction;
+
+	function isPrimitive(arg) {
+	  return arg === null ||
+	         typeof arg === 'boolean' ||
+	         typeof arg === 'number' ||
+	         typeof arg === 'string' ||
+	         typeof arg === 'symbol' ||  // ES6 symbol
+	         typeof arg === 'undefined';
+	}
+	exports.isPrimitive = isPrimitive;
+
+	exports.isBuffer = __webpack_require__(57);
+
+	function objectToString(o) {
+	  return Object.prototype.toString.call(o);
+	}
+
+
+	function pad(n) {
+	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+	}
+
+
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+	              'Oct', 'Nov', 'Dec'];
+
+	// 26 Feb 16:19:34
+	function timestamp() {
+	  var d = new Date();
+	  var time = [pad(d.getHours()),
+	              pad(d.getMinutes()),
+	              pad(d.getSeconds())].join(':');
+	  return [d.getDate(), months[d.getMonth()], time].join(' ');
+	}
+
+
+	// log is just a thin wrapper to console.log that prepends a timestamp
+	exports.log = function() {
+	  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+	};
+
+
+	/**
+	 * Inherit the prototype methods from one constructor into another.
+	 *
+	 * The Function.prototype.inherits from lang.js rewritten as a standalone
+	 * function (not on Function.prototype). NOTE: If this file is to be loaded
+	 * during bootstrapping this function needs to be rewritten using some native
+	 * functions as prototype setup using normal JavaScript does not work as
+	 * expected during bootstrapping (see mirror.js in r114903).
+	 *
+	 * @param {function} ctor Constructor function which needs to inherit the
+	 *     prototype.
+	 * @param {function} superCtor Constructor function to inherit prototype from.
+	 */
+	exports.inherits = __webpack_require__(67);
+
+	exports._extend = function(origin, add) {
+	  // Don't do anything if add isn't an object
+	  if (!add || !isObject(add)) return origin;
+
+	  var keys = Object.keys(add);
+	  var i = keys.length;
+	  while (i--) {
+	    origin[keys[i]] = add[keys[i]];
+	  }
+	  return origin;
+	};
+
+	function hasOwnProperty(obj, prop) {
+	  return Object.prototype.hasOwnProperty.call(obj, prop);
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -20392,7 +21227,7 @@ var ripple =
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
@@ -20422,7 +21257,7 @@ var ripple =
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(43);
+	var util = __webpack_require__(37);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -20758,7 +21593,7 @@ var ripple =
 
 
 /***/ },
-/* 39 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -20874,10 +21709,10 @@ var ripple =
 
 
 /***/ },
-/* 40 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(52)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -20888,9 +21723,9 @@ var ripple =
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(54)
+	exports.createHash = __webpack_require__(53)
 
-	exports.createHmac = __webpack_require__(55)
+	exports.createHmac = __webpack_require__(54)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -20912,7 +21747,7 @@ var ripple =
 
 	}
 
-	var p = __webpack_require__(56)(exports.createHmac)
+	var p = __webpack_require__(55)(exports.createHmac)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
 
@@ -20932,10 +21767,10 @@ var ripple =
 	  }
 	})
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 41 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -22048,10 +22883,10 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*jshint strict:true node:true es5:true onevar:true laxcomma:true laxbreak:true eqeqeq:true immed:true latedef:true*/
@@ -22079,7 +22914,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(67);
+	var punycode = __webpack_require__(68);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -22147,7 +22982,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(68);
+	    querystring = __webpack_require__(69);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && typeof(url) === 'object' && url.href) return url;
@@ -22688,599 +23523,6 @@ var ripple =
 
 
 /***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	var formatRegExp = /%[sdj%]/g;
-	exports.format = function(f) {
-	  if (!isString(f)) {
-	    var objects = [];
-	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(inspect(arguments[i]));
-	    }
-	    return objects.join(' ');
-	  }
-
-	  var i = 1;
-	  var args = arguments;
-	  var len = args.length;
-	  var str = String(f).replace(formatRegExp, function(x) {
-	    if (x === '%%') return '%';
-	    if (i >= len) return x;
-	    switch (x) {
-	      case '%s': return String(args[i++]);
-	      case '%d': return Number(args[i++]);
-	      case '%j':
-	        try {
-	          return JSON.stringify(args[i++]);
-	        } catch (_) {
-	          return '[Circular]';
-	        }
-	      default:
-	        return x;
-	    }
-	  });
-	  for (var x = args[i]; i < len; x = args[++i]) {
-	    if (isNull(x) || !isObject(x)) {
-	      str += ' ' + x;
-	    } else {
-	      str += ' ' + inspect(x);
-	    }
-	  }
-	  return str;
-	};
-
-
-	// Mark that a method should not be used.
-	// Returns a modified function which warns once by default.
-	// If --no-deprecation is set, then it is a no-op.
-	exports.deprecate = function(fn, msg) {
-	  // Allow for deprecating things in the process of starting up.
-	  if (isUndefined(global.process)) {
-	    return function() {
-	      return exports.deprecate(fn, msg).apply(this, arguments);
-	    };
-	  }
-
-	  if (process.noDeprecation === true) {
-	    return fn;
-	  }
-
-	  var warned = false;
-	  function deprecated() {
-	    if (!warned) {
-	      if (process.throwDeprecation) {
-	        throw new Error(msg);
-	      } else if (process.traceDeprecation) {
-	        console.trace(msg);
-	      } else {
-	        console.error(msg);
-	      }
-	      warned = true;
-	    }
-	    return fn.apply(this, arguments);
-	  }
-
-	  return deprecated;
-	};
-
-
-	var debugs = {};
-	var debugEnviron;
-	exports.debuglog = function(set) {
-	  if (isUndefined(debugEnviron))
-	    debugEnviron = process.env.NODE_DEBUG || '';
-	  set = set.toUpperCase();
-	  if (!debugs[set]) {
-	    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-	      var pid = process.pid;
-	      debugs[set] = function() {
-	        var msg = exports.format.apply(exports, arguments);
-	        console.error('%s %d: %s', set, pid, msg);
-	      };
-	    } else {
-	      debugs[set] = function() {};
-	    }
-	  }
-	  return debugs[set];
-	};
-
-
-	/**
-	 * Echos the value of a value. Trys to print the value out
-	 * in the best way possible given the different types.
-	 *
-	 * @param {Object} obj The object to print out.
-	 * @param {Object} opts Optional options object that alters the output.
-	 */
-	/* legacy: obj, showHidden, depth, colors*/
-	function inspect(obj, opts) {
-	  // default options
-	  var ctx = {
-	    seen: [],
-	    stylize: stylizeNoColor
-	  };
-	  // legacy...
-	  if (arguments.length >= 3) ctx.depth = arguments[2];
-	  if (arguments.length >= 4) ctx.colors = arguments[3];
-	  if (isBoolean(opts)) {
-	    // legacy...
-	    ctx.showHidden = opts;
-	  } else if (opts) {
-	    // got an "options" object
-	    exports._extend(ctx, opts);
-	  }
-	  // set default options
-	  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
-	  if (isUndefined(ctx.depth)) ctx.depth = 2;
-	  if (isUndefined(ctx.colors)) ctx.colors = false;
-	  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
-	  if (ctx.colors) ctx.stylize = stylizeWithColor;
-	  return formatValue(ctx, obj, ctx.depth);
-	}
-	exports.inspect = inspect;
-
-
-	// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	inspect.colors = {
-	  'bold' : [1, 22],
-	  'italic' : [3, 23],
-	  'underline' : [4, 24],
-	  'inverse' : [7, 27],
-	  'white' : [37, 39],
-	  'grey' : [90, 39],
-	  'black' : [30, 39],
-	  'blue' : [34, 39],
-	  'cyan' : [36, 39],
-	  'green' : [32, 39],
-	  'magenta' : [35, 39],
-	  'red' : [31, 39],
-	  'yellow' : [33, 39]
-	};
-
-	// Don't use 'blue' not visible on cmd.exe
-	inspect.styles = {
-	  'special': 'cyan',
-	  'number': 'yellow',
-	  'boolean': 'yellow',
-	  'undefined': 'grey',
-	  'null': 'bold',
-	  'string': 'green',
-	  'date': 'magenta',
-	  // "name": intentionally not styling
-	  'regexp': 'red'
-	};
-
-
-	function stylizeWithColor(str, styleType) {
-	  var style = inspect.styles[styleType];
-
-	  if (style) {
-	    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
-	           '\u001b[' + inspect.colors[style][1] + 'm';
-	  } else {
-	    return str;
-	  }
-	}
-
-
-	function stylizeNoColor(str, styleType) {
-	  return str;
-	}
-
-
-	function arrayToHash(array) {
-	  var hash = {};
-
-	  array.forEach(function(val, idx) {
-	    hash[val] = true;
-	  });
-
-	  return hash;
-	}
-
-
-	function formatValue(ctx, value, recurseTimes) {
-	  // Provide a hook for user-specified inspect functions.
-	  // Check that value is an object with an inspect function on it
-	  if (ctx.customInspect &&
-	      value &&
-	      isFunction(value.inspect) &&
-	      // Filter out the util module, it's inspect function is special
-	      value.inspect !== exports.inspect &&
-	      // Also filter out any prototype objects using the circular check.
-	      !(value.constructor && value.constructor.prototype === value)) {
-	    var ret = value.inspect(recurseTimes, ctx);
-	    if (!isString(ret)) {
-	      ret = formatValue(ctx, ret, recurseTimes);
-	    }
-	    return ret;
-	  }
-
-	  // Primitive types cannot have properties
-	  var primitive = formatPrimitive(ctx, value);
-	  if (primitive) {
-	    return primitive;
-	  }
-
-	  // Look up the keys of the object.
-	  var keys = Object.keys(value);
-	  var visibleKeys = arrayToHash(keys);
-
-	  if (ctx.showHidden) {
-	    keys = Object.getOwnPropertyNames(value);
-	  }
-
-	  // IE doesn't make error fields non-enumerable
-	  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-	  if (isError(value)
-	      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-	    return formatError(value);
-	  }
-
-	  // Some type of object without properties can be shortcutted.
-	  if (keys.length === 0) {
-	    if (isFunction(value)) {
-	      var name = value.name ? ': ' + value.name : '';
-	      return ctx.stylize('[Function' + name + ']', 'special');
-	    }
-	    if (isRegExp(value)) {
-	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-	    }
-	    if (isDate(value)) {
-	      return ctx.stylize(Date.prototype.toString.call(value), 'date');
-	    }
-	    if (isError(value)) {
-	      return formatError(value);
-	    }
-	  }
-
-	  var base = '', array = false, braces = ['{', '}'];
-
-	  // Make Array say that they are Array
-	  if (isArray(value)) {
-	    array = true;
-	    braces = ['[', ']'];
-	  }
-
-	  // Make functions say that they are functions
-	  if (isFunction(value)) {
-	    var n = value.name ? ': ' + value.name : '';
-	    base = ' [Function' + n + ']';
-	  }
-
-	  // Make RegExps say that they are RegExps
-	  if (isRegExp(value)) {
-	    base = ' ' + RegExp.prototype.toString.call(value);
-	  }
-
-	  // Make dates with properties first say the date
-	  if (isDate(value)) {
-	    base = ' ' + Date.prototype.toUTCString.call(value);
-	  }
-
-	  // Make error with message first say the error
-	  if (isError(value)) {
-	    base = ' ' + formatError(value);
-	  }
-
-	  if (keys.length === 0 && (!array || value.length == 0)) {
-	    return braces[0] + base + braces[1];
-	  }
-
-	  if (recurseTimes < 0) {
-	    if (isRegExp(value)) {
-	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-	    } else {
-	      return ctx.stylize('[Object]', 'special');
-	    }
-	  }
-
-	  ctx.seen.push(value);
-
-	  var output;
-	  if (array) {
-	    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
-	  } else {
-	    output = keys.map(function(key) {
-	      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
-	    });
-	  }
-
-	  ctx.seen.pop();
-
-	  return reduceToSingleString(output, base, braces);
-	}
-
-
-	function formatPrimitive(ctx, value) {
-	  if (isUndefined(value))
-	    return ctx.stylize('undefined', 'undefined');
-	  if (isString(value)) {
-	    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-	                                             .replace(/'/g, "\\'")
-	                                             .replace(/\\"/g, '"') + '\'';
-	    return ctx.stylize(simple, 'string');
-	  }
-	  if (isNumber(value))
-	    return ctx.stylize('' + value, 'number');
-	  if (isBoolean(value))
-	    return ctx.stylize('' + value, 'boolean');
-	  // For some reason typeof null is "object", so special case here.
-	  if (isNull(value))
-	    return ctx.stylize('null', 'null');
-	}
-
-
-	function formatError(value) {
-	  return '[' + Error.prototype.toString.call(value) + ']';
-	}
-
-
-	function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
-	  var output = [];
-	  for (var i = 0, l = value.length; i < l; ++i) {
-	    if (hasOwnProperty(value, String(i))) {
-	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-	          String(i), true));
-	    } else {
-	      output.push('');
-	    }
-	  }
-	  keys.forEach(function(key) {
-	    if (!key.match(/^\d+$/)) {
-	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-	          key, true));
-	    }
-	  });
-	  return output;
-	}
-
-
-	function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-	  var name, str, desc;
-	  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
-	  if (desc.get) {
-	    if (desc.set) {
-	      str = ctx.stylize('[Getter/Setter]', 'special');
-	    } else {
-	      str = ctx.stylize('[Getter]', 'special');
-	    }
-	  } else {
-	    if (desc.set) {
-	      str = ctx.stylize('[Setter]', 'special');
-	    }
-	  }
-	  if (!hasOwnProperty(visibleKeys, key)) {
-	    name = '[' + key + ']';
-	  }
-	  if (!str) {
-	    if (ctx.seen.indexOf(desc.value) < 0) {
-	      if (isNull(recurseTimes)) {
-	        str = formatValue(ctx, desc.value, null);
-	      } else {
-	        str = formatValue(ctx, desc.value, recurseTimes - 1);
-	      }
-	      if (str.indexOf('\n') > -1) {
-	        if (array) {
-	          str = str.split('\n').map(function(line) {
-	            return '  ' + line;
-	          }).join('\n').substr(2);
-	        } else {
-	          str = '\n' + str.split('\n').map(function(line) {
-	            return '   ' + line;
-	          }).join('\n');
-	        }
-	      }
-	    } else {
-	      str = ctx.stylize('[Circular]', 'special');
-	    }
-	  }
-	  if (isUndefined(name)) {
-	    if (array && key.match(/^\d+$/)) {
-	      return str;
-	    }
-	    name = JSON.stringify('' + key);
-	    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-	      name = name.substr(1, name.length - 2);
-	      name = ctx.stylize(name, 'name');
-	    } else {
-	      name = name.replace(/'/g, "\\'")
-	                 .replace(/\\"/g, '"')
-	                 .replace(/(^"|"$)/g, "'");
-	      name = ctx.stylize(name, 'string');
-	    }
-	  }
-
-	  return name + ': ' + str;
-	}
-
-
-	function reduceToSingleString(output, base, braces) {
-	  var numLinesEst = 0;
-	  var length = output.reduce(function(prev, cur) {
-	    numLinesEst++;
-	    if (cur.indexOf('\n') >= 0) numLinesEst++;
-	    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
-	  }, 0);
-
-	  if (length > 60) {
-	    return braces[0] +
-	           (base === '' ? '' : base + '\n ') +
-	           ' ' +
-	           output.join(',\n  ') +
-	           ' ' +
-	           braces[1];
-	  }
-
-	  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-	}
-
-
-	// NOTE: These type checking functions intentionally don't use `instanceof`
-	// because it is fragile and can be easily faked with `Object.create()`.
-	function isArray(ar) {
-	  return Array.isArray(ar);
-	}
-	exports.isArray = isArray;
-
-	function isBoolean(arg) {
-	  return typeof arg === 'boolean';
-	}
-	exports.isBoolean = isBoolean;
-
-	function isNull(arg) {
-	  return arg === null;
-	}
-	exports.isNull = isNull;
-
-	function isNullOrUndefined(arg) {
-	  return arg == null;
-	}
-	exports.isNullOrUndefined = isNullOrUndefined;
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-	exports.isNumber = isNumber;
-
-	function isString(arg) {
-	  return typeof arg === 'string';
-	}
-	exports.isString = isString;
-
-	function isSymbol(arg) {
-	  return typeof arg === 'symbol';
-	}
-	exports.isSymbol = isSymbol;
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-	exports.isUndefined = isUndefined;
-
-	function isRegExp(re) {
-	  return isObject(re) && objectToString(re) === '[object RegExp]';
-	}
-	exports.isRegExp = isRegExp;
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-	exports.isObject = isObject;
-
-	function isDate(d) {
-	  return isObject(d) && objectToString(d) === '[object Date]';
-	}
-	exports.isDate = isDate;
-
-	function isError(e) {
-	  return isObject(e) &&
-	      (objectToString(e) === '[object Error]' || e instanceof Error);
-	}
-	exports.isError = isError;
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-	exports.isFunction = isFunction;
-
-	function isPrimitive(arg) {
-	  return arg === null ||
-	         typeof arg === 'boolean' ||
-	         typeof arg === 'number' ||
-	         typeof arg === 'string' ||
-	         typeof arg === 'symbol' ||  // ES6 symbol
-	         typeof arg === 'undefined';
-	}
-	exports.isPrimitive = isPrimitive;
-
-	exports.isBuffer = __webpack_require__(57);
-
-	function objectToString(o) {
-	  return Object.prototype.toString.call(o);
-	}
-
-
-	function pad(n) {
-	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-	}
-
-
-	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-	              'Oct', 'Nov', 'Dec'];
-
-	// 26 Feb 16:19:34
-	function timestamp() {
-	  var d = new Date();
-	  var time = [pad(d.getHours()),
-	              pad(d.getMinutes()),
-	              pad(d.getSeconds())].join(':');
-	  return [d.getDate(), months[d.getMonth()], time].join(' ');
-	}
-
-
-	// log is just a thin wrapper to console.log that prepends a timestamp
-	exports.log = function() {
-	  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
-	};
-
-
-	/**
-	 * Inherit the prototype methods from one constructor into another.
-	 *
-	 * The Function.prototype.inherits from lang.js rewritten as a standalone
-	 * function (not on Function.prototype). NOTE: If this file is to be loaded
-	 * during bootstrapping this function needs to be rewritten using some native
-	 * functions as prototype setup using normal JavaScript does not work as
-	 * expected during bootstrapping (see mirror.js in r114903).
-	 *
-	 * @param {function} ctor Constructor function which needs to inherit the
-	 *     prototype.
-	 * @param {function} superCtor Constructor function to inherit prototype from.
-	 */
-	exports.inherits = __webpack_require__(69);
-
-	exports._extend = function(origin, add) {
-	  // Don't do anything if add isn't an object
-	  if (!add || !isObject(add)) return origin;
-
-	  var keys = Object.keys(add);
-	  var i = keys.length;
-	  while (i--) {
-	    origin[keys[i]] = add[keys[i]];
-	  }
-	  return origin;
-	};
-
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
-
-/***/ },
 /* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -23508,8 +23750,8 @@ var ripple =
 
 	var Crypt = __webpack_require__(32).Crypt;
 	var Message = __webpack_require__(14).Message;
-	var parser  = __webpack_require__(42);
-	var querystring = __webpack_require__(52);
+	var parser  = __webpack_require__(43);
+	var querystring = __webpack_require__(56);
 	var extend = __webpack_require__(44);
 
 	var SignedRequest = function (config) {
@@ -25140,8 +25382,8 @@ var ripple =
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(73);
-	var reduce = __webpack_require__(74);
+	var Emitter = __webpack_require__(71);
+	var reduce = __webpack_require__(72);
 
 	/**
 	 * Root reference for iframes.
@@ -26191,16 +26433,6 @@ var ripple =
 /* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	exports.decode = exports.parse = __webpack_require__(64);
-	exports.encode = exports.stringify = __webpack_require__(65);
-
-
-/***/ },
-/* 53 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Original code adapted from Robert Kieffer.
 	// details at https://github.com/broofa/node-uuid
 
@@ -26235,13 +26467,13 @@ var ripple =
 
 	}())
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 54 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(71)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(73)
 
 	var md5 = toConstructor(__webpack_require__(63))
 	var rmd160 = toConstructor(__webpack_require__(75))
@@ -26272,13 +26504,13 @@ var ripple =
 	  return createHash(alg)
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 55 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(54)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(53)
 
 	var blocksize = 64
 	var zeroBuffer = new Buffer(blocksize); zeroBuffer.fill(0)
@@ -26320,10 +26552,10 @@ var ripple =
 	}
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// JavaScript PBKDF2 Implementation
@@ -26409,7 +26641,17 @@ var ripple =
 	  return exports
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+
+/***/ },
+/* 56 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	exports.decode = exports.parse = __webpack_require__(64);
+	exports.encode = exports.stringify = __webpack_require__(65);
+
 
 /***/ },
 /* 57 */
@@ -26704,7 +26946,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(72);
+	var helpers = __webpack_require__(74);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -27125,6 +27367,35 @@ var ripple =
 
 /***/ },
 /* 67 */
+/***/ function(module, exports, __webpack_require__) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
+
+/***/ },
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;var require;/* WEBPACK VAR INJECTION */(function(module) {/*! http://mths.be/punycode by @mathias */
@@ -27641,7 +27912,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(80)(module)))
 
 /***/ },
-/* 68 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright Joyent, Inc. and other Node contributors.
@@ -27752,35 +28023,6 @@ var ripple =
 	};
 
 	}.call(exports, __webpack_require__, exports, module)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ },
-/* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
 
 
 /***/ },
@@ -27911,65 +28153,6 @@ var ripple =
 
 /***/ },
 /* 71 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var exports = module.exports = function (alg) {
-	  var Alg = exports[alg]
-	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
-	  return new Alg()
-	}
-
-	var Buffer = __webpack_require__(82).Buffer
-	var Hash   = __webpack_require__(76)(Buffer)
-
-	exports.sha =
-	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
-
-
-/***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
-	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
-	var chrsz = 8;
-
-	function toArray(buf, bigEndian) {
-	  if ((buf.length % intSize) !== 0) {
-	    var len = buf.length + (intSize - (buf.length % intSize));
-	    buf = Buffer.concat([buf, zeroBuffer], len);
-	  }
-
-	  var arr = [];
-	  var fn = bigEndian ? buf.readInt32BE : buf.readInt32LE;
-	  for (var i = 0; i < buf.length; i += intSize) {
-	    arr.push(fn.call(buf, i));
-	  }
-	  return arr;
-	}
-
-	function toBuffer(arr, size, bigEndian) {
-	  var buf = new Buffer(size);
-	  var fn = bigEndian ? buf.writeInt32BE : buf.writeInt32LE;
-	  for (var i = 0; i < arr.length; i++) {
-	    fn.call(buf, arr[i], i * 4, true);
-	  }
-	  return buf;
-	}
-
-	function hash(buf, fn, hashSize, bigEndian) {
-	  if (!Buffer.isBuffer(buf)) buf = new Buffer(buf);
-	  var arr = fn(toArray(buf, bigEndian), buf.length * chrsz);
-	  return toBuffer(arr, hashSize, bigEndian);
-	}
-
-	module.exports = { hash: hash };
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
-
-/***/ },
-/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28139,7 +28322,7 @@ var ripple =
 
 
 /***/ },
-/* 74 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28166,6 +28349,65 @@ var ripple =
 	  
 	  return curr;
 	};
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(82).Buffer
+	var Hash   = __webpack_require__(76)(Buffer)
+
+	exports.sha =
+	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
+
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
+	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
+	var chrsz = 8;
+
+	function toArray(buf, bigEndian) {
+	  if ((buf.length % intSize) !== 0) {
+	    var len = buf.length + (intSize - (buf.length % intSize));
+	    buf = Buffer.concat([buf, zeroBuffer], len);
+	  }
+
+	  var arr = [];
+	  var fn = bigEndian ? buf.readInt32BE : buf.readInt32LE;
+	  for (var i = 0; i < buf.length; i += intSize) {
+	    arr.push(fn.call(buf, i));
+	  }
+	  return arr;
+	}
+
+	function toBuffer(arr, size, bigEndian) {
+	  var buf = new Buffer(size);
+	  var fn = bigEndian ? buf.writeInt32BE : buf.writeInt32LE;
+	  for (var i = 0; i < arr.length; i++) {
+	    fn.call(buf, arr[i], i * 4, true);
+	  }
+	  return buf;
+	}
+
+	function hash(buf, fn, hashSize, bigEndian) {
+	  if (!Buffer.isBuffer(buf)) buf = new Buffer(buf);
+	  var arr = fn(toArray(buf, bigEndian), buf.length * chrsz);
+	  return toBuffer(arr, hashSize, bigEndian);
+	}
+
+	module.exports = { hash: hash };
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 75 */
@@ -28377,7 +28619,7 @@ var ripple =
 
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 76 */
@@ -28497,7 +28739,7 @@ var ripple =
 	 */
 	module.exports = function (Buffer, Hash) {
 
-	  var inherits = __webpack_require__(43).inherits
+	  var inherits = __webpack_require__(37).inherits
 
 	  inherits(Sha1, Hash)
 
@@ -28661,7 +28903,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(43).inherits
+	var inherits = __webpack_require__(37).inherits
 	var BE       = false
 	var LE       = true
 	var u        = __webpack_require__(81)
@@ -30043,7 +30285,7 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 83 */
