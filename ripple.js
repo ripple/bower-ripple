@@ -140,14 +140,14 @@ var ripple =
 	var Transaction      = __webpack_require__(5).Transaction;
 	var Account          = __webpack_require__(4).Account;
 	var Meta             = __webpack_require__(11).Meta;
-	var OrderBook        = __webpack_require__(25).OrderBook;
-	var PathFind         = __webpack_require__(26).PathFind;
+	var OrderBook        = __webpack_require__(23).OrderBook;
+	var PathFind         = __webpack_require__(24).PathFind;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
 	var utils            = __webpack_require__(19);
 	var sjcl             = __webpack_require__(19).sjcl;
 	var config           = __webpack_require__(22);
-	var log              = __webpack_require__(27).internal.sub('remote');
+	var log              = __webpack_require__(25).internal.sub('remote');
 
 	/**
 	 *    Interface to manage the connection to a Ripple server.
@@ -1349,6 +1349,70 @@ var ripple =
 	};
 
 	/**
+	 * Account Request for paging request
+	 *
+	 * @param {String} type - request name, e.g. 'account_lines'
+	 * @param {String} account - ripple address
+	 * @param {Object} options
+	 *   @param {String} peer - ripple address
+	 *   @param [String|Number] ledger identifier
+	 *   @param [Number] limit - max results per response
+	 *   @param {String} marker - start position in response paging
+	 * @param [Function] callback
+	 * @return {Request}
+	 */
+	Remote.pagingAccountRequest = function(type, account, options, callback) {
+	  var ledger, peer, limit, marker;
+
+	  if (typeof options === 'object') {
+	    ledger = options.ledger;
+	    peer = options.peer;
+	    limit = options.limit;
+	    marker = options.marker;
+	  }
+
+	  var lastArg = arguments[arguments.length - 1];
+
+	  if (typeof lastArg === 'function') {
+	    callback = lastArg;
+	  }
+
+	  var request = new Request(this, type);
+	  var account = UInt160.json_rewrite(account);
+
+	  request.message.account = account;
+	  request.ledgerSelect(ledger);
+
+	  if (UInt160.is_valid(peer)) {
+	    request.message.peer = UInt160.json_rewrite(peer);
+	  }
+
+	  if (!isNaN(Number(limit))) {
+	    limit = Number(limit);
+
+	    // max for 32-bit unsigned int is 4294967295
+	    // we'll clamp to 1e9
+	    if (limit > 1e9) {
+	      limit = 1e9;
+	    }
+	    // min for 32-bit unsigned int is 0
+	    // we'll clamp to 0
+	    if (limit < 0) {
+	      limit = 0;
+	    }
+
+	    request.message.limit = limit;
+	  }
+
+	  if (marker) {
+	    request.message.marker = marker;
+	  }
+
+	  request.callback(callback);
+	  return request;
+	};
+
+	/**
 	 * Request account_info
 	 *
 	 * @param {String} ripple address
@@ -1379,32 +1443,38 @@ var ripple =
 	/**
 	 * Request account_lines
 	 *
-	 * @param {String} ripple address
-	 * @param [String|Number] ledger identifier
-	 * @param [String] peer
+	 * @param {String} account - ripple address
+	 * @param {Object} options
+	 *   @param {String} peer - ripple address
+	 *   @param [String|Number] ledger identifier
+	 *   @param [Number] limit - max results per response
+	 *   @param {String} marker - start position in response paging
 	 * @param [Function] callback
 	 * @return {Request}
 	 */
 
-	Remote.prototype.requestAccountLines = function(account, peer, callback) {
+	Remote.prototype.requestAccountLines = function(account, options, callback) {
 	  // XXX Does this require the server to be trusted?
 	  //utils.assert(this.trusted);
 	  var args = Array.prototype.concat.apply(['account_lines'], arguments);
-	  return Remote.accountRequest.apply(this, args);
+	  return Remote.pagingAccountRequest.apply(this, args);
 	};
 
 	/**
 	 * Request account_offers
 	 *
-	 * @param {String} ripple address
-	 * @param [String|Number] ledger identifier
+	 * @param {String} account - ripple address
+	 * @param {Object} options
+	 *   @param [String|Number] ledger identifier
+	 *   @param [Number] limit - max results per response
+	 *   @param {String} marker - start position in response paging
 	 * @param [Function] callback
 	 * @return {Request}
 	 */
 
-	Remote.prototype.requestAccountOffers = function(account, callback) {
+	Remote.prototype.requestAccountOffers = function(account, options, callback) {
 	  var args = Array.prototype.concat.apply(['account_offers'], arguments);
-	  return Remote.accountRequest.apply(this, args);
+	  return Remote.pagingAccountRequest.apply(this, args);
 	};
 
 	/**
@@ -2866,7 +2936,9 @@ var ripple =
 
 	  // Maximum possible amount for non-XRP currencies using the maximum mantissa
 	  // with maximum exponent. Corresponds to hex 0xEC6386F26FC0FFFF.
-	  max_value:         '9999999999999999e80'
+	  max_value:         '9999999999999999e80',
+	  // Minimum possible amount for non-XRP currencies.
+	  min_value:         '-1000000000000000e-96'
 	};
 
 	// Add constants to Amount class
@@ -3236,6 +3308,33 @@ var ripple =
 	  return this.copy()._invert();
 	};
 
+	/**
+	 * Canonicalize amount value
+	 *
+	 * Mirrors rippled's internal Amount representation
+	 * From https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol/STAmount.h#L31-L40
+	 *
+	 * Internal form:
+	 * 1: If amount is zero, then value is zero and offset is -100
+	 * 2: Otherwise:
+	 *    legal offset range is -96 to +80 inclusive
+	 *    value range is 10^15 to (10^16 - 1) inclusive
+	 *    amount = value * [10 ^ offset]
+	 *
+	 * -------------------
+	 *
+	 * The amount can be epxresses as A x 10^B
+	 * Where:
+	 * - A must be an integer between 10^15 and (10^16)-1 inclusive
+	 * - B must be between -96 and 80 inclusive
+	 *
+	 * This results
+	 * - minumum: 10^15 x 10^-96 -> 10^-81 -> -1e-81
+	 * - maximum: (10^16)-1 x 10^80 -> 9999999999999999e80
+	 *
+	 * @returns {Amount}
+	 * @throws {Error} if offset exceeds legal ranges, meaning the amount value is bigger than supported
+	 */
 	Amount.prototype.canonicalize = function() {
 	  if (!(this._value instanceof BigInteger)) {
 	    // NaN.
@@ -3259,9 +3358,8 @@ var ripple =
 	      }
 	    }
 
-	    // XXX Make sure not bigger than supported. Throw if so.
 	  } else if (this.is_zero()) {
-	    this._offset      = -100;
+	    this._offset      = Amount.cMinOffset;
 	    this._is_negative = false;
 	  } else {
 	    // Normalize mantissa to valid range.
@@ -3275,6 +3373,16 @@ var ripple =
 	      this._value  = this._value.divide(Amount.bi_10);
 	      this._offset += 1;
 	    }
+	  }
+
+	  // Make sure not bigger than supported. Throw if so.
+	  if (this.is_negative() && this._offset < Amount.cMinOffset) {
+	    throw new Error('Exceeding min value of ' + Amount.min_value);
+	  }
+
+	  // Make sure not smaller than supported. Throw if so.
+	  if (!this.is_negative() && this._offset > Amount.cMaxOffset) {
+	    throw new Error('Exceeding max value of ' + Amount.max_value);
 	  }
 
 	  return this;
@@ -3351,9 +3459,7 @@ var ripple =
 	    return this.equals(Amount.from_json(d));
 	  }
 
-	  var result = true;
-
-	  result = !((!this.is_valid() || !d.is_valid())
+	  var result = !((!this.is_valid() || !d.is_valid())
 	             || (this._is_native !== d._is_native)
 	             || (!this._value.equals(d._value) || this._offset !== d._offset)
 	             || (this._is_negative !== d._is_negative)
@@ -4103,7 +4209,7 @@ var ripple =
 	var EventEmitter       = __webpack_require__(37).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(8).UInt160;
-	var TransactionManager = __webpack_require__(23).TransactionManager;
+	var TransactionManager = __webpack_require__(26).TransactionManager;
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Base               = __webpack_require__(7).Base;
 
@@ -4541,7 +4647,7 @@ var ripple =
 	var Seed             = __webpack_require__(10).Seed;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
-	var hashprefixes     = __webpack_require__(28);
+	var hashprefixes     = __webpack_require__(29);
 	var config           = __webpack_require__(22);
 
 	function Transaction(remote) {
@@ -5473,7 +5579,7 @@ var ripple =
 	var extend    = __webpack_require__(44);
 	var UInt160 = __webpack_require__(8).UInt160;
 	var utils = __webpack_require__(19);
-	var Float = __webpack_require__(24).Float;
+	var Float = __webpack_require__(27).Float;
 
 	//
 	// Currency support
@@ -5525,11 +5631,7 @@ var ripple =
 	Currency.prototype.human_RE = /^\s*([a-zA-Z0-9]{3})(\s*-\s*[- \w]+)?(\s*\(-?\d+\.?\d*%pa\))?\s*$/;
 
 	Currency.from_json = function(j, shouldInterpretXrpAsIou) {
-	  if (j instanceof this) {
-	    return j.clone();
-	  } else {
-	    return (new this()).parse_json(j, shouldInterpretXrpAsIou);
-	  }
+	    return (new Currency()).parse_json(j, shouldInterpretXrpAsIou);
 	};
 
 	Currency.from_human = function(j, opts) {
@@ -5538,17 +5640,18 @@ var ripple =
 
 	// this._value = NaN on error.
 	Currency.prototype.parse_json = function(j, shouldInterpretXrpAsIou) {
+	  if (j instanceof Currency) {
+	    return j.clone();
+	  }
+
 	  this._value = NaN;
 
 	  switch (typeof j) {
 	    case 'string':
 
-	      if (!j || /^(0|XRP)$/.test(j)) {
-	        if (shouldInterpretXrpAsIou) {
-	          this.parse_hex(Currency.HEX_CURRENCY_BAD);
-	        } else {
-	          this.parse_hex(Currency.HEX_ZERO);
-	        }
+	      // if an empty string is given, fall back to XRP
+	      if (!j) {
+	        this.parse_hex(shouldInterpretXrpAsIou ? Currency.HEX_CURRENCY_BAD : Currency.HEX_ZERO);
 	        break;
 	      }
 
@@ -5558,6 +5661,17 @@ var ripple =
 	      if (matches) {
 
 	        var currencyCode = matches[1];
+
+	        // for the currency 'XRP' case
+	        // we drop everything else that could have been provided
+	        // e.g. 'XRP - Ripple'
+	        if (!currencyCode || /^(0|XRP)$/.test(currencyCode)) {
+	          this.parse_hex(shouldInterpretXrpAsIou ? Currency.HEX_CURRENCY_BAD : Currency.HEX_ZERO);
+
+	          // early break, we can't have interest on XRP
+	          break;
+	        }
+
 	        // the full currency is matched as it is part of the valid currency format, but not stored
 	        // var full_currency = matches[2] || '';
 	        var interest = matches[3] || '';
@@ -5742,7 +5856,7 @@ var ripple =
 	 * @returns {number} - interest for provided interval, can be negative for demurred currencies
 	 */
 	Currency.prototype.get_interest_at = function(referenceDate, decimals) {
-	  if (!this.has_interest) {
+	  if (!this.has_interest()) {
 	    return 0;
 	  }
 
@@ -6014,7 +6128,7 @@ var ripple =
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = __webpack_require__(29).UInt;
+	var UInt = __webpack_require__(28).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6121,7 +6235,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(44);
-	var UInt   = __webpack_require__(29).UInt;
+	var UInt   = __webpack_require__(28).UInt;
 
 	//
 	// UInt256 support
@@ -6159,7 +6273,7 @@ var ripple =
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(29).UInt;
+	var UInt    = __webpack_require__(28).UInt;
 	var UInt256 = __webpack_require__(9).UInt256;
 	var UInt160 = __webpack_require__(8).UInt160;
 	var KeyPair = __webpack_require__(30).KeyPair;
@@ -7145,7 +7259,7 @@ var ripple =
 	var blobClient = __webpack_require__(33).BlobClient;
 	var AuthInfo   = __webpack_require__(16).AuthInfo;
 	var crypt      = __webpack_require__(32).Crypt;
-	var log        = __webpack_require__(27).sub('vault');
+	var log        = __webpack_require__(25).sub('vault');
 	function VaultClient(opts) {
 	  
 	  var self = this;
@@ -8532,7 +8646,7 @@ var ripple =
 	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var Transaction  = __webpack_require__(5).Transaction;
-	var log          = __webpack_require__(27).internal.sub('server');
+	var log          = __webpack_require__(25).internal.sub('server');
 
 	/**
 	 *  @constructor Server
@@ -9093,7 +9207,7 @@ var ripple =
 	  this._remote.emit('load', message, this);
 
 	  var loadChanged = message.load_base !== this._load_base
-	  || message.load_factor !== this._load_factor
+	  || message.load_factor !== this._load_factor;
 
 	  if (loadChanged) {
 	    this._load_base = message.load_base;
@@ -9399,12 +9513,1251 @@ var ripple =
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Routines for working with an orderbook.
+	//
+	// One OrderBook object represents one half of an order book. (i.e. bids OR
+	// asks) Which one depends on the ordering of the parameters.
+	//
+	// Events:
+	//  - model
+	//  - trade
+	//  - transaction
+
+	var util         = __webpack_require__(39);
+	var extend       = __webpack_require__(44);
+	var assert       = __webpack_require__(38);
+	var async        = __webpack_require__(50);
+	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var Amount       = __webpack_require__(3).Amount;
+	var UInt160      = __webpack_require__(8).UInt160;
+	var Currency     = __webpack_require__(6).Currency;
+	var log          = __webpack_require__(25).internal.sub('orderbook');
+
+	/**
+	 * @constructor OrderBook
+	 * @param {Remote} remote
+	 * @param {String} ask currency
+	 * @param {String} ask issuer
+	 * @param {String} bid currency
+	 * @param {String} bid issuer
+	 * @param {String} orderbook key
+	 */
+
+	function OrderBook(remote, getsC, getsI, paysC, paysI, key) {
+	  EventEmitter.call(this);
+
+	  var self = this;
+
+	  this._remote = remote;
+	  this._currencyGets = Currency.from_json(getsC);
+	  this._issuerGets = getsI;
+	  this._currencyPays = Currency.from_json(paysC);
+	  this._issuerPays = paysI;
+	  this._key = key;
+	  this._subscribed = false;
+	  this._shouldSubscribe = true;
+	  this._listeners = 0;
+	  this._offers = [ ];
+	  this._ownerFunds = { };
+	  this._offerCounts = { };
+
+	  // We consider ourselves synchronized if we have a current
+	  // copy of the offers, we are online and subscribed to updates.
+	  this._synchronized = false;
+
+	  function listenersModified(action, event) {
+	    // Automatically subscribe and unsubscribe to orderbook
+	    // on the basis of existing event listeners
+	    if (~OrderBook.EVENTS.indexOf(event)) {
+	      switch (action) {
+	        case 'add':
+	          if (++self._listeners === 1) {
+	            self.subscribe();
+	          }
+	          break;
+	        case 'remove':
+	          if (--self._listeners === 0) {
+	            self.unsubscribe();
+	          }
+	          break;
+	      }
+	    }
+	  };
+
+	  this.on('newListener', function(event) {
+	    listenersModified('add', event);
+	  });
+
+	  this.on('removeListener', function(event) {
+	    listenersModified('remove', event);
+	  });
+
+	  this.on('unsubscribe', function() {
+	    self.resetCache();
+	    self._remote.removeListener('transaction', updateFundedAmounts);
+	    self._remote.removeListener('transaction', updateTransferRate);
+	  });
+
+	  this._remote.once('prepare_subscribe', function() {
+	    self.subscribe();
+	  });
+
+	  this._remote.on('disconnect', function() {
+	    self.resetCache();
+	    self._remote.once('prepare_subscribe', function() {
+	      self.subscribe();
+	    });
+	  });
+
+	  function updateFundedAmounts(message) {
+	    self.updateFundedAmounts(message);
+	  };
+
+	  this._remote.on('transaction', updateFundedAmounts);
+
+	  function updateTransferRate(message) {
+	    self.updateTransferRate(message);
+	  };
+
+	  this._remote.on('transaction', updateTransferRate);
+
+	  return this;
+	};
+
+	util.inherits(OrderBook, EventEmitter);
+
+	/**
+	 * Events emitted from OrderBook
+	 */
+
+	OrderBook.EVENTS = [ 'transaction', 'model', 'trade', 'offer' ];
+
+	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
+
+	/**
+	 * Whether the OrderBook is valid.
+	 *
+	 * Note: This only checks whether the parameters (currencies and issuer) are
+	 *       syntactically valid. It does not check anything against the ledger.
+	 *
+	 * @return {Boolean} is valid
+	 */
+
+	OrderBook.prototype.isValid =
+	OrderBook.prototype.is_valid = function() {
+	  // XXX Should check for same currency (non-native) && same issuer
+	  return (
+	    this._currencyPays && this._currencyPays.is_valid() &&
+	    (this._currencyPays.is_native() || UInt160.is_valid(this._issuerPays)) &&
+	    this._currencyGets && this._currencyGets.is_valid() &&
+	    (this._currencyGets.is_native() || UInt160.is_valid(this._issuerGets)) &&
+	    !(this._currencyPays.is_native() && this._currencyGets.is_native())
+	  );
+	};
+
+	/**
+	 * Initialize orderbook. Get orderbook offers and subscribe to transactions
+	 */
+
+	OrderBook.prototype.subscribe = function() {
+	  var self = this;
+
+	  if (!this._shouldSubscribe) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('subscribing', this._key);
+	  }
+
+	  var steps = [
+	    function(callback) {
+	      self.requestTransferRate(callback);
+	    },
+	    function(callback) {
+	      self.requestOffers(callback);
+	    },
+	    function(callback) {
+	      self.subscribeTransactions(callback);
+	    }
+	  ];
+
+	  async.series(steps, function(err) {
+	    //XXX What now?
+	  });
+	};
+
+	/**
+	 * Unhook event listeners and prevent ripple-lib from further work on this
+	 * orderbook. There is no more orderbook stream, so "unsubscribe" is nominal
+	 */
+
+	OrderBook.prototype.unsubscribe = function() {
+	  var self = this;
+
+	  if (this._remote.trace) {
+	    log.info('unsubscribing', this._key);
+	  }
+
+	  this._subscribed = false;
+	  this._shouldSubscribe = false;
+
+	  OrderBook.EVENTS.forEach(function(event) {
+	    if (self.listeners(event).length > 0) {
+	      self.removeAllListeners(event);
+	    }
+	  });
+
+	  this.emit('unsubscribe');
+	};
+
+	/**
+	 * Reset cached owner funds, offer counts
+	 */
+
+	OrderBook.prototype.resetCache = function() {
+	  this._ownerFunds = { };
+	  this._offerCounts = { };
+	  this._synchronized = false;
+	};
+
+	/**
+	 * Check that the funds for offer owner have been cached
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.hasCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._ownerFunds[account] !== void(0);
+	};
+
+	/**
+	 * Add cached offer owner funds
+	 *
+	 * @param {String} account address
+	 * @param {String} funded amount
+	 */
+
+	OrderBook.prototype.addCachedFunds = function(account, fundedAmount) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(!isNaN(fundedAmount), 'Funded amount is invalid');
+	  this._ownerFunds[account] = fundedAmount;
+	};
+
+	/**
+	 * Get cached offer owner funds
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.getCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._ownerFunds[account];
+	};
+
+	/**
+	 * Remove cached offer owner funds
+	 *
+	 * @param {String} account address
+	 */
+
+	OrderBook.prototype.removeCachedFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  this._ownerFunds[account] = void(0);
+	};
+
+	/**
+	 * Get offer count for offer owner
+	 */
+
+	OrderBook.prototype.getOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  return this._offerCounts[account] || 0;
+	};
+
+	/**
+	 * Increment offer count for offer owner
+	 */
+
+	OrderBook.prototype.incrementOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  var result = (this._offerCounts[account] || 0) + 1;
+	  this._offerCounts[account] = result;
+	  return result;
+	};
+
+	/**
+	 * Decrement offer count for offer owner
+	 */
+
+	OrderBook.prototype.decrementOfferCount = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  var result = (this._offerCounts[account] || 1) - 1;
+	  this._offerCounts[account] = result;
+	  return result;
+	};
+
+	/**
+	 * Compute funded amount for a balance/transferRate
+	 *
+	 * @param {String} balance
+	 * @param [String] transferRate
+	 * @return {Amount} funded amount
+	 */
+
+	OrderBook.prototype.applyTransferRate = function(balance, transferRate) {
+	  assert(!isNaN(balance), 'Balance is invalid');
+
+	  if (this._currencyGets.is_native()) {
+	    return balance;
+	  }
+
+	  if (transferRate === void(0)) {
+	    transferRate = this._issuerTransferRate;
+	  }
+
+	  assert(!isNaN(transferRate), 'Transfer rate is invalid');
+
+	  if (transferRate === OrderBook.DEFAULT_TRANSFER_RATE) {
+	    return balance;
+	  }
+
+	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
+	  var adjustedBalance = Amount.from_json(balance + iouSuffix)
+	  .divide(transferRate)
+	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
+	  .to_json()
+	  .value;
+
+	  return adjustedBalance;
+	};
+
+	/**
+	 * Request transfer rate for this orderbook's issuer
+	 *
+	 * @param [Function] calback
+	 */
+
+	OrderBook.prototype.requestTransferRate = function(callback) {
+	  var self = this;
+	  var issuer = this._issuerGets;
+
+	  this.once('transfer_rate', function(rate) {
+	    if (typeof callback === 'function') {
+	      callback(null, rate);
+	    }
+	  });
+
+	  if (this._currencyGets.is_native()) {
+	    // Transfer rate is default
+	    return this.emit('transfer_rate', OrderBook.DEFAULT_TRANSFER_RATE);
+	  }
+
+	  if (this._issuerTransferRate) {
+	    // Transfer rate has been cached
+	    return this.emit('transfer_rate', this._issuerTransferRate);
+	  }
+
+	  this._remote.requestAccountInfo(issuer, function(err, info) {
+	    if (err) {
+	      // XXX What now?
+	      return callback(err);
+	    }
+
+	    var transferRate = info.account_data.TransferRate
+	    || OrderBook.DEFAULT_TRANSFER_RATE;
+
+	    self._issuerTransferRate = transferRate;
+	    self.emit('transfer_rate', transferRate);
+	  });
+	};
+
+	/**
+	 * Set funded amount on offer. All offers have taker_gets_funded property,
+	 * which reflects the amount this account can afford to offer. All offers have
+	 * is_fully_funded property, indicating whether these funds are sufficient for
+	 * the offer placed.
+	 *
+	 * @param {Object} offer
+	 * @param {String} funds
+	 * @return offer
+	 */
+
+	OrderBook.prototype.setFundedAmount = function(offer, fundedAmount) {
+	  assert.strictEqual(typeof offer, 'object', 'Offer is invalid');
+	  assert(!isNaN(fundedAmount), 'Funds is invalid');
+
+	  if (fundedAmount === '0') {
+	    offer.taker_gets_funded = '0';
+	    offer.taker_pays_funded = '0';
+	    offer.is_fully_funded = false;
+	    return offer;
+	  }
+
+	  var iouSuffix = '/' + this._currencyGets.to_json()
+	                + '/' + this._issuerGets;
+
+	  offer.is_fully_funded = Amount.from_json(
+	    this._currencyGets.is_native() ? fundedAmount : fundedAmount + iouSuffix
+	  ).compareTo(Amount.from_json(offer.TakerGets)) >= 0;
+
+	  if (offer.is_fully_funded) {
+	    offer.taker_gets_funded = Amount.from_json(offer.TakerGets).to_text();
+	    offer.taker_pays_funded = Amount.from_json(offer.TakerPays).to_text();
+	    return offer;
+	  }
+
+	  offer.taker_gets_funded = fundedAmount;
+
+	  var takerPaysValue = typeof offer.TakerPays === 'object'
+	  ? offer.TakerPays.value
+	  : offer.TakerPays;
+
+	  var takerGetsValue = typeof offer.TakerGets === 'object'
+	  ? offer.TakerGets.value
+	  : offer.TakerGets;
+
+	  var takerPays = Amount.from_json(
+	    takerPaysValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
+
+	  var takerGets = Amount.from_json(
+	    takerGetsValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
+
+	  var fundedPays = Amount.from_json(
+	    fundedAmount + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
+	  );
+
+	  var rate = takerPays.divide(takerGets);
+
+	  fundedPays = fundedPays.multiply(rate);
+
+	  if (fundedPays.compareTo(takerPays) < 0) {
+	    offer.taker_pays_funded = fundedPays.to_json().value;
+	  } else {
+	    offer.taker_pays_funded = takerPays.to_json().value;
+	  }
+
+	  return offer;
+	};
+
+	/**
+	 * Determine what an account is funded to offer for orderbook's
+	 * currency/issuer
+	 *
+	 * @param {String} account
+	 * @param {Function} callback
+	 */
+
+	OrderBook.prototype.requestFundedAmount = function(account, callback) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert.strictEqual(typeof callback, 'function', 'Callback is invalid');
+
+	  var self = this;
+
+	  if (self._remote.trace) {
+	    log.info('requesting funds', account);
+	  }
+
+	  function requestNativeBalance(callback) {
+	    self._remote.requestAccountInfo(account, function(err, info) {
+	      if (err) {
+	        callback(err);
+	      } else {
+	        callback(null, String(info.account_data.Balance));
+	      }
+	    });
+	  };
+
+	  function requestLineBalance(callback) {
+	    var request = self._remote.requestAccountLines(
+	      account,
+	      {
+	        ledger: 'validated',
+	        peer: self._issuerGets
+	      }
+	    );
+
+	    request.request(function(err, res) {
+	      if (err) {
+	        return callback(err);
+	      }
+
+	      var currency = self._currencyGets.to_json();
+	      var balance = '0';
+
+	      for (var i=0, line; (line=res.lines[i]); i++) {
+	        if (line.currency === currency) {
+	          balance = line.balance;
+	          break;
+	        }
+	      }
+
+	      callback(null, balance);
+	    });
+	  };
+
+	  function computeFundedAmount(err, results) {
+	    if (err) {
+	      if (self._remote.trace) {
+	        log.info('failed to request funds', err);
+	      }
+	      //XXX What now?
+	      return callback(err);
+	    }
+
+	    if (self._remote.trace) {
+	      log.info('requested funds', account, results);
+	    }
+
+	    var balance;
+	    var fundedAmount;
+
+	    if (self._currencyGets.is_native()) {
+	      balance = results[0];
+	      fundedAmount = balance;
+	    } else {
+	      balance = results[1];
+	      fundedAmount = self.applyTransferRate(balance, results[0]);
+	    }
+
+	    callback(null, fundedAmount);
+	  };
+
+	  var steps = [ ];
+
+	  if (this._currencyGets.is_native()) {
+	    steps.push(requestNativeBalance);
+	  } else {
+	    steps.push(this.requestTransferRate.bind(this));
+	    steps.push(requestLineBalance);
+	  }
+
+	  async.parallel(steps, computeFundedAmount);
+	};
+
+	/**
+	 * Get changed balance of an affected node
+	 *
+	 * @param {Object} RippleState or AccountRoot node
+	 * @return {Object} { account, balance }
+	 */
+
+	OrderBook.prototype.getBalanceChange = function(node) {
+	  var result = {
+	    account: void(0),
+	    balance: void(0)
+	  };
+
+	  switch (node.entryType) {
+	    case 'AccountRoot':
+	      result.account = node.fields.Account;
+	      result.balance = node.fieldsFinal.Balance;
+	      break;
+
+	    case 'RippleState':
+	      if (node.fields.HighLimit.issuer === this._issuerGets) {
+	        result.account = node.fields.LowLimit.issuer;
+	        result.balance = node.fieldsFinal.Balance.value;
+	      } else if (node.fields.LowLimit.issuer === this._issuerGets) {
+	        // Negate balance
+	        result.account = node.fields.HighLimit.issuer;
+	        result.balance = Amount.from_json(
+	          node.fieldsFinal.Balance
+	        ).negate().to_json().value;
+	      }
+	      break;
+	  }
+
+	  result.isValid = !isNaN(result.balance)
+	                && UInt160.is_valid(result.account);
+
+	  return result;
+	};
+
+	/**
+	 * Check that affected node represents a balance change
+	 *
+	 * @param {Object} RippleState or AccountRoot node
+	 * @return {Boolean}
+	 */
+
+	OrderBook.prototype.isBalanceChange = function(node) {
+	  // Check balance change
+	  if (!(node.fields && node.fields.Balance
+	  && node.fieldsPrev && node.fieldsFinal
+	  && node.fieldsPrev.Balance && node.fieldsFinal.Balance)) {
+	    return false;
+	  }
+
+	  // Check currency
+	  if (this._currencyGets.is_native()) {
+	    return !isNaN(node.fields.Balance);
+	  }
+
+	  if (node.fields.Balance.currency !== this._currencyGets.to_json()) {
+	    return false;
+	  }
+
+	  // Check issuer
+	  if (!(node.fields.HighLimit.issuer === this._issuerGets
+	     || node.fields.LowLimit.issuer === this._issuerGets)) {
+	     return false;
+	   }
+
+	   return true;
+	};
+
+	/**
+	 * Update funded amounts for offers in the orderbook as new transactions are
+	 * streamed from server
+	 *
+	 * @param {Object} transaction
+	 */
+
+	OrderBook.prototype.updateFundedAmounts = function(message) {
+	  var self = this;
+
+	  var affectedAccounts = message.mmeta.getAffectedAccounts();
+
+	  var isOwnerAffected = affectedAccounts.some(function(account) {
+	    return self.hasCachedFunds(account);
+	  });
+
+	  if (!isOwnerAffected) {
+	    return;
+	  }
+
+	  if (!this._currencyGets.is_native() && !this._issuerTransferRate) {
+	    // Defer until transfer rate is requested
+	    if (self._remote.trace) {
+	      log.info('waiting for transfer rate');
+	    }
+
+	    this.once('transfer_rate', function() {
+	      self.updateFundedAmounts(message);
+	    });
+
+	    this.requestTransferRate();
+	    return;
+	  }
+
+	  var nodes = message.mmeta.getNodes({
+	    nodeType: 'ModifiedNode',
+	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
+	  });
+
+	  for (var i=0; i<nodes.length; i++) {
+	    var node = nodes[i];
+
+	    if (!this.isBalanceChange(node)) {
+	      continue;
+	    }
+
+	    var result = this.getBalanceChange(node);
+
+	    if (result.isValid) {
+	      if (this.hasCachedFunds(result.account)) {
+	        this.updateOfferFunds(result.account, result.balance);
+	      }
+	    }
+	  }
+	};
+
+	/**
+	 * Update issuer's TransferRate as it changes
+	 *
+	 * @param {Object} transaction
+	 */
+
+	OrderBook.prototype.updateTransferRate = function(message) {
+	  var self = this;
+
+	  var affectedAccounts = message.mmeta.getAffectedAccounts();
+
+	  var isIssuerAffected = affectedAccounts.some(function(account) {
+	    return account === self._issuerGets;
+	  });
+
+	  if (!isIssuerAffected) {
+	    return;
+	  }
+
+	  // XXX Update transfer rate
+	  //
+	  //  var nodes = message.mmeta.getNodes({
+	  //    nodeType: 'ModifiedNode',
+	  //    entryType: 'AccountRoot'
+	  //  });
+	};
+
+	/**
+	 * Request orderbook entries from server
+	 */
+
+	OrderBook.prototype.requestOffers = function(callback) {
+	  var self = this;
+
+	  if (typeof callback !== 'function') {
+	    callback = function(){};
+	  }
+
+	  if (!this._shouldSubscribe) {
+	    return callback(new Error('Should not request offers'));
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('requesting offers', this._key);
+	  }
+
+	  function handleOffers(res) {
+	    if (!Array.isArray(res.offers)) {
+	      // XXX What now?
+	      return callback(new Error('Invalid response'));
+	    }
+
+	    if (self._remote.trace) {
+	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
+	    }
+
+	    // Reset offers
+	    self._offers = [ ];
+
+	    for (var i=0, l=res.offers.length; i<l; i++) {
+	      var offer = res.offers[i];
+	      var fundedAmount;
+
+	      if (self.hasCachedFunds(offer.Account)) {
+	        fundedAmount = self.getCachedFunds(offer.Account);
+	      } else if (offer.hasOwnProperty('owner_funds')) {
+	        fundedAmount = self.applyTransferRate(offer.owner_funds);
+	        self.addCachedFunds(offer.Account, fundedAmount);
+	      }
+
+	      self.setFundedAmount(offer, fundedAmount);
+	      self.incrementOfferCount(offer.Account);
+	      self._offers.push(offer);
+	    }
+
+	    self._synchronized = true;
+
+	    self.emit('model', self._offers);
+
+	    callback(null, self._offers);
+	  };
+
+	  function handleError(err) {
+	    // XXX What now?
+	    if (self._remote.trace) {
+	      log.info('failed to request offers', self._key, err);
+	    }
+
+	    callback(err);
+	  };
+
+	  var request = this._remote.requestBookOffers(this.toJSON());
+	  request.once('success', handleOffers);
+	  request.once('error', handleError);
+	  request.request();
+
+	  return request;
+	};
+
+	/**
+	 * Subscribe to transactions stream
+	 */
+
+	OrderBook.prototype.subscribeTransactions = function(callback) {
+	  var self = this;
+
+	  if (typeof callback !== 'function') {
+	    callback = function(){};
+	  }
+
+	  if (!this._shouldSubscribe) {
+	    return callback('Should not subscribe');
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('subscribing to transactions');
+	  }
+
+	  function handleSubscribed(res) {
+	    if (self._remote.trace) {
+	      log.info('subscribed to transactions');
+	    }
+
+	    self._subscribed = true;
+
+	    callback(null, res);
+	  };
+
+	  function handleError(err) {
+	    if (self._remote.trace) {
+	      log.info('failed to subscribe to transactions', self._key, err);
+	    }
+
+	    callback(err);
+	  };
+
+	  var request = this._remote.requestSubscribe();
+	  request.addStream('transactions');
+	  request.once('success', handleSubscribed);
+	  request.once('error', handleError);
+	  request.request();
+
+	  return request;
+	};
+
+	/**
+	 * Get offers model asynchronously.
+	 *
+	 * This function takes a callback and calls it with an array containing the
+	 * current set of offers in this order book.
+	 *
+	 * If the data is available immediately, the callback may be called
+	 * synchronously.
+	 *
+	 * @param {Function} callback
+	 */
+
+	OrderBook.prototype.offers =
+	OrderBook.prototype.getOffers = function(callback) {
+	  assert.strictEqual(typeof callback, 'function', 'Callback missing');
+
+	  var self = this;
+
+	  if (this._synchronized) {
+	    callback(null, this._offers);
+	  } else {
+	    this.once('model', function(m) {
+	      callback(null, m);
+	    });
+	  }
+
+	  return this;
+	};
+
+	/**
+	 * Return latest known offers
+	 *
+	 * Usually, this will just be an empty array if the order book hasn't been
+	 * loaded yet. But this accessor may be convenient in some circumstances.
+	 *
+	 * @return {Array} offers
+	 */
+
+	OrderBook.prototype.offersSync =
+	OrderBook.prototype.getOffersSync = function() {
+	  return this._offers;
+	};
+
+	/**
+	 * Insert an offer into the orderbook
+	 *
+	 * @param {Object} node
+	 */
+
+	OrderBook.prototype.insertOffer = function(node, fundedAmount) {
+	  if (this._remote.trace) {
+	    log.info('inserting offer', this._key, node.fields);
+	  }
+
+	  var nodeFields = node.fields;
+
+	  nodeFields.index = node.ledgerIndex;
+
+	  if (!isNaN(fundedAmount)) {
+	    this.setFundedAmount(nodeFields, fundedAmount);
+	    this.addCachedFunds(nodeFields.Account, fundedAmount);
+	  }
+
+	  var DATE_REF = {
+	    reference_date: new Date()
+	  };
+
+	  // XXX Should use Amount#from_quality
+	  var price = Amount.from_json(
+	    nodeFields.TakerPays
+	  ).ratio_human(node.fields.TakerGets, DATE_REF);
+
+	  for (var i=0, l=this._offers.length; i<l; i++) {
+	    var offer = this._offers[i];
+
+	    var priceItem = Amount.from_json(
+	      offer.TakerPays
+	    ).ratio_human(offer.TakerGets, DATE_REF);
+
+	    if (price.compareTo(priceItem) <= 0) {
+	      this._offers.splice(i, 0, nodeFields);
+	      break;
+	    } else if (i === (l - 1)) {
+	      this._offers.push(nodeFields);
+	    }
+	  }
+
+	  this.emit('offer_added', nodeFields);
+	};
+
+	/**
+	 * Modify an existing offer in the orderbook
+	 *
+	 * @param {Object} node
+	 * @param {Boolean} isDeletedNode
+	 */
+
+	OrderBook.prototype.modifyOffer = function(node, isDeletedNode) {
+	  if (this._remote.trace) {
+	    if (isDeletedNode) {
+	      log.info('deleting offer', this._key, node.fields);
+	    } else {
+	      log.info('modifying offer', this._key, node.fields);
+	    }
+	  }
+
+	  for (var i=0; i<this._offers.length; i++) {
+	    var offer = this._offers[i];
+	    if (offer.index === node.ledgerIndex) {
+	      if (isDeletedNode) {
+	        // Multiple offers same account?
+	        this._offers.splice(i, 1);
+	        this.emit('offer_removed', offer);
+	      } else {
+	        // TODO: This assumes no fields are deleted, which is
+	        // probably a safe assumption, but should be checked.
+	        var previousOffer = extend({}, offer);
+	        extend(offer, node.fieldsFinal);
+	        this.emit('offer_changed', previousOffer, offer);
+	      }
+	      break;
+	    }
+	  }
+	};
+
+	/**
+	 * Update funded status on offers whose account's balance has changed
+	 *
+	 * Update cached account funds
+	 *
+	 * @param {String} account address
+	 * @param {String|Object} offer funds
+	 */
+
+	OrderBook.prototype.updateOfferFunds = function(account, balance) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(!isNaN(balance), 'Funded amount is invalid');
+
+	  if (this._remote.trace) {
+	    log.info('updating offer funds', this._key, account, fundedAmount);
+	  }
+
+	  var fundedAmount = this.applyTransferRate(balance);
+
+	  // Update cached account funds
+	  this.addCachedFunds(account, fundedAmount);
+
+	  for (var i=0; i<this._offers.length; i++) {
+	    var offer = this._offers[i];
+
+	    if (offer.Account !== account) {
+	      continue;
+	    }
+
+	    var suffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
+	    var previousOffer = extend({}, offer);
+	    var previousFundedGets = Amount.from_json(offer.taker_gets_funded + suffix);
+
+	    offer.owner_funds = balance;
+	    this.setFundedAmount(offer, fundedAmount);
+
+	    var hasChangedFunds = !previousFundedGets.equals(
+	      Amount.from_json(offer.taker_gets_funded + suffix)
+	    );
+
+	    if (hasChangedFunds) {
+	      this.emit('offer_changed', previousOffer, offer);
+	      this.emit(
+	        'offer_funds_changed', offer,
+	        previousOffer.taker_gets_funded,
+	        offer.taker_gets_funded
+	      );
+	    }
+	  }
+	};
+
+	/**
+	 * Notify orderbook of a relevant transaction
+	 *
+	 * @param {Object} transaction
+	 * @api private
+	 */
+
+	OrderBook.prototype.notify = function(message) {
+	  var self = this;
+
+	  // Unsubscribed from OrderBook
+	  if (!this._subscribed) {
+	    return;
+	  }
+
+	  var affectedNodes = message.mmeta.getNodes({
+	    entryType: 'Offer',
+	    bookKey: this._key
+	  });
+
+	  if (affectedNodes.length < 1) {
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('notifying', this._key, message.transaction.hash);
+	  }
+
+	  var tradeGets = Amount.from_json(
+	    '0' + ((Currency.from_json(this._currencyGets).is_native())
+	           ? ''
+	           : ('/' + this._currencyGets + '/' + this._issuerGets))
+	  );
+
+	  var tradePays = Amount.from_json(
+	    '0' + ((Currency.from_json(this._currencyPays).is_native())
+	           ? ''
+	           : ('/' + this._currencyPays + '/' + this._issuerPays))
+	  );
+
+	  function handleNode(node, callback) {
+	    var isDeletedNode = node.nodeType === 'DeletedNode';
+	    var isOfferCancel = message.transaction.TransactionType === 'OfferCancel';
+
+	    switch (node.nodeType) {
+	      case 'DeletedNode':
+	      case 'ModifiedNode':
+	         self.modifyOffer(node, isDeletedNode);
+
+	        // We don't want to count an OfferCancel as a trade
+	        if (!isOfferCancel) {
+	          tradeGets = tradeGets.add(node.fieldsPrev.TakerGets);
+	          tradePays = tradePays.add(node.fieldsPrev.TakerPays);
+
+	          if (isDeletedNode) {
+	            if (self.decrementOfferCount(node.fields.Account) < 1) {
+	              self.removeCachedFunds(node.fields.Account);
+	            }
+	          } else {
+	            tradeGets = tradeGets.subtract(node.fieldsFinal.TakerGets);
+	            tradePays = tradePays.subtract(node.fieldsFinal.TakerPays);
+	          }
+	        }
+	        callback();
+	        break;
+
+	      case 'CreatedNode':
+	        self.incrementOfferCount(node.fields.Account);
+
+	        var fundedAmount = message.transaction.owner_funds;
+
+	        if (!isNaN(fundedAmount)) {
+	          self.insertOffer(node, fundedAmount);
+	          return callback();
+	        }
+
+	        // Get the offer account's balance from server
+	        self.requestFundedAmount(
+	          node.fields.Account, function(err, fundedAmount) {
+	          if (err) {
+	            // XXX Now what?
+	          } else {
+	            self.insertOffer(node, fundedAmount);
+	          }
+	          callback();
+	        });
+	        break;
+	    }
+	  };
+
+	  async.eachSeries(affectedNodes, handleNode, function() {
+	    self.emit('transaction', message);
+	    self.emit('model', self._offers);
+	    if (!tradeGets.is_zero()) {
+	      self.emit('trade', tradePays, tradeGets);
+	    }
+	  });
+	};
+
+	/**
+	 * Get request-representation of orderbook
+	 *
+	 * @return {Object} json
+	 */
+
+	OrderBook.prototype.toJSON =
+	OrderBook.prototype.to_json = function() {
+	  var json = {
+	    taker_gets: {
+	      currency: this._currencyGets.to_hex()
+	    },
+	    taker_pays: {
+	      currency: this._currencyPays.to_hex()
+	    }
+	  };
+
+	  if (!this._currencyGets.is_native()) {
+	    json.taker_gets.issuer = this._issuerGets;
+	  }
+
+	  if (!this._currencyPays.is_native()) {
+	    json.taker_pays.issuer = this._issuerPays;
+	  }
+
+	  return json;
+	};
+
+	exports.OrderBook = OrderBook;
+
+	// vim:sw=2:sts=2:ts=8:et
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var util         = __webpack_require__(39);
+	var Amount       = __webpack_require__(3).Amount;
+	var extend       = __webpack_require__(44);
+
+	/**
+	 * Represents a persistent path finding request.
+	 *
+	 * Only one path find request is allowed per connection, so when another path
+	 * find request is triggered it will supercede the existing one, making it emit
+	 * the 'end' and 'superceded' events.
+	 */
+	function PathFind(remote, src_account, dst_account, dst_amount, src_currencies) {
+	  EventEmitter.call(this);
+
+	  this.remote = remote;
+
+	  this.src_account    = src_account;
+	  this.dst_account    = dst_account;
+	  this.dst_amount     = dst_amount;
+	  this.src_currencies = src_currencies;
+	};
+
+	util.inherits(PathFind, EventEmitter);
+
+	/**
+	 * Submits a path_find_create request to the network.
+	 *
+	 * This starts a path find request, superceding all previous path finds.
+	 *
+	 * This will be called automatically by Remote when this object is instantiated,
+	 * so you should only have to call it if the path find was closed or superceded
+	 * and you wish to restart it.
+	 */
+	PathFind.prototype.create = function () {
+	  var self = this;
+
+	  var req = this.remote.request_path_find_create(this.src_account,
+	                                                 this.dst_account,
+	                                                 this.dst_amount,
+	                                                 this.src_currencies,
+	                                                 handleInitialPath);
+
+	  function handleInitialPath(err, msg) {
+	    if (err) {
+	      self.emit('error', err);
+	    } else {
+	      self.notify_update(msg);
+	    }
+	  }
+
+	  // XXX We should add ourselves to prepare_subscribe or a similar mechanism so
+	  // that we can resubscribe after a reconnection.
+
+	  req.request();
+	};
+
+	PathFind.prototype.close = function () {
+	  this.remote.request_path_find_close().request();
+	  this.emit('end');
+	  this.emit('close');
+	};
+
+	PathFind.prototype.notify_update = function (message) {
+	  var src_account = message.source_account;
+	  var dst_account = message.destination_account;
+	  var dst_amount  = Amount.from_json(message.destination_amount);
+
+	  // Only pass the event along if this path find response matches what we were
+	  // looking for.
+	  if (this.src_account === src_account &&
+	      this.dst_account === dst_account &&
+	      this.dst_amount.equals(dst_amount)) {
+	    this.emit('update', message);
+	  }
+	};
+
+	PathFind.prototype.notify_superceded = function () {
+	  // XXX If we're set to re-subscribe whenever we connect to a new server, then
+	  // we should cancel that behavior here. See PathFind#create.
+
+	  this.emit('end');
+	  this.emit('superceded');
+	};
+
+	exports.PathFind = PathFind;
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = __webpack_require__(40);
+
+	/**
+	 * Log engine for browser consoles.
+	 *
+	 * Browsers tend to have better consoles that support nicely formatted
+	 * JavaScript objects. This connector passes objects through to the logging
+	 * function without any stringification.
+	 */
+	var InteractiveLogEngine = {
+	  logObject: function (msg, obj) {
+	    var args = Array.prototype.slice.call(arguments, 1);
+
+	    args = args.map(function(arg) {
+	      if (/MSIE/.test(navigator.userAgent)) {
+	        return JSON.stringify(arg, null, 2);
+	      } else {
+	        return arg;
+	      }
+	    });
+
+	    args.unshift(msg);
+	    args.unshift('[' + new Date().toISOString() + ']');
+
+	    console.log.apply(console, args);
+	  }
+	};
+
+	if (window.console && window.console.log) {
+	  exports.Log.engine = InteractiveLogEngine;
+	}
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var util         = __webpack_require__(39);
 	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Transaction  = __webpack_require__(5).Transaction;
 	var RippleError  = __webpack_require__(13).RippleError;
 	var PendingQueue = __webpack_require__(45).TransactionQueue;
-	var log          = __webpack_require__(27).internal.sub('transactionmanager');
+	var log          = __webpack_require__(25).internal.sub('transactionmanager');
 
 	/**
 	 * @constructor TransactionManager
@@ -10081,7 +11434,7 @@ var ripple =
 
 
 /***/ },
-/* 24 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Convert a JavaScript number to IEEE-754 Double Precision
@@ -10193,1276 +11546,7 @@ var ripple =
 	}
 
 /***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Routines for working with an orderbook.
-	//
-	// One OrderBook object represents one half of an order book. (i.e. bids OR
-	// asks) Which one depends on the ordering of the parameters.
-	//
-	// Events:
-	//  - model
-	//  - trade
-	//  - transaction
-
-	var util         = __webpack_require__(39);
-	var extend       = __webpack_require__(44);
-	var assert       = __webpack_require__(38);
-	var async        = __webpack_require__(50);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var Amount       = __webpack_require__(3).Amount;
-	var UInt160      = __webpack_require__(8).UInt160;
-	var Currency     = __webpack_require__(6).Currency;
-	var log          = __webpack_require__(27).internal.sub('orderbook');
-
-	/**
-	 * @constructor OrderBook
-	 * @param {Remote} remote
-	 * @param {String} ask currency
-	 * @param {String} ask issuer
-	 * @param {String} bid currency
-	 * @param {String} bid issuer
-	 * @param {String} orderbook key
-	 */
-
-	function OrderBook(remote, getsC, getsI, paysC, paysI, key) {
-	  EventEmitter.call(this);
-
-	  var self = this;
-
-	  this._remote = remote;
-	  this._currencyGets = Currency.from_json(getsC);
-	  this._issuerGets = getsI;
-	  this._currencyPays = Currency.from_json(paysC);
-	  this._issuerPays = paysI;
-	  this._key = key;
-	  this._subscribed = false;
-	  this._shouldSubscribe = true;
-	  this._listeners = 0;
-	  this._offers = [ ];
-	  this._ownerFunds = { };
-	  this._offerCounts = { };
-
-	  // We consider ourselves synchronized if we have a current
-	  // copy of the offers, we are online and subscribed to updates.
-	  this._synchronized = false;
-
-	  function listenersModified(action, event) {
-	    // Automatically subscribe and unsubscribe to orderbook
-	    // on the basis of existing event listeners
-	    if (~OrderBook.EVENTS.indexOf(event)) {
-	      switch (action) {
-	        case 'add':
-	          if (++self._listeners === 1) {
-	            self.subscribe();
-	          }
-	          break;
-	        case 'remove':
-	          if (--self._listeners === 0) {
-	            self.unsubscribe();
-	          }
-	          break;
-	      }
-	    }
-	  };
-
-	  this.on('newListener', function(event) {
-	    listenersModified('add', event);
-	  });
-
-	  this.on('removeListener', function(event) {
-	    listenersModified('remove', event);
-	  });
-
-	  this.on('unsubscribe', function() {
-	    self.resetCache();
-	    self._remote.removeListener('transaction', updateFundedAmounts);
-	    self._remote.removeListener('transaction', updateTransferRate);
-	  });
-
-	  this._remote.once('prepare_subscribe', function() {
-	    self.subscribe();
-	  });
-
-	  this._remote.on('disconnect', function() {
-	    self.resetCache();
-	    self._remote.once('prepare_subscribe', function() {
-	      self.subscribe();
-	    });
-	  });
-
-	  function updateFundedAmounts(message) {
-	    self.updateFundedAmounts(message);
-	  };
-
-	  this._remote.on('transaction', updateFundedAmounts);
-
-	  function updateTransferRate(message) {
-	    self.updateTransferRate(message);
-	  };
-
-	  this._remote.on('transaction', updateTransferRate);
-
-	  return this;
-	};
-
-	util.inherits(OrderBook, EventEmitter);
-
-	/**
-	 * Events emitted from OrderBook
-	 */
-
-	OrderBook.EVENTS = [ 'transaction', 'model', 'trade', 'offer' ];
-
-	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
-
-	/**
-	 * Whether the OrderBook is valid.
-	 *
-	 * Note: This only checks whether the parameters (currencies and issuer) are
-	 *       syntactically valid. It does not check anything against the ledger.
-	 *
-	 * @return {Boolean} is valid
-	 */
-
-	OrderBook.prototype.isValid =
-	OrderBook.prototype.is_valid = function() {
-	  // XXX Should check for same currency (non-native) && same issuer
-	  return (
-	    this._currencyPays && this._currencyPays.is_valid() &&
-	    (this._currencyPays.is_native() || UInt160.is_valid(this._issuerPays)) &&
-	    this._currencyGets && this._currencyGets.is_valid() &&
-	    (this._currencyGets.is_native() || UInt160.is_valid(this._issuerGets)) &&
-	    !(this._currencyPays.is_native() && this._currencyGets.is_native())
-	  );
-	};
-
-	/**
-	 * Initialize orderbook. Get orderbook offers and subscribe to transactions
-	 */
-
-	OrderBook.prototype.subscribe = function() {
-	  var self = this;
-
-	  if (!this._shouldSubscribe) {
-	    return;
-	  }
-
-	  if (this._remote.trace) {
-	    log.info('subscribing', this._key);
-	  }
-
-	  var steps = [
-	    function(callback) {
-	      self.requestTransferRate(callback);
-	    },
-	    function(callback) {
-	      self.requestOffers(callback);
-	    },
-	    function(callback) {
-	      self.subscribeTransactions(callback);
-	    }
-	  ];
-
-	  async.series(steps, function(err) {
-	    //XXX What now?
-	  });
-	};
-
-	/**
-	 * Unhook event listeners and prevent ripple-lib from further work on this
-	 * orderbook. There is no more orderbook stream, so "unsubscribe" is nominal
-	 */
-
-	OrderBook.prototype.unsubscribe = function() {
-	  var self = this;
-
-	  if (this._remote.trace) {
-	    log.info('unsubscribing', this._key);
-	  }
-
-	  this._subscribed = false;
-	  this._shouldSubscribe = false;
-
-	  OrderBook.EVENTS.forEach(function(event) {
-	    if (self.listeners(event).length > 0) {
-	      self.removeAllListeners(event);
-	    }
-	  });
-
-	  this.emit('unsubscribe');
-	};
-
-	/**
-	 * Reset cached owner funds, offer counts
-	 */
-
-	OrderBook.prototype.resetCache = function() {
-	  this._ownerFunds = { };
-	  this._offerCounts = { };
-	  this._synchronized = false;
-	};
-
-	/**
-	 * Check that the funds for offer owner have been cached
-	 *
-	 * @param {String} account address
-	 */
-
-	OrderBook.prototype.hasCachedFunds = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  return this._ownerFunds[account] !== void(0);
-	};
-
-	/**
-	 * Add cached offer owner funds
-	 *
-	 * @param {String} account address
-	 * @param {String} funded amount
-	 */
-
-	OrderBook.prototype.addCachedFunds = function(account, fundedAmount) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(!isNaN(fundedAmount), 'Funded amount is invalid');
-	  this._ownerFunds[account] = fundedAmount;
-	};
-
-	/**
-	 * Get cached offer owner funds
-	 *
-	 * @param {String} account address
-	 */
-
-	OrderBook.prototype.getCachedFunds = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  return this._ownerFunds[account];
-	};
-
-	/**
-	 * Remove cached offer owner funds
-	 *
-	 * @param {String} account address
-	 */
-
-	OrderBook.prototype.removeCachedFunds = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  this._ownerFunds[account] = void(0);
-	};
-
-	/**
-	 * Get offer count for offer owner
-	 */
-
-	OrderBook.prototype.getOfferCount = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  return this._offerCounts[account] || 0;
-	};
-
-	/**
-	 * Increment offer count for offer owner
-	 */
-
-	OrderBook.prototype.incrementOfferCount = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  var result = (this._offerCounts[account] || 0) + 1;
-	  this._offerCounts[account] = result;
-	  return result;
-	};
-
-	/**
-	 * Decrement offer count for offer owner
-	 */
-
-	OrderBook.prototype.decrementOfferCount = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  var result = (this._offerCounts[account] || 1) - 1;
-	  this._offerCounts[account] = result;
-	  return result;
-	};
-
-	/**
-	 * Compute funded amount for a balance/transferRate
-	 *
-	 * @param {String} balance
-	 * @param [String] transferRate
-	 * @return {Amount} funded amount
-	 */
-
-	OrderBook.prototype.applyTransferRate = function(balance, transferRate) {
-	  assert(!isNaN(balance), 'Balance is invalid');
-
-	  if (this._currencyGets.is_native()) {
-	    return balance;
-	  }
-
-	  if (transferRate === void(0)) {
-	    transferRate = this._issuerTransferRate;
-	  }
-
-	  assert(!isNaN(transferRate), 'Transfer rate is invalid');
-
-	  if (transferRate === OrderBook.DEFAULT_TRANSFER_RATE) {
-	    return balance;
-	  }
-
-	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
-	  var adjustedBalance = Amount.from_json(balance + iouSuffix)
-	  .divide(transferRate)
-	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
-	  .to_json()
-	  .value;
-
-	  return adjustedBalance;
-	};
-
-	/**
-	 * Request transfer rate for this orderbook's issuer
-	 *
-	 * @param [Function] calback
-	 */
-
-	OrderBook.prototype.requestTransferRate = function(callback) {
-	  var self = this;
-	  var issuer = this._issuerGets;
-
-	  this.once('transfer_rate', function(rate) {
-	    if (typeof callback === 'function') {
-	      callback(null, rate);
-	    }
-	  });
-
-	  if (this._currencyGets.is_native()) {
-	    // Transfer rate is default
-	    return this.emit('transfer_rate', OrderBook.DEFAULT_TRANSFER_RATE);
-	  }
-
-	  if (this._issuerTransferRate) {
-	    // Transfer rate has been cached
-	    return this.emit('transfer_rate', this._issuerTransferRate);
-	  }
-
-	  this._remote.requestAccountInfo(issuer, function(err, info) {
-	    if (err) {
-	      // XXX What now?
-	      return callback(err);
-	    }
-
-	    var transferRate = info.account_data.TransferRate
-	    || OrderBook.DEFAULT_TRANSFER_RATE;
-
-	    self._issuerTransferRate = transferRate;
-	    self.emit('transfer_rate', transferRate);
-	  });
-	};
-
-	/**
-	 * Set funded amount on offer. All offers have taker_gets_funded property,
-	 * which reflects the amount this account can afford to offer. All offers have
-	 * is_fully_funded property, indicating whether these funds are sufficient for
-	 * the offer placed.
-	 *
-	 * @param {Object} offer
-	 * @param {String} funds
-	 * @return offer
-	 */
-
-	OrderBook.prototype.setFundedAmount = function(offer, fundedAmount) {
-	  assert.strictEqual(typeof offer, 'object', 'Offer is invalid');
-	  assert(!isNaN(fundedAmount), 'Funds is invalid');
-
-	  if (fundedAmount === '0') {
-	    offer.taker_gets_funded = '0';
-	    offer.taker_pays_funded = '0';
-	    offer.is_fully_funded = false;
-	    return offer;
-	  }
-
-	  var iouSuffix = '/' + this._currencyGets.to_json()
-	                + '/' + this._issuerGets;
-
-	  offer.is_fully_funded = Amount.from_json(
-	    this._currencyGets.is_native() ? fundedAmount : fundedAmount + iouSuffix
-	  ).compareTo(Amount.from_json(offer.TakerGets)) >= 0;
-
-	  if (offer.is_fully_funded) {
-	    offer.taker_gets_funded = Amount.from_json(offer.TakerGets).to_text();
-	    offer.taker_pays_funded = Amount.from_json(offer.TakerPays).to_text();
-	    return offer;
-	  }
-
-	  offer.taker_gets_funded = fundedAmount;
-
-	  var takerPaysValue = typeof offer.TakerPays === 'object'
-	  ? offer.TakerPays.value
-	  : offer.TakerPays;
-
-	  var takerGetsValue = typeof offer.TakerGets === 'object'
-	  ? offer.TakerGets.value
-	  : offer.TakerGets;
-
-	  var takerPays = Amount.from_json(
-	    takerPaysValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
-	  var takerGets = Amount.from_json(
-	    takerGetsValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
-	  var fundedPays = Amount.from_json(
-	    fundedAmount + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
-	  var rate = takerPays.divide(takerGets);
-
-	  fundedPays = fundedPays.multiply(rate);
-
-	  if (fundedPays.compareTo(takerPays) < 0) {
-	    offer.taker_pays_funded = fundedPays.to_json().value;
-	  } else {
-	    offer.taker_pays_funded = takerPays.to_json().value;
-	  }
-
-	  return offer;
-	};
-
-	/**
-	 * Determine what an account is funded to offer for orderbook's
-	 * currency/issuer
-	 *
-	 * @param {String} account
-	 * @param {Function} callback
-	 */
-
-	OrderBook.prototype.requestFundedAmount = function(account, callback) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert.strictEqual(typeof callback, 'function', 'Callback is invalid');
-
-	  var self = this;
-
-	  if (self._remote.trace) {
-	    log.info('requesting funds', account);
-	  }
-
-	  function requestNativeBalance(callback) {
-	    self._remote.requestAccountInfo(account, function(err, info) {
-	      if (err) {
-	        callback(err);
-	      } else {
-	        callback(null, String(info.account_data.Balance));
-	      }
-	    });
-	  };
-
-	  function requestLineBalance(callback) {
-	    var request = self._remote.requestAccountLines(
-	      account, // account
-	      void(0), // account index
-	      'VALIDATED', // ledger
-	      self._issuerGets //peer
-	    );
-
-	    request.request(function(err, res) {
-	      if (err) {
-	        return callback(err);
-	      }
-
-	      var currency = self._currencyGets.to_json();
-	      var balance = '0';
-
-	      for (var i=0, line; (line=res.lines[i]); i++) {
-	        if (line.currency === currency) {
-	          balance = line.balance;
-	          break;
-	        }
-	      }
-
-	      callback(null, balance);
-	    });
-	  };
-
-	  function computeFundedAmount(err, results) {
-	    if (err) {
-	      if (self._remote.trace) {
-	        log.info('failed to request funds', err);
-	      }
-	      //XXX What now?
-	      return callback(err);
-	    }
-
-	    if (self._remote.trace) {
-	      log.info('requested funds', account, results);
-	    }
-
-	    var balance;
-	    var fundedAmount;
-
-	    if (self._currencyGets.is_native()) {
-	      balance = results[0];
-	      fundedAmount = balance;
-	    } else {
-	      balance = results[1];
-	      fundedAmount = self.applyTransferRate(balance, results[0]);
-	    }
-
-	    callback(null, fundedAmount);
-	  };
-
-	  var steps = [ ];
-
-	  if (this._currencyGets.is_native()) {
-	    steps.push(requestNativeBalance);
-	  } else {
-	    steps.push(this.requestTransferRate.bind(this));
-	    steps.push(requestLineBalance);
-	  }
-
-	  async.parallel(steps, computeFundedAmount);
-	};
-
-	/**
-	 * Get changed balance of an affected node
-	 *
-	 * @param {Object} RippleState or AccountRoot node
-	 * @return {Object} { account, balance }
-	 */
-
-	OrderBook.prototype.getBalanceChange = function(node) {
-	  var result = {
-	    account: void(0),
-	    balance: void(0)
-	  };
-
-	  switch (node.entryType) {
-	    case 'AccountRoot':
-	      result.account = node.fields.Account;
-	      result.balance = node.fieldsFinal.Balance;
-	      break;
-
-	    case 'RippleState':
-	      if (node.fields.HighLimit.issuer === this._issuerGets) {
-	        result.account = node.fields.LowLimit.issuer;
-	        result.balance = node.fieldsFinal.Balance.value;
-	      } else if (node.fields.LowLimit.issuer === this._issuerGets) {
-	        // Negate balance
-	        result.account = node.fields.HighLimit.issuer;
-	        result.balance = Amount.from_json(
-	          node.fieldsFinal.Balance
-	        ).negate().to_json().value;
-	      }
-	      break;
-	  }
-
-	  result.isValid = !isNaN(result.balance)
-	                && UInt160.is_valid(result.account);
-
-	  return result;
-	};
-
-	/**
-	 * Check that affected node represents a balance change
-	 *
-	 * @param {Object} RippleState or AccountRoot node
-	 * @return {Boolean}
-	 */
-
-	OrderBook.prototype.isBalanceChange = function(node) {
-	  // Check balance change
-	  if (!(node.fields && node.fields.Balance
-	  && node.fieldsPrev && node.fieldsFinal
-	  && node.fieldsPrev.Balance && node.fieldsFinal.Balance)) {
-	    return false;
-	  }
-
-	  // Check currency
-	  if (this._currencyGets.is_native()) {
-	    return !isNaN(node.fields.Balance);
-	  }
-
-	  if (node.fields.Balance.currency !== this._currencyGets.to_json()) {
-	    return false;
-	  }
-
-	  // Check issuer
-	  if (!(node.fields.HighLimit.issuer === this._issuerGets
-	     || node.fields.LowLimit.issuer === this._issuerGets)) {
-	     return false;
-	   }
-
-	   return true;
-	};
-
-	/**
-	 * Update funded amounts for offers in the orderbook as new transactions are
-	 * streamed from server
-	 *
-	 * @param {Object} transaction
-	 */
-
-	OrderBook.prototype.updateFundedAmounts = function(message) {
-	  var self = this;
-
-	  var affectedAccounts = message.mmeta.getAffectedAccounts();
-
-	  var isOwnerAffected = affectedAccounts.some(function(account) {
-	    return self.hasCachedFunds(account);
-	  });
-
-	  if (!isOwnerAffected) {
-	    return;
-	  }
-
-	  if (!this._currencyGets.is_native() && !this._issuerTransferRate) {
-	    // Defer until transfer rate is requested
-	    if (self._remote.trace) {
-	      log.info('waiting for transfer rate');
-	    }
-
-	    this.once('transfer_rate', function() {
-	      self.updateFundedAmounts(message);
-	    });
-
-	    this.requestTransferRate();
-	    return;
-	  }
-
-	  var nodes = message.mmeta.getNodes({
-	    nodeType: 'ModifiedNode',
-	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
-	  });
-
-	  for (var i=0; i<nodes.length; i++) {
-	    var node = nodes[i];
-
-	    if (!this.isBalanceChange(node)) {
-	      continue;
-	    }
-
-	    var result = this.getBalanceChange(node);
-
-	    if (result.isValid) {
-	      if (this.hasCachedFunds(result.account)) {
-	        this.updateOfferFunds(result.account, result.balance);
-	      }
-	    }
-	  }
-	};
-
-	/**
-	 * Update issuer's TransferRate as it changes
-	 *
-	 * @param {Object} transaction
-	 */
-
-	OrderBook.prototype.updateTransferRate = function(message) {
-	  var self = this;
-
-	  var affectedAccounts = message.mmeta.getAffectedAccounts();
-
-	  var isIssuerAffected = affectedAccounts.some(function(account) {
-	    return account === self._issuerGets;
-	  });
-
-	  if (!isIssuerAffected) {
-	    return;
-	  }
-
-	  // XXX Update transfer rate
-	  //
-	  //  var nodes = message.mmeta.getNodes({
-	  //    nodeType: 'ModifiedNode',
-	  //    entryType: 'AccountRoot'
-	  //  });
-	};
-
-	/**
-	 * Request orderbook entries from server
-	 */
-
-	OrderBook.prototype.requestOffers = function(callback) {
-	  var self = this;
-
-	  if (typeof callback !== 'function') {
-	    callback = function(){};
-	  }
-
-	  if (!this._shouldSubscribe) {
-	    return callback(new Error('Should not request offers'));
-	  }
-
-	  if (this._remote.trace) {
-	    log.info('requesting offers', this._key);
-	  }
-
-	  function handleOffers(res) {
-	    if (!Array.isArray(res.offers)) {
-	      // XXX What now?
-	      return callback(new Error('Invalid response'));
-	    }
-
-	    if (self._remote.trace) {
-	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
-	    }
-
-	    // Reset offers
-	    self._offers = [ ];
-
-	    for (var i=0, l=res.offers.length; i<l; i++) {
-	      var offer = res.offers[i];
-	      var fundedAmount;
-
-	      if (self.hasCachedFunds(offer.Account)) {
-	        fundedAmount = self.getCachedFunds(offer.Account);
-	      } else if (offer.hasOwnProperty('owner_funds')) {
-	        fundedAmount = self.applyTransferRate(offer.owner_funds);
-	        self.addCachedFunds(offer.Account, fundedAmount);
-	      }
-
-	      self.setFundedAmount(offer, fundedAmount);
-	      self.incrementOfferCount(offer.Account);
-	      self._offers.push(offer);
-	    }
-
-	    self._synchronized = true;
-
-	    self.emit('model', self._offers);
-
-	    callback(null, self._offers);
-	  };
-
-	  function handleError(err) {
-	    // XXX What now?
-	    if (self._remote.trace) {
-	      log.info('failed to request offers', self._key, err);
-	    }
-
-	    callback(err);
-	  };
-
-	  var request = this._remote.requestBookOffers(this.toJSON());
-	  request.once('success', handleOffers);
-	  request.once('error', handleError);
-	  request.request();
-
-	  return request;
-	};
-
-	/**
-	 * Subscribe to transactions stream
-	 */
-
-	OrderBook.prototype.subscribeTransactions = function(callback) {
-	  var self = this;
-
-	  if (typeof callback !== 'function') {
-	    callback = function(){};
-	  }
-
-	  if (!this._shouldSubscribe) {
-	    return callback('Should not subscribe');
-	  }
-
-	  if (this._remote.trace) {
-	    log.info('subscribing to transactions');
-	  }
-
-	  function handleSubscribed(res) {
-	    if (self._remote.trace) {
-	      log.info('subscribed to transactions');
-	    }
-
-	    self._subscribed = true;
-
-	    callback(null, res);
-	  };
-
-	  function handleError(err) {
-	    if (self._remote.trace) {
-	      log.info('failed to subscribe to transactions', self._key, err);
-	    }
-
-	    callback(err);
-	  };
-
-	  var request = this._remote.requestSubscribe();
-	  request.addStream('transactions');
-	  request.once('success', handleSubscribed);
-	  request.once('error', handleError);
-	  request.request();
-
-	  return request;
-	};
-
-	/**
-	 * Get offers model asynchronously.
-	 *
-	 * This function takes a callback and calls it with an array containing the
-	 * current set of offers in this order book.
-	 *
-	 * If the data is available immediately, the callback may be called
-	 * synchronously.
-	 *
-	 * @param {Function} callback
-	 */
-
-	OrderBook.prototype.offers =
-	OrderBook.prototype.getOffers = function(callback) {
-	  assert.strictEqual(typeof callback, 'function', 'Callback missing');
-
-	  var self = this;
-
-	  if (this._synchronized) {
-	    callback(null, this._offers);
-	  } else {
-	    this.once('model', function(m) {
-	      callback(null, m);
-	    });
-	  }
-
-	  return this;
-	};
-
-	/**
-	 * Return latest known offers
-	 *
-	 * Usually, this will just be an empty array if the order book hasn't been
-	 * loaded yet. But this accessor may be convenient in some circumstances.
-	 *
-	 * @return {Array} offers
-	 */
-
-	OrderBook.prototype.offersSync =
-	OrderBook.prototype.getOffersSync = function() {
-	  return this._offers;
-	};
-
-	/**
-	 * Insert an offer into the orderbook
-	 *
-	 * @param {Object} node
-	 */
-
-	OrderBook.prototype.insertOffer = function(node, fundedAmount) {
-	  if (this._remote.trace) {
-	    log.info('inserting offer', this._key, node.fields);
-	  }
-
-	  var nodeFields = node.fields;
-
-	  nodeFields.index = node.ledgerIndex;
-
-	  if (!isNaN(fundedAmount)) {
-	    this.setFundedAmount(nodeFields, fundedAmount);
-	    this.addCachedFunds(nodeFields.Account, fundedAmount);
-	  }
-
-	  var DATE_REF = {
-	    reference_date: new Date()
-	  };
-
-	  // XXX Should use Amount#from_quality
-	  var price = Amount.from_json(
-	    nodeFields.TakerPays
-	  ).ratio_human(node.fields.TakerGets, DATE_REF);
-
-	  for (var i=0, l=this._offers.length; i<l; i++) {
-	    var offer = this._offers[i];
-
-	    var priceItem = Amount.from_json(
-	      offer.TakerPays
-	    ).ratio_human(offer.TakerGets, DATE_REF);
-
-	    if (price.compareTo(priceItem) <= 0) {
-	      this._offers.splice(i, 0, nodeFields);
-	      break;
-	    } else if (i === (l - 1)) {
-	      this._offers.push(nodeFields);
-	    }
-	  }
-
-	  this.emit('offer_added', nodeFields);
-	};
-
-	/**
-	 * Modify an existing offer in the orderbook
-	 *
-	 * @param {Object} node
-	 * @param {Boolean} isDeletedNode
-	 */
-
-	OrderBook.prototype.modifyOffer = function(node, isDeletedNode) {
-	  if (this._remote.trace) {
-	    if (isDeletedNode) {
-	      log.info('deleting offer', this._key, node.fields);
-	    } else {
-	      log.info('modifying offer', this._key, node.fields);
-	    }
-	  }
-
-	  for (var i=0; i<this._offers.length; i++) {
-	    var offer = this._offers[i];
-	    if (offer.index === node.ledgerIndex) {
-	      if (isDeletedNode) {
-	        // Multiple offers same account?
-	        this._offers.splice(i, 1);
-	        this.emit('offer_removed', offer);
-	      } else {
-	        // TODO: This assumes no fields are deleted, which is
-	        // probably a safe assumption, but should be checked.
-	        var previousOffer = extend({}, offer);
-	        extend(offer, node.fieldsFinal);
-	        this.emit('offer_changed', previousOffer, offer);
-	      }
-	      break;
-	    }
-	  }
-	};
-
-	/**
-	 * Update funded status on offers whose account's balance has changed
-	 *
-	 * Update cached account funds
-	 *
-	 * @param {String} account address
-	 * @param {String|Object} offer funds
-	 */
-
-	OrderBook.prototype.updateOfferFunds = function(account, balance) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(!isNaN(balance), 'Funded amount is invalid');
-
-	  if (this._remote.trace) {
-	    log.info('updating offer funds', this._key, account, fundedAmount);
-	  }
-
-	  var fundedAmount = this.applyTransferRate(balance);
-
-	  // Update cached account funds
-	  this.addCachedFunds(account, fundedAmount);
-
-	  for (var i=0; i<this._offers.length; i++) {
-	    var offer = this._offers[i];
-
-	    if (offer.Account !== account) {
-	      continue;
-	    }
-
-	    var suffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
-	    var previousOffer = extend({}, offer);
-	    var previousFundedGets = Amount.from_json(offer.taker_gets_funded + suffix);
-
-	    offer.owner_funds = balance;
-	    this.setFundedAmount(offer, fundedAmount);
-
-	    var hasChangedFunds = !previousFundedGets.equals(
-	      Amount.from_json(offer.taker_gets_funded + suffix)
-	    );
-
-	    if (hasChangedFunds) {
-	      this.emit('offer_changed', previousOffer, offer);
-	      this.emit(
-	        'offer_funds_changed', offer,
-	        previousOffer.taker_gets_funded,
-	        offer.taker_gets_funded
-	      );
-	    }
-	  }
-	};
-
-	/**
-	 * Notify orderbook of a relevant transaction
-	 *
-	 * @param {Object} transaction
-	 * @api private
-	 */
-
-	OrderBook.prototype.notify = function(message) {
-	  var self = this;
-
-	  // Unsubscribed from OrderBook
-	  if (!this._subscribed) {
-	    return;
-	  }
-
-	  var affectedNodes = message.mmeta.getNodes({
-	    entryType: 'Offer',
-	    bookKey: this._key
-	  });
-
-	  if (affectedNodes.length < 1) {
-	    return;
-	  }
-
-	  if (this._remote.trace) {
-	    log.info('notifying', this._key, message.transaction.hash);
-	  }
-
-	  var tradeGets = Amount.from_json(
-	    '0' + ((Currency.from_json(this._currencyGets).is_native())
-	           ? ''
-	           : ('/' + this._currencyGets + '/' + this._issuerGets))
-	  );
-
-	  var tradePays = Amount.from_json(
-	    '0' + ((Currency.from_json(this._currencyPays).is_native())
-	           ? ''
-	           : ('/' + this._currencyPays + '/' + this._issuerPays))
-	  );
-
-	  function handleNode(node, callback) {
-	    var isDeletedNode = node.nodeType === 'DeletedNode';
-	    var isOfferCancel = message.transaction.TransactionType === 'OfferCancel';
-
-	    switch (node.nodeType) {
-	      case 'DeletedNode':
-	      case 'ModifiedNode':
-	         self.modifyOffer(node, isDeletedNode);
-
-	        // We don't want to count an OfferCancel as a trade
-	        if (!isOfferCancel) {
-	          tradeGets = tradeGets.add(node.fieldsPrev.TakerGets);
-	          tradePays = tradePays.add(node.fieldsPrev.TakerPays);
-
-	          if (isDeletedNode) {
-	            if (self.decrementOfferCount(node.fields.Account) < 1) {
-	              self.removeCachedFunds(node.fields.Account);
-	            }
-	          } else {
-	            tradeGets = tradeGets.subtract(node.fieldsFinal.TakerGets);
-	            tradePays = tradePays.subtract(node.fieldsFinal.TakerPays);
-	          }
-	        }
-	        callback();
-	        break;
-
-	      case 'CreatedNode':
-	        self.incrementOfferCount(node.fields.Account);
-
-	        var fundedAmount = message.transaction.owner_funds;
-
-	        if (!isNaN(fundedAmount)) {
-	          self.insertOffer(node, fundedAmount);
-	          return callback();
-	        }
-
-	        // Get the offer account's balance from server
-	        self.requestFundedAmount(
-	          node.fields.Account, function(err, fundedAmount) {
-	          if (err) {
-	            // XXX Now what?
-	          } else {
-	            self.insertOffer(node, fundedAmount);
-	          }
-	          callback();
-	        });
-	        break;
-	    }
-	  };
-
-	  async.eachSeries(affectedNodes, handleNode, function() {
-	    self.emit('transaction', message);
-	    self.emit('model', self._offers);
-	    if (!tradeGets.is_zero()) {
-	      self.emit('trade', tradePays, tradeGets);
-	    }
-	  });
-	};
-
-	/**
-	 * Get request-representation of orderbook
-	 *
-	 * @return {Object} json
-	 */
-
-	OrderBook.prototype.toJSON =
-	OrderBook.prototype.to_json = function() {
-	  var json = {
-	    taker_gets: {
-	      currency: this._currencyGets.to_hex()
-	    },
-	    taker_pays: {
-	      currency: this._currencyPays.to_hex()
-	    }
-	  };
-
-	  if (!this._currencyGets.is_native()) {
-	    json.taker_gets.issuer = this._issuerGets;
-	  }
-
-	  if (!this._currencyPays.is_native()) {
-	    json.taker_pays.issuer = this._issuerPays;
-	  }
-
-	  return json;
-	};
-
-	exports.OrderBook = OrderBook;
-
-	// vim:sw=2:sts=2:ts=8:et
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var util         = __webpack_require__(39);
-	var Amount       = __webpack_require__(3).Amount;
-	var extend       = __webpack_require__(44);
-
-	/**
-	 * Represents a persistent path finding request.
-	 *
-	 * Only one path find request is allowed per connection, so when another path
-	 * find request is triggered it will supercede the existing one, making it emit
-	 * the 'end' and 'superceded' events.
-	 */
-	function PathFind(remote, src_account, dst_account, dst_amount, src_currencies) {
-	  EventEmitter.call(this);
-
-	  this.remote = remote;
-
-	  this.src_account    = src_account;
-	  this.dst_account    = dst_account;
-	  this.dst_amount     = dst_amount;
-	  this.src_currencies = src_currencies;
-	};
-
-	util.inherits(PathFind, EventEmitter);
-
-	/**
-	 * Submits a path_find_create request to the network.
-	 *
-	 * This starts a path find request, superceding all previous path finds.
-	 *
-	 * This will be called automatically by Remote when this object is instantiated,
-	 * so you should only have to call it if the path find was closed or superceded
-	 * and you wish to restart it.
-	 */
-	PathFind.prototype.create = function () {
-	  var self = this;
-
-	  var req = this.remote.request_path_find_create(this.src_account,
-	                                                 this.dst_account,
-	                                                 this.dst_amount,
-	                                                 this.src_currencies,
-	                                                 handleInitialPath);
-
-	  function handleInitialPath(err, msg) {
-	    if (err) {
-	      self.emit('error', err);
-	    } else {
-	      self.notify_update(msg);
-	    }
-	  }
-
-	  // XXX We should add ourselves to prepare_subscribe or a similar mechanism so
-	  // that we can resubscribe after a reconnection.
-
-	  req.request();
-	};
-
-	PathFind.prototype.close = function () {
-	  this.remote.request_path_find_close().request();
-	  this.emit('end');
-	  this.emit('close');
-	};
-
-	PathFind.prototype.notify_update = function (message) {
-	  var src_account = message.source_account;
-	  var dst_account = message.destination_account;
-	  var dst_amount  = Amount.from_json(message.destination_amount);
-
-	  // Only pass the event along if this path find response matches what we were
-	  // looking for.
-	  if (this.src_account === src_account &&
-	      this.dst_account === dst_account &&
-	      this.dst_amount.equals(dst_amount)) {
-	    this.emit('update', message);
-	  }
-	};
-
-	PathFind.prototype.notify_superceded = function () {
-	  // XXX If we're set to re-subscribe whenever we connect to a new server, then
-	  // we should cancel that behavior here. See PathFind#create.
-
-	  this.emit('end');
-	  this.emit('superceded');
-	};
-
-	exports.PathFind = PathFind;
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var exports = module.exports = __webpack_require__(40);
-
-	/**
-	 * Log engine for browser consoles.
-	 *
-	 * Browsers tend to have better consoles that support nicely formatted
-	 * JavaScript objects. This connector passes objects through to the logging
-	 * function without any stringification.
-	 */
-	var InteractiveLogEngine = {
-	  logObject: function (msg, obj) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
-	    args = args.map(function(arg) {
-	      if (/MSIE/.test(navigator.userAgent)) {
-	        return JSON.stringify(arg, null, 2);
-	      } else {
-	        return arg;
-	      }
-	    });
-
-	    args.unshift(msg);
-	    args.unshift('[' + new Date().toISOString() + ']');
-
-	    console.log.apply(console, args);
-	  }
-	};
-
-	if (window.console && window.console.log) {
-	  exports.Log.engine = InteractiveLogEngine;
-	}
-
-
-/***/ },
 /* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// leaf node in tree
-	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
-
-
-/***/ },
-/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils   = __webpack_require__(19);
@@ -11761,6 +11845,37 @@ var ripple =
 	exports.UInt = UInt;
 
 	// vim:sw=2:sts=2:ts=8:et
+
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// leaf node in tree
+	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
 
 
 /***/ },
@@ -12976,7 +13091,7 @@ var ripple =
 	var request = __webpack_require__(51);
 	var extend  = __webpack_require__(44);
 	var async   = __webpack_require__(50);
-	var log     = __webpack_require__(27).sub('blob');
+	var log     = __webpack_require__(25).sub('blob');
 	var BlobClient = {};
 
 	//Blob object class
@@ -21769,7 +21884,7 @@ var ripple =
 	 */
 
 	var base64 = __webpack_require__(70)
-	var ieee754 = __webpack_require__(63)
+	var ieee754 = __webpack_require__(66)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = Buffer
@@ -23770,7 +23885,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(44);
-	var UInt   = __webpack_require__(29).UInt;
+	var UInt   = __webpack_require__(28).UInt;
 
 	//
 	// UInt128 support
@@ -25432,7 +25547,7 @@ var ripple =
 	 */
 
 	var Emitter = __webpack_require__(71);
-	var reduce = __webpack_require__(72);
+	var reduce = __webpack_require__(73);
 
 	/**
 	 * Root reference for iframes.
@@ -26522,9 +26637,9 @@ var ripple =
 /* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(74)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(72)
 
-	var md5 = toConstructor(__webpack_require__(64))
+	var md5 = toConstructor(__webpack_require__(63))
 	var rmd160 = toConstructor(__webpack_require__(75))
 
 	function toConstructor (fn) {
@@ -26698,8 +26813,8 @@ var ripple =
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(65);
-	exports.encode = exports.stringify = __webpack_require__(66);
+	exports.decode = exports.parse = __webpack_require__(64);
+	exports.encode = exports.stringify = __webpack_require__(65);
 
 
 /***/ },
@@ -26986,96 +27101,6 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-	  var e, m,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      nBits = -7,
-	      i = isLE ? (nBytes - 1) : 0,
-	      d = isLE ? -1 : 1,
-	      s = buffer[offset + i];
-
-	  i += d;
-
-	  e = s & ((1 << (-nBits)) - 1);
-	  s >>= (-nBits);
-	  nBits += eLen;
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  m = e & ((1 << (-nBits)) - 1);
-	  e >>= (-nBits);
-	  nBits += mLen;
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  if (e === 0) {
-	    e = 1 - eBias;
-	  } else if (e === eMax) {
-	    return m ? NaN : ((s ? -1 : 1) * Infinity);
-	  } else {
-	    m = m + Math.pow(2, mLen);
-	    e = e - eBias;
-	  }
-	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-	};
-
-	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-	  var e, m, c,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-	      i = isLE ? 0 : (nBytes - 1),
-	      d = isLE ? 1 : -1,
-	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-	  value = Math.abs(value);
-
-	  if (isNaN(value) || value === Infinity) {
-	    m = isNaN(value) ? 1 : 0;
-	    e = eMax;
-	  } else {
-	    e = Math.floor(Math.log(value) / Math.LN2);
-	    if (value * (c = Math.pow(2, -e)) < 1) {
-	      e--;
-	      c *= 2;
-	    }
-	    if (e + eBias >= 1) {
-	      value += rt / c;
-	    } else {
-	      value += rt * Math.pow(2, 1 - eBias);
-	    }
-	    if (value * c >= 2) {
-	      e++;
-	      c /= 2;
-	    }
-
-	    if (e + eBias >= eMax) {
-	      m = 0;
-	      e = eMax;
-	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen);
-	      e = e + eBias;
-	    } else {
-	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-	      e = 0;
-	    }
-	  }
-
-	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-	  e = (e << mLen) | m;
-	  eLen += mLen;
-	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-	  buffer[offset + i - d] |= s * 128;
-	};
-
-
-/***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -27085,7 +27110,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(73);
+	var helpers = __webpack_require__(74);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -27234,7 +27259,7 @@ var ripple =
 
 
 /***/ },
-/* 65 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -27324,7 +27349,7 @@ var ripple =
 
 
 /***/ },
-/* 66 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -27411,6 +27436,96 @@ var ripple =
 	    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
 	  }
 	  return res;
+	};
+
+
+/***/ },
+/* 66 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+	  var e, m,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      nBits = -7,
+	      i = isLE ? (nBytes - 1) : 0,
+	      d = isLE ? -1 : 1,
+	      s = buffer[offset + i];
+
+	  i += d;
+
+	  e = s & ((1 << (-nBits)) - 1);
+	  s >>= (-nBits);
+	  nBits += eLen;
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  m = e & ((1 << (-nBits)) - 1);
+	  e >>= (-nBits);
+	  nBits += mLen;
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  if (e === 0) {
+	    e = 1 - eBias;
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity);
+	  } else {
+	    m = m + Math.pow(2, mLen);
+	    e = e - eBias;
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+	};
+
+	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+	  var e, m, c,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+	      i = isLE ? 0 : (nBytes - 1),
+	      d = isLE ? 1 : -1,
+	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+	  value = Math.abs(value);
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0;
+	    e = eMax;
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2);
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--;
+	      c *= 2;
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c;
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias);
+	    }
+	    if (value * c >= 2) {
+	      e++;
+	      c /= 2;
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0;
+	      e = eMax;
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen);
+	      e = e + eBias;
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+	      e = 0;
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+	  e = (e << mLen) | m;
+	  eLen += mLen;
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+	  buffer[offset + i - d] |= s * 128;
 	};
 
 
@@ -28374,6 +28489,24 @@ var ripple =
 /* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(82).Buffer
+	var Hash   = __webpack_require__(76)(Buffer)
+
+	exports.sha =
+	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
+
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
 	
 	/**
 	 * Reduce `arr` with `fn`.
@@ -28400,7 +28533,7 @@ var ripple =
 	};
 
 /***/ },
-/* 73 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -28439,24 +28572,6 @@ var ripple =
 	module.exports = { hash: hash };
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
-
-/***/ },
-/* 74 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var exports = module.exports = function (alg) {
-	  var Alg = exports[alg]
-	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
-	  return new Alg()
-	}
-
-	var Buffer = __webpack_require__(81).Buffer
-	var Hash   = __webpack_require__(76)(Buffer)
-
-	exports.sha =
-	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
-
 
 /***/ },
 /* 75 */
@@ -28674,7 +28789,7 @@ var ripple =
 /* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var u = __webpack_require__(82)
+	var u = __webpack_require__(81)
 	var write = u.write
 	var fill = u.zeroFill
 
@@ -28955,7 +29070,7 @@ var ripple =
 	var inherits = __webpack_require__(39).inherits
 	var BE       = false
 	var LE       = true
-	var u        = __webpack_require__(82)
+	var u        = __webpack_require__(81)
 
 	module.exports = function (Buffer, Hash) {
 
@@ -29133,6 +29248,48 @@ var ripple =
 
 /***/ },
 /* 81 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.write = write
+	exports.zeroFill = zeroFill
+
+	exports.toString = toString
+
+	function write (buffer, string, enc, start, from, to, LE) {
+	  var l = (to - from)
+	  if(enc === 'ascii' || enc === 'binary') {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string.charCodeAt(i + from)
+	    }
+	  }
+	  else if(enc == null) {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string[i + from]
+	    }
+	  }
+	  else if(enc === 'hex') {
+	    for(var i = 0; i < l; i++) {
+	      var j = from + i
+	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
+	    }
+	  }
+	  else if(enc === 'base64') {
+	    throw new Error('base64 encoding not yet supported')
+	  }
+	  else
+	    throw new Error(enc +' encoding not yet supported')
+	}
+
+	//always fill to the end!
+	function zeroFill(buf, from) {
+	  for(var i = from; i < buf.length; i++)
+	    buf[i] = 0
+	}
+
+
+
+/***/ },
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -30293,48 +30450,6 @@ var ripple =
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
-
-/***/ },
-/* 82 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.write = write
-	exports.zeroFill = zeroFill
-
-	exports.toString = toString
-
-	function write (buffer, string, enc, start, from, to, LE) {
-	  var l = (to - from)
-	  if(enc === 'ascii' || enc === 'binary') {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string.charCodeAt(i + from)
-	    }
-	  }
-	  else if(enc == null) {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string[i + from]
-	    }
-	  }
-	  else if(enc === 'hex') {
-	    for(var i = 0; i < l; i++) {
-	      var j = from + i
-	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
-	    }
-	  }
-	  else if(enc === 'base64') {
-	    throw new Error('base64 encoding not yet supported')
-	  }
-	  else
-	    throw new Error(enc +' encoding not yet supported')
-	}
-
-	//always fill to the end!
-	function zeroFill(buf, from) {
-	  for(var i = from; i < buf.length; i++)
-	    buf[i] = 0
-	}
-
-
 
 /***/ },
 /* 83 */
