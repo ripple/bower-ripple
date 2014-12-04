@@ -4029,25 +4029,21 @@ var ripple =
 	  fraction_part = fraction_part.replace(/0*$/, '');
 
 	  if (fraction_part.length || !opts.skip_empty_fraction) {
-
 	    // Enforce the maximum number of decimal digits (precision)
 	    if (typeof opts.precision === 'number') {
-	      if (opts.precision <= 0) {
+	      var precision = Math.max(0, opts.precision);
+	      precision = Math.min(precision, fraction_part.length);
+	      var rounded = Number('0.' + fraction_part).toFixed(precision);
 
-	        // increment the int_part if the first decimal is 5 or higher
-	        if (fraction_part.charCodeAt(0) >= 53) {
-	          int_part = (Number(int_part) + 1).toString();
-	        }
-	        fraction_part = '';
+	      if (rounded < 1) {
+	        fraction_part = rounded.substring(2);
 	      } else {
-	        var precision = Math.min(opts.precision, fraction_part.length);
-	        fraction_part = Math.round(fraction_part / Math.pow(10, fraction_part.length - precision)).toString();
+	        int_part = (Number(int_part) + 1).toString();
+	        fraction_part = '';
+	      }
 
-	        // because the division above will cut off the leading 0's we have to add them back again
-	        // XXX look for a more elegant alternative
-	        while (fraction_part.length < precision) {
-	          fraction_part = '0' + fraction_part;
-	        }
+	      while (fraction_part.length < precision) {
+	        fraction_part = '0' + fraction_part;
 	      }
 	    }
 
@@ -4055,7 +4051,7 @@ var ripple =
 	    if (typeof opts.max_sig_digits === 'number') {
 	      // First, we count the significant digits we have.
 	      // A zero in the integer part does not count.
-	      var int_is_zero = +int_part === 0;
+	      var int_is_zero = Number(int_part) === 0;
 	      var digits = int_is_zero ? 0 : int_part.length;
 
 	      // Don't count leading zeros in the fractional part if the integer part is
@@ -4081,6 +4077,7 @@ var ripple =
 
 	    // Enforce the minimum number of decimal digits (min_precision)
 	    if (typeof opts.min_precision === 'number') {
+	      opts.min_precision = Math.max(0, opts.min_precision);
 	      while (fraction_part.length < opts.min_precision) {
 	        fraction_part += '0';
 	      }
@@ -4205,13 +4202,13 @@ var ripple =
 	//
 
 	// var network = require('./network.js');
-	var async              = __webpack_require__(50);
+	var async              = __webpack_require__(49);
 	var util               = __webpack_require__(38);
 	var extend             = __webpack_require__(44);
 	var EventEmitter       = __webpack_require__(37).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(8).UInt160;
-	var TransactionManager = __webpack_require__(27).TransactionManager;
+	var TransactionManager = __webpack_require__(26).TransactionManager;
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Base               = __webpack_require__(7).Base;
 
@@ -4649,7 +4646,7 @@ var ripple =
 	var Seed             = __webpack_require__(10).Seed;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
-	var hashprefixes     = __webpack_require__(26);
+	var hashprefixes     = __webpack_require__(27);
 	var config           = __webpack_require__(22);
 
 	function Transaction(remote) {
@@ -4777,6 +4774,8 @@ var ripple =
 	  tesSUCCESS:      0,
 	  tecCLAIMED:      100
 	};
+
+	Transaction.prototype.ascii_regex = /^[\x00-\x7F]*$/;
 
 	Transaction.from_json = function(j) {
 	  return (new Transaction()).parseJson(j);
@@ -5217,40 +5216,52 @@ var ripple =
 	};
 
 	/**
-	 * Add a Memo to transaction. Memos can be used as key-value,
-	 * using the MemoType as a key
+	 * Add a Memo to transaction.
 	 *
-	 * @param {String} type
-	 * @param {String} data
+	 * @param {String} memoType - describes what the data represents, needs to be valid ASCII
+	 * @param {String} memoFormat - describes what format the data is in, MIME type, needs to be valid ASCII
+	 * @param {String} memoData - data for the memo, can be any JS object. Any object other than string will be stringified (JSON) for transport
 	 */
 
-	Transaction.prototype.addMemo = function(type, data) {
-	  if (!/(undefined|string)/.test(typeof type)) {
+	Transaction.prototype.addMemo = function(memoType, memoFormat, memoData) {
+
+	  if (typeof memoType === 'object') {
+	    var opts = memoType;
+	    memoType = opts.memoType;
+	    memoFormat = opts.memoFormat;
+	    memoData = opts.memoData;
+	  }
+
+	  if (!/(undefined|string)/.test(typeof memoType)) {
 	    throw new Error('MemoType must be a string');
+	  } else if (!this.ascii_regex.test(memoType)) {
+	    throw new Error('MemoType must be valid ASCII');
 	  }
 
-	  if (!/(undefined|string)/.test(typeof data)) {
-	    throw new Error('MemoData must be a string');
+	  if (!/(undefined|string)/.test(typeof memoFormat)) {
+	    throw new Error('MemoFormat must be a string');
+	  } else if (!this.ascii_regex.test(memoFormat)) {
+	    throw new Error('MemoFormat must be valid ASCII');
 	  }
 
-	  function toHex(str) {
-	    return sjcl.codec.hex.fromBits(sjcl.codec.utf8String.toBits(str));
-	  };
+	  var memo = {};
 
-	  var memo = { };
-
-	  if (type) {
-	    if (Transaction.MEMO_TYPES[type]) {
+	  if (memoType) {
+	    if (Transaction.MEMO_TYPES[memoType]) {
 	      //XXX Maybe in the future we want a schema validator for
 	      //memo types
-	      memo.MemoType = Transaction.MEMO_TYPES[type];
+	      memo.MemoType = Transaction.MEMO_TYPES[memoType];
 	    } else {
-	      memo.MemoType = toHex(type);
+	      memo.MemoType = memoType;
 	    }
 	  }
 
-	  if (data) {
-	    memo.MemoData = toHex(data);
+	  if (memoFormat) {
+	    memo.MemoFormat = memoFormat;
+	  }
+
+	  if (memoData) {
+	    memo.MemoData = memoData;
 	  }
 
 	  this.tx_json.Memos = (this.tx_json.Memos || []).concat({ Memo: memo });
@@ -7044,7 +7055,7 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async              = __webpack_require__(50);
+	var async              = __webpack_require__(49);
 	var crypto             = __webpack_require__(42);
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
@@ -7253,7 +7264,7 @@ var ripple =
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async      = __webpack_require__(50);
+	var async      = __webpack_require__(49);
 	var blobClient = __webpack_require__(33).BlobClient;
 	var AuthInfo   = __webpack_require__(16).AuthInfo;
 	var crypt      = __webpack_require__(32).Crypt;
@@ -7852,7 +7863,7 @@ var ripple =
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async      = __webpack_require__(50);
+	var async      = __webpack_require__(49);
 	var superagent = __webpack_require__(51);
 	var RippleTxt  = __webpack_require__(17).RippleTxt;
 
@@ -8060,6 +8071,9 @@ var ripple =
 	 * Data type map.
 	 *
 	 * Mapping of type ids to data types. The type id is specified by the high
+	 *
+	 * For reference, see rippled's definition:
+	 * https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol/SField.cpp
 	 */
 	var TYPES_MAP = exports.types = [
 	  void(0),
@@ -8433,7 +8447,7 @@ var ripple =
 	    ['Balance',             REQUIRED],
 	    ['LowLimit',            REQUIRED],
 	    ['HighLimit',           REQUIRED]])
-	}
+	};
 
 	exports.metadata = [
 	  [ 'TransactionIndex'     , REQUIRED ],
@@ -9478,7 +9492,7 @@ var ripple =
 
 	var sjcl = __webpack_require__(19).sjcl;
 
-	var WalletGenerator = __webpack_require__(49)({
+	var WalletGenerator = __webpack_require__(50)({
 	  sjcl: sjcl
 	});
 
@@ -9519,7 +9533,7 @@ var ripple =
 	var util         = __webpack_require__(38);
 	var extend       = __webpack_require__(44);
 	var assert       = __webpack_require__(39);
-	var async        = __webpack_require__(50);
+	var async        = __webpack_require__(49);
 	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var UInt160      = __webpack_require__(8).UInt160;
@@ -9585,10 +9599,15 @@ var ripple =
 	    listenersModified('remove', event);
 	  });
 
+	  function updateFundedAmounts(transaction) {
+	    self.updateFundedAmounts(transaction);
+	  };
+
+	  this._remote.on('transaction', updateFundedAmounts);
+
 	  this.on('unsubscribe', function() {
 	    self.resetCache();
 	    self._remote.removeListener('transaction', updateFundedAmounts);
-	    self._remote.removeListener('transaction', updateTransferRate);
 	  });
 
 	  this._remote.once('prepare_subscribe', function() {
@@ -9602,18 +9621,6 @@ var ripple =
 	    });
 	  });
 
-	  function updateFundedAmounts(message) {
-	    self.updateFundedAmounts(message);
-	  };
-
-	  this._remote.on('transaction', updateFundedAmounts);
-
-	  function updateTransferRate(message) {
-	    self.updateTransferRate(message);
-	  };
-
-	  this._remote.on('transaction', updateTransferRate);
-
 	  return this;
 	};
 
@@ -9623,30 +9630,15 @@ var ripple =
 	 * Events emitted from OrderBook
 	 */
 
-	OrderBook.EVENTS = [ 'transaction', 'model', 'trade', 'offer' ];
+	OrderBook.EVENTS = [
+	  'transaction', 'model', 'trade',
+	  'offer_added', 'offer_removed',
+	  'offer_changed', 'offer_funds_changed'
+	];
 
 	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
 
-	/**
-	 * Whether the OrderBook is valid.
-	 *
-	 * Note: This only checks whether the parameters (currencies and issuer) are
-	 *       syntactically valid. It does not check anything against the ledger.
-	 *
-	 * @return {Boolean} is valid
-	 */
-
-	OrderBook.prototype.isValid =
-	OrderBook.prototype.is_valid = function() {
-	  // XXX Should check for same currency (non-native) && same issuer
-	  return (
-	    this._currencyPays && this._currencyPays.is_valid() &&
-	    (this._currencyPays.is_native() || UInt160.is_valid(this._issuerPays)) &&
-	    this._currencyGets && this._currencyGets.is_valid() &&
-	    (this._currencyGets.is_native() || UInt160.is_valid(this._issuerGets)) &&
-	    !(this._currencyPays.is_native() && this._currencyGets.is_native())
-	  );
-	};
+	OrderBook.IOU_SUFFIX = '/000/rrrrrrrrrrrrrrrrrrrrrhoLvTp';
 
 	/**
 	 * Initialize orderbook. Get orderbook offers and subscribe to transactions
@@ -9675,7 +9667,7 @@ var ripple =
 	    }
 	  ];
 
-	  async.series(steps, function(err) {
+	  async.series(steps, function(err, res) {
 	    //XXX What now?
 	  });
 	};
@@ -9816,8 +9808,7 @@ var ripple =
 	    return balance;
 	  }
 
-	  var iouSuffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
-	  var adjustedBalance = Amount.from_json(balance + iouSuffix)
+	  var adjustedBalance = Amount.from_json(balance + OrderBook.IOU_SUFFIX)
 	  .divide(transferRate)
 	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
 	  .to_json()
@@ -9829,40 +9820,41 @@ var ripple =
 	/**
 	 * Request transfer rate for this orderbook's issuer
 	 *
-	 * @param [Function] calback
+	 * @param {Function} callback
 	 */
 
 	OrderBook.prototype.requestTransferRate = function(callback) {
+	  assert.strictEqual(typeof callback, 'function');
+
 	  var self = this;
 	  var issuer = this._issuerGets;
 
-	  this.once('transfer_rate', function(rate) {
-	    if (typeof callback === 'function') {
-	      callback(null, rate);
-	    }
-	  });
-
 	  if (this._currencyGets.is_native()) {
-	    // Transfer rate is default
-	    return this.emit('transfer_rate', OrderBook.DEFAULT_TRANSFER_RATE);
+	    // Transfer rate is default (native currency)
+	    callback(null, OrderBook.DEFAULT_TRANSFER_RATE);
+	    return;
 	  }
 
 	  if (this._issuerTransferRate) {
-	    // Transfer rate has been cached
-	    return this.emit('transfer_rate', this._issuerTransferRate);
+	    // Transfer rate has already been cached
+	    callback(null, this._issuerTransferRate);
+	    return;
 	  }
 
-	  this._remote.requestAccountInfo({account: issuer}, function(err, info) {
+	  this._remote.requestAccountInfo({ account: issuer }, function(err, info) {
 	    if (err) {
 	      // XXX What now?
 	      return callback(err);
 	    }
 
-	    var transferRate = info.account_data.TransferRate
-	    || OrderBook.DEFAULT_TRANSFER_RATE;
+	    var transferRate = info.account_data.TransferRate;
+
+	    if (!transferRate) {
+	      transferRate = OrderBook.DEFAULT_TRANSFER_RATE;
+	    }
 
 	    self._issuerTransferRate = transferRate;
-	    self.emit('transfer_rate', transferRate);
+	    callback(null, transferRate);
 	  });
 	};
 
@@ -9888,11 +9880,10 @@ var ripple =
 	    return offer;
 	  }
 
-	  var iouSuffix = '/' + this._currencyGets.to_json()
-	                + '/' + this._issuerGets;
-
 	  offer.is_fully_funded = Amount.from_json(
-	    this._currencyGets.is_native() ? fundedAmount : fundedAmount + iouSuffix
+	    this._currencyGets.is_native()
+	    ? fundedAmount
+	    : fundedAmount + OrderBook.IOU_SUFFIX
 	  ).compareTo(Amount.from_json(offer.TakerGets)) >= 0;
 
 	  if (offer.is_fully_funded) {
@@ -9903,40 +9894,40 @@ var ripple =
 
 	  offer.taker_gets_funded = fundedAmount;
 
-	  var takerPaysValue = typeof offer.TakerPays === 'object'
+	  var takerPaysValue = (typeof offer.TakerPays === 'object')
 	  ? offer.TakerPays.value
 	  : offer.TakerPays;
 
-	  var takerGetsValue = typeof offer.TakerGets === 'object'
+	  var takerGetsValue = (typeof offer.TakerGets === 'object')
 	  ? offer.TakerGets.value
 	  : offer.TakerGets;
 
-	  var takerPays = Amount.from_json(
-	    takerPaysValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
-	  var takerGets = Amount.from_json(
-	    takerGetsValue + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
-	  var fundedPays = Amount.from_json(
-	    fundedAmount + '/000/rrrrrrrrrrrrrrrrrrrrBZbvji'
-	  );
-
+	  var takerPays = Amount.from_json(takerPaysValue +  OrderBook.IOU_SUFFIX);
+	  var takerGets = Amount.from_json(takerGetsValue + OrderBook.IOU_SUFFIX);
+	  var fundedPays = Amount.from_json(fundedAmount + OrderBook.IOU_SUFFIX);
 	  var rate = takerPays.divide(takerGets);
 
 	  fundedPays = fundedPays.multiply(rate);
 
 	  if (fundedPays.compareTo(takerPays) < 0) {
-	    offer.taker_pays_funded = fundedPays.to_json().value;
+	    if (this._currencyPays.is_native()) {
+	      fundedPays = String(parseInt(fundedPays.to_json().value, 10));
+	    } else {
+	      fundedPays = fundedPays.to_json().value;
+	    }
 	  } else {
-	    offer.taker_pays_funded = takerPays.to_json().value;
+	    fundedPays = takerPays.to_json().value;
 	  }
+
+	  offer.taker_pays_funded = fundedPays;
 
 	  return offer;
 	};
 
 	/**
+	 * DEPRECATED:
+	 * Should only be called for old versions of rippled
+	 *
 	 * Determine what an account is funded to offer for orderbook's
 	 * currency/issuer
 	 *
@@ -9955,7 +9946,7 @@ var ripple =
 	  }
 
 	  function requestNativeBalance(callback) {
-	    self._remote.requestAccountInfo({account: account}, function(err, info) {
+	    self._remote.requestAccountInfo({ account: account }, function(err, info) {
 	      if (err) {
 	        callback(err);
 	      } else {
@@ -9965,13 +9956,11 @@ var ripple =
 	  };
 
 	  function requestLineBalance(callback) {
-	    var request = self._remote.requestAccountLines(
-	      {
-	        account: account,
-	        ledger: 'validated',
-	        peer: self._issuerGets
-	      }
-	    );
+	    var request = self._remote.requestAccountLines({
+	      account: account,
+	      ledger: 'validated',
+	      peer: self._issuerGets
+	    });
 
 	    request.request(function(err, res) {
 	      if (err) {
@@ -10110,10 +10099,10 @@ var ripple =
 	 * @param {Object} transaction
 	 */
 
-	OrderBook.prototype.updateFundedAmounts = function(message) {
+	OrderBook.prototype.updateFundedAmounts = function(transaction) {
 	  var self = this;
 
-	  var affectedAccounts = message.mmeta.getAffectedAccounts();
+	  var affectedAccounts = transaction.mmeta.getAffectedAccounts();
 
 	  var isOwnerAffected = affectedAccounts.some(function(account) {
 	    return self.hasCachedFunds(account);
@@ -10125,25 +10114,23 @@ var ripple =
 
 	  if (!this._currencyGets.is_native() && !this._issuerTransferRate) {
 	    // Defer until transfer rate is requested
-	    if (self._remote.trace) {
+	    if (this._remote.trace) {
 	      log.info('waiting for transfer rate');
 	    }
 
-	    this.once('transfer_rate', function() {
-	      self.updateFundedAmounts(message);
+	    this.requestTransferRate(function() {
+	      self.updateFundedAmounts(transaction);
 	    });
-
-	    this.requestTransferRate();
 	    return;
 	  }
 
-	  var nodes = message.mmeta.getNodes({
+	  var affectedNodes = transaction.mmeta.getNodes({
 	    nodeType: 'ModifiedNode',
 	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
 	  });
 
-	  for (var i=0; i<nodes.length; i++) {
-	    var node = nodes[i];
+	  for (var i=0, l=affectedNodes.length; i<l; i++) {
+	    var node = affectedNodes[i];
 
 	    if (!this.isBalanceChange(node)) {
 	      continue;
@@ -10151,39 +10138,72 @@ var ripple =
 
 	    var result = this.getBalanceChange(node);
 
-	    if (result.isValid) {
-	      if (this.hasCachedFunds(result.account)) {
-	        this.updateOfferFunds(result.account, result.balance);
-	      }
+	    if (result.isValid && this.hasCachedFunds(result.account)) {
+	      this.updateAccountFunds(result.account, result.balance);
 	    }
 	  }
 	};
 
 	/**
-	 * Update issuer's TransferRate as it changes
+	 * Normalize offers from book_offers and transaction stream
 	 *
-	 * @param {Object} transaction
+	 * @param {Object} offer
+	 * @return {Object} normalized
 	 */
 
-	OrderBook.prototype.updateTransferRate = function(message) {
-	  var self = this;
+	OrderBook.offerRewrite = function(offer) {
+	  var result = { };
+	  var keys = Object.keys(offer);
 
-	  var affectedAccounts = message.mmeta.getAffectedAccounts();
-
-	  var isIssuerAffected = affectedAccounts.some(function(account) {
-	    return account === self._issuerGets;
-	  });
-
-	  if (!isIssuerAffected) {
-	    return;
+	  for (var i=0, l=keys.length; i<l; i++) {
+	    var key = keys[i];
+	    switch (key) {
+	      case 'PreviousTxnID':
+	      case 'PreviousTxnLgrSeq':
+	      case 'quality':
+	        break;
+	      default:
+	        result[key] = offer[key];
+	    }
 	  }
 
-	  // XXX Update transfer rate
-	  //
-	  //  var nodes = message.mmeta.getNodes({
-	  //    nodeType: 'ModifiedNode',
-	  //    entryType: 'AccountRoot'
-	  //  });
+	  result.Flags = result.Flags || 0;
+	  result.OwnerNode = result.OwnerNode || new Array(16 + 1).join('0');
+	  result.BookNode = result.BookNode || new Array(16 + 1).join('0');
+
+	  return result;
+	};
+
+	/**
+	 * Reset internal offers cache from book_offers request
+	 *
+	 * @param {Array} offers
+	 * @api private
+	 */
+
+	OrderBook.prototype.setOffers = function(offers) {
+	  assert(Array.isArray(offers));
+
+	  var newOffers = [ ];
+
+	  for (var i=0, l=offers.length; i<l; i++) {
+	    var offer = OrderBook.offerRewrite(offers[i]);
+	    var fundedAmount;
+
+	    if (this.hasCachedFunds(offer.Account)) {
+	      fundedAmount = this.getCachedFunds(offer.Account);
+	    } else if (offer.hasOwnProperty('owner_funds')) {
+	      fundedAmount = this.applyTransferRate(offer.owner_funds);
+	      this.addCachedFunds(offer.Account, fundedAmount);
+	    }
+
+	    this.setFundedAmount(offer, fundedAmount);
+	    this.incrementOfferCount(offer.Account);
+
+	    newOffers.push(offer);
+	  }
+
+	  this._offers = newOffers;
 	};
 
 	/**
@@ -10215,27 +10235,8 @@ var ripple =
 	      log.info('requested offers', self._key, 'offers: ' + res.offers.length);
 	    }
 
-	    // Reset offers
-	    self._offers = [ ];
-
-	    for (var i=0, l=res.offers.length; i<l; i++) {
-	      var offer = res.offers[i];
-	      var fundedAmount;
-
-	      if (self.hasCachedFunds(offer.Account)) {
-	        fundedAmount = self.getCachedFunds(offer.Account);
-	      } else if (offer.hasOwnProperty('owner_funds')) {
-	        fundedAmount = self.applyTransferRate(offer.owner_funds);
-	        self.addCachedFunds(offer.Account, fundedAmount);
-	      }
-
-	      self.setFundedAmount(offer, fundedAmount);
-	      self.incrementOfferCount(offer.Account);
-	      self._offers.push(offer);
-	    }
-
+	    self.setOffers(res.offers);
 	    self._synchronized = true;
-
 	    self.emit('model', self._offers);
 
 	    callback(null, self._offers);
@@ -10348,6 +10349,57 @@ var ripple =
 	};
 
 	/**
+	 * Update offers whose account's funds have changed
+	 *
+	 * @param {String} account address
+	 * @param {String|Object} offer funds
+	 */
+
+	OrderBook.prototype.updateAccountFunds = function(account, balance) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(!isNaN(balance), 'Funded amount is invalid');
+
+	  if (this._remote.trace) {
+	    log.info('updating offer funds', this._key, account, fundedAmount);
+	  }
+
+	  var fundedAmount = this.applyTransferRate(balance);
+
+	  // Update cached account funds
+	  this.addCachedFunds(account, fundedAmount);
+
+	  for (var i=0, l=this._offers.length; i<l; i++) {
+	    var offer = this._offers[i];
+
+	    if (offer.Account !== account) {
+	      continue;
+	    }
+
+	    var previousOffer = extend({ }, offer);
+	    var previousFundedGets = Amount.from_json(
+	      offer.taker_gets_funded + OrderBook.IOU_SUFFIX
+	    );
+
+	    offer.owner_funds = balance;
+	    this.setFundedAmount(offer, fundedAmount);
+
+	    var hasChangedFunds = !previousFundedGets.equals(
+	      Amount.from_json(offer.taker_gets_funded + OrderBook.IOU_SUFFIX)
+	    );
+
+	    if (!hasChangedFunds) {
+	      continue;
+	    }
+
+	    this.emit('offer_changed', previousOffer, offer);
+	    this.emit('offer_funds_changed', offer,
+	      previousOffer.taker_gets_funded,
+	      offer.taker_gets_funded
+	    );
+	  }
+	};
+
+	/**
 	 * Insert an offer into the orderbook
 	 *
 	 * @param {Object} node
@@ -10358,8 +10410,8 @@ var ripple =
 	    log.info('inserting offer', this._key, node.fields);
 	  }
 
-	  var nodeFields = node.fields;
-
+	  var nodeFields = OrderBook.offerRewrite(node.fields);
+	  nodeFields.LedgerEntryType = node.entryType;
 	  nodeFields.index = node.ledgerIndex;
 
 	  if (!isNaN(fundedAmount)) {
@@ -10410,7 +10462,7 @@ var ripple =
 	    }
 	  }
 
-	  for (var i=0; i<this._offers.length; i++) {
+	  for (var i=0, l=this._offers.length; i<l; i++) {
 	    var offer = this._offers[i];
 	    if (offer.index === node.ledgerIndex) {
 	      if (isDeletedNode) {
@@ -10430,64 +10482,13 @@ var ripple =
 	};
 
 	/**
-	 * Update funded status on offers whose account's balance has changed
-	 *
-	 * Update cached account funds
-	 *
-	 * @param {String} account address
-	 * @param {String|Object} offer funds
-	 */
-
-	OrderBook.prototype.updateOfferFunds = function(account, balance) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(!isNaN(balance), 'Funded amount is invalid');
-
-	  if (this._remote.trace) {
-	    log.info('updating offer funds', this._key, account, fundedAmount);
-	  }
-
-	  var fundedAmount = this.applyTransferRate(balance);
-
-	  // Update cached account funds
-	  this.addCachedFunds(account, fundedAmount);
-
-	  for (var i=0; i<this._offers.length; i++) {
-	    var offer = this._offers[i];
-
-	    if (offer.Account !== account) {
-	      continue;
-	    }
-
-	    var suffix = '/USD/rrrrrrrrrrrrrrrrrrrrBZbvji';
-	    var previousOffer = extend({}, offer);
-	    var previousFundedGets = Amount.from_json(offer.taker_gets_funded + suffix);
-
-	    offer.owner_funds = balance;
-	    this.setFundedAmount(offer, fundedAmount);
-
-	    var hasChangedFunds = !previousFundedGets.equals(
-	      Amount.from_json(offer.taker_gets_funded + suffix)
-	    );
-
-	    if (hasChangedFunds) {
-	      this.emit('offer_changed', previousOffer, offer);
-	      this.emit(
-	        'offer_funds_changed', offer,
-	        previousOffer.taker_gets_funded,
-	        offer.taker_gets_funded
-	      );
-	    }
-	  }
-	};
-
-	/**
 	 * Notify orderbook of a relevant transaction
 	 *
 	 * @param {Object} transaction
 	 * @api private
 	 */
 
-	OrderBook.prototype.notify = function(message) {
+	OrderBook.prototype.notify = function(transaction) {
 	  var self = this;
 
 	  // Unsubscribed from OrderBook
@@ -10495,7 +10496,7 @@ var ripple =
 	    return;
 	  }
 
-	  var affectedNodes = message.mmeta.getNodes({
+	  var affectedNodes = transaction.mmeta.getNodes({
 	    entryType: 'Offer',
 	    bookKey: this._key
 	  });
@@ -10505,7 +10506,7 @@ var ripple =
 	  }
 
 	  if (this._remote.trace) {
-	    log.info('notifying', this._key, message.transaction.hash);
+	    log.info('notifying', this._key, transaction.transaction.hash);
 	  }
 
 	  var tradeGets = Amount.from_json(
@@ -10522,7 +10523,7 @@ var ripple =
 
 	  function handleNode(node, callback) {
 	    var isDeletedNode = node.nodeType === 'DeletedNode';
-	    var isOfferCancel = message.transaction.TransactionType === 'OfferCancel';
+	    var isOfferCancel = transaction.transaction.TransactionType === 'OfferCancel';
 
 	    switch (node.nodeType) {
 	      case 'DeletedNode':
@@ -10549,7 +10550,7 @@ var ripple =
 	      case 'CreatedNode':
 	        self.incrementOfferCount(node.fields.Account);
 
-	        var fundedAmount = message.transaction.owner_funds;
+	        var fundedAmount = transaction.transaction.owner_funds;
 
 	        if (!isNaN(fundedAmount)) {
 	          self.insertOffer(node, fundedAmount);
@@ -10571,7 +10572,7 @@ var ripple =
 	  };
 
 	  async.eachSeries(affectedNodes, handleNode, function() {
-	    self.emit('transaction', message);
+	    self.emit('transaction', transaction);
 	    self.emit('model', self._offers);
 	    if (!tradeGets.is_zero()) {
 	      self.emit('trade', tradePays, tradeGets);
@@ -10605,6 +10606,27 @@ var ripple =
 	  }
 
 	  return json;
+	};
+
+	/**
+	 * Whether the OrderBook is valid.
+	 *
+	 * Note: This only checks whether the parameters (currencies and issuer) are
+	 *       syntactically valid. It does not check anything against the ledger.
+	 *
+	 * @return {Boolean} is valid
+	 */
+
+	OrderBook.prototype.isValid =
+	OrderBook.prototype.is_valid = function() {
+	  // XXX Should check for same currency (non-native) && same issuer
+	  return (
+	    this._currencyPays && this._currencyPays.is_valid() &&
+	    (this._currencyPays.is_native() || UInt160.is_valid(this._issuerPays)) &&
+	    this._currencyGets && this._currencyGets.is_valid() &&
+	    (this._currencyGets.is_native() || UInt160.is_valid(this._issuerGets)) &&
+	    !(this._currencyPays.is_native() && this._currencyGets.is_native())
+	  );
 	};
 
 	exports.OrderBook = OrderBook;
@@ -10743,37 +10765,6 @@ var ripple =
 
 /***/ },
 /* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Prefix for hashing functions.
-	 *
-	 * These prefixes are inserted before the source material used to
-	 * generate various hashes. This is done to put each hash in its own
-	 * "space." This way, two different types of objects with the
-	 * same binary data will produce different hashes.
-	 *
-	 * Each prefix is a 4-byte value with the last byte set to zero
-	 * and the first three bytes formed from the ASCII equivalent of
-	 * some arbitrary string. For example "TXN".
-	 */
-
-	// transaction plus signature to give transaction ID
-	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
-	// transaction plus metadata
-	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
-	// inner node in tree
-	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
-	// leaf node in tree
-	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
-	// inner transaction to sign
-	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
-	// inner transaction to sign (TESTNET)
-	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
-
-
-/***/ },
-/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var util         = __webpack_require__(38);
@@ -11464,6 +11455,37 @@ var ripple =
 
 
 /***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Prefix for hashing functions.
+	 *
+	 * These prefixes are inserted before the source material used to
+	 * generate various hashes. This is done to put each hash in its own
+	 * "space." This way, two different types of objects with the
+	 * same binary data will produce different hashes.
+	 *
+	 * Each prefix is a 4-byte value with the last byte set to zero
+	 * and the first three bytes formed from the ASCII equivalent of
+	 * some arbitrary string. For example "TXN".
+	 */
+
+	// transaction plus signature to give transaction ID
+	exports.HASH_TX_ID           = 0x54584E00; // 'TXN'
+	// transaction plus metadata
+	exports.HASH_TX_NODE         = 0x534E4400; // 'TND'
+	// inner node in tree
+	exports.HASH_INNER_NODE      = 0x4D494E00; // 'MIN'
+	// leaf node in tree
+	exports.HASH_LEAF_NODE       = 0x4D4C4E00; // 'MLN'
+	// inner transaction to sign
+	exports.HASH_TX_SIGN         = 0x53545800; // 'STX'
+	// inner transaction to sign (TESTNET)
+	exports.HASH_TX_SIGN_TESTNET = 0x73747800; // 'stx'
+
+
+/***/ },
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -12011,6 +12033,7 @@ var ripple =
 	// Shortcuts
 	var hex = sjcl.codec.hex;
 	var bytes = sjcl.codec.bytes;
+	var utf8 = sjcl.codec.utf8String;
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -12039,7 +12062,7 @@ var ripple =
 	  return val instanceof BigInteger;
 	};
 
-	function serialize_hex(so, hexData, noLength) {
+	function serializeHex(so, hexData, noLength) {
 	  var byteData = bytes.fromBits(hex.toBits(hexData));
 	  if (!noLength) {
 	    SerializedType.serialize_varint(so, byteData.length);
@@ -12050,9 +12073,17 @@ var ripple =
 	/**
 	 * parses bytes as hex
 	 */
-	function convert_bytes_to_hex (byte_array) {
+	function convertByteArrayToHex (byte_array) {
 	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
 	};
+
+	function convertStringToHex(string) {
+	  return hex.fromBits(utf8.toBits(string)).toUpperCase();
+	}
+
+	function convertHexToString(hexString) {
+	  return utf8.fromBits(hex.toBits(hexString));
+	}
 
 	SerializedType.serialize_varint = function (so, val) {
 	  if (val < 0) {
@@ -12102,7 +12133,7 @@ var ripple =
 	 *
 	 * The result is appended to the serialized object ('so').
 	 */
-	function append_byte_array(so, val, bytes) {
+	function convertIntegerToByteArray(val, bytes) {
 	  if (!isNumber(val)) {
 	    throw new Error('Value is not a number', bytes);
 	  }
@@ -12117,7 +12148,7 @@ var ripple =
 	    newBytes.unshift(val >>> (i * 8) & 0xff);
 	  }
 
-	  so.append(newBytes);
+	  return newBytes;
 	};
 
 	// Convert a certain number of bytes from the serialized object ('so') into an integer.
@@ -12139,7 +12170,7 @@ var ripple =
 
 	var STInt8 = exports.Int8 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 1);
+	    so.append(convertIntegerToByteArray(val, 1));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 1);
@@ -12150,7 +12181,7 @@ var ripple =
 
 	var STInt16 = exports.Int16 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 2);
+	    so.append(convertIntegerToByteArray(val, 2));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 2);
@@ -12161,7 +12192,7 @@ var ripple =
 
 	var STInt32 = exports.Int32 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 4);
+	    so.append(convertIntegerToByteArray(val, 4));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 4);
@@ -12204,7 +12235,7 @@ var ripple =
 	      hex = '0' + hex;
 	    }
 
-	    serialize_hex(so, hex, true); //noLength = true
+	    serializeHex(so, hex, true); //noLength = true
 	  },
 	  parse: function (so) {
 	    var bytes = so.read(8);
@@ -12224,7 +12255,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash128');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt128.from_bytes(so.read(16));
@@ -12239,7 +12270,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash256');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt256.from_bytes(so.read(32));
@@ -12254,7 +12285,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash160');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt160.from_bytes(so.read(20));
@@ -12281,7 +12312,7 @@ var ripple =
 	    //     UInt160 value and consider it valid. But it doesn't, so for the
 	    //     deserialization to be usable, we need to allow invalid results for now.
 	    //if (!currency.is_valid()) {
-	    //  throw new Error('Invalid currency: '+convert_bytes_to_hex(bytes));
+	    //  throw new Error('Invalid currency: '+convertByteArrayToHex(bytes));
 	    //}
 	    return currency;
 	  }
@@ -12396,15 +12427,16 @@ var ripple =
 
 	var STVL = exports.VariableLength = exports.VL = new SerializedType({
 	  serialize: function (so, val) {
+
 	    if (typeof val === 'string') {
-	      serialize_hex(so, val);
+	      serializeHex(so, val);
 	    } else {
 	      throw new Error('Unknown datatype.');
 	    }
 	  },
 	  parse: function (so) {
 	    var len = this.parse_varint(so);
-	    return convert_bytes_to_hex(so.read(len));
+	    return convertByteArrayToHex(so.read(len));
 	  }
 	});
 
@@ -12416,7 +12448,7 @@ var ripple =
 	    if (!account.is_valid()) {
 	      throw new Error('Invalid account!');
 	    }
-	    serialize_hex(so, account.to_hex());
+	    serializeHex(so, account.to_hex());
 	  },
 	  parse: function (so) {
 	    var len = this.parse_varint(so);
@@ -12428,7 +12460,6 @@ var ripple =
 	    var result = UInt160.from_bytes(so.read(len));
 	    result.set_version(Base.VER_ACCOUNT_ID);
 
-	    //console.log('PARSED 160:', result.to_json());
 	    if (false) {
 	      throw new Error('Invalid Account');
 	    }
@@ -12580,6 +12611,104 @@ var ripple =
 
 	STVector256.id = 19;
 
+	// Internal
+	var STMemo = exports.STMemo = new SerializedType({
+	  serialize: function(so, val, no_marker) {
+
+	    var keys = [];
+
+	    Object.keys(val).forEach(function (key) {
+	      // Ignore lowercase field names - they're non-serializable fields by
+	      // convention.
+	      if (key[0] === key[0].toLowerCase()) {
+	        return;
+	      }
+
+	      if (typeof binformat.fieldsInverseMap[key] === 'undefined') {
+	        throw new Error('JSON contains unknown field: "' + key + '"');
+	      }
+
+	      keys.push(key);
+	    });
+
+	    // Sort fields
+	    keys = sort_fields(keys);
+
+	    // store that we're dealing with json
+	    var isJson = val.MemoFormat === 'json';
+
+	    for (var i=0; i<keys.length; i++) {
+	      var key = keys[i];
+	      switch (key) {
+
+	        // MemoType and MemoFormat are always ASCII strings
+	        case 'MemoType':
+	        case 'MemoFormat':
+	          val[key] = convertStringToHex(val[key]);
+	          break;
+
+	        // MemoData can be a JSON object, otherwise it's a string
+	        case 'MemoData':
+	          if (typeof val[key] !== 'string') {
+	            if (isJson) {
+	              try {
+	                val[key] = convertStringToHex(JSON.stringify(val[key]));
+	              } catch (e) {
+	                throw new Error('MemoFormat json with invalid JSON in MemoData field');
+	              }
+	            } else {
+	              throw new Error('MemoData can only be a JSON object with a valid json MemoFormat');
+	            }
+	          } else if (isString(val[key])) {
+	            val[key] = convertStringToHex(val[key]);
+	          }
+	          break;
+	      }
+
+	      serialize(so, key, val[key]);
+	    }
+
+	    if (!no_marker) {
+	      //Object ending marker
+	      STInt8.serialize(so, 0xe1);
+	    }
+
+	  },
+	  parse: function(so) {
+	    var output = {};
+	    while (so.peek(1)[0] !== 0xe1) {
+	      var keyval = parse(so);
+	      output[keyval[0]] = keyval[1];
+	    }
+
+	    if (output['MemoType'] !== void(0)) {
+	      output['parsed_memo_type'] = convertHexToString(output['MemoType']);
+	    }
+
+	    if (output['MemoFormat'] !== void(0)) {
+	      output['parsed_memo_format'] = convertHexToString(output['MemoFormat']);
+	    }
+
+	    if (output['MemoData'] !== void(0)) {
+
+	      // see if we can parse JSON
+	      if (output['parsed_memo_format'] === 'json') {
+	        try {
+	          output['parsed_memo_data'] = JSON.parse(convertHexToString(output['MemoData']));
+	        } catch(e) {
+	          // fail, which is fine, we just won't add the memo_data field
+	        }
+	      } else if(output['parsed_memo_format'] === 'text') {
+	        output['parsed_memo_data'] = convertHexToString(output['MemoData']);
+	      }
+	    }
+
+	    so.read(1);
+	    return output;
+	  }
+
+	});
+
 	exports.serialize = exports.serialize_whatever = serialize;
 
 	function serialize(so, field_name, value) {
@@ -12609,9 +12738,15 @@ var ripple =
 	    STInt8.serialize(so, field_bits);
 	  }
 
-	  // Get the serializer class (ST...) for a field based on the type bits.
-	  var serialized_object_type = exports[binformat.types[type_bits]];
-	  //do something with val[keys] and val[keys[i]];
+	  // Get the serializer class (ST...)
+	  var serialized_object_type;
+	  if (field_name === 'Memo' && typeof value === 'object') {
+	    // for Memo we override the default behavior with our STMemo serializer
+	    serialized_object_type = exports.STMemo;
+	  } else {
+	    // for a field based on the type bits.
+	    serialized_object_type = exports[binformat.types[type_bits]];
+	  }
 
 	  try {
 	    serialized_object_type.serialize(so, value);
@@ -12632,17 +12767,20 @@ var ripple =
 	    type_bits = so.read(1)[0];
 	  }
 
-	  // Get the parser class (ST...) for a field based on the type bits.
-	  var type = exports[binformat.types[type_bits]];
-
-	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
 
 	  var field_bits = tag_byte & 0x0f;
 	  var field_name = (field_bits === 0)
-	  ? field_name = binformat.fields[type_bits][so.read(1)[0]]
-	  : field_name = binformat.fields[type_bits][field_bits];
+	    ? field_name = binformat.fields[type_bits][so.read(1)[0]]
+	    : field_name = binformat.fields[type_bits][field_bits];
 
 	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
+
+	  // Get the parser class (ST...) for a field based on the type bits.
+	  var type = (field_name === 'Memo')
+	    ? exports.STMemo
+	    : exports[binformat.types[type_bits]];
+
+	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
 
 	  return [ field_name, type.parse(so) ]; //key, value
 	};
@@ -12665,18 +12803,20 @@ var ripple =
 
 	var STObject = exports.Object = new SerializedType({
 	  serialize: function (so, val, no_marker) {
-	    var keys = Object.keys(val);
+	    var keys = [];
 
-	    // Ignore lowercase field names - they're non-serializable fields by
-	    // convention.
-	    keys = keys.filter(function (key) {
-	      return key[0] !== key[0].toLowerCase();
-	    });
+	    Object.keys(val).forEach(function (key) {
+	      // Ignore lowercase field names - they're non-serializable fields by
+	      // convention.
+	      if (key[0] === key[0].toLowerCase()) {
+	        return;
+	      }
 
-	    keys.forEach(function (key) {
 	      if (typeof binformat.fieldsInverseMap[key] === 'undefined') {
 	        throw new Error('JSON contains unknown field: "' + key + '"');
 	      }
+
+	      keys.push(key);
 	    });
 
 	    // Sort fields
@@ -13089,7 +13229,7 @@ var ripple =
 	var SignedRequest = __webpack_require__(47).SignedRequest;
 	var request = __webpack_require__(51);
 	var extend  = __webpack_require__(44);
-	var async   = __webpack_require__(50);
+	var async   = __webpack_require__(49);
 	var log     = __webpack_require__(25).sub('blob');
 	var BlobClient = {};
 
@@ -24378,104 +24518,6 @@ var ripple =
 /* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(options) {
-	  var sjcl = options.sjcl; // inject sjcl dependency
-
-	  var base58 = __webpack_require__(58)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(59)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(60)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(61)({ sjcl: options.sjcl });
-
-	  function firstHalfOfSHA512(bytes) {
-	    return sjcl.bitArray.bitSlice(
-	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
-	      0, 256
-	    );
-	  }
-
-	  function append_int(a, i) {
-	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
-	  }
-
-	  function RippleWallet(secret){
-	    this.secret = secret;
-
-	    if (!this.secret) {
-	      throw "Invalid secret."
-	    }
-	  }
-
-	  RippleWallet.prototype = {
-
-	    getPrivateKey: function(secret){
-	      var self = this;
-	      return base58.decode_base_check(33, self.secret);
-	    },
-
-	    getPrivateGenerator: function(privateKey){
-	      var i = 0;
-	      do {
-	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
-	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
-	      return privateGenerator; 
-	    },
-
-	    getPublicGenerator: function (){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
-	    },
-
-	    getPublicKey: function(publicGenerator){
-	      var sec;
-	      var i = 0;
-	      do {
-	        // Compute the hash of the public generator with the sub-sequence number
-	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
-	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
-	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
-	    },
-
-	    getAddress: function(){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
-	      var publicKey = this.getPublicKey(publicGenerator);
-	      return RippleAddress.fromPublicKey(publicKey);
-	    }
-	  }
-
-	  RippleWallet.getRandom = function(){
-	    var secretKey = MasterKey.getRandom().value;
-	    return new RippleWallet(secretKey);
-	  };
-
-	  RippleWallet.generate = function() {
-	    /* Generate a 128-bit master key that can be used to make 
-	       any number of private / public key pairs and accounts
-	    */
-	    var secretKey = MasterKey.getRandom().value;
-	    var wallet = new RippleWallet(secretKey);
-	    return {
-	      address: wallet.getAddress().value,
-	      secret: secretKey 
-	    };
-	  };
-
-	  return RippleWallet;
-	};
-
-
-/***/ },
-/* 50 */
-/***/ function(module, exports, __webpack_require__) {
-
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process) {/*!
 	 * async
 	 * https://github.com/caolan/async
@@ -25538,6 +25580,104 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)))
 
 /***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(options) {
+	  var sjcl = options.sjcl; // inject sjcl dependency
+
+	  var base58 = __webpack_require__(58)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(59)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(60)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(61)({ sjcl: options.sjcl });
+
+	  function firstHalfOfSHA512(bytes) {
+	    return sjcl.bitArray.bitSlice(
+	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
+	      0, 256
+	    );
+	  }
+
+	  function append_int(a, i) {
+	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
+	  }
+
+	  function RippleWallet(secret){
+	    this.secret = secret;
+
+	    if (!this.secret) {
+	      throw "Invalid secret."
+	    }
+	  }
+
+	  RippleWallet.prototype = {
+
+	    getPrivateKey: function(secret){
+	      var self = this;
+	      return base58.decode_base_check(33, self.secret);
+	    },
+
+	    getPrivateGenerator: function(privateKey){
+	      var i = 0;
+	      do {
+	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
+	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
+	      return privateGenerator; 
+	    },
+
+	    getPublicGenerator: function (){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
+	    },
+
+	    getPublicKey: function(publicGenerator){
+	      var sec;
+	      var i = 0;
+	      do {
+	        // Compute the hash of the public generator with the sub-sequence number
+	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
+	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
+	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
+	    },
+
+	    getAddress: function(){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
+	      var publicKey = this.getPublicKey(publicGenerator);
+	      return RippleAddress.fromPublicKey(publicKey);
+	    }
+	  }
+
+	  RippleWallet.getRandom = function(){
+	    var secretKey = MasterKey.getRandom().value;
+	    return new RippleWallet(secretKey);
+	  };
+
+	  RippleWallet.generate = function() {
+	    /* Generate a 128-bit master key that can be used to make 
+	       any number of private / public key pairs and accounts
+	    */
+	    var secretKey = MasterKey.getRandom().value;
+	    var wallet = new RippleWallet(secretKey);
+	    return {
+	      address: wallet.getAddress().value,
+	      secret: secretKey 
+	    };
+	  };
+
+	  return RippleWallet;
+	};
+
+
+/***/ },
 /* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -25545,8 +25685,8 @@ var ripple =
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(71);
-	var reduce = __webpack_require__(72);
+	var Emitter = __webpack_require__(72);
+	var reduce = __webpack_require__(71);
 
 	/**
 	 * Root reference for iframes.
@@ -28320,6 +28460,35 @@ var ripple =
 
 	
 	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
 	 * Expose `Emitter`.
 	 */
 
@@ -28483,35 +28652,6 @@ var ripple =
 	  return !! this.listeners(event).length;
 	};
 
-
-/***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
 
 /***/ },
 /* 73 */
