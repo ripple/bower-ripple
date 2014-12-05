@@ -127,9 +127,9 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter     = __webpack_require__(37).EventEmitter;
-	var util             = __webpack_require__(39);
-	var assert           = __webpack_require__(38);
+	var EventEmitter     = __webpack_require__(38).EventEmitter;
+	var util             = __webpack_require__(37);
+	var assert           = __webpack_require__(39);
 	var LRU              = __webpack_require__(48);
 	var Server           = __webpack_require__(20).Server;
 	var Request          = __webpack_require__(2).Request;
@@ -141,14 +141,14 @@ var ripple =
 	var Transaction      = __webpack_require__(5).Transaction;
 	var Account          = __webpack_require__(4).Account;
 	var Meta             = __webpack_require__(11).Meta;
-	var OrderBook        = __webpack_require__(24).OrderBook;
-	var PathFind         = __webpack_require__(25).PathFind;
+	var OrderBook        = __webpack_require__(23).OrderBook;
+	var PathFind         = __webpack_require__(24).PathFind;
 	var SerializedObject = __webpack_require__(12).SerializedObject;
 	var RippleError      = __webpack_require__(13).RippleError;
 	var utils            = __webpack_require__(19);
 	var sjcl             = __webpack_require__(19).sjcl;
 	var config           = __webpack_require__(22);
-	var log              = __webpack_require__(26).internal.sub('remote');
+	var log              = __webpack_require__(25).internal.sub('remote');
 
 	/**
 	 *    Interface to manage the connection to a Ripple server.
@@ -2439,8 +2439,8 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var util         = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(37);
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(13).RippleError;
@@ -4202,13 +4202,13 @@ var ripple =
 	//
 
 	// var network = require('./network.js');
-	var async              = __webpack_require__(50);
-	var util               = __webpack_require__(39);
+	var async              = __webpack_require__(49);
+	var util               = __webpack_require__(37);
 	var extend             = __webpack_require__(44);
-	var EventEmitter       = __webpack_require__(37).EventEmitter;
+	var EventEmitter       = __webpack_require__(38).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(8).UInt160;
-	var TransactionManager = __webpack_require__(23).TransactionManager;
+	var TransactionManager = __webpack_require__(26).TransactionManager;
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Base               = __webpack_require__(7).Base;
 
@@ -4636,8 +4636,8 @@ var ripple =
 	//   - may or may not forward.
 	//
 
-	var EventEmitter     = __webpack_require__(37).EventEmitter;
-	var util             = __webpack_require__(39);
+	var EventEmitter     = __webpack_require__(38).EventEmitter;
+	var util             = __webpack_require__(37);
 	var utils            = __webpack_require__(19);
 	var sjcl             = __webpack_require__(19).sjcl;
 	var Amount           = __webpack_require__(3).Amount;
@@ -5578,7 +5578,7 @@ var ripple =
 	var extend    = __webpack_require__(44);
 	var UInt160 = __webpack_require__(8).UInt160;
 	var utils = __webpack_require__(19);
-	var Float = __webpack_require__(29).Float;
+	var Float = __webpack_require__(28).Float;
 
 	//
 	// Currency support
@@ -6123,7 +6123,7 @@ var ripple =
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = __webpack_require__(28).UInt;
+	var UInt = __webpack_require__(29).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6230,7 +6230,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(44);
-	var UInt   = __webpack_require__(28).UInt;
+	var UInt   = __webpack_require__(29).UInt;
 
 	//
 	// UInt256 support
@@ -6268,10 +6268,10 @@ var ripple =
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(28).UInt;
+	var UInt    = __webpack_require__(29).UInt;
 	var UInt256 = __webpack_require__(9).UInt256;
 	var UInt160 = __webpack_require__(8).UInt160;
-	var KeyPair = __webpack_require__(32).KeyPair;
+	var KeyPair = __webpack_require__(30).KeyPair;
 
 	var Seed = extend(function () {
 	  // Internal form: NaN or BigInteger
@@ -6665,12 +6665,12 @@ var ripple =
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var assert    = __webpack_require__(38);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var assert    = __webpack_require__(39);
 	var extend    = __webpack_require__(44);
 	var binformat = __webpack_require__(18);
-	var stypes    = __webpack_require__(30);
+	var stypes    = __webpack_require__(31);
 	var UInt256   = __webpack_require__(9).UInt256;
-	var Crypt     = __webpack_require__(31).Crypt;
+	var Crypt     = __webpack_require__(32).Crypt;
 	var utils     = __webpack_require__(19);
 
 	var sjcl = utils.sjcl;
@@ -6996,13 +6996,13 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(39);
+	var util   = __webpack_require__(37);
 	var extend = __webpack_require__(44);
 
 	function RippleError(code, message) {
@@ -7041,12 +7041,12 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async              = __webpack_require__(50);
-	var crypto             = __webpack_require__(42);
+	var async              = __webpack_require__(49);
+	var crypto             = __webpack_require__(41);
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
 	var Seed               = __webpack_require__(10).Seed;
-	var KeyPair            = __webpack_require__(32).KeyPair;
+	var KeyPair            = __webpack_require__(30).KeyPair;
 	var Account            = __webpack_require__(4).Account;
 	var UInt160            = __webpack_require__(8).UInt160;
 
@@ -7250,11 +7250,11 @@ var ripple =
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async      = __webpack_require__(50);
+	var async      = __webpack_require__(49);
 	var blobClient = __webpack_require__(33).BlobClient;
 	var AuthInfo   = __webpack_require__(16).AuthInfo;
-	var crypt      = __webpack_require__(31).Crypt;
-	var log        = __webpack_require__(26).sub('vault');
+	var crypt      = __webpack_require__(32).Crypt;
+	var log        = __webpack_require__(25).sub('vault');
 	function VaultClient(opts) {
 	  
 	  var self = this;
@@ -7849,7 +7849,7 @@ var ripple =
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async      = __webpack_require__(50);
+	var async      = __webpack_require__(49);
 	var superagent = __webpack_require__(51);
 	var RippleTxt  = __webpack_require__(17).RippleTxt;
 
@@ -8638,11 +8638,11 @@ var ripple =
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(37);
 	var url          = __webpack_require__(43);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
-	var log          = __webpack_require__(26).internal.sub('server');
+	var log          = __webpack_require__(25).internal.sub('server');
 
 	/**
 	 *  @constructor Server
@@ -9475,7 +9475,7 @@ var ripple =
 
 	var sjcl = __webpack_require__(19).sjcl;
 
-	var WalletGenerator = __webpack_require__(49)({
+	var WalletGenerator = __webpack_require__(50)({
 	  sjcl: sjcl
 	});
 
@@ -9503,697 +9503,6 @@ var ripple =
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var Transaction  = __webpack_require__(5).Transaction;
-	var RippleError  = __webpack_require__(13).RippleError;
-	var PendingQueue = __webpack_require__(45).TransactionQueue;
-	var log          = __webpack_require__(26).internal.sub('transactionmanager');
-
-	/**
-	 * @constructor TransactionManager
-	 * @param {Account} account
-	 */
-
-	function TransactionManager(account) {
-	  EventEmitter.call(this);
-
-	  var self = this;
-
-	  this._account           = account;
-	  this._accountID         = account._account_id;
-	  this._remote            = account._remote;
-	  this._nextSequence      = void(0);
-	  this._maxFee            = this._remote.max_fee;
-	  this._maxAttempts       = this._remote.max_attempts;
-	  this._submissionTimeout = this._remote._submission_timeout;
-	  this._pending           = new PendingQueue();
-
-	  // Query remote server for next account sequence number
-	  this._loadSequence();
-
-	  function transactionReceived(res) {
-	    var transaction = TransactionManager.normalizeTransaction(res);
-	    var sequence    = transaction.tx_json.Sequence;
-	    var hash        = transaction.tx_json.hash;
-
-	    if (!transaction.validated) {
-	      return;
-	    }
-
-	    self._pending.addReceivedSequence(sequence);
-
-	    // ND: we need to check against all submissions IDs
-	    var submission = self._pending.getSubmission(hash);
-
-	    if (self._remote.trace) {
-	      log.info('transaction received:', transaction.tx_json);
-	    }
-
-	    if (submission instanceof Transaction) {
-
-	      // ND: A `success` handler will `finalize` this later
-	      switch (transaction.engine_result) {
-	        case 'tesSUCCESS':
-	          submission.emit('success', transaction);
-	          break;
-	        default:
-	          submission.emit('error', transaction);
-	      }
-
-	    } else {
-	      self._pending.addReceivedId(hash, transaction);
-	    }
-	  };
-
-	  this._account.on('transaction-outbound', transactionReceived);
-
-	  this._remote.on('load_changed', this._adjustFees.bind(this));
-
-	  function updatePendingStatus(ledger) {
-	    self._pending.forEach(function(pending) {
-	      switch (ledger.ledger_index - pending.submitIndex) {
-	        case 8:
-	          pending.emit('lost', ledger);
-	          break;
-	        case 4:
-	          pending.emit('missing', ledger);
-	          break;
-	      }
-	    });
-	  };
-
-	  this._remote.on('ledger_closed', updatePendingStatus);
-
-	  function remoteReconnected(callback) {
-	    var callback = (typeof callback === 'function') ? callback : function(){};
-
-	    if (!self._pending.length) {
-	      return callback();
-	    }
-
-	    //Load account transaction history
-	    var options = {
-	      account: self._accountID,
-	      ledger_index_min: -1,
-	      ledger_index_max: -1,
-	      binary: true,
-	      parseBinary: true,
-	      limit: 100,
-	      filter: 'outbound'
-	    };
-
-	    function accountTx(err, transactions) {
-	      if (!err && Array.isArray(transactions.transactions)) {
-	        transactions.transactions.forEach(transactionReceived);
-	      }
-
-	      self._remote.on('ledger_closed', updatePendingStatus);
-
-	      //Load next transaction sequence
-	      self._loadSequence(self._resubmit.bind(self));
-
-	      callback();
-	    };
-
-	    self._remote.requestAccountTx(options, accountTx);
-
-	    self.emit('reconnect');
-	  };
-
-	  function remoteDisconnected() {
-	    self._remote.once('connect', remoteReconnected);
-	    self._remote.removeListener('ledger_closed', updatePendingStatus);
-	  };
-
-	  this._remote.on('disconnect', remoteDisconnected);
-
-	  function saveTransaction(transaction) {
-	    self._remote.storage.saveTransaction(transaction.summary());
-	  };
-
-	  if (this._remote.storage) {
-	    this.on('save', saveTransaction);
-	  }
-	};
-
-	util.inherits(TransactionManager, EventEmitter);
-
-	//Normalize transactions received from account
-	//transaction stream and account_tx
-	TransactionManager.normalizeTransaction = function(tx) {
-	  var transaction = { };
-
-	  Object.keys(tx).forEach(function(key) {
-	    transaction[key] = tx[key];
-	  });
-
-	  if (!tx.engine_result) {
-	    // account_tx
-	    transaction = {
-	      engine_result:  tx.meta.TransactionResult,
-	      tx_json:        tx.tx,
-	      hash:           tx.tx.hash,
-	      ledger_index:   tx.tx.ledger_index,
-	      meta:           tx.meta,
-	      type:           'transaction',
-	      validated:      true
-	    };
-
-	    transaction.result = transaction.engine_result;
-	    transaction.result_message = transaction.engine_result_message;
-	  }
-
-	  if (!transaction.metadata) {
-	    transaction.metadata = transaction.meta;
-	  }
-
-	  if (!transaction.tx_json) {
-	    transaction.tx_json = transaction.transaction;
-	  }
-
-	  delete transaction.transaction;
-	  delete transaction.mmeta;
-	  delete transaction.meta;
-
-	  return transaction;
-	};
-
-	// Transaction fees are adjusted in real-time
-	TransactionManager.prototype._adjustFees = function(loadData) {
-	  // ND: note, that `Fee` is a component of a transactionID
-	  var self = this;
-
-	  if (!this._remote.local_fee) {
-	    return;
-	  }
-
-	  this._pending.forEach(function(pending) {
-	    var oldFee = pending.tx_json.Fee;
-	    var newFee = pending._computeFee();
-
-	    function maxFeeExceeded() {
-	      pending.once('presubmit', function() {
-	        pending.emit('error', 'tejMaxFeeExceeded');
-	      });
-	    };
-
-	    if (Number(newFee) > self._maxFee) {
-	      return maxFeeExceeded();
-	    }
-
-	    pending.tx_json.Fee = newFee;
-	    pending.emit('fee_adjusted', oldFee, newFee);
-
-	    if (self._remote.trace) {
-	      log.info('fee adjusted:', pending.tx_json, oldFee, newFee);
-	    }
-	  });
-	};
-
-	//Fill an account transaction sequence
-	TransactionManager.prototype._fillSequence = function(tx, callback) {
-	  var self = this;
-
-	  function submitFill(sequence, callback) {
-	    var fill = self._remote.transaction();
-	    fill.account_set(self._accountID);
-	    fill.tx_json.Sequence = sequence;
-	    fill.once('submitted', callback);
-
-	    // Secrets may be set on a per-transaction basis
-	    if (tx._secret) {
-	      fill.secret(tx._secret);
-	    }
-
-	    fill.submit();
-	  };
-
-	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence !== 'number') {
-	      return callback(new Error('Failed to fetch account transaction sequence'));
-	    }
-
-	    var sequenceDif = tx.tx_json.Sequence - sequence;
-	    var submitted = 0;
-
-	    ;(function nextFill(sequence) {
-	      if (sequence >= tx.tx_json.Sequence) {
-	        return;
-	      }
-
-	      submitFill(sequence, function() {
-	        if (++submitted === sequenceDif) {
-	          callback();
-	        } else {
-	          nextFill(sequence + 1);
-	        }
-	      });
-	    })(sequence);
-	  };
-
-	  this._loadSequence(sequenceLoaded);
-	};
-
-	TransactionManager.prototype._loadSequence = function(callback) {
-	  var self = this;
-
-	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence === 'number') {
-	      self._nextSequence = sequence;
-	      self.emit('sequence_loaded', sequence);
-	      if (typeof callback === 'function') {
-	        callback(err, sequence);
-	      }
-	    } else {
-	      setTimeout(function() {
-	        self._loadSequence(callback);
-	      }, 1000 * 3);
-	    }
-	  };
-
-	  this._account.getNextSequence(sequenceLoaded);
-	};
-
-	TransactionManager.prototype._resubmit = function(ledgers, pending) {
-	  var self = this;
-	  var pending = pending ? [ pending ] : this._pending;
-	  var ledgers = Number(ledgers) || 0;
-
-	  function resubmitTransaction(pending) {
-	    if (!pending || pending.finalized) {
-	      // Transaction has been finalized, nothing to do
-	      return;
-	    }
-
-	    var hashCached = pending.findId(self._pending._idCache);
-
-	    if (self._remote.trace) {
-	      log.info('resubmit:', pending.tx_json);
-	    }
-
-	    if (hashCached) {
-	      return pending.emit('success', hashCached);
-	    }
-
-	    while (self._pending.hasSequence(pending.tx_json.Sequence)) {
-	      //Sequence number has been consumed by another transaction
-	      pending.tx_json.Sequence += 1;
-
-	      if (self._remote.trace) {
-	        log.info('incrementing sequence:', pending.tx_json);
-	      }
-	    }
-
-	    self._request(pending);
-	  };
-
-	  function resubmitTransactions() {
-	    ;(function nextTransaction(i) {
-	      var transaction = pending[i];
-
-	      if (!(transaction instanceof Transaction)) {
-	        return;
-	      }
-
-	      transaction.once('submitted', function(m) {
-	        transaction.emit('resubmitted', m);
-
-	        self._loadSequence();
-
-	        if (++i < pending.length) {
-	          nextTransaction(i);
-	        }
-	      });
-
-	      resubmitTransaction(transaction);
-	    })(0);
-	  };
-
-	  this._waitLedgers(ledgers, resubmitTransactions);
-	};
-
-	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
-	  if (ledgers < 1) {
-	    return callback();
-	  }
-
-	  var self = this;
-	  var closes = 0;
-
-	  function ledgerClosed() {
-	    if (++closes < ledgers) {
-	      return;
-	    }
-
-	    self._remote.removeListener('ledger_closed', ledgerClosed);
-
-	    callback();
-	  };
-
-	  this._remote.on('ledger_closed', ledgerClosed);
-	};
-
-	TransactionManager.prototype._request = function(tx) {
-	  var self   = this;
-	  var remote = this._remote;
-
-	  if (tx.attempts > this._maxAttempts) {
-	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
-	  }
-
-	  if (tx.attempts > 0 && !remote.local_signing) {
-	    var message = ''
-	    + 'It is not possible to resubmit transactions automatically safely without '
-	    + 'synthesizing the transactionID locally. See `local_signing` config option';
-
-	    return tx.emit('error', new RippleError('tejLocalSigningRequired', message));
-	  }
-
-	  if (tx.finalized) {
-	    return;
-	  }
-
-	  if (remote.trace) {
-	    log.info('submit transaction:', tx.tx_json);
-	  }
-
-	  function transactionProposed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    // If server is honest, don't expect a final if rejected.
-	    message.rejected = tx.isRejected(message.engine_result_code);
-
-	    tx.emit('proposed', message);
-	  };
-
-	  function transactionFailed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    switch (message.engine_result) {
-	      case 'tefPAST_SEQ':
-	        self._resubmit(1, tx);
-	        break;
-	      case 'tefALREADY':
-	        if (tx.responses === tx.submissions) {
-	          tx.emit('error', message);
-	        } else {
-	          submitRequest.once('success', submitted);
-	        }
-	        break;
-	      default:
-	        tx.emit('error', message);
-	    }
-	  };
-
-	  function transactionRetry(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    self._fillSequence(tx, function() {
-	      self._resubmit(1, tx);
-	    });
-	  };
-
-	  function transactionFeeClaimed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-	  };
-
-	  function transactionFailedLocal(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    if (self._remote.local_fee && (message.engine_result === 'telINSUF_FEE_P')) {
-	      self._resubmit(2, tx);
-	    } else {
-	      submissionError(message);
-	    }
-	  };
-
-	  function submissionError(error) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    if (TransactionManager._isTooBusy(error)) {
-	      self._resubmit(1, tx);
-	    } else {
-	      self._nextSequence--;
-	      tx.emit('error', error);
-	    }
-	  };
-
-	  function submitted(message) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    // ND: If for some unknown reason our hash wasn't computed correctly this is
-	    // an extra measure.
-	    if (message.tx_json && message.tx_json.hash) {
-	      tx.addId(message.tx_json.hash);
-	    }
-
-	    message.result = message.engine_result || '';
-
-	    tx.result = message;
-	    tx.responses += 1;
-
-	    if (remote.trace) {
-	      log.info('submit response:', message);
-	    }
-
-	    tx.emit('submitted', message);
-
-	    switch (message.result.slice(0, 3)) {
-	      case 'tes':
-	        transactionProposed(message);
-	        break;
-	      case 'tec':
-	        transactionFeeClaimed(message);
-	        break;
-	      case 'ter':
-	        transactionRetry(message);
-	        break;
-	      case 'tef':
-	        transactionFailed(message);
-	        break;
-	      case 'tel':
-	        transactionFailedLocal(message);
-	        break;
-	      default:
-	        // tem
-	        submissionError(message);
-	    }
-	  };
-
-	  var submitRequest = remote.requestSubmit();
-
-	  submitRequest.once('error', submitted);
-	  submitRequest.once('success', submitted);
-
-	  function prepareSubmit() {
-	    if (remote.local_signing) {
-	      // TODO: We are serializing twice, when we could/should be feeding the
-	      // tx_blob to `tx.hash()` which rebuilds it to sign it.
-	      submitRequest.tx_blob(tx.serialize().to_hex());
-
-	      // ND: ecdsa produces a random `TxnSignature` field value, a component of
-	      // the hash. Attempting to identify a transaction via a hash synthesized
-	      // locally while using remote signing is inherently flawed.
-	      tx.addId(tx.hash());
-	    } else {
-	      // ND: `build_path` is completely ignored when doing local signing as
-	      // `Paths` is a component of the signed blob, the `tx_blob` is signed,
-	      // sealed and delivered, and the txn unmodified.
-	      // TODO: perhaps an exception should be raised if build_path is attempted
-	      // while local signing
-	      submitRequest.build_path(tx._build_path);
-	      submitRequest.secret(tx._secret);
-	      submitRequest.tx_json(tx.tx_json);
-	    }
-
-	    if (tx._server) {
-	      submitRequest.server = tx._server;
-	    }
-
-	    submitTransaction();
-	  };
-
-	  function requestTimeout() {
-	    // ND: What if the response is just slow and we get a response that
-	    // `submitted` above will cause to have concurrent resubmit logic streams?
-	    // It's simpler to just mute handlers and look out for finalized
-	    // `transaction` messages.
-
-	    // ND: We should audit the code for other potential multiple resubmit
-	    // streams. Connection/reconnection could be one? That's why it's imperative
-	    // that ALL transactionIDs sent over network are tracked.
-
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    tx.emit('timeout');
-
-	    if (remote._connected) {
-	      if (remote.trace) {
-	        log.info('timeout:', tx.tx_json);
-	      }
-	      self._resubmit(3, tx);
-	    }
-	  };
-
-	  function submitTransaction() {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    tx.emit('presubmit');
-
-	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
-
-	    tx.submissions = submitRequest.broadcast();
-	    tx.attempts++;
-	    tx.emit('postsubmit');
-	  };
-
-	  tx.submitIndex = this._remote._ledger_current_index;
-
-	  if (tx.attempts === 0) {
-	    tx.initialSubmitIndex = tx.submitIndex;
-	  }
-
-	  if (!tx._setLastLedger) {
-	    // Honor LastLedgerSequence set by user of API. If
-	    // left unset by API, bump LastLedgerSequence
-	    tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
-	  }
-
-	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
-
-	  if (remote.local_signing) {
-	    tx.sign(prepareSubmit);
-	  } else {
-	    prepareSubmit();
-	  }
-
-	  return submitRequest;
-	};
-
-	TransactionManager._isNoOp = function(transaction) {
-	  return (typeof transaction === 'object')
-	      && (typeof transaction.tx_json === 'object')
-	      && (transaction.tx_json.TransactionType === 'AccountSet')
-	      && (transaction.tx_json.Flags === 0);
-	};
-
-	TransactionManager._isRemoteError = function(error) {
-	  return (typeof error === 'object')
-	      && (error.error === 'remoteError')
-	      && (typeof error.remote === 'object');
-	};
-
-	TransactionManager._isNotFound = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
-	};
-
-	TransactionManager._isTooBusy = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && (error.remote.error === 'tooBusy');
-	};
-
-	/**
-	 * Entry point for TransactionManager submission
-	 *
-	 * @param {Transaction} tx
-	 */
-
-	TransactionManager.prototype.submit = function(tx) {
-	  var self = this;
-	  var remote = this._remote;
-
-	  // If sequence number is not yet known, defer until it is.
-	  if (typeof this._nextSequence !== 'number') {
-	    this.once('sequence_loaded', this.submit.bind(this, tx));
-	    return;
-	  }
-
-	  // Finalized (e.g. aborted) transactions must stop all activity
-	  if (tx.finalized) {
-	    return;
-	  }
-
-	  function cleanup(message) {
-	    // ND: We can just remove this `tx` by identity
-	    self._pending.remove(tx);
-	    tx.emit('final', message);
-	    if (remote.trace) {
-	      log.info('transaction finalized:', tx.tx_json, self._pending.getLength());
-	    }
-	  };
-
-	  tx.once('cleanup', cleanup);
-
-	  tx.on('save', function() {
-	    self.emit('save', tx);
-	  });
-
-	  tx.once('error', function(message) {
-	    tx._errorHandler(message);
-	  });
-
-	  tx.once('success', function(message) {
-	    tx._successHandler(message);
-	  });
-
-	  tx.once('abort', function() {
-	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
-	  });
-
-	  if (typeof tx.tx_json.Sequence !== 'number') {
-	    tx.tx_json.Sequence = this._nextSequence++;
-	  }
-
-	  // Attach secret, associate transaction with a server, attach fee.
-	  // If the transaction can't complete, decrement sequence so that
-	  // subsequent transactions
-	  if (!tx.complete()) {
-	    this._nextSequence--;
-	    return;
-	  }
-
-	  tx.attempts = 0;
-	  tx.submissions = 0;
-	  tx.responses = 0;
-
-	  // ND: this is the ONLY place we put the tx into the queue. The
-	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
-	  // will cause subsequent look ups (eg. inside 'transaction-outbound'
-	  // validated transaction clearing) to fail.
-	  this._pending.push(tx);
-	  this._request(tx);
-	};
-
-	exports.TransactionManager = TransactionManager;
-
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// Routines for working with an orderbook.
 	//
 	// One OrderBook object represents one half of an order book. (i.e. bids OR
@@ -10204,15 +9513,15 @@ var ripple =
 	//  - trade
 	//  - transaction
 
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(37);
 	var extend       = __webpack_require__(44);
-	var assert       = __webpack_require__(38);
-	var async        = __webpack_require__(50);
-	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var assert       = __webpack_require__(39);
+	var async        = __webpack_require__(49);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
-	var log          = __webpack_require__(26).internal.sub('orderbook');
+	var log          = __webpack_require__(25).internal.sub('orderbook');
 
 	/**
 	 * @constructor OrderBook
@@ -11309,11 +10618,11 @@ var ripple =
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(37).EventEmitter;
-	var util         = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(37);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(44);
 
@@ -11401,7 +10710,7 @@ var ripple =
 
 
 /***/ },
-/* 26 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = __webpack_require__(40);
@@ -11438,6 +10747,697 @@ var ripple =
 
 
 /***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var util         = __webpack_require__(37);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var Transaction  = __webpack_require__(5).Transaction;
+	var RippleError  = __webpack_require__(13).RippleError;
+	var PendingQueue = __webpack_require__(45).TransactionQueue;
+	var log          = __webpack_require__(25).internal.sub('transactionmanager');
+
+	/**
+	 * @constructor TransactionManager
+	 * @param {Account} account
+	 */
+
+	function TransactionManager(account) {
+	  EventEmitter.call(this);
+
+	  var self = this;
+
+	  this._account           = account;
+	  this._accountID         = account._account_id;
+	  this._remote            = account._remote;
+	  this._nextSequence      = void(0);
+	  this._maxFee            = this._remote.max_fee;
+	  this._maxAttempts       = this._remote.max_attempts;
+	  this._submissionTimeout = this._remote._submission_timeout;
+	  this._pending           = new PendingQueue();
+
+	  // Query remote server for next account sequence number
+	  this._loadSequence();
+
+	  function transactionReceived(res) {
+	    var transaction = TransactionManager.normalizeTransaction(res);
+	    var sequence    = transaction.tx_json.Sequence;
+	    var hash        = transaction.tx_json.hash;
+
+	    if (!transaction.validated) {
+	      return;
+	    }
+
+	    self._pending.addReceivedSequence(sequence);
+
+	    // ND: we need to check against all submissions IDs
+	    var submission = self._pending.getSubmission(hash);
+
+	    if (self._remote.trace) {
+	      log.info('transaction received:', transaction.tx_json);
+	    }
+
+	    if (submission instanceof Transaction) {
+
+	      // ND: A `success` handler will `finalize` this later
+	      switch (transaction.engine_result) {
+	        case 'tesSUCCESS':
+	          submission.emit('success', transaction);
+	          break;
+	        default:
+	          submission.emit('error', transaction);
+	      }
+
+	    } else {
+	      self._pending.addReceivedId(hash, transaction);
+	    }
+	  };
+
+	  this._account.on('transaction-outbound', transactionReceived);
+
+	  this._remote.on('load_changed', this._adjustFees.bind(this));
+
+	  function updatePendingStatus(ledger) {
+	    self._pending.forEach(function(pending) {
+	      switch (ledger.ledger_index - pending.submitIndex) {
+	        case 8:
+	          pending.emit('lost', ledger);
+	          break;
+	        case 4:
+	          pending.emit('missing', ledger);
+	          break;
+	      }
+	    });
+	  };
+
+	  this._remote.on('ledger_closed', updatePendingStatus);
+
+	  function remoteReconnected(callback) {
+	    var callback = (typeof callback === 'function') ? callback : function(){};
+
+	    if (!self._pending.length) {
+	      return callback();
+	    }
+
+	    //Load account transaction history
+	    var options = {
+	      account: self._accountID,
+	      ledger_index_min: -1,
+	      ledger_index_max: -1,
+	      binary: true,
+	      parseBinary: true,
+	      limit: 100,
+	      filter: 'outbound'
+	    };
+
+	    function accountTx(err, transactions) {
+	      if (!err && Array.isArray(transactions.transactions)) {
+	        transactions.transactions.forEach(transactionReceived);
+	      }
+
+	      self._remote.on('ledger_closed', updatePendingStatus);
+
+	      //Load next transaction sequence
+	      self._loadSequence(self._resubmit.bind(self));
+
+	      callback();
+	    };
+
+	    self._remote.requestAccountTx(options, accountTx);
+
+	    self.emit('reconnect');
+	  };
+
+	  function remoteDisconnected() {
+	    self._remote.once('connect', remoteReconnected);
+	    self._remote.removeListener('ledger_closed', updatePendingStatus);
+	  };
+
+	  this._remote.on('disconnect', remoteDisconnected);
+
+	  function saveTransaction(transaction) {
+	    self._remote.storage.saveTransaction(transaction.summary());
+	  };
+
+	  if (this._remote.storage) {
+	    this.on('save', saveTransaction);
+	  }
+	};
+
+	util.inherits(TransactionManager, EventEmitter);
+
+	//Normalize transactions received from account
+	//transaction stream and account_tx
+	TransactionManager.normalizeTransaction = function(tx) {
+	  var transaction = { };
+
+	  Object.keys(tx).forEach(function(key) {
+	    transaction[key] = tx[key];
+	  });
+
+	  if (!tx.engine_result) {
+	    // account_tx
+	    transaction = {
+	      engine_result:  tx.meta.TransactionResult,
+	      tx_json:        tx.tx,
+	      hash:           tx.tx.hash,
+	      ledger_index:   tx.tx.ledger_index,
+	      meta:           tx.meta,
+	      type:           'transaction',
+	      validated:      true
+	    };
+
+	    transaction.result = transaction.engine_result;
+	    transaction.result_message = transaction.engine_result_message;
+	  }
+
+	  if (!transaction.metadata) {
+	    transaction.metadata = transaction.meta;
+	  }
+
+	  if (!transaction.tx_json) {
+	    transaction.tx_json = transaction.transaction;
+	  }
+
+	  delete transaction.transaction;
+	  delete transaction.mmeta;
+	  delete transaction.meta;
+
+	  return transaction;
+	};
+
+	// Transaction fees are adjusted in real-time
+	TransactionManager.prototype._adjustFees = function(loadData) {
+	  // ND: note, that `Fee` is a component of a transactionID
+	  var self = this;
+
+	  if (!this._remote.local_fee) {
+	    return;
+	  }
+
+	  this._pending.forEach(function(pending) {
+	    var oldFee = pending.tx_json.Fee;
+	    var newFee = pending._computeFee();
+
+	    function maxFeeExceeded() {
+	      pending.once('presubmit', function() {
+	        pending.emit('error', 'tejMaxFeeExceeded');
+	      });
+	    };
+
+	    if (Number(newFee) > self._maxFee) {
+	      return maxFeeExceeded();
+	    }
+
+	    pending.tx_json.Fee = newFee;
+	    pending.emit('fee_adjusted', oldFee, newFee);
+
+	    if (self._remote.trace) {
+	      log.info('fee adjusted:', pending.tx_json, oldFee, newFee);
+	    }
+	  });
+	};
+
+	//Fill an account transaction sequence
+	TransactionManager.prototype._fillSequence = function(tx, callback) {
+	  var self = this;
+
+	  function submitFill(sequence, callback) {
+	    var fill = self._remote.transaction();
+	    fill.account_set(self._accountID);
+	    fill.tx_json.Sequence = sequence;
+	    fill.once('submitted', callback);
+
+	    // Secrets may be set on a per-transaction basis
+	    if (tx._secret) {
+	      fill.secret(tx._secret);
+	    }
+
+	    fill.submit();
+	  };
+
+	  function sequenceLoaded(err, sequence) {
+	    if (typeof sequence !== 'number') {
+	      return callback(new Error('Failed to fetch account transaction sequence'));
+	    }
+
+	    var sequenceDif = tx.tx_json.Sequence - sequence;
+	    var submitted = 0;
+
+	    ;(function nextFill(sequence) {
+	      if (sequence >= tx.tx_json.Sequence) {
+	        return;
+	      }
+
+	      submitFill(sequence, function() {
+	        if (++submitted === sequenceDif) {
+	          callback();
+	        } else {
+	          nextFill(sequence + 1);
+	        }
+	      });
+	    })(sequence);
+	  };
+
+	  this._loadSequence(sequenceLoaded);
+	};
+
+	TransactionManager.prototype._loadSequence = function(callback) {
+	  var self = this;
+
+	  function sequenceLoaded(err, sequence) {
+	    if (typeof sequence === 'number') {
+	      self._nextSequence = sequence;
+	      self.emit('sequence_loaded', sequence);
+	      if (typeof callback === 'function') {
+	        callback(err, sequence);
+	      }
+	    } else {
+	      setTimeout(function() {
+	        self._loadSequence(callback);
+	      }, 1000 * 3);
+	    }
+	  };
+
+	  this._account.getNextSequence(sequenceLoaded);
+	};
+
+	TransactionManager.prototype._resubmit = function(ledgers, pending) {
+	  var self = this;
+	  var pending = pending ? [ pending ] : this._pending;
+	  var ledgers = Number(ledgers) || 0;
+
+	  function resubmitTransaction(pending) {
+	    if (!pending || pending.finalized) {
+	      // Transaction has been finalized, nothing to do
+	      return;
+	    }
+
+	    var hashCached = pending.findId(self._pending._idCache);
+
+	    if (self._remote.trace) {
+	      log.info('resubmit:', pending.tx_json);
+	    }
+
+	    if (hashCached) {
+	      return pending.emit('success', hashCached);
+	    }
+
+	    while (self._pending.hasSequence(pending.tx_json.Sequence)) {
+	      //Sequence number has been consumed by another transaction
+	      pending.tx_json.Sequence += 1;
+
+	      if (self._remote.trace) {
+	        log.info('incrementing sequence:', pending.tx_json);
+	      }
+	    }
+
+	    self._request(pending);
+	  };
+
+	  function resubmitTransactions() {
+	    ;(function nextTransaction(i) {
+	      var transaction = pending[i];
+
+	      if (!(transaction instanceof Transaction)) {
+	        return;
+	      }
+
+	      transaction.once('submitted', function(m) {
+	        transaction.emit('resubmitted', m);
+
+	        self._loadSequence();
+
+	        if (++i < pending.length) {
+	          nextTransaction(i);
+	        }
+	      });
+
+	      resubmitTransaction(transaction);
+	    })(0);
+	  };
+
+	  this._waitLedgers(ledgers, resubmitTransactions);
+	};
+
+	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
+	  if (ledgers < 1) {
+	    return callback();
+	  }
+
+	  var self = this;
+	  var closes = 0;
+
+	  function ledgerClosed() {
+	    if (++closes < ledgers) {
+	      return;
+	    }
+
+	    self._remote.removeListener('ledger_closed', ledgerClosed);
+
+	    callback();
+	  };
+
+	  this._remote.on('ledger_closed', ledgerClosed);
+	};
+
+	TransactionManager.prototype._request = function(tx) {
+	  var self   = this;
+	  var remote = this._remote;
+
+	  if (tx.attempts > this._maxAttempts) {
+	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
+	  }
+
+	  if (tx.attempts > 0 && !remote.local_signing) {
+	    var message = ''
+	    + 'It is not possible to resubmit transactions automatically safely without '
+	    + 'synthesizing the transactionID locally. See `local_signing` config option';
+
+	    return tx.emit('error', new RippleError('tejLocalSigningRequired', message));
+	  }
+
+	  if (tx.finalized) {
+	    return;
+	  }
+
+	  if (remote.trace) {
+	    log.info('submit transaction:', tx.tx_json);
+	  }
+
+	  function transactionProposed(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    // If server is honest, don't expect a final if rejected.
+	    message.rejected = tx.isRejected(message.engine_result_code);
+
+	    tx.emit('proposed', message);
+	  };
+
+	  function transactionFailed(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    switch (message.engine_result) {
+	      case 'tefPAST_SEQ':
+	        self._resubmit(1, tx);
+	        break;
+	      case 'tefALREADY':
+	        if (tx.responses === tx.submissions) {
+	          tx.emit('error', message);
+	        } else {
+	          submitRequest.once('success', submitted);
+	        }
+	        break;
+	      default:
+	        tx.emit('error', message);
+	    }
+	  };
+
+	  function transactionRetry(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    self._fillSequence(tx, function() {
+	      self._resubmit(1, tx);
+	    });
+	  };
+
+	  function transactionFeeClaimed(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+	  };
+
+	  function transactionFailedLocal(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    if (self._remote.local_fee && (message.engine_result === 'telINSUF_FEE_P')) {
+	      self._resubmit(2, tx);
+	    } else {
+	      submissionError(message);
+	    }
+	  };
+
+	  function submissionError(error) {
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    if (TransactionManager._isTooBusy(error)) {
+	      self._resubmit(1, tx);
+	    } else {
+	      self._nextSequence--;
+	      tx.emit('error', error);
+	    }
+	  };
+
+	  function submitted(message) {
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    // ND: If for some unknown reason our hash wasn't computed correctly this is
+	    // an extra measure.
+	    if (message.tx_json && message.tx_json.hash) {
+	      tx.addId(message.tx_json.hash);
+	    }
+
+	    message.result = message.engine_result || '';
+
+	    tx.result = message;
+	    tx.responses += 1;
+
+	    if (remote.trace) {
+	      log.info('submit response:', message);
+	    }
+
+	    tx.emit('submitted', message);
+
+	    switch (message.result.slice(0, 3)) {
+	      case 'tes':
+	        transactionProposed(message);
+	        break;
+	      case 'tec':
+	        transactionFeeClaimed(message);
+	        break;
+	      case 'ter':
+	        transactionRetry(message);
+	        break;
+	      case 'tef':
+	        transactionFailed(message);
+	        break;
+	      case 'tel':
+	        transactionFailedLocal(message);
+	        break;
+	      default:
+	        // tem
+	        submissionError(message);
+	    }
+	  };
+
+	  var submitRequest = remote.requestSubmit();
+
+	  submitRequest.once('error', submitted);
+	  submitRequest.once('success', submitted);
+
+	  function prepareSubmit() {
+	    if (remote.local_signing) {
+	      // TODO: We are serializing twice, when we could/should be feeding the
+	      // tx_blob to `tx.hash()` which rebuilds it to sign it.
+	      submitRequest.tx_blob(tx.serialize().to_hex());
+
+	      // ND: ecdsa produces a random `TxnSignature` field value, a component of
+	      // the hash. Attempting to identify a transaction via a hash synthesized
+	      // locally while using remote signing is inherently flawed.
+	      tx.addId(tx.hash());
+	    } else {
+	      // ND: `build_path` is completely ignored when doing local signing as
+	      // `Paths` is a component of the signed blob, the `tx_blob` is signed,
+	      // sealed and delivered, and the txn unmodified.
+	      // TODO: perhaps an exception should be raised if build_path is attempted
+	      // while local signing
+	      submitRequest.build_path(tx._build_path);
+	      submitRequest.secret(tx._secret);
+	      submitRequest.tx_json(tx.tx_json);
+	    }
+
+	    if (tx._server) {
+	      submitRequest.server = tx._server;
+	    }
+
+	    submitTransaction();
+	  };
+
+	  function requestTimeout() {
+	    // ND: What if the response is just slow and we get a response that
+	    // `submitted` above will cause to have concurrent resubmit logic streams?
+	    // It's simpler to just mute handlers and look out for finalized
+	    // `transaction` messages.
+
+	    // ND: We should audit the code for other potential multiple resubmit
+	    // streams. Connection/reconnection could be one? That's why it's imperative
+	    // that ALL transactionIDs sent over network are tracked.
+
+	    // Finalized (e.g. aborted) transactions must stop all activity
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    tx.emit('timeout');
+
+	    if (remote._connected) {
+	      if (remote.trace) {
+	        log.info('timeout:', tx.tx_json);
+	      }
+	      self._resubmit(3, tx);
+	    }
+	  };
+
+	  function submitTransaction() {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    tx.emit('presubmit');
+
+	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
+
+	    tx.submissions = submitRequest.broadcast();
+	    tx.attempts++;
+	    tx.emit('postsubmit');
+	  };
+
+	  tx.submitIndex = this._remote._ledger_current_index;
+
+	  if (tx.attempts === 0) {
+	    tx.initialSubmitIndex = tx.submitIndex;
+	  }
+
+	  if (!tx._setLastLedger) {
+	    // Honor LastLedgerSequence set by user of API. If
+	    // left unset by API, bump LastLedgerSequence
+	    tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
+	  }
+
+	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
+
+	  if (remote.local_signing) {
+	    tx.sign(prepareSubmit);
+	  } else {
+	    prepareSubmit();
+	  }
+
+	  return submitRequest;
+	};
+
+	TransactionManager._isNoOp = function(transaction) {
+	  return (typeof transaction === 'object')
+	      && (typeof transaction.tx_json === 'object')
+	      && (transaction.tx_json.TransactionType === 'AccountSet')
+	      && (transaction.tx_json.Flags === 0);
+	};
+
+	TransactionManager._isRemoteError = function(error) {
+	  return (typeof error === 'object')
+	      && (error.error === 'remoteError')
+	      && (typeof error.remote === 'object');
+	};
+
+	TransactionManager._isNotFound = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
+	};
+
+	TransactionManager._isTooBusy = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && (error.remote.error === 'tooBusy');
+	};
+
+	/**
+	 * Entry point for TransactionManager submission
+	 *
+	 * @param {Transaction} tx
+	 */
+
+	TransactionManager.prototype.submit = function(tx) {
+	  var self = this;
+	  var remote = this._remote;
+
+	  // If sequence number is not yet known, defer until it is.
+	  if (typeof this._nextSequence !== 'number') {
+	    this.once('sequence_loaded', this.submit.bind(this, tx));
+	    return;
+	  }
+
+	  // Finalized (e.g. aborted) transactions must stop all activity
+	  if (tx.finalized) {
+	    return;
+	  }
+
+	  function cleanup(message) {
+	    // ND: We can just remove this `tx` by identity
+	    self._pending.remove(tx);
+	    tx.emit('final', message);
+	    if (remote.trace) {
+	      log.info('transaction finalized:', tx.tx_json, self._pending.getLength());
+	    }
+	  };
+
+	  tx.once('cleanup', cleanup);
+
+	  tx.on('save', function() {
+	    self.emit('save', tx);
+	  });
+
+	  tx.once('error', function(message) {
+	    tx._errorHandler(message);
+	  });
+
+	  tx.once('success', function(message) {
+	    tx._successHandler(message);
+	  });
+
+	  tx.once('abort', function() {
+	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
+	  });
+
+	  if (typeof tx.tx_json.Sequence !== 'number') {
+	    tx.tx_json.Sequence = this._nextSequence++;
+	  }
+
+	  // Attach secret, associate transaction with a server, attach fee.
+	  // If the transaction can't complete, decrement sequence so that
+	  // subsequent transactions
+	  if (!tx.complete()) {
+	    this._nextSequence--;
+	    return;
+	  }
+
+	  tx.attempts = 0;
+	  tx.submissions = 0;
+	  tx.responses = 0;
+
+	  // ND: this is the ONLY place we put the tx into the queue. The
+	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
+	  // will cause subsequent look ups (eg. inside 'transaction-outbound'
+	  // validated transaction clearing) to fail.
+	  this._pending.push(tx);
+	  this._request(tx);
+	};
+
+	exports.TransactionManager = TransactionManager;
+
+
+/***/ },
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -11470,6 +11470,118 @@ var ripple =
 
 /***/ },
 /* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Convert a JavaScript number to IEEE-754 Double Precision
+	// value represented as an array of 8 bytes (octets)
+	//
+	// Based on:
+	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
+	//
+	// Found and modified from:
+	// https://gist.github.com/bartaz/1119041
+
+	var Float = exports.Float = {};
+
+	Float.toIEEE754 = function(v, ebits, fbits) {
+
+	  var bias = (1 << (ebits - 1)) - 1;
+
+	  // Compute sign, exponent, fraction
+	  var s, e, f;
+	  if (isNaN(v)) {
+	    e = (1 << bias) - 1; f = 1; s = 0;
+	  }
+	  else if (v === Infinity || v === -Infinity) {
+	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
+	  }
+	  else if (v === 0) {
+	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
+	  }
+	  else {
+	    s = v < 0;
+	    v = Math.abs(v);
+
+	    if (v >= Math.pow(2, 1 - bias)) {
+	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
+	      e = ln + bias;
+	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
+	    }
+	    else {
+	      e = 0;
+	      f = v / Math.pow(2, 1 - bias - fbits);
+	    }
+	  }
+
+	  // Pack sign, exponent, fraction
+	  var i, bits = [];
+	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
+	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
+	  bits.push(s ? 1 : 0);
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Bits to bytes
+	  var bytes = [];
+	  while (str.length) {
+	    bytes.push(parseInt(str.substring(0, 8), 2));
+	    str = str.substring(8);
+	  }
+	  return bytes;
+	}
+
+	Float.fromIEEE754 = function(bytes, ebits, fbits) {
+
+	  // Bytes to bits
+	  var bits = [];
+	  for (var i = bytes.length; i; i -= 1) {
+	    var byte = bytes[i - 1];
+	    for (var j = 8; j; j -= 1) {
+	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
+	    }
+	  }
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Unpack sign, exponent, fraction
+	  var bias = (1 << (ebits - 1)) - 1;
+	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
+	  var e = parseInt(str.substring(1, 1 + ebits), 2);
+	  var f = parseInt(str.substring(1 + ebits), 2);
+
+	  // Produce number
+	  if (e === (1 << ebits) - 1) {
+	    return f !== 0 ? NaN : s * Infinity;
+	  }
+	  else if (e > 0) {
+	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
+	  }
+	  else if (f !== 0) {
+	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
+	  }
+	  else {
+	    return s * 0;
+	  }
+	}
+
+	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
+	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
+	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
+	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
+
+
+	// Convert array of octets to string binary representation
+	// by bartaz
+
+	Float.toIEEE754DoubleString = function(v) {
+	  return exports.toIEEE754Double(v)
+	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
+	    .join('')
+	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
+	}
+
+/***/ },
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils   = __webpack_require__(19);
@@ -11771,119 +11883,111 @@ var ripple =
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Convert a JavaScript number to IEEE-754 Double Precision
-	// value represented as an array of 8 bytes (octets)
-	//
-	// Based on:
-	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
-	//
-	// Found and modified from:
-	// https://gist.github.com/bartaz/1119041
+	var sjcl    = __webpack_require__(19).sjcl;
 
-	var Float = exports.Float = {};
+	var UInt160 = __webpack_require__(8).UInt160;
+	var UInt256 = __webpack_require__(9).UInt256;
+	var Base    = __webpack_require__(7).Base;
 
-	Float.toIEEE754 = function(v, ebits, fbits) {
+	function KeyPair() {
+	  this._curve  = sjcl.ecc.curves.c256;
+	  this._secret = null;
+	  this._pubkey = null;
+	};
 
-	  var bias = (1 << (ebits - 1)) - 1;
+	KeyPair.from_bn_secret = function(j) {
+	  return (j instanceof this) ? j.clone() : (new this()).parse_bn_secret(j);
+	};
 
-	  // Compute sign, exponent, fraction
-	  var s, e, f;
-	  if (isNaN(v)) {
-	    e = (1 << bias) - 1; f = 1; s = 0;
-	  }
-	  else if (v === Infinity || v === -Infinity) {
-	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
-	  }
-	  else if (v === 0) {
-	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
-	  }
-	  else {
-	    s = v < 0;
-	    v = Math.abs(v);
+	KeyPair.prototype.parse_bn_secret = function(j) {
+	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, j);
+	  return this;
+	};
 
-	    if (v >= Math.pow(2, 1 - bias)) {
-	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
-	      e = ln + bias;
-	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
-	    }
-	    else {
-	      e = 0;
-	      f = v / Math.pow(2, 1 - bias - fbits);
-	    }
+	/**
+	 * Returns public key as sjcl public key.
+	 *
+	 * @private
+	 */
+	KeyPair.prototype._pub = function() {
+	  var curve = this._curve;
+
+	  if (!this._pubkey && this._secret) {
+	    var exponent = this._secret._exponent;
+	    this._pubkey = new sjcl.ecc.ecdsa.publicKey(curve, curve.G.mult(exponent));
 	  }
 
-	  // Pack sign, exponent, fraction
-	  var i, bits = [];
-	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
-	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
-	  bits.push(s ? 1 : 0);
-	  bits.reverse();
-	  var str = bits.join('');
+	  return this._pubkey;
+	};
 
-	  // Bits to bytes
-	  var bytes = [];
-	  while (str.length) {
-	    bytes.push(parseInt(str.substring(0, 8), 2));
-	    str = str.substring(8);
+	/**
+	 * Returns public key in compressed format as bit array.
+	 *
+	 * @private
+	 */
+	KeyPair.prototype._pub_bits = function() {
+	  var pub = this._pub();
+
+	  if (!pub) {
+	    return null;
 	  }
-	  return bytes;
+
+	  var point = pub._point, y_even = point.y.mod(2).equals(0);
+
+	  return sjcl.bitArray.concat(
+	    [sjcl.bitArray.partial(8, y_even ? 0x02 : 0x03)],
+	    point.x.toBits(this._curve.r.bitLength())
+	  );
+	};
+
+	/**
+	 * Returns public key as hex.
+	 *
+	 * Key will be returned as a compressed pubkey - 33 bytes converted to hex.
+	 */
+	KeyPair.prototype.to_hex_pub = function() {
+	  var bits = this._pub_bits();
+
+	  if (!bits) {
+	    return null;
+	  }
+
+	  return sjcl.codec.hex.fromBits(bits).toUpperCase();
+	};
+
+	function SHA256_RIPEMD160(bits) {
+	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
 	}
 
-	Float.fromIEEE754 = function(bytes, ebits, fbits) {
+	KeyPair.prototype.get_address = function() {
+	  var bits = this._pub_bits();
 
-	  // Bytes to bits
-	  var bits = [];
-	  for (var i = bytes.length; i; i -= 1) {
-	    var byte = bytes[i - 1];
-	    for (var j = 8; j; j -= 1) {
-	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
-	    }
+	  if (!bits) {
+	    return null;
 	  }
-	  bits.reverse();
-	  var str = bits.join('');
 
-	  // Unpack sign, exponent, fraction
-	  var bias = (1 << (ebits - 1)) - 1;
-	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
-	  var e = parseInt(str.substring(1, 1 + ebits), 2);
-	  var f = parseInt(str.substring(1 + ebits), 2);
+	  var hash = SHA256_RIPEMD160(bits);
 
-	  // Produce number
-	  if (e === (1 << ebits) - 1) {
-	    return f !== 0 ? NaN : s * Infinity;
-	  }
-	  else if (e > 0) {
-	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
-	  }
-	  else if (f !== 0) {
-	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
-	  }
-	  else {
-	    return s * 0;
-	  }
-	}
+	  var address = UInt160.from_bits(hash);
+	  address.set_version(Base.VER_ACCOUNT_ID);
+	  return address;
+	};
 
-	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
-	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
-	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
-	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
+	KeyPair.prototype.sign = function(hash) {
+	  hash = UInt256.from_json(hash);
+	  var sig = this._secret.sign(hash.to_bits(), 0);
+	  sig = this._secret.canonicalizeSignature(sig);
+	  return this._secret.encodeDER(sig);
+	};
 
+	exports.KeyPair = KeyPair;
 
-	// Convert array of octets to string binary representation
-	// by bartaz
-
-	Float.toIEEE754DoubleString = function(v) {
-	  return exports.toIEEE754Double(v)
-	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
-	    .join('')
-	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
-	}
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -11894,7 +11998,7 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = __webpack_require__(38);
+	var assert    = __webpack_require__(39);
 	var extend    = __webpack_require__(44);
 	var binformat = __webpack_require__(18);
 	var utils     = __webpack_require__(19);
@@ -12644,7 +12748,7 @@ var ripple =
 
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var sjcl        = __webpack_require__(19).sjcl;
@@ -12983,119 +13087,15 @@ var ripple =
 
 
 /***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var sjcl    = __webpack_require__(19).sjcl;
-
-	var UInt160 = __webpack_require__(8).UInt160;
-	var UInt256 = __webpack_require__(9).UInt256;
-	var Base    = __webpack_require__(7).Base;
-
-	function KeyPair() {
-	  this._curve  = sjcl.ecc.curves.c256;
-	  this._secret = null;
-	  this._pubkey = null;
-	};
-
-	KeyPair.from_bn_secret = function(j) {
-	  return (j instanceof this) ? j.clone() : (new this()).parse_bn_secret(j);
-	};
-
-	KeyPair.prototype.parse_bn_secret = function(j) {
-	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, j);
-	  return this;
-	};
-
-	/**
-	 * Returns public key as sjcl public key.
-	 *
-	 * @private
-	 */
-	KeyPair.prototype._pub = function() {
-	  var curve = this._curve;
-
-	  if (!this._pubkey && this._secret) {
-	    var exponent = this._secret._exponent;
-	    this._pubkey = new sjcl.ecc.ecdsa.publicKey(curve, curve.G.mult(exponent));
-	  }
-
-	  return this._pubkey;
-	};
-
-	/**
-	 * Returns public key in compressed format as bit array.
-	 *
-	 * @private
-	 */
-	KeyPair.prototype._pub_bits = function() {
-	  var pub = this._pub();
-
-	  if (!pub) {
-	    return null;
-	  }
-
-	  var point = pub._point, y_even = point.y.mod(2).equals(0);
-
-	  return sjcl.bitArray.concat(
-	    [sjcl.bitArray.partial(8, y_even ? 0x02 : 0x03)],
-	    point.x.toBits(this._curve.r.bitLength())
-	  );
-	};
-
-	/**
-	 * Returns public key as hex.
-	 *
-	 * Key will be returned as a compressed pubkey - 33 bytes converted to hex.
-	 */
-	KeyPair.prototype.to_hex_pub = function() {
-	  var bits = this._pub_bits();
-
-	  if (!bits) {
-	    return null;
-	  }
-
-	  return sjcl.codec.hex.fromBits(bits).toUpperCase();
-	};
-
-	function SHA256_RIPEMD160(bits) {
-	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
-	}
-
-	KeyPair.prototype.get_address = function() {
-	  var bits = this._pub_bits();
-
-	  if (!bits) {
-	    return null;
-	  }
-
-	  var hash = SHA256_RIPEMD160(bits);
-
-	  var address = UInt160.from_bits(hash);
-	  address.set_version(Base.VER_ACCOUNT_ID);
-	  return address;
-	};
-
-	KeyPair.prototype.sign = function(hash) {
-	  hash = UInt256.from_json(hash);
-	  var sig = this._secret.sign(hash.to_bits(), 0);
-	  sig = this._secret.canonicalizeSignature(sig);
-	  return this._secret.encodeDER(sig);
-	};
-
-	exports.KeyPair = KeyPair;
-
-
-/***/ },
 /* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var crypt   = __webpack_require__(31).Crypt;
+	var crypt   = __webpack_require__(32).Crypt;
 	var SignedRequest = __webpack_require__(47).SignedRequest;
 	var request = __webpack_require__(51);
 	var extend  = __webpack_require__(44);
-	var async   = __webpack_require__(50);
-	var log     = __webpack_require__(26).sub('blob');
+	var async   = __webpack_require__(49);
+	var log     = __webpack_require__(25).sub('blob');
 	var BlobClient = {};
 
 	//Blob object class
@@ -20498,679 +20498,6 @@ var ripple =
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	function EventEmitter() {
-	  this._events = this._events || {};
-	  this._maxListeners = this._maxListeners || undefined;
-	}
-	module.exports = EventEmitter;
-
-	// Backwards-compat with node 0.10.x
-	EventEmitter.EventEmitter = EventEmitter;
-
-	EventEmitter.prototype._events = undefined;
-	EventEmitter.prototype._maxListeners = undefined;
-
-	// By default EventEmitters will print a warning if more than 10 listeners are
-	// added to it. This is a useful default which helps finding memory leaks.
-	EventEmitter.defaultMaxListeners = 10;
-
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!isNumber(n) || n < 0 || isNaN(n))
-	    throw TypeError('n must be a positive number');
-	  this._maxListeners = n;
-	  return this;
-	};
-
-	EventEmitter.prototype.emit = function(type) {
-	  var er, handler, len, args, i, listeners;
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events.error ||
-	        (isObject(this._events.error) && !this._events.error.length)) {
-	      er = arguments[1];
-	      if (er instanceof Error) {
-	        throw er; // Unhandled 'error' event
-	      }
-	      throw TypeError('Uncaught, unspecified "error" event.');
-	    }
-	  }
-
-	  handler = this._events[type];
-
-	  if (isUndefined(handler))
-	    return false;
-
-	  if (isFunction(handler)) {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        len = arguments.length;
-	        args = new Array(len - 1);
-	        for (i = 1; i < len; i++)
-	          args[i - 1] = arguments[i];
-	        handler.apply(this, args);
-	    }
-	  } else if (isObject(handler)) {
-	    len = arguments.length;
-	    args = new Array(len - 1);
-	    for (i = 1; i < len; i++)
-	      args[i - 1] = arguments[i];
-
-	    listeners = handler.slice();
-	    len = listeners.length;
-	    for (i = 0; i < len; i++)
-	      listeners[i].apply(this, args);
-	  }
-
-	  return true;
-	};
-
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  var m;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // To avoid recursion in the case that type === "newListener"! Before
-	  // adding it to the listeners, first emit "newListener".
-	  if (this._events.newListener)
-	    this.emit('newListener', type,
-	              isFunction(listener.listener) ?
-	              listener.listener : listener);
-
-	  if (!this._events[type])
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  else if (isObject(this._events[type]))
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-	  else
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-
-	  // Check for listener leak
-	  if (isObject(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (!isUndefined(this._maxListeners)) {
-	      m = this._maxListeners;
-	    } else {
-	      m = EventEmitter.defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(node) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      if (typeof console.trace === 'function') {
-	        // not supported in IE 10
-	        console.trace();
-	      }
-	    }
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  var fired = false;
-
-	  function g() {
-	    this.removeListener(type, g);
-
-	    if (!fired) {
-	      fired = true;
-	      listener.apply(this, arguments);
-	    }
-	  }
-
-	  g.listener = listener;
-	  this.on(type, g);
-
-	  return this;
-	};
-
-	// emits a 'removeListener' event iff the listener was removed
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  var list, position, length, i;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events || !this._events[type])
-	    return this;
-
-	  list = this._events[type];
-	  length = list.length;
-	  position = -1;
-
-	  if (list === listener ||
-	      (isFunction(list.listener) && list.listener === listener)) {
-	    delete this._events[type];
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-
-	  } else if (isObject(list)) {
-	    for (i = length; i-- > 0;) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener)) {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0)
-	      return this;
-
-	    if (list.length === 1) {
-	      list.length = 0;
-	      delete this._events[type];
-	    } else {
-	      list.splice(position, 1);
-	    }
-
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  var key, listeners;
-
-	  if (!this._events)
-	    return this;
-
-	  // not listening for removeListener, no need to emit
-	  if (!this._events.removeListener) {
-	    if (arguments.length === 0)
-	      this._events = {};
-	    else if (this._events[type])
-	      delete this._events[type];
-	    return this;
-	  }
-
-	  // emit removeListener for all listeners on all events
-	  if (arguments.length === 0) {
-	    for (key in this._events) {
-	      if (key === 'removeListener') continue;
-	      this.removeAllListeners(key);
-	    }
-	    this.removeAllListeners('removeListener');
-	    this._events = {};
-	    return this;
-	  }
-
-	  listeners = this._events[type];
-
-	  if (isFunction(listeners)) {
-	    this.removeListener(type, listeners);
-	  } else {
-	    // LIFO order
-	    while (listeners.length)
-	      this.removeListener(type, listeners[listeners.length - 1]);
-	  }
-	  delete this._events[type];
-
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  var ret;
-	  if (!this._events || !this._events[type])
-	    ret = [];
-	  else if (isFunction(this._events[type]))
-	    ret = [this._events[type]];
-	  else
-	    ret = this._events[type].slice();
-	  return ret;
-	};
-
-	EventEmitter.listenerCount = function(emitter, type) {
-	  var ret;
-	  if (!emitter._events || !emitter._events[type])
-	    ret = 0;
-	  else if (isFunction(emitter._events[type]))
-	    ret = 1;
-	  else
-	    ret = emitter._events[type].length;
-	  return ret;
-	};
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-
-
-/***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-	//
-	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
-	//
-	// Originally from narwhal.js (http://narwhaljs.org)
-	// Copyright (c) 2009 Thomas Robinson <280north.com>
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a copy
-	// of this software and associated documentation files (the 'Software'), to
-	// deal in the Software without restriction, including without limitation the
-	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-	// sell copies of the Software, and to permit persons to whom the Software is
-	// furnished to do so, subject to the following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included in
-	// all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// when used in node, this will actually load the util module we depend on
-	// versus loading the builtin util module as happens otherwise
-	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(39);
-
-	var pSlice = Array.prototype.slice;
-	var hasOwn = Object.prototype.hasOwnProperty;
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  if (options.message) {
-	    this.message = options.message;
-	    this.generatedMessage = false;
-	  } else {
-	    this.message = getMessage(this);
-	    this.generatedMessage = true;
-	  }
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	  else {
-	    // non v8 browsers so we can have a stacktrace
-	    var err = new Error();
-	    if (err.stack) {
-	      var out = err.stack;
-
-	      // try to strip useless frames
-	      var fn_name = stackStartFunction.name;
-	      var idx = out.indexOf('\n' + fn_name);
-	      if (idx >= 0) {
-	        // once we have located the function frame
-	        // we need to strip out everything before it (and its line)
-	        var next_line = out.indexOf('\n', idx + 1);
-	        out = out.substring(next_line + 1);
-	      }
-
-	      this.stack = out;
-	    }
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (util.isUndefined(value)) {
-	    return '' + value;
-	  }
-	  if (util.isNumber(value) && (isNaN(value) || !isFinite(value))) {
-	    return value.toString();
-	  }
-	  if (util.isFunction(value) || util.isRegExp(value)) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (util.isString(s)) {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	function getMessage(self) {
-	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
-	         self.operator + ' ' +
-	         truncate(JSON.stringify(self.expected, replacer), 128);
-	}
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (util.isDate(actual) && util.isDate(expected)) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  //~~~I've managed to break Object.keys through screwy arguments passing.
-	  //   Converting to array solves the problem.
-	  if (isArguments(a)) {
-	    if (!isArguments(b)) {
-	      return false;
-	    }
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  try {
-	    var ka = objectKeys(a),
-	        kb = objectKeys(b),
-	        key, i;
-	  } catch (e) {//happens when one is a string literal and the other isn't
-	    return false;
-	  }
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (util.isString(expected)) {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) {
-	    if (hasOwn.call(obj, key)) keys.push(key);
-	  }
-	  return keys;
-	};
-
-
-/***/ },
-/* 39 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -21761,6 +21088,679 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
 
 /***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	function EventEmitter() {
+	  this._events = this._events || {};
+	  this._maxListeners = this._maxListeners || undefined;
+	}
+	module.exports = EventEmitter;
+
+	// Backwards-compat with node 0.10.x
+	EventEmitter.EventEmitter = EventEmitter;
+
+	EventEmitter.prototype._events = undefined;
+	EventEmitter.prototype._maxListeners = undefined;
+
+	// By default EventEmitters will print a warning if more than 10 listeners are
+	// added to it. This is a useful default which helps finding memory leaks.
+	EventEmitter.defaultMaxListeners = 10;
+
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!isNumber(n) || n < 0 || isNaN(n))
+	    throw TypeError('n must be a positive number');
+	  this._maxListeners = n;
+	  return this;
+	};
+
+	EventEmitter.prototype.emit = function(type) {
+	  var er, handler, len, args, i, listeners;
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events.error ||
+	        (isObject(this._events.error) && !this._events.error.length)) {
+	      er = arguments[1];
+	      if (er instanceof Error) {
+	        throw er; // Unhandled 'error' event
+	      }
+	      throw TypeError('Uncaught, unspecified "error" event.');
+	    }
+	  }
+
+	  handler = this._events[type];
+
+	  if (isUndefined(handler))
+	    return false;
+
+	  if (isFunction(handler)) {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        len = arguments.length;
+	        args = new Array(len - 1);
+	        for (i = 1; i < len; i++)
+	          args[i - 1] = arguments[i];
+	        handler.apply(this, args);
+	    }
+	  } else if (isObject(handler)) {
+	    len = arguments.length;
+	    args = new Array(len - 1);
+	    for (i = 1; i < len; i++)
+	      args[i - 1] = arguments[i];
+
+	    listeners = handler.slice();
+	    len = listeners.length;
+	    for (i = 0; i < len; i++)
+	      listeners[i].apply(this, args);
+	  }
+
+	  return true;
+	};
+
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  var m;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // To avoid recursion in the case that type === "newListener"! Before
+	  // adding it to the listeners, first emit "newListener".
+	  if (this._events.newListener)
+	    this.emit('newListener', type,
+	              isFunction(listener.listener) ?
+	              listener.listener : listener);
+
+	  if (!this._events[type])
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  else if (isObject(this._events[type]))
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+	  else
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+
+	  // Check for listener leak
+	  if (isObject(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (!isUndefined(this._maxListeners)) {
+	      m = this._maxListeners;
+	    } else {
+	      m = EventEmitter.defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(node) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      if (typeof console.trace === 'function') {
+	        // not supported in IE 10
+	        console.trace();
+	      }
+	    }
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  var fired = false;
+
+	  function g() {
+	    this.removeListener(type, g);
+
+	    if (!fired) {
+	      fired = true;
+	      listener.apply(this, arguments);
+	    }
+	  }
+
+	  g.listener = listener;
+	  this.on(type, g);
+
+	  return this;
+	};
+
+	// emits a 'removeListener' event iff the listener was removed
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  var list, position, length, i;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events || !this._events[type])
+	    return this;
+
+	  list = this._events[type];
+	  length = list.length;
+	  position = -1;
+
+	  if (list === listener ||
+	      (isFunction(list.listener) && list.listener === listener)) {
+	    delete this._events[type];
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+
+	  } else if (isObject(list)) {
+	    for (i = length; i-- > 0;) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener)) {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0)
+	      return this;
+
+	    if (list.length === 1) {
+	      list.length = 0;
+	      delete this._events[type];
+	    } else {
+	      list.splice(position, 1);
+	    }
+
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  var key, listeners;
+
+	  if (!this._events)
+	    return this;
+
+	  // not listening for removeListener, no need to emit
+	  if (!this._events.removeListener) {
+	    if (arguments.length === 0)
+	      this._events = {};
+	    else if (this._events[type])
+	      delete this._events[type];
+	    return this;
+	  }
+
+	  // emit removeListener for all listeners on all events
+	  if (arguments.length === 0) {
+	    for (key in this._events) {
+	      if (key === 'removeListener') continue;
+	      this.removeAllListeners(key);
+	    }
+	    this.removeAllListeners('removeListener');
+	    this._events = {};
+	    return this;
+	  }
+
+	  listeners = this._events[type];
+
+	  if (isFunction(listeners)) {
+	    this.removeListener(type, listeners);
+	  } else {
+	    // LIFO order
+	    while (listeners.length)
+	      this.removeListener(type, listeners[listeners.length - 1]);
+	  }
+	  delete this._events[type];
+
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  var ret;
+	  if (!this._events || !this._events[type])
+	    ret = [];
+	  else if (isFunction(this._events[type]))
+	    ret = [this._events[type]];
+	  else
+	    ret = this._events[type].slice();
+	  return ret;
+	};
+
+	EventEmitter.listenerCount = function(emitter, type) {
+	  var ret;
+	  if (!emitter._events || !emitter._events[type])
+	    ret = 0;
+	  else if (isFunction(emitter._events[type]))
+	    ret = 1;
+	  else
+	    ret = emitter._events[type].length;
+	  return ret;
+	};
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+
+
+/***/ },
+/* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
+	//
+	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
+	//
+	// Originally from narwhal.js (http://narwhaljs.org)
+	// Copyright (c) 2009 Thomas Robinson <280north.com>
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy
+	// of this software and associated documentation files (the 'Software'), to
+	// deal in the Software without restriction, including without limitation the
+	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+	// sell copies of the Software, and to permit persons to whom the Software is
+	// furnished to do so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in
+	// all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// when used in node, this will actually load the util module we depend on
+	// versus loading the builtin util module as happens otherwise
+	// this is a bug in node module loading as far as I am concerned
+	var util = __webpack_require__(37);
+
+	var pSlice = Array.prototype.slice;
+	var hasOwn = Object.prototype.hasOwnProperty;
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  if (options.message) {
+	    this.message = options.message;
+	    this.generatedMessage = false;
+	  } else {
+	    this.message = getMessage(this);
+	    this.generatedMessage = true;
+	  }
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	  else {
+	    // non v8 browsers so we can have a stacktrace
+	    var err = new Error();
+	    if (err.stack) {
+	      var out = err.stack;
+
+	      // try to strip useless frames
+	      var fn_name = stackStartFunction.name;
+	      var idx = out.indexOf('\n' + fn_name);
+	      if (idx >= 0) {
+	        // once we have located the function frame
+	        // we need to strip out everything before it (and its line)
+	        var next_line = out.indexOf('\n', idx + 1);
+	        out = out.substring(next_line + 1);
+	      }
+
+	      this.stack = out;
+	    }
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (util.isUndefined(value)) {
+	    return '' + value;
+	  }
+	  if (util.isNumber(value) && (isNaN(value) || !isFinite(value))) {
+	    return value.toString();
+	  }
+	  if (util.isFunction(value) || util.isRegExp(value)) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (util.isString(s)) {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	function getMessage(self) {
+	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
+	         self.operator + ' ' +
+	         truncate(JSON.stringify(self.expected, replacer), 128);
+	}
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (util.isDate(actual) && util.isDate(expected)) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  //~~~I've managed to break Object.keys through screwy arguments passing.
+	  //   Converting to array solves the problem.
+	  if (isArguments(a)) {
+	    if (!isArguments(b)) {
+	      return false;
+	    }
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  try {
+	    var ka = objectKeys(a),
+	        kb = objectKeys(b),
+	        key, i;
+	  } catch (e) {//happens when one is a string literal and the other isn't
+	    return false;
+	  }
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (util.isString(expected)) {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) {
+	    if (hasOwn.call(obj, key)) keys.push(key);
+	  }
+	  return keys;
+	};
+
+
+/***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -21878,6 +21878,67 @@ var ripple =
 
 /***/ },
 /* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
+
+	function error () {
+	  var m = [].slice.call(arguments).join(' ')
+	  throw new Error([
+	    m,
+	    'we accept pull requests',
+	    'http://github.com/dominictarr/crypto-browserify'
+	    ].join('\n'))
+	}
+
+	exports.createHash = __webpack_require__(54)
+
+	exports.createHmac = __webpack_require__(55)
+
+	exports.randomBytes = function(size, callback) {
+	  if (callback && callback.call) {
+	    try {
+	      callback.call(this, undefined, new Buffer(rng(size)))
+	    } catch (err) { callback(err) }
+	  } else {
+	    return new Buffer(rng(size))
+	  }
+	}
+
+	function each(a, f) {
+	  for(var i in a)
+	    f(a[i], i)
+	}
+
+	exports.getHashes = function () {
+	  return ['sha1', 'sha256', 'md5', 'rmd160']
+
+	}
+
+	var p = __webpack_require__(56)(exports.createHmac)
+	exports.pbkdf2 = p.pbkdf2
+	exports.pbkdf2Sync = p.pbkdf2Sync
+
+
+	// the least I can do is make error messages for the rest of the node.js/crypto api.
+	each(['createCredentials'
+	, 'createCipher'
+	, 'createCipheriv'
+	, 'createDecipher'
+	, 'createDecipheriv'
+	, 'createSign'
+	, 'createVerify'
+	, 'createDiffieHellman'
+	], function (name) {
+	  exports[name] = function () {
+	    error('sorry,', name, 'is not implemented yet')
+	  }
+	})
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+
+/***/ },
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -22990,68 +23051,7 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
-
-/***/ },
-/* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
-
-	function error () {
-	  var m = [].slice.call(arguments).join(' ')
-	  throw new Error([
-	    m,
-	    'we accept pull requests',
-	    'http://github.com/dominictarr/crypto-browserify'
-	    ].join('\n'))
-	}
-
-	exports.createHash = __webpack_require__(54)
-
-	exports.createHmac = __webpack_require__(55)
-
-	exports.randomBytes = function(size, callback) {
-	  if (callback && callback.call) {
-	    try {
-	      callback.call(this, undefined, new Buffer(rng(size)))
-	    } catch (err) { callback(err) }
-	  } else {
-	    return new Buffer(rng(size))
-	  }
-	}
-
-	function each(a, f) {
-	  for(var i in a)
-	    f(a[i], i)
-	}
-
-	exports.getHashes = function () {
-	  return ['sha1', 'sha256', 'md5', 'rmd160']
-
-	}
-
-	var p = __webpack_require__(56)(exports.createHmac)
-	exports.pbkdf2 = p.pbkdf2
-	exports.pbkdf2Sync = p.pbkdf2Sync
-
-
-	// the least I can do is make error messages for the rest of the node.js/crypto api.
-	each(['createCredentials'
-	, 'createCipher'
-	, 'createCipheriv'
-	, 'createDecipher'
-	, 'createDecipheriv'
-	, 'createSign'
-	, 'createVerify'
-	, 'createDiffieHellman'
-	], function (name) {
-	  exports[name] = function () {
-	    error('sorry,', name, 'is not implemented yet')
-	  }
-	})
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 43 */
@@ -23889,7 +23889,7 @@ var ripple =
 
 	var utils  = __webpack_require__(19);
 	var extend = __webpack_require__(44);
-	var UInt   = __webpack_require__(28).UInt;
+	var UInt   = __webpack_require__(29).UInt;
 
 	//
 	// UInt128 support
@@ -23916,7 +23916,7 @@ var ripple =
 /* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Crypt = __webpack_require__(31).Crypt;
+	var Crypt = __webpack_require__(32).Crypt;
 	var Message = __webpack_require__(14).Message;
 	var parser  = __webpack_require__(43);
 	var querystring = __webpack_require__(52);
@@ -24381,104 +24381,6 @@ var ripple =
 
 /***/ },
 /* 49 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = function(options) {
-	  var sjcl = options.sjcl; // inject sjcl dependency
-
-	  var base58 = __webpack_require__(58)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(59)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(60)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(61)({ sjcl: options.sjcl });
-
-	  function firstHalfOfSHA512(bytes) {
-	    return sjcl.bitArray.bitSlice(
-	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
-	      0, 256
-	    );
-	  }
-
-	  function append_int(a, i) {
-	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
-	  }
-
-	  function RippleWallet(secret){
-	    this.secret = secret;
-
-	    if (!this.secret) {
-	      throw "Invalid secret."
-	    }
-	  }
-
-	  RippleWallet.prototype = {
-
-	    getPrivateKey: function(secret){
-	      var self = this;
-	      return base58.decode_base_check(33, self.secret);
-	    },
-
-	    getPrivateGenerator: function(privateKey){
-	      var i = 0;
-	      do {
-	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
-	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
-	      return privateGenerator; 
-	    },
-
-	    getPublicGenerator: function (){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
-	    },
-
-	    getPublicKey: function(publicGenerator){
-	      var sec;
-	      var i = 0;
-	      do {
-	        // Compute the hash of the public generator with the sub-sequence number
-	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
-	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
-	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
-	    },
-
-	    getAddress: function(){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
-	      var publicKey = this.getPublicKey(publicGenerator);
-	      return RippleAddress.fromPublicKey(publicKey);
-	    }
-	  }
-
-	  RippleWallet.getRandom = function(){
-	    var secretKey = MasterKey.getRandom().value;
-	    return new RippleWallet(secretKey);
-	  };
-
-	  RippleWallet.generate = function() {
-	    /* Generate a 128-bit master key that can be used to make 
-	       any number of private / public key pairs and accounts
-	    */
-	    var secretKey = MasterKey.getRandom().value;
-	    var wallet = new RippleWallet(secretKey);
-	    return {
-	      address: wallet.getAddress().value,
-	      secret: secretKey 
-	    };
-	  };
-
-	  return RippleWallet;
-	};
-
-
-/***/ },
-/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process) {/*!
@@ -25543,6 +25445,104 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)))
 
 /***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(options) {
+	  var sjcl = options.sjcl; // inject sjcl dependency
+
+	  var base58 = __webpack_require__(58)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(59)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(60)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(61)({ sjcl: options.sjcl });
+
+	  function firstHalfOfSHA512(bytes) {
+	    return sjcl.bitArray.bitSlice(
+	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
+	      0, 256
+	    );
+	  }
+
+	  function append_int(a, i) {
+	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
+	  }
+
+	  function RippleWallet(secret){
+	    this.secret = secret;
+
+	    if (!this.secret) {
+	      throw "Invalid secret."
+	    }
+	  }
+
+	  RippleWallet.prototype = {
+
+	    getPrivateKey: function(secret){
+	      var self = this;
+	      return base58.decode_base_check(33, self.secret);
+	    },
+
+	    getPrivateGenerator: function(privateKey){
+	      var i = 0;
+	      do {
+	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
+	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
+	      return privateGenerator; 
+	    },
+
+	    getPublicGenerator: function (){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
+	    },
+
+	    getPublicKey: function(publicGenerator){
+	      var sec;
+	      var i = 0;
+	      do {
+	        // Compute the hash of the public generator with the sub-sequence number
+	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
+	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
+	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
+	    },
+
+	    getAddress: function(){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
+	      var publicKey = this.getPublicKey(publicGenerator);
+	      return RippleAddress.fromPublicKey(publicKey);
+	    }
+	  }
+
+	  RippleWallet.getRandom = function(){
+	    var secretKey = MasterKey.getRandom().value;
+	    return new RippleWallet(secretKey);
+	  };
+
+	  RippleWallet.generate = function() {
+	    /* Generate a 128-bit master key that can be used to make 
+	       any number of private / public key pairs and accounts
+	    */
+	    var secretKey = MasterKey.getRandom().value;
+	    var wallet = new RippleWallet(secretKey);
+	    return {
+	      address: wallet.getAddress().value,
+	      secret: secretKey 
+	    };
+	  };
+
+	  return RippleWallet;
+	};
+
+
+/***/ },
 /* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -25551,7 +25551,7 @@ var ripple =
 	 */
 
 	var Emitter = __webpack_require__(71);
-	var reduce = __webpack_require__(73);
+	var reduce = __webpack_require__(72);
 
 	/**
 	 * Root reference for iframes.
@@ -26645,13 +26645,13 @@ var ripple =
 
 	}())
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(72)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(73)
 
 	var md5 = toConstructor(__webpack_require__(65))
 	var rmd160 = toConstructor(__webpack_require__(75))
@@ -26682,7 +26682,7 @@ var ripple =
 	  return createHash(alg)
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 55 */
@@ -26730,7 +26730,7 @@ var ripple =
 	}
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 56 */
@@ -26819,7 +26819,7 @@ var ripple =
 	  return exports
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 57 */
@@ -28493,24 +28493,6 @@ var ripple =
 /* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var exports = module.exports = function (alg) {
-	  var Alg = exports[alg]
-	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
-	  return new Alg()
-	}
-
-	var Buffer = __webpack_require__(82).Buffer
-	var Hash   = __webpack_require__(76)(Buffer)
-
-	exports.sha =
-	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
-
-
-/***/ },
-/* 73 */
-/***/ function(module, exports, __webpack_require__) {
-
 	
 	/**
 	 * Reduce `arr` with `fn`.
@@ -28535,6 +28517,24 @@ var ripple =
 	  
 	  return curr;
 	};
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(81).Buffer
+	var Hash   = __webpack_require__(76)(Buffer)
+
+	exports.sha =
+	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
+
 
 /***/ },
 /* 74 */
@@ -28575,7 +28575,7 @@ var ripple =
 
 	module.exports = { hash: hash };
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 75 */
@@ -28787,13 +28787,13 @@ var ripple =
 
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
 /* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var u = __webpack_require__(81)
+	var u = __webpack_require__(82)
 	var write = u.write
 	var fill = u.zeroFill
 
@@ -28907,7 +28907,7 @@ var ripple =
 	 */
 	module.exports = function (Buffer, Hash) {
 
-	  var inherits = __webpack_require__(39).inherits
+	  var inherits = __webpack_require__(37).inherits
 
 	  inherits(Sha1, Hash)
 
@@ -29071,10 +29071,10 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(37).inherits
 	var BE       = false
 	var LE       = true
-	var u        = __webpack_require__(81)
+	var u        = __webpack_require__(82)
 
 	module.exports = function (Buffer, Hash) {
 
@@ -29252,48 +29252,6 @@ var ripple =
 
 /***/ },
 /* 81 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.write = write
-	exports.zeroFill = zeroFill
-
-	exports.toString = toString
-
-	function write (buffer, string, enc, start, from, to, LE) {
-	  var l = (to - from)
-	  if(enc === 'ascii' || enc === 'binary') {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string.charCodeAt(i + from)
-	    }
-	  }
-	  else if(enc == null) {
-	    for( var i = 0; i < l; i++) {
-	      buffer[start + i] = string[i + from]
-	    }
-	  }
-	  else if(enc === 'hex') {
-	    for(var i = 0; i < l; i++) {
-	      var j = from + i
-	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
-	    }
-	  }
-	  else if(enc === 'base64') {
-	    throw new Error('base64 encoding not yet supported')
-	  }
-	  else
-	    throw new Error(enc +' encoding not yet supported')
-	}
-
-	//always fill to the end!
-	function zeroFill(buf, from) {
-	  for(var i = from; i < buf.length; i++)
-	    buf[i] = 0
-	}
-
-
-
-/***/ },
-/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -30453,7 +30411,49 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+
+/***/ },
+/* 82 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports.write = write
+	exports.zeroFill = zeroFill
+
+	exports.toString = toString
+
+	function write (buffer, string, enc, start, from, to, LE) {
+	  var l = (to - from)
+	  if(enc === 'ascii' || enc === 'binary') {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string.charCodeAt(i + from)
+	    }
+	  }
+	  else if(enc == null) {
+	    for( var i = 0; i < l; i++) {
+	      buffer[start + i] = string[i + from]
+	    }
+	  }
+	  else if(enc === 'hex') {
+	    for(var i = 0; i < l; i++) {
+	      var j = from + i
+	      buffer[start + i] = parseInt(string[j*2] + string[(j*2)+1], 16)
+	    }
+	  }
+	  else if(enc === 'base64') {
+	    throw new Error('base64 encoding not yet supported')
+	  }
+	  else
+	    throw new Error(enc +' encoding not yet supported')
+	}
+
+	//always fill to the end!
+	function zeroFill(buf, from) {
+	  for(var i = from; i < buf.length; i++)
+	    buf[i] = 0
+	}
+
+
 
 /***/ },
 /* 83 */
