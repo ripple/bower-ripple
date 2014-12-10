@@ -127,8 +127,8 @@ var ripple =
 	// YYY Will later provide js/network.js which will transparently use multiple
 	// instances of this class for network access.
 
-	var EventEmitter     = __webpack_require__(38).EventEmitter;
-	var util             = __webpack_require__(37);
+	var EventEmitter     = __webpack_require__(37).EventEmitter;
+	var util             = __webpack_require__(38);
 	var assert           = __webpack_require__(39);
 	var LRU              = __webpack_require__(48);
 	var Server           = __webpack_require__(20).Server;
@@ -225,6 +225,7 @@ var ripple =
 	  this._should_connect = true;
 
 	  this._submission_timeout = 1000 * (typeof opts.submission_timeout === 'number' ? opts.submission_timeout : 20);
+	  this._last_ledger_offset = (typeof opts.last_ledger_offset === 'number') ? opts.last_ledger_offset : 3;
 
 	  this._received_tx = LRU({ max: 100 });
 	  this._cur_path_find = null;
@@ -2439,8 +2440,8 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(38).EventEmitter;
-	var util         = __webpack_require__(37);
+	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var util         = __webpack_require__(38);
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(13).RippleError;
@@ -4203,9 +4204,9 @@ var ripple =
 
 	// var network = require('./network.js');
 	var async              = __webpack_require__(49);
-	var util               = __webpack_require__(37);
+	var util               = __webpack_require__(38);
 	var extend             = __webpack_require__(44);
-	var EventEmitter       = __webpack_require__(38).EventEmitter;
+	var EventEmitter       = __webpack_require__(37).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(8).UInt160;
 	var TransactionManager = __webpack_require__(26).TransactionManager;
@@ -4592,52 +4593,9 @@ var ripple =
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Transactions
-	//
-	//  Construction:
-	//    remote.transaction()  // Build a transaction object.
-	//     .offer_create(...)   // Set major parameters.
-	//     .set_flags()         // Set optional parameters.
-	//     .on()                // Register for events.
-	//     .submit();           // Send to network.
-	//
-	//  Events:
-	// 'success' : Transaction submitted without error.
-	// 'error' : Error submitting transaction.
-	// 'proposed' : Advisory proposed status transaction.
-	// - A client should expect 0 to multiple results.
-	// - Might not get back. The remote might just forward the transaction.
-	// - A success could be reverted in final.
-	// - local error: other remotes might like it.
-	// - malformed error: local server thought it was malformed.
-	// - The client should only trust this when talking to a trusted server.
-	// 'final' : Final status of transaction.
-	// - Only expect a final from dishonest servers after a tesSUCCESS or ter*.
-	// 'lost' : Gave up looking for on ledger_closed.
-	// 'pending' : Transaction was not found on ledger_closed.
-	// 'state' : Follow the state of a transaction.
-	//    'client_submitted'     - Sent to remote
-	//     |- 'remoteError'      - Remote rejected transaction.
-	//      \- 'client_proposed' - Remote provisionally accepted transaction.
-	//       |- 'client_missing' - Transaction has not appeared in ledger as expected.
-	//       | |\- 'client_lost' - No longer monitoring missing transaction.
-	//       |/
-	//       |- 'tesSUCCESS'     - Transaction in ledger as expected.
-	//       |- 'ter...'         - Transaction failed.
-	//       \- 'tec...'         - Transaction claimed fee only.
-	//
-	// Notes:
-	// - All transactions including those with local and malformed errors may be
-	//   forwarded anyway.
-	// - A malicous server can:
-	//   - give any proposed result.
-	//     - it may declare something correct as incorrect or something incorrect as correct.
-	//     - it may not communicate with the rest of the network.
-	//   - may or may not forward.
-	//
-
-	var EventEmitter     = __webpack_require__(38).EventEmitter;
-	var util             = __webpack_require__(37);
+	var util             = __webpack_require__(38);
+	var assert           = __webpack_require__(39);
+	var EventEmitter     = __webpack_require__(37).EventEmitter;
 	var utils            = __webpack_require__(19);
 	var sjcl             = __webpack_require__(19).sjcl;
 	var Amount           = __webpack_require__(3).Amount;
@@ -4649,55 +4607,67 @@ var ripple =
 	var hashprefixes     = __webpack_require__(27);
 	var config           = __webpack_require__(22);
 
+	/**
+	 * @constructor Transaction
+	 *
+	 * Notes:
+	 * All transactions including those with local and malformed errors may be
+	 * forwarded anyway.
+	 *
+	 * A malicous server can:
+	 *  - may or may not forward
+	 *  - give any result
+	 *    + it may declare something correct as incorrect or something incorrect
+	 *      as correct
+	 *    + it may not communicate with the rest of the network
+	 */
+
 	function Transaction(remote) {
 	  EventEmitter.call(this);
 
 	  var self = this;
-
-	  var remote = remote || void(0);
+	  var remoteExists = (typeof remote === 'object');
 
 	  this.remote = remote;
-
-	  // Transaction data
 	  this.tx_json = { Flags: 0 };
-
 	  this._secret = void(0);
 	  this._build_path = false;
-	  this._maxFee = (typeof remote === 'object') ? this.remote.max_fee : void(0);
-
+	  this._maxFee = remoteExists ? this.remote.max_fee : void(0);
 	  this.state = 'unsubmitted';
 	  this.finalized = false;
 	  this.previousSigningHash = void(0);
-
-	  // Index at which transaction was submitted
 	  this.submitIndex = void(0);
-
-	  // Canonical signing setting defaults to the Remote's configuration
-	  this.canonical = (typeof remote === 'object') ? Boolean(remote.canonical_signing) : true;
-
-	  // We aren't clever enough to eschew preventative measures so we keep an array
-	  // of all submitted transactionIDs (which can change due to load_factor
-	  // effecting the Fee amount). This should be populated with a transactionID
-	  // any time it goes on the network
+	  this.canonical = remoteExists ? this.remote.canonical_signing : true;
 	  this.submittedIDs = [ ];
+	  this.attempts = 0;
+	  this.submissions = 0;
+	  this.responses = 0;
 
 	  this.once('success', function(message) {
-	    self.finalize(message);
+	    // Transaction definitively succeeded
 	    self.setState('validated');
-	    self.emit('cleanup', message);
+	    self.finalize(message);
+	    if (self._successHandler) {
+	      self._successHandler(message);
+	    }
 	  });
 
 	  this.once('error', function(message) {
-	    self.finalize(message);
+	    // Transaction definitively failed
 	    self.setState('failed');
-	    self.emit('cleanup', message);
+	    self.finalize(message);
+	    if (self._errorHandler) {
+	      self._errorHandler(message);
+	    }
 	  });
 
 	  this.once('submitted', function() {
+	    // Transaction was submitted to the network
 	    self.setState('submitted');
 	  });
 
 	  this.once('proposed', function() {
+	    // Transaction was submitted successfully to the network
 	    self.setState('pending');
 	  });
 	};
@@ -4764,6 +4734,8 @@ var ripple =
 	Transaction.MEMO_TYPES = {
 	};
 
+	Transaction.ASCII_REGEX = /^[\x00-\x7F]*$/;
+
 	Transaction.formats = __webpack_require__(18).tx;
 
 	Transaction.prototype.consts = {
@@ -4773,15 +4745,6 @@ var ripple =
 	  terRETRY:        -99,
 	  tesSUCCESS:      0,
 	  tecCLAIMED:      100
-	};
-
-	Transaction.from_json = function(j) {
-	  return (new Transaction()).parseJson(j);
-	};
-
-	Transaction.prototype.parseJson = function(v) {
-	  this.tx_json = v;
-	  return this;
 	};
 
 	Transaction.prototype.isTelLocal = function(ter) {
@@ -4812,13 +4775,34 @@ var ripple =
 	  return this.isTelLocal(ter) || this.isTemMalformed(ter) || this.isTefFailure(ter);
 	};
 
+	Transaction.from_json = function(j) {
+	  return (new Transaction()).parseJson(j);
+	};
+
+	Transaction.prototype.parseJson = function(v) {
+	  this.tx_json = v;
+	  return this;
+	};
+
+	/**
+	 * Set state on the condition that the state is different
+	 *
+	 * @param {String} state
+	 */
+
 	Transaction.prototype.setState = function(state) {
 	  if (this.state !== state) {
 	    this.state = state;
 	    this.emit('state', state);
-	    this.emit('save');
 	  }
 	};
+
+	/**
+	 * Finalize transaction. This will prevent future activity
+	 *
+	 * @param {Object} message
+	 * @api private
+	 */
 
 	Transaction.prototype.finalize = function(message) {
 	  this.finalized = true;
@@ -4831,11 +4815,73 @@ var ripple =
 	    this.result.tx_json = this.tx_json;
 	  }
 
+	  this.emit('cleanup');
+	  this.emit('final', message);
+
+	  if (this.remote && this.remote.trace) {
+	    log.info('transaction finalized:',
+	             this.tx_json, this.getManager()._pending.getLength());
+	  }
+
 	  return this;
 	};
 
+	/**
+	 * Get transaction Account
+	 *
+	 * @return {Account}
+	 */
+
+	Transaction.prototype.getAccount = function() {
+	  return this.tx_json.Account;
+	};
+
+	/**
+	 * Get TransactionType
+	 *
+	 * @return {String}
+	 */
+
+	Transaction.prototype.getTransactionType = function() {
+	  return this.tx_json.TransactionType;
+	};
+
+	/**
+	 * Get transaction TransactionManager
+	 *
+	 * @param [String] account
+	 * @return {TransactionManager]
+	 */
+
+	Transaction.prototype.getManager = function(account) {
+	  if (!this.remote) {
+	    return void(0);
+	  }
+
+	  if (!account) {
+	    account = this.tx_json.Account;
+	  }
+
+	  return this.remote.account(account)._transactionManager;
+	};
+
+	/**
+	 * Get transaction secret
+	 *
+	 * @param [String] account
+	 */
+
+	Transaction.prototype.getSecret =
 	Transaction.prototype._accountSecret = function(account) {
-	  return this.remote ? this.remote.secrets[account] : void(0);
+	  if (!this.remote) {
+	    return void(0);
+	  }
+
+	  if (!account) {
+	    account = this.tx_json.Account;
+	  }
+
+	  return this.remote.secrets[account];
 	};
 
 	/**
@@ -4857,6 +4903,8 @@ var ripple =
 
 	/**
 	 * Compute median server fee
+	 *
+	 * @return {String} median fee
 	 */
 
 	Transaction.prototype._computeFee = function() {
@@ -4904,18 +4952,22 @@ var ripple =
 	 * This function seeks to fill out certain fields, such as Fee and
 	 * SigningPubKey, which can be determined by the library based on network
 	 * information and other fields.
+	 *
+	 * @return {Boolean|Transaction} If succeeded, return transaction. Otherwise
+	 * return `false`
 	 */
 
 	Transaction.prototype.complete = function() {
 	  if (this.remote) {
 	    if (!this.remote.trusted && !this.remote.local_signing) {
-	      this.emit('error', new RippleError('tejServerUntrusted', 'Attempt to give secret to untrusted server'));
+	      this.emit('error', new RippleError(
+	        'tejServerUntrusted', 'Attempt to give secret to untrusted server'));
 	      return false;
 	    }
 	  }
 
 	  // Try to auto-fill the secret
-	  if (!this._secret && !(this._secret = this._accountSecret(this.tx_json.Account))) {
+	  if (!this._secret && !(this._secret = this.getSecret())) {
 	    this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
 	    return false;
 	  }
@@ -4926,7 +4978,8 @@ var ripple =
 	      var key  = seed.get_key(this.tx_json.Account);
 	      this.tx_json.SigningPubKey = key.to_hex_pub();
 	    } catch(e) {
-	      this.emit('error', new RippleError('tejSecretInvalid', 'Invalid secret'));
+	      this.emit('error', new RippleError(
+	        'tejSecretInvalid', 'Invalid secret'));
 	      return false;
 	    }
 	  }
@@ -4937,13 +4990,14 @@ var ripple =
 	    if (this.remote.local_fee || !this.remote.trusted) {
 	      if (!(this.tx_json.Fee = this._computeFee())) {
 	        this.emit('error', new RippleError('tejUnconnected'));
-	        return;
+	        return false;
 	      }
 	    }
 	  }
 
 	  if (Number(this.tx_json.Fee) > this._maxFee) {
-	    this.emit('error', new RippleError('tejMaxFeeExceeded', 'Max fee exceeded'));
+	    this.emit('error', new RippleError(
+	      'tejMaxFeeExceeded', 'Max fee exceeded'));
 	    return false;
 	  }
 
@@ -4967,7 +5021,7 @@ var ripple =
 	  return this.hash(config.testnet ? 'HASH_TX_SIGN_TESTNET' : 'HASH_TX_SIGN');
 	};
 
-	Transaction.prototype.hash = function(prefix, as_uint256) {
+	Transaction.prototype.hash = function(prefix, asUINT256, serialized) {
 	  if (typeof prefix === 'string') {
 	    if (typeof hashprefixes[prefix] === 'undefined') {
 	      throw new Error('Unknown hashing prefix requested.');
@@ -4977,13 +5031,12 @@ var ripple =
 	    prefix = hashprefixes.HASH_TX_ID;
 	  }
 
-	  var hash = SerializedObject.from_json(this.tx_json).hash(prefix);
+	  var hash = (serialized || this.serialize()).hash(prefix);
 
-	  return as_uint256 ? hash : hash.to_hex();
+	  return asUINT256 ? hash : hash.to_hex();
 	};
 
-	Transaction.prototype.sign = function(callback) {
-	  var callback = typeof callback === 'function' ? callback : function(){};
+	Transaction.prototype.sign = function() {
 	  var seed = Seed.from_json(this._secret);
 
 	  var prev_sig = this.tx_json.TxnSignature;
@@ -4994,7 +5047,6 @@ var ripple =
 	  // If the hash is the same, we can re-use the previous signature
 	  if (prev_sig && hash === this.previousSigningHash) {
 	    this.tx_json.TxnSignature = prev_sig;
-	    callback();
 	    return this;
 	  }
 
@@ -5005,25 +5057,30 @@ var ripple =
 	  this.tx_json.TxnSignature = hex;
 	  this.previousSigningHash = hash;
 
-	  callback();
-
 	  return this;
 	};
 
 	/**
-	 * Add a ID to list of submitted IDs for this transaction
+	 * Add an ID to cached list of submitted IDs
+	 *
+	 * @param {String} transaction id
+	 * @api private
 	 */
 
-	Transaction.prototype.addId = function(hash) {
-	  if (this.submittedIDs.indexOf(hash) === -1) {
-	    this.submittedIDs.unshift(hash);
-	    this.emit('signed', hash);
-	    this.emit('save');
+	Transaction.prototype.addId = function(id) {
+	  if (this.submittedIDs.indexOf(id) === -1) {
+	    this.submittedIDs.unshift(id);
 	  }
 	};
 
 	/**
-	 * Find ID within list of submitted IDs for this transaction
+	 * Find ID within cached received (validated) IDs. If this transaction has
+	 * an ID that is within the cache, it has been seen validated, so return the
+	 * received message
+	 *
+	 * @param {Object} cache
+	 * @return {Object} message
+	 * @api private
 	 */
 
 	Transaction.prototype.findId = function(cache) {
@@ -5039,27 +5096,67 @@ var ripple =
 	  return result;
 	};
 
-	//
-	// Set options for Transactions
-	//
+	/**
+	 * Set build_path to have server blindly construct a path for Payment
+	 *
+	 *  "blindly" because the sender has no idea of the actual cost must be less
+	 *  than send max.
+	 *
+	 * XXX Abort if not a Payment
+	 *
+	 *  @param {Boolean} build path
+	 */
 
-	// --> build: true, to have server blindly construct a path.
-	//
-	// "blindly" because the sender has no idea of the actual cost except that is must be less than send max.
+	Transaction.prototype.setBuildPath =
 	Transaction.prototype.buildPath = function(build) {
 	  this._build_path = build;
 	  return this;
 	};
 
-	// tag should be undefined or a 32 bit integer.
-	// YYY Add range checking for tag.
+	/**
+	 * Set SourceTag
+	 *
+	 * tag should be undefined or a 32 bit integer.
+	 * YYY Add range checking for tag
+	 *
+	 * @param {Number} source tag
+	 */
+
+	Transaction.prototype.sourceTag = function(tag) {
+	  if (typeof tag === 'number' && isFinite(tag)) {
+	    this.tx_json.SourceTag = tag;
+	  }
+	  return this;
+	};
+
+	/**
+	 * Set DestinationTag for Payment transaction
+	 *
+	 * tag should be undefined or a 32 bit integer.
+	 * YYY Add range checking for tag.
+	 *
+	 * XXX Abort if not a Payment
+	 *
+	 * @param {Number} destination tag
+	 */
+
+	Transaction.prototype.setDestinationTag =
 	Transaction.prototype.destinationTag = function(tag) {
-	  if (tag !== void(0)) {
+	  if (typeof tag === 'number' && isFinite(tag)) {
 	    this.tx_json.DestinationTag = tag;
 	  }
 	  return this;
 	};
 
+	/**
+	 * Set InvoiceID for Payment transaction
+	 *
+	 * XXX Abort if not a Payment
+	 *
+	 * @param {String} id
+	 */
+
+	Transaction.prototype.setInvoiceID =
 	Transaction.prototype.invoiceID = function(id) {
 	  if (typeof id === 'string') {
 	    while (id.length < 64) {
@@ -5070,6 +5167,19 @@ var ripple =
 	  return this;
 	};
 
+	/**
+	 * Set client ID. This is an identifier specified by the user of the API to
+	 * identify a transaction in the event of a disconnect. It is not currently
+	 * persisted in the transaction itself, but used offline for identification.
+	 * In applications that require high reliability, client-specified ID should
+	 * be persisted such that one could map it to submitted transactions. Use
+	 * .summary() for a consistent transaction summary output for persisitng. In
+	 * the future, this ID may be stored in the transaction itself (in the ledger)
+	 *
+	 * @param {String} id
+	 */
+
+	Transaction.prototype.setClientID =
 	Transaction.prototype.clientID = function(id) {
 	  if (typeof id === 'string') {
 	    this._clientID = id;
@@ -5077,34 +5187,72 @@ var ripple =
 	  return this;
 	};
 
+	/**
+	 * Set LastLedgerSequence as the absolute last ledger sequence the transaction
+	 * is valid for. LastLedgerSequence is set automatically if not set using this
+	 * method
+	 *
+	 * @param {Number} ledger index
+	 */
+
+	Transaction.prototype.setLastLedger =
 	Transaction.prototype.lastLedger = function(sequence) {
 	  if (typeof sequence === 'number' && isFinite(sequence)) {
 	    this._setLastLedger = true;
 	    this.tx_json.LastLedgerSequence = sequence;
 	  }
+
 	  return this;
 	};
 
-	/*
-	 * Set the transaction's proposed fee. No op when fee parameter
-	 * is not 0 or a positive number
+	/**
+	 * Set max fee. Submission will abort if this is exceeded. Specified fee must
+	 * be >= 0.
 	 *
 	 * @param {Number} fee The proposed fee
-	 *
-	 * @returns {Transaction} calling instance for chaining
 	 */
+
 	Transaction.prototype.maxFee = function(fee) {
 	  if (typeof fee === 'number' && fee >= 0) {
 	    this._setMaxFee = true;
 	    this._maxFee = fee;
 	  }
+	  return this;
+	};
+
+	/*
+	 * Set the fee user will pay to the network for submitting this transaction. 
+	 * Specified fee must be >= 0.
+	 *
+	 * @param {Number} fee The proposed fee
+	 *
+	 * @returns {Transaction} calling instance for chaining
+	 */
+	Transaction.prototype.setFixedFee = function(fee) {
+	  if (typeof fee === 'number' && fee >= 0) {
+	    this._setFixedFee = true;
+	    this.tx_json.Fee = String(fee);
+	  }
 
 	  return this;
 	};
 
-	Transaction._pathRewrite = function(path) {
+	/**
+	 * Filter invalid properties from path objects in a path array
+	 *
+	 * Valid properties are:
+	 * - account
+	 * - currency
+	 * - issuer
+	 * - type_hex
+	 *
+	 * @param {Array} path
+	 * @return {Array} filtered path
+	 */
+
+	Transaction._rewritePath = function(path) {
 	  if (!Array.isArray(path)) {
-	    return;
+	    throw new Error('Path must be an array');
 	  }
 
 	  var newPath = path.map(function(node) {
@@ -5132,32 +5280,63 @@ var ripple =
 	  return newPath;
 	};
 
+	/**
+	 * Add a path for Payment transaction
+	 *
+	 * XXX Abort if not a Payment
+	 *
+	 * @param {Array} path
+	 */
+
+	Transaction.prototype.addPath =
 	Transaction.prototype.pathAdd = function(path) {
 	  if (Array.isArray(path)) {
-	    this.tx_json.Paths  = this.tx_json.Paths || [];
-	    this.tx_json.Paths.push(Transaction._pathRewrite(path));
+	    this.tx_json.Paths = this.tx_json.Paths || [ ];
+	    this.tx_json.Paths.push(Transaction._rewritePath(path));
 	  }
 	  return this;
 	};
 
-	// --> paths: undefined or array of path
-	// // A path is an array of objects containing some combination of: account, currency, issuer
+	/**
+	 * Set paths for Payment transaction
+	 *
+	 * XXX Abort if not a Payment
+	 *
+	 * @param {Array} paths
+	 */
 
+	Transaction.prototype.setPaths =
 	Transaction.prototype.paths = function(paths) {
 	  if (Array.isArray(paths)) {
 	    for (var i=0, l=paths.length; i<l; i++) {
-	      this.pathAdd(paths[i]);
+	      this.addPath(paths[i]);
 	    }
 	  }
 	  return this;
 	};
 
-	// If the secret is in the config object, it does not need to be provided.
+	/**
+	 * Set secret If the secret has been set with Remote.setSecret, it does not
+	 * need to be provided
+	 *
+	 * @param {String} secret
+	 */
+
+	Transaction.prototype.setSecret =
 	Transaction.prototype.secret = function(secret) {
-	  this._secret = secret;
+	  if (typeof secret === 'string') {
+	    this._secret = secret;
+	  }
 	  return this;
 	};
 
+	/**
+	 * Set SendMax for Payment
+	 *
+	 * @param {String|Object} send max amount
+	 */
+
+	Transaction.prototype.setSendMax =
 	Transaction.prototype.sendMax = function(send_max) {
 	  if (send_max) {
 	    this.tx_json.SendMax = Amount.json_rewrite(send_max);
@@ -5165,28 +5344,31 @@ var ripple =
 	  return this;
 	};
 
-	// tag should be undefined or a 32 bit integer.
-	// YYY Add range checking for tag.
-	Transaction.prototype.sourceTag = function(tag) {
-	  if (tag) {
-	    this.tx_json.SourceTag = tag;
-	  }
-	  return this;
-	};
+	/**
+	 * Set TransferRate for AccountSet
+	 *
+	 * @param {Number} transfer raate
+	 */
 
-	// --> rate: In billionths.
 	Transaction.prototype.transferRate = function(rate) {
-	  this.tx_json.TransferRate = Number(rate);
-
-	  if (this.tx_json.TransferRate < 1e9) {
-	    throw new Error('invalidTransferRate');
+	  if (typeof rate === 'number' && rate >= 1e9) {
+	    this.tx_json.TransferRate = rate;
 	  }
-
 	  return this;
 	};
 
-	// Add flags to a transaction.
-	// --> flags: undefined, _flag_, or [ _flags_ ]
+	/**
+	 * Set Flags. You may specify flags as a number, as the string name of the
+	 * flag, or as an array of strings.
+	 *
+	 * setFlags(Transaction.flags.AccountSet.RequireDestTag)
+	 * setFlags('RequireDestTag')
+	 * setFlags('RequireDestTag', 'RequireAuth')
+	 * setFlags([ 'RequireDestTag', 'RequireAuth' ])
+	 *
+	 * @param {Number|String|Array} flags
+	 */
+
 	Transaction.prototype.setFlags = function(flags) {
 	  if (flags === void(0)) {
 	    return this;
@@ -5197,8 +5379,8 @@ var ripple =
 	    return this;
 	  }
 
-	  var flag_set = Array.isArray(flags) ? flags : Array.prototype.slice.call(arguments);
-	  var transaction_flags = Transaction.flags[this.tx_json.TransactionType] || { };
+	  var transaction_flags = Transaction.flags[this.getTransactionType()] || { };
+	  var flag_set = Array.isArray(flags) ? flags : [].slice.call(arguments);
 
 	  for (var i=0, l=flag_set.length; i<l; i++) {
 	    var flag = flag_set[i];
@@ -5214,40 +5396,56 @@ var ripple =
 	};
 
 	/**
-	 * Add a Memo to transaction. Memos can be used as key-value,
-	 * using the MemoType as a key
+	 * Add a Memo to transaction.
 	 *
-	 * @param {String} type
-	 * @param {String} data
+	 * @param {String} memoType
+	 * - describes what the data represents, needs to be valid ASCII
+	 * * @param {String} memoFormat
+	 * - describes what format the data is in, MIME type, needs to be valid ASCII
+	 * @param {String} memoData
+	 * - data for the memo, can be any JS object. Any object other than string will
+	 *   be stringified (JSON) for transport
 	 */
 
-	Transaction.prototype.addMemo = function(type, data) {
-	  if (!/(undefined|string)/.test(typeof type)) {
+	Transaction.prototype.addMemo = function(memoType, memoFormat, memoData) {
+
+	  if (typeof memoType === 'object') {
+	    var opts = memoType;
+	    memoType = opts.memoType;
+	    memoFormat = opts.memoFormat;
+	    memoData = opts.memoData;
+	  }
+
+	  if (!/(undefined|string)/.test(typeof memoType)) {
 	    throw new Error('MemoType must be a string');
+	  } else if (!Transaction.ASCII_REGEX.test(memoType)) {
+	    throw new Error('MemoType must be valid ASCII');
 	  }
 
-	  if (!/(undefined|string)/.test(typeof data)) {
-	    throw new Error('MemoData must be a string');
+	  if (!/(undefined|string)/.test(typeof memoFormat)) {
+	    throw new Error('MemoFormat must be a string');
+	  } else if (!Transaction.ASCII_REGEX.test(memoFormat)) {
+	    throw new Error('MemoFormat must be valid ASCII');
 	  }
 
-	  function toHex(str) {
-	    return sjcl.codec.hex.fromBits(sjcl.codec.utf8String.toBits(str));
-	  };
+	  var memo = {};
 
-	  var memo = { };
-
-	  if (type) {
-	    if (Transaction.MEMO_TYPES[type]) {
+	  if (memoType) {
+	    if (Transaction.MEMO_TYPES[memoType]) {
 	      //XXX Maybe in the future we want a schema validator for
 	      //memo types
-	      memo.MemoType = Transaction.MEMO_TYPES[type];
+	      memo.MemoType = Transaction.MEMO_TYPES[memoType];
 	    } else {
-	      memo.MemoType = toHex(type);
+	      memo.MemoType = memoType;
 	    }
 	  }
 
-	  if (data) {
-	    memo.MemoData = toHex(data);
+	  if (memoFormat) {
+	    memo.MemoFormat = memoFormat;
+	  }
+
+	  if (memoData) {
+	    memo.MemoData = memoData;
 	  }
 
 	  this.tx_json.Memos = (this.tx_json.Memos || []).concat({ Memo: memo });
@@ -5255,30 +5453,23 @@ var ripple =
 	  return this;
 	};
 
-	// Options:
-	//  .domain()           NYI
-	//  .flags()
-	//  .message_key()      NYI
-	//  .transfer_rate()
-	//  .wallet_locator()   NYI
-	//  .wallet_size()      NYI
-
 	/**
-	 *  Construct an 'AccountSet' transaction.
+	 * Construct an 'AccountSet' transaction
 	 *
-	 *  Note that bit flags can be set using the .setFlags() method
-	 *  but for 'AccountSet' transactions there is an additional way to
-	 *  modify AccountRoot flags. The values available for the SetFlag 
-	 *  and ClearFlag are as follows:
+	 * Note that bit flags can be set using the .setFlags() method but for
+	 * 'AccountSet' transactions there is an additional way to modify AccountRoot
+	 * flags. The values available for the SetFlag and ClearFlag are as follows:
 	 *
-	 *  "asfRequireDest"
-	 *    Require a destination tag
-	 *  "asfRequireAuth"
-	 *    Authorization is required to extend trust
-	 *  "asfDisallowXRP"
-	 *    XRP should not be sent to this account
-	 *  "asfDisableMaster"
-	 *    Disallow use of the master key
+	 * asfRequireDest:    Require a destination tag
+	 * asfRequireAuth:    Authorization is required to extend trust
+	 * asfDisallowXRP:    XRP should not be sent to this account
+	 * asfDisableMaster:  Disallow use of the master key
+	 * asfNoFreeze:       Permanently give up the ability to freeze individual
+	 *                    trust lines. This flag can never be cleared.
+	 * asfGlobalFreeze:   Freeze all assets issued by this account
+	 *
+	 * @param [String] set flag
+	 * @param [String] clear flag
 	 */
 
 	Transaction.prototype.accountSet = function(src, set_flag, clear_flag) {
@@ -5293,13 +5484,15 @@ var ripple =
 	    throw new Error('Source address invalid');
 	  }
 
-	  this.tx_json.TransactionType  = 'AccountSet';
-	  this.tx_json.Account          = UInt160.json_rewrite(src);
+	  this.tx_json.TransactionType= 'AccountSet';
+	  this.tx_json.Account = UInt160.json_rewrite(src);
 
 	  var SetClearFlags = Transaction.set_clear_flags.AccountSet;
 
 	  function prepareFlag(flag) {
-	    return (typeof flag === 'number') ? flag : (SetClearFlags[flag] || SetClearFlags['asf' + flag]);
+	    return (typeof flag === 'number')
+	    ?  flag
+	    : (SetClearFlags[flag] || SetClearFlags['asf' + flag]);
 	  };
 
 	  if (set_flag && (set_flag = prepareFlag(set_flag))) {
@@ -5313,28 +5506,39 @@ var ripple =
 	  return this;
 	};
 
+	/**
+	 * Construct a 'Claim' transaction
+	 */
+
 	Transaction.prototype.claim = function(src, generator, public_key, signature) {
 	  if (typeof src === 'object') {
 	    var options = src;
-	    signature  = options.signature;
+	    signature = options.signature;
 	    public_key = options.public_key;
-	    generator  = options.generator;
-	    src        = options.source || options.from || options.account;
+	    generator = options.generator;
+	    src = options.source || options.from || options.account;
 	  }
 
 	  this.tx_json.TransactionType = 'Claim';
-	  this.tx_json.Generator       = generator;
-	  this.tx_json.PublicKey       = public_key;
-	  this.tx_json.Signature       = signature;
+	  this.tx_json.Generator = generator;
+	  this.tx_json.PublicKey = public_key;
+	  this.tx_json.Signature = signature;
 
 	  return this;
 	};
+
+	/**
+	 * Construct an 'OfferCancel' transaction
+	 *
+	 * @param {String} account
+	 * @param [Number] sequence of an existing offer
+	 */
 
 	Transaction.prototype.offerCancel = function(src, sequence) {
 	  if (typeof src === 'object') {
 	    var options = src;
 	    sequence = options.sequence;
-	    src      = options.source || options.from || options.account;
+	    src = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -5342,24 +5546,30 @@ var ripple =
 	  }
 
 	  this.tx_json.TransactionType = 'OfferCancel';
-	  this.tx_json.Account         = UInt160.json_rewrite(src);
-	  this.tx_json.OfferSequence   = Number(sequence);
+	  this.tx_json.Account = UInt160.json_rewrite(src);
+	  this.tx_json.OfferSequence = Number(sequence);
 
 	  return this;
 	};
 
-	// Options:
-	//  .set_flags()
-	// --> expiration : if not undefined, Date or Number
-	// --> cancel_sequence : if not undefined, Sequence
+	/**
+	 * Construct an 'OfferCreate transaction
+	 *
+	 * @param {String} account
+	 * @param {Amount} taker pays amount
+	 * @param {Amount} taker gets amount
+	 * @param [Number|Date]
+	 * @param [Number] sequence of an existing offer to replace
+	 */
+
 	Transaction.prototype.offerCreate = function(src, taker_pays, taker_gets, expiration, cancel_sequence) {
 	  if (typeof src === 'object') {
 	    var options = src;
-	    cancel_sequence = options.cancel_sequence;
-	    expiration      = options.expiration;
-	    taker_gets      = options.taker_gets || options.sell;
-	    taker_pays      = options.taker_pays || options.buy;
-	    src             = options.source || options.from || options.account;
+	    cancel_sequence = options.cancel_sequence || options.sequence;
+	    expiration = options.expiration;
+	    taker_gets = options.taker_gets || options.sell;
+	    taker_pays = options.taker_pays || options.buy;
+	    src = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -5367,9 +5577,9 @@ var ripple =
 	  }
 
 	  this.tx_json.TransactionType = 'OfferCreate';
-	  this.tx_json.Account         = UInt160.json_rewrite(src);
-	  this.tx_json.TakerPays       = Amount.json_rewrite(taker_pays);
-	  this.tx_json.TakerGets       = Amount.json_rewrite(taker_gets);
+	  this.tx_json.Account = UInt160.json_rewrite(src);
+	  this.tx_json.TakerPays = Amount.json_rewrite(taker_pays);
+	  this.tx_json.TakerGets = Amount.json_rewrite(taker_gets);
 
 	  if (expiration) {
 	    this.tx_json.Expiration = utils.time.toRipple(expiration);
@@ -5383,12 +5593,16 @@ var ripple =
 	};
 
 	/**
-	 *  Construct a 'SetRegularKey' transaction.
-	 *  If the RegularKey is set, the private key that corresponds to
-	 *  it can be used to sign transactions instead of the master key
+	 * Construct a 'SetRegularKey' transaction
 	 *
-	 *  The RegularKey must be a valid Ripple Address, or a Hash160 of
-	 *  the public key corresponding to the new private signing key.
+	 * If the RegularKey is set, the private key that corresponds to it can be
+	 * used to sign transactions instead of the master key
+	 *
+	 * The RegularKey must be a valid Ripple Address, or a Hash160 of the public
+	 * key corresponding to the new private signing key.
+	 *
+	 * @param {String} account
+	 * @param {String} regular key
 	 */
 
 	Transaction.prototype.setRegularKey = function(src, regular_key) {
@@ -5403,7 +5617,7 @@ var ripple =
 	  }
 
 	  if (!UInt160.is_valid(regular_key)) {
-	    throw new Error('RegularKey must be a valid Ripple Address (a Hash160 of the public key)');
+	    throw new Error('RegularKey must be a valid Ripple Address');
 	  }
 
 	  this.tx_json.TransactionType = 'SetRegularKey';
@@ -5413,29 +5627,29 @@ var ripple =
 	  return this;
 	};
 
-	// Construct a 'payment' transaction.
-	//
-	// When a transaction is submitted:
-	// - If the connection is reliable and the server is not merely forwarding and is not malicious,
-	// --> src : UInt160 or String
-	// --> dst : UInt160 or String
-	// --> deliver_amount : Amount or String.
-	//
-	// Options:
-	//  .paths()
-	//  .build_path()
-	//  .destination_tag()
-	//  .path_add()
-	//  .secret()
-	//  .send_max()
-	//  .set_flags()
-	//  .source_tag()
+	/**
+	 * Construct a 'Payment' transaction
+	 *
+	 * Relevant setters:
+	 *  - setPaths()
+	 *  - setBuildPath()
+	 *  - addPath()
+	 *  - setSourceTag()
+	 *  - setDestinationTag()
+	 *  - setSendMax()
+	 *  - setFlags()
+	 *
+	 *  @param {String} source account
+	 *  @param {StrinG} destination account
+	 *  @param {Amount} payment amount
+	 */
+
 	Transaction.prototype.payment = function(src, dst, amount) {
 	  if (typeof src === 'object') {
 	    var options = src;
 	    amount = options.amount;
-	    dst    = options.destination || options.to;
-	    src    = options.source || options.from || options.account;
+	    dst = options.destination || options.to;
+	    src = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -5447,21 +5661,30 @@ var ripple =
 	  }
 
 	  this.tx_json.TransactionType = 'Payment';
-	  this.tx_json.Account         = UInt160.json_rewrite(src);
-	  this.tx_json.Amount          = Amount.json_rewrite(amount);
-	  this.tx_json.Destination     = UInt160.json_rewrite(dst);
+	  this.tx_json.Account = UInt160.json_rewrite(src);
+	  this.tx_json.Amount = Amount.json_rewrite(amount);
+	  this.tx_json.Destination = UInt160.json_rewrite(dst);
 
 	  return this;
 	};
+
+	/**
+	 * Construct a 'TrustSet' transaction
+	 *
+	 * @param {String} account
+	 * @param {Amount} limit
+	 * @param {Number} quality in
+	 * @param {Number} quality out
+	 */
 
 	Transaction.prototype.trustSet =
 	Transaction.prototype.rippleLineSet = function(src, limit, quality_in, quality_out) {
 	  if (typeof src === 'object') {
 	    var options = src;
 	    quality_out = options.quality_out;
-	    quality_in  = options.quality_in;
-	    limit       = options.limit;
-	    src         = options.source || options.from || options.account;
+	    quality_in = options.quality_in;
+	    limit = options.limit;
+	    src = options.source || options.from || options.account;
 	  }
 
 	  if (!UInt160.is_valid(src)) {
@@ -5469,7 +5692,7 @@ var ripple =
 	  }
 
 	  this.tx_json.TransactionType = 'TrustSet';
-	  this.tx_json.Account         = UInt160.json_rewrite(src);
+	  this.tx_json.Account = UInt160.json_rewrite(src);
 
 	  if (limit !== void(0)) {
 	    this.tx_json.LimitAmount = Amount.json_rewrite(limit);
@@ -5488,78 +5711,71 @@ var ripple =
 	  return this;
 	};
 
-	// Submit a transaction to the network.
+	/**
+	 * Submit transaction to the network
+	 *
+	 * @param [Function] callback
+	 */
+
 	Transaction.prototype.submit = function(callback) {
 	  var self = this;
 
 	  this.callback = (typeof callback === 'function') ? callback : function(){};
 
-	  function transactionError(error, message) {
+	  this._errorHandler = function transactionError(error, message) {
 	    if (!(error instanceof RippleError)) {
 	      error = new RippleError(error, message);
 	    }
 	    self.callback(error);
 	  };
 
-	  this._errorHandler = transactionError;
-
-	  function transactionSuccess(message) {
+	  this._successHandler = function transactionSuccess(message) {
 	    self.callback(null, message);
 	  };
 
-	  this._successHandler = transactionSuccess;
-
-	  this.on('error', function(){});
-
-	  var account = this.tx_json.Account;
-
 	  if (!this.remote) {
-	    return this.emit('error', new Error('No remote found'));
+	    this.emit('error', new Error('No remote found'));
+	    return;
 	  }
 
-	  if (!UInt160.is_valid(account)) {
-	    return this.emit('error', new RippleError('tejInvalidAccount', 'Account is missing or invalid'));
-	  }
-
-	  // YYY Might check paths for invalid accounts.
-	  this.remote.account(account).submit(this);
+	  this.getManager().submit(this);
 
 	  return this;
 	};
 
-	Transaction.prototype.abort = function(callback) {
-	  var callback = (typeof callback === 'function') ? callback : function(){};
+	Transaction.prototype.abort = function() {
 	  if (!this.finalized) {
-	    this.once('final', callback);
-	    this.emit('abort');
+	    this.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
 	  }
 	};
 
-	Transaction.prototype.summary = function() {
-	  return Transaction.summary.call(this);
-	};
+	/**
+	 * Return summary object containing important information for persistence
+	 *
+	 * @return {Object} transaction summary
+	 */
 
 	Transaction.summary = function() {
 	  var result = {
-	    tx_json:             this.tx_json,
-	    clientID:            this._clientID,
-	    submittedIDs:        this.submittedIDs,
-	    submissionAttempts:  this.attempts,
-	    submitIndex:         this.submitIndex,
-	    initialSubmitIndex:  this.initialSubmitIndex,
-	    lastLedgerSequence:  this.lastLedgerSequence,
-	    state:               this.state,
-	    server:              this._server ? this._server._opts.url : void(0),
-	    finalized:           this.finalized
+	    tx_json: this.tx_json,
+	    clientID: this._clientID,
+	    submittedIDs: this.submittedIDs,
+	    submissionAttempts: this.attempts,
+	    submitIndex: this.submitIndex,
+	    initialSubmitIndex: this.initialSubmitIndex,
+	    lastLedgerSequence: this.lastLedgerSequence,
+	    state: this.state,
+	    server: this._server ? this._server._opts.url : void(0),
+	    finalized: this.finalized
 	  };
 
 	  if (this.result) {
 	    result.result = {
-	      engine_result        : this.result.engine_result,
+	      engine_result: this.result.engine_result,
 	      engine_result_message: this.result.engine_result_message,
-	      ledger_hash          : this.result.ledger_hash,
-	      ledger_index         : this.result.ledger_index,
-	      transaction_hash     : this.result.tx_json.hash
+	      ledger_hash: this.result.ledger_hash,
+	      ledger_index: this.result.ledger_index,
+	      transaction_hash: this.result.tx_json.hash
 	    };
 	  }
 
@@ -6275,7 +6491,7 @@ var ripple =
 
 	var Seed = extend(function () {
 	  // Internal form: NaN or BigInteger
-	  this._curve = sjcl.ecc.curves.c256;
+	  this._curve = sjcl.ecc.curves.k256;
 	  this._value = NaN;
 	}, UInt);
 
@@ -6709,7 +6925,7 @@ var ripple =
 
 	SerializedObject.from_json = function(obj) {
 	  // Create a copy of the object so we don't modify it
-	  var obj = extend({}, obj);
+	  var obj = extend(true, {}, obj);
 	  var so  = new SerializedObject();
 	  var typedef;
 
@@ -6996,13 +7212,13 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(37);
+	var util   = __webpack_require__(38);
 	var extend = __webpack_require__(44);
 
 	function RippleError(code, message) {
@@ -7042,7 +7258,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var async              = __webpack_require__(49);
-	var crypto             = __webpack_require__(41);
+	var crypto             = __webpack_require__(42);
 	var sjcl               = __webpack_require__(19).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
 	var Seed               = __webpack_require__(10).Seed;
@@ -8057,6 +8273,9 @@ var ripple =
 	 * Data type map.
 	 *
 	 * Mapping of type ids to data types. The type id is specified by the high
+	 *
+	 * For reference, see rippled's definition:
+	 * https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol/SField.cpp
 	 */
 	var TYPES_MAP = exports.types = [
 	  void(0),
@@ -8430,7 +8649,7 @@ var ripple =
 	    ['Balance',             REQUIRED],
 	    ['LowLimit',            REQUIRED],
 	    ['HighLimit',           REQUIRED]])
-	}
+	};
 
 	exports.metadata = [
 	  [ 'TransactionIndex'     , REQUIRED ],
@@ -8638,9 +8857,9 @@ var ripple =
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(37);
+	var util         = __webpack_require__(38);
 	var url          = __webpack_require__(43);
-	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var log          = __webpack_require__(25).internal.sub('server');
 
@@ -9513,11 +9732,11 @@ var ripple =
 	//  - trade
 	//  - transaction
 
-	var util         = __webpack_require__(37);
+	var util         = __webpack_require__(38);
 	var extend       = __webpack_require__(44);
 	var assert       = __webpack_require__(39);
 	var async        = __webpack_require__(49);
-	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var UInt160      = __webpack_require__(8).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
@@ -10621,8 +10840,8 @@ var ripple =
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(38).EventEmitter;
-	var util         = __webpack_require__(37);
+	var EventEmitter = __webpack_require__(37).EventEmitter;
+	var util         = __webpack_require__(38);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(44);
 
@@ -10750,8 +10969,10 @@ var ripple =
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(37);
-	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(38);
+	var assert       = __webpack_require__(39);
+	var async        = __webpack_require__(49);
+	var EventEmitter = __webpack_require__(37).EventEmitter;
 	var Transaction  = __webpack_require__(5).Transaction;
 	var RippleError  = __webpack_require__(13).RippleError;
 	var PendingQueue = __webpack_require__(45).TransactionQueue;
@@ -10767,193 +10988,250 @@ var ripple =
 
 	  var self = this;
 
-	  this._account           = account;
-	  this._accountID         = account._account_id;
-	  this._remote            = account._remote;
-	  this._nextSequence      = void(0);
-	  this._maxFee            = this._remote.max_fee;
-	  this._maxAttempts       = this._remote.max_attempts;
+	  this._account = account;
+	  this._accountID = account._account_id;
+	  this._remote = account._remote;
+	  this._nextSequence = void(0);
+	  this._maxFee = this._remote.max_fee;
+	  this._maxAttempts = this._remote.max_attempts;
 	  this._submissionTimeout = this._remote._submission_timeout;
-	  this._pending           = new PendingQueue();
+	  this._lastLedgerOffset = this._remote._last_ledger_offset;
+	  this._pending = new PendingQueue();
 
-	  // Query remote server for next account sequence number
-	  this._loadSequence();
+	  this._account.on('transaction-outbound', function(res) {
+	    self._transactionReceived(res);
+	  });
 
-	  function transactionReceived(res) {
-	    var transaction = TransactionManager.normalizeTransaction(res);
-	    var sequence    = transaction.tx_json.Sequence;
-	    var hash        = transaction.tx_json.hash;
-
-	    if (!transaction.validated) {
-	      return;
-	    }
-
-	    self._pending.addReceivedSequence(sequence);
-
-	    // ND: we need to check against all submissions IDs
-	    var submission = self._pending.getSubmission(hash);
-
-	    if (self._remote.trace) {
-	      log.info('transaction received:', transaction.tx_json);
-	    }
-
-	    if (submission instanceof Transaction) {
-
-	      // ND: A `success` handler will `finalize` this later
-	      switch (transaction.engine_result) {
-	        case 'tesSUCCESS':
-	          submission.emit('success', transaction);
-	          break;
-	        default:
-	          submission.emit('error', transaction);
-	      }
-
-	    } else {
-	      self._pending.addReceivedId(hash, transaction);
-	    }
-	  };
-
-	  this._account.on('transaction-outbound', transactionReceived);
-
-	  this._remote.on('load_changed', this._adjustFees.bind(this));
+	  this._remote.on('load_changed', function(load) {
+	    self._adjustFees(load);
+	  });
 
 	  function updatePendingStatus(ledger) {
-	    self._pending.forEach(function(pending) {
-	      switch (ledger.ledger_index - pending.submitIndex) {
-	        case 8:
-	          pending.emit('lost', ledger);
-	          break;
-	        case 4:
-	          pending.emit('missing', ledger);
-	          break;
-	      }
-	    });
+	    self._updatePendingStatus(ledger);
 	  };
 
 	  this._remote.on('ledger_closed', updatePendingStatus);
 
-	  function remoteReconnected(callback) {
-	    var callback = (typeof callback === 'function') ? callback : function(){};
-
-	    if (!self._pending.length) {
-	      return callback();
-	    }
-
-	    //Load account transaction history
-	    var options = {
-	      account: self._accountID,
-	      ledger_index_min: -1,
-	      ledger_index_max: -1,
-	      binary: true,
-	      parseBinary: true,
-	      limit: 100,
-	      filter: 'outbound'
-	    };
-
-	    function accountTx(err, transactions) {
-	      if (!err && Array.isArray(transactions.transactions)) {
-	        transactions.transactions.forEach(transactionReceived);
-	      }
-
+	  function handleReconnect() {
+	    self._handleReconnect(function() {
+	      // Handle reconnect, account_tx procedure first, before
+	      // hooking back into ledger_closed
 	      self._remote.on('ledger_closed', updatePendingStatus);
-
-	      //Load next transaction sequence
-	      self._loadSequence(self._resubmit.bind(self));
-
-	      callback();
-	    };
-
-	    self._remote.requestAccountTx(options, accountTx);
-
-	    self.emit('reconnect');
+	    });
 	  };
 
-	  function remoteDisconnected() {
-	    self._remote.once('connect', remoteReconnected);
+	  this._remote.on('disconnect', function() {
 	    self._remote.removeListener('ledger_closed', updatePendingStatus);
-	  };
+	    self._remote.once('connect', handleReconnect);
+	  });
 
-	  this._remote.on('disconnect', remoteDisconnected);
-
-	  function saveTransaction(transaction) {
-	    self._remote.storage.saveTransaction(transaction.summary());
-	  };
-
-	  if (this._remote.storage) {
-	    this.on('save', saveTransaction);
-	  }
+	  // Query server for next account transaction sequence
+	  this._loadSequence();
 	};
 
 	util.inherits(TransactionManager, EventEmitter);
 
-	//Normalize transactions received from account
-	//transaction stream and account_tx
+	TransactionManager._isNoOp = function(transaction) {
+	  return (typeof transaction === 'object')
+	      && (typeof transaction.tx_json === 'object')
+	      && (transaction.tx_json.TransactionType === 'AccountSet')
+	      && (transaction.tx_json.Flags === 0);
+	};
+
+	TransactionManager._isRemoteError = function(error) {
+	  return (typeof error === 'object')
+	      && (error.error === 'remoteError')
+	      && (typeof error.remote === 'object');
+	};
+
+	TransactionManager._isNotFound = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
+	};
+
+	TransactionManager._isTooBusy = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && (error.remote.error === 'tooBusy');
+	};
+
+	/**
+	 * Normalize transactions received from account transaction stream and
+	 * account_tx
+	 *
+	 * @param {Transaction}
+	 * @return {Transaction} normalized
+	 * @api private
+	 */
+
 	TransactionManager.normalizeTransaction = function(tx) {
 	  var transaction = { };
+	  var keys = Object.keys(tx);
 
-	  Object.keys(tx).forEach(function(key) {
-	    transaction[key] = tx[key];
-	  });
-
-	  if (!tx.engine_result) {
-	    // account_tx
-	    transaction = {
-	      engine_result:  tx.meta.TransactionResult,
-	      tx_json:        tx.tx,
-	      hash:           tx.tx.hash,
-	      ledger_index:   tx.tx.ledger_index,
-	      meta:           tx.meta,
-	      type:           'transaction',
-	      validated:      true
-	    };
-
-	    transaction.result = transaction.engine_result;
-	    transaction.result_message = transaction.engine_result_message;
+	  for (var i=0; i<keys.length; i++) {
+	    var k = keys[i];
+	    switch (k) {
+	      case 'transaction':
+	        // Account transaction stream
+	        transaction.tx_json = tx[k];
+	        break;
+	      case 'tx':
+	        // account_tx response
+	        transaction.engine_result = tx.meta.TransactionResult;
+	        transaction.result = transaction.engine_result;
+	        transaction.tx_json = tx[k];
+	        transaction.hash = tx[k].hash;
+	        transaction.ledger_index = tx[k].ledger_index;
+	        transaction.type = 'transaction';
+	        transaction.validated = tx.validated;
+	        break;
+	      case 'meta':
+	      case 'metadata':
+	        transaction.metadata = tx[k];
+	        break;
+	      case 'mmeta':
+	        // Don't copy mmeta
+	        break;
+	      default:
+	        transaction[k] = tx[k];
+	    }
 	  }
-
-	  if (!transaction.metadata) {
-	    transaction.metadata = transaction.meta;
-	  }
-
-	  if (!transaction.tx_json) {
-	    transaction.tx_json = transaction.transaction;
-	  }
-
-	  delete transaction.transaction;
-	  delete transaction.mmeta;
-	  delete transaction.meta;
 
 	  return transaction;
 	};
 
-	// Transaction fees are adjusted in real-time
-	TransactionManager.prototype._adjustFees = function(loadData) {
-	  // ND: note, that `Fee` is a component of a transactionID
+	/**
+	 * Handle received transaction from two possible sources
+	 *
+	 * + Account transaction stream (normal operation)
+	 * + account_tx (after reconnect)
+	 *
+	 * @param {Object} transaction
+	 * @api private
+	 */
+
+	TransactionManager.prototype._transactionReceived = function(tx) {
+	  var transaction = TransactionManager.normalizeTransaction(tx);
+
+	  if (!transaction.validated) {
+	    // Transaction has not been validated
+	    return;
+	  }
+
+	  if (transaction.tx_json.Account !== this._accountID) {
+	    // Received transaction's account does not match
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('transaction received:', transaction.tx_json);
+	  }
+
+	  this._pending.addReceivedSequence(transaction.tx_json.Sequence);
+
+	  var hash = transaction.tx_json.hash;
+	  var submission = this._pending.getSubmission(hash);
+
+	  if (!(submission instanceof Transaction)) {
+	    // The received transaction does not correlate to one submitted
+	    return this._pending.addReceivedId(hash, transaction);
+	  }
+
+	  // ND: A `success` handler will `finalize` this later
+	  switch (transaction.engine_result) {
+	    case 'tesSUCCESS':
+	      submission.emit('success', transaction);
+	      break;
+	    default:
+	      submission.emit('error', transaction);
+	  }
+	};
+
+	/**
+	 * Adjust pending transactions' fees in real-time. This does not resubmit
+	 * pending transactions; they will be resubmitted periodically with an updated
+	 * fee (and as a consequence, a new transaction ID) if not already validated
+	 *
+	 * ND: note, that `Fee` is a component of a transactionID
+	 *
+	 * @api private
+	 */
+
+	TransactionManager.prototype._adjustFees = function() {
 	  var self = this;
 
 	  if (!this._remote.local_fee) {
 	    return;
 	  }
 
-	  this._pending.forEach(function(pending) {
-	    var oldFee = pending.tx_json.Fee;
-	    var newFee = pending._computeFee();
+	  function maxFeeExceeded(transaction) {
+	    // Don't err until attempting to resubmit
+	    transaction.once('presubmit', function() {
+	      transaction.emit('error', 'tejMaxFeeExceeded');
+	    });
+	  };
 
-	    function maxFeeExceeded() {
-	      pending.once('presubmit', function() {
-	        pending.emit('error', 'tejMaxFeeExceeded');
-	      });
-	    };
+	  this._pending.forEach(function(transaction) {
+	    if (transaction._setFixedFee === true) {
+	      return;
+	    }
+	    
+	    var oldFee = transaction.tx_json.Fee;
+	    var newFee = transaction._computeFee();
 
 	    if (Number(newFee) > self._maxFee) {
-	      return maxFeeExceeded();
+	      // Max transaction fee exceeded, abort submission
+	      return maxFeeExceeded(transaction);
 	    }
 
-	    pending.tx_json.Fee = newFee;
-	    pending.emit('fee_adjusted', oldFee, newFee);
+	    transaction.tx_json.Fee = newFee;
+	    transaction.emit('fee_adjusted', oldFee, newFee);
 
 	    if (self._remote.trace) {
-	      log.info('fee adjusted:', pending.tx_json, oldFee, newFee);
+	      log.info('fee adjusted:', transaction.tx_json, oldFee, newFee);
+	    }
+	  });
+	};
+
+	/**
+	 * Get pending transactions
+	 *
+	 * @return {Array} pending transactions
+	 */
+
+	TransactionManager.prototype.getPending = function() {
+	  return this._pending;
+	};
+
+	/**
+	 * Legacy code. Update transaction status after excessive ledgers pass. One of
+	 * either "missing" or "lost"
+	 *
+	 * @param {Object} ledger data
+	 * @api private
+	 */
+
+	TransactionManager.prototype._updatePendingStatus = function(ledger) {
+	  assert.strictEqual(typeof ledger, 'object');
+	  assert.strictEqual(typeof ledger.ledger_index, 'number');
+
+	  this._pending.forEach(function(transaction) {    
+	    switch (ledger.ledger_index - transaction.submitIndex) {
+	      case 4:
+	        transaction.emit('missing', ledger);
+	        break;
+	      case 8:
+	        transaction.emit('lost', ledger);
+	        break;
+	    }
+
+	    if (transaction.finalized) {
+	      return;
+	    }
+
+	    if (ledger.ledger_index > transaction.tx_json.LastLedgerSequence) {
+	      // Transaction must fail
+	      transaction.emit('error', new RippleError(
+	        'tejMaxLedger', 'Transaction LastLedgerSequence exceeded'));
 	    }
 	  });
 	};
@@ -11002,85 +11280,93 @@ var ripple =
 	  this._loadSequence(sequenceLoaded);
 	};
 
+	/**
+	 * Load account transaction sequence
+	 *
+	 * @param [Function] callback
+	 */
+
 	TransactionManager.prototype._loadSequence = function(callback) {
 	  var self = this;
+	  var callback = (typeof callback === 'function') ? callback : function(){};
 
 	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence === 'number') {
-	      self._nextSequence = sequence;
-	      self.emit('sequence_loaded', sequence);
-	      if (typeof callback === 'function') {
-	        callback(err, sequence);
+	    if (err || typeof sequence !== 'number') {
+	      if (self._remote.trace) {
+	        log.info('error requesting account transaction sequence', err);
+	        return;
 	      }
-	    } else {
-	      setTimeout(function() {
-	        self._loadSequence(callback);
-	      }, 1000 * 3);
 	    }
+
+	    self._nextSequence = sequence;
+	    self.emit('sequence_loaded', sequence);
+	    callback(err, sequence);
 	  };
 
 	  this._account.getNextSequence(sequenceLoaded);
 	};
 
-	TransactionManager.prototype._resubmit = function(ledgers, pending) {
-	  var self = this;
-	  var pending = pending ? [ pending ] : this._pending;
-	  var ledgers = Number(ledgers) || 0;
+	/**
+	 * On reconnect, load account_tx in case a pending transaction succeeded while
+	 * disconnected
+	 *
+	 * @param [Function] callback
+	 * @api private
+	 */
 
-	  function resubmitTransaction(pending) {
-	    if (!pending || pending.finalized) {
-	      // Transaction has been finalized, nothing to do
+	TransactionManager.prototype._handleReconnect = function(callback) {
+	  var self = this;
+	  var callback = (typeof callback === 'function') ? callback : function(){};
+
+	  if (!this._pending.length) {
+	    return callback();
+	  }
+
+	  function handleTransactions(err, transactions) {
+	    if (err || typeof transactions !== 'object') {
+	      if (self._remote.trace) {
+	        log.info('error requesting account_tx', err);
+	      }
+	      callback();
 	      return;
 	    }
 
-	    var hashCached = pending.findId(self._pending._idCache);
-
-	    if (self._remote.trace) {
-	      log.info('resubmit:', pending.tx_json);
+	    if (Array.isArray(transactions.transactions)) {
+	      // Treat each transaction in account transaction history as received
+	      transactions.transactions.forEach(self._transactionReceived, self);
 	    }
 
-	    if (hashCached) {
-	      return pending.emit('success', hashCached);
-	    }
+	    callback();
 
-	    while (self._pending.hasSequence(pending.tx_json.Sequence)) {
-	      //Sequence number has been consumed by another transaction
-	      pending.tx_json.Sequence += 1;
-
-	      if (self._remote.trace) {
-	        log.info('incrementing sequence:', pending.tx_json);
-	      }
-	    }
-
-	    self._request(pending);
+	    self._loadSequence(function() {
+	      // Resubmit pending transactions after sequence is loaded
+	      self._resubmit();
+	    });
 	  };
 
-	  function resubmitTransactions() {
-	    ;(function nextTransaction(i) {
-	      var transaction = pending[i];
-
-	      if (!(transaction instanceof Transaction)) {
-	        return;
-	      }
-
-	      transaction.once('submitted', function(m) {
-	        transaction.emit('resubmitted', m);
-
-	        self._loadSequence();
-
-	        if (++i < pending.length) {
-	          nextTransaction(i);
-	        }
-	      });
-
-	      resubmitTransaction(transaction);
-	    })(0);
+	  var options = {
+	    account: this._accountID,
+	    ledger_index_min: this._pending.getMinLedger(),
+	    ledger_index_max: -1,
+	    binary: true,
+	    parseBinary: true,
+	    limit: 20
 	  };
 
-	  this._waitLedgers(ledgers, resubmitTransactions);
+	  this._remote.requestAccountTx(options, handleTransactions);
 	};
 
+	/**
+	 * Wait for specified number of ledgers to pass
+	 *
+	 * @param {Number} ledgers
+	 * @param {Function} callback
+	 */
+
 	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
+	  assert.strictEqual(typeof ledgers, 'number');
+	  assert.strictEqual(typeof callback, 'function');
+
 	  if (ledgers < 1) {
 	    return callback();
 	  }
@@ -11089,35 +11375,121 @@ var ripple =
 	  var closes = 0;
 
 	  function ledgerClosed() {
-	    if (++closes < ledgers) {
-	      return;
+	    if (++closes === ledgers) {
+	      self._remote.removeListener('ledger_closed', ledgerClosed);
+	      callback();
 	    }
-
-	    self._remote.removeListener('ledger_closed', ledgerClosed);
-
-	    callback();
 	  };
 
 	  this._remote.on('ledger_closed', ledgerClosed);
 	};
 
+	/**
+	 * Resubmit pending transactions. If a transaction is specified, it will be
+	 * resubmitted. Otherwise, all pending transactions will be resubmitted
+	 *
+	 * @param [Number] ledgers to wait before resubmitting
+	 * @param [Transaction] pending transactions to resubmit
+	 */
+
+	TransactionManager.prototype._resubmit = function(ledgers, pending) {
+	  var self = this;
+	  var ledgers = ledgers || 0;
+	  var pending = pending ? [ pending ] : this._pending;
+
+	  function resubmitTransaction(transaction, next) {
+	    if (!transaction || transaction.finalized) {
+	      // Transaction has been finalized, nothing to do
+	      return;
+	    }
+
+	    // Find ID within cache of received (validated) transaction IDs
+	    var received = transaction.findId(self._pending._idCache);
+
+	    if (received) {
+	      return transaction.emit('success', received);
+	    }
+
+	    while (self._pending.hasSequence(transaction.tx_json.Sequence)) {
+	      //Sequence number has been consumed by another transaction
+	      transaction.tx_json.Sequence += 1;
+
+	      if (self._remote.trace) {
+	        log.info('incrementing sequence:', transaction.tx_json);
+	      }
+	    }
+
+	    if (self._remote.trace) {
+	      log.info('resubmit:', transaction.tx_json);
+	    }
+
+	    transaction.once('submitted', function(m) {
+	      transaction.emit('resubmitted', m);
+	      next();
+	    });
+
+	    self._request(transaction);
+	  };
+
+	  this._waitLedgers(ledgers, function() {
+	    async.eachSeries(pending, resubmitTransaction);
+	  });
+	};
+
+	/**
+	 * Prepare submit request
+	 *
+	 * @param {Transaction} transaction to submit
+	 * @return {Request} submit request
+	 */
+
+	TransactionManager.prototype._prepareRequest = function(tx) {
+	  var submitRequest = this._remote.requestSubmit();
+
+	  if (this._remote.local_signing) {
+	    tx.sign();
+
+	    var serialized = tx.serialize();
+	    submitRequest.tx_blob(serialized.to_hex());
+
+	    var hash = tx.hash(null, null, serialized);
+	    tx.addId(hash);
+	  } else {
+	    // ND: `build_path` is completely ignored when doing local signing as
+	    // `Paths` is a component of the signed blob, the `tx_blob` is signed,
+	    // sealed and delivered, and the txn unmodified.
+	    // TODO: perhaps an exception should be raised if build_path is attempted
+	    // while local signing
+	    submitRequest.build_path(tx._build_path);
+	    submitRequest.secret(tx._secret);
+	    submitRequest.tx_json(tx.tx_json);
+	  }
+
+	  return submitRequest;
+	};
+
+	/**
+	 * Send `submit` request, handle response
+	 *
+	 * @param {Transaction} transaction to submit
+	 */
+
 	TransactionManager.prototype._request = function(tx) {
-	  var self   = this;
+	  var self = this;
 	  var remote = this._remote;
 
+	  if (tx.finalized) {
+	    return;
+	  }
+
 	  if (tx.attempts > this._maxAttempts) {
-	    return tx.emit('error', new RippleError('tejAttemptsExceeded'));
+	    tx.emit('error', new RippleError('tejAttemptsExceeded'));
+	    return;
 	  }
 
 	  if (tx.attempts > 0 && !remote.local_signing) {
-	    var message = ''
-	    + 'It is not possible to resubmit transactions automatically safely without '
-	    + 'synthesizing the transactionID locally. See `local_signing` config option';
-
-	    return tx.emit('error', new RippleError('tejLocalSigningRequired', message));
-	  }
-
-	  if (tx.finalized) {
+	    var message = 'Automatic resubmission requires local signing';
+	    tx.emit('error', new RippleError('tejLocalSigningRequired', message));
 	    return;
 	  }
 
@@ -11125,72 +11497,31 @@ var ripple =
 	    log.info('submit transaction:', tx.tx_json);
 	  }
 
-	  function transactionProposed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    // If server is honest, don't expect a final if rejected.
-	    message.rejected = tx.isRejected(message.engine_result_code);
-
-	    tx.emit('proposed', message);
-	  };
-
 	  function transactionFailed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    switch (message.engine_result) {
-	      case 'tefPAST_SEQ':
-	        self._resubmit(1, tx);
-	        break;
-	      case 'tefALREADY':
-	        if (tx.responses === tx.submissions) {
-	          tx.emit('error', message);
-	        } else {
-	          submitRequest.once('success', submitted);
-	        }
-	        break;
-	      default:
-	        tx.emit('error', message);
+	    if (message.engine_result === 'tefPAST_SEQ') {
+	      // Transaction may succeed after Sequence is updated
+	      self._resubmit(1, tx);
 	    }
 	  };
 
 	  function transactionRetry(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
+	    // XXX This may no longer be necessary. Instead, update sequence numbers
+	    // after a transaction fails definitively
 	    self._fillSequence(tx, function() {
 	      self._resubmit(1, tx);
 	    });
 	  };
 
-	  function transactionFeeClaimed(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-	  };
-
 	  function transactionFailedLocal(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    if (self._remote.local_fee && (message.engine_result === 'telINSUF_FEE_P')) {
-	      self._resubmit(2, tx);
-	    } else {
-	      submissionError(message);
+	    if (message.engine_result === 'telINSUF_FEE_P') {
+	      // Transaction may succeed after Fee is updated
+	      self._resubmit(1, tx);
 	    }
 	  };
 
 	  function submissionError(error) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
-	    if (tx.finalized) {
-	      return;
-	    }
-
+	    // Either a tem-class error or generic server error such as tooBusy. This
+	    // should be a definitive failure
 	    if (TransactionManager._isTooBusy(error)) {
 	      self._resubmit(1, tx);
 	    } else {
@@ -11200,13 +11531,12 @@ var ripple =
 	  };
 
 	  function submitted(message) {
-	    // Finalized (e.g. aborted) transactions must stop all activity
 	    if (tx.finalized) {
 	      return;
 	    }
 
-	    // ND: If for some unknown reason our hash wasn't computed correctly this is
-	    // an extra measure.
+	    // ND: If for some unknown reason our hash wasn't computed correctly this
+	    // is an extra measure.
 	    if (message.tx_json && message.tx_json.hash) {
 	      tx.addId(message.tx_json.hash);
 	    }
@@ -11224,10 +11554,9 @@ var ripple =
 
 	    switch (message.result.slice(0, 3)) {
 	      case 'tes':
-	        transactionProposed(message);
+	        tx.emit('proposed', message);
 	        break;
 	      case 'tec':
-	        transactionFeeClaimed(message);
 	        break;
 	      case 'ter':
 	        transactionRetry(message);
@@ -11244,76 +11573,23 @@ var ripple =
 	    }
 	  };
 
-	  var submitRequest = remote.requestSubmit();
-
-	  submitRequest.once('error', submitted);
-	  submitRequest.once('success', submitted);
-
-	  function prepareSubmit() {
-	    if (remote.local_signing) {
-	      // TODO: We are serializing twice, when we could/should be feeding the
-	      // tx_blob to `tx.hash()` which rebuilds it to sign it.
-	      submitRequest.tx_blob(tx.serialize().to_hex());
-
-	      // ND: ecdsa produces a random `TxnSignature` field value, a component of
-	      // the hash. Attempting to identify a transaction via a hash synthesized
-	      // locally while using remote signing is inherently flawed.
-	      tx.addId(tx.hash());
-	    } else {
-	      // ND: `build_path` is completely ignored when doing local signing as
-	      // `Paths` is a component of the signed blob, the `tx_blob` is signed,
-	      // sealed and delivered, and the txn unmodified.
-	      // TODO: perhaps an exception should be raised if build_path is attempted
-	      // while local signing
-	      submitRequest.build_path(tx._build_path);
-	      submitRequest.secret(tx._secret);
-	      submitRequest.tx_json(tx.tx_json);
-	    }
-
-	    if (tx._server) {
-	      submitRequest.server = tx._server;
-	    }
-
-	    submitTransaction();
-	  };
-
 	  function requestTimeout() {
 	    // ND: What if the response is just slow and we get a response that
 	    // `submitted` above will cause to have concurrent resubmit logic streams?
 	    // It's simpler to just mute handlers and look out for finalized
 	    // `transaction` messages.
-
-	    // ND: We should audit the code for other potential multiple resubmit
-	    // streams. Connection/reconnection could be one? That's why it's imperative
-	    // that ALL transactionIDs sent over network are tracked.
-
-	    // Finalized (e.g. aborted) transactions must stop all activity
 	    if (tx.finalized) {
 	      return;
 	    }
 
 	    tx.emit('timeout');
 
-	    if (remote._connected) {
+	    if (remote.isConnected()) {
 	      if (remote.trace) {
 	        log.info('timeout:', tx.tx_json);
 	      }
-	      self._resubmit(3, tx);
+	      self._resubmit(1, tx);
 	    }
-	  };
-
-	  function submitTransaction() {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    tx.emit('presubmit');
-
-	    submitRequest.timeout(self._submissionTimeout, requestTimeout);
-
-	    tx.submissions = submitRequest.broadcast();
-	    tx.attempts++;
-	    tx.emit('postsubmit');
 	  };
 
 	  tx.submitIndex = this._remote._ledger_current_index;
@@ -11323,43 +11599,32 @@ var ripple =
 	  }
 
 	  if (!tx._setLastLedger) {
-	    // Honor LastLedgerSequence set by user of API. If
-	    // left unset by API, bump LastLedgerSequence
-	    tx.tx_json.LastLedgerSequence = tx.submitIndex + 8;
+	    // Honor LastLedgerSequence set with tx.lastLedger()
+	    tx.tx_json.LastLedgerSequence = tx.initialSubmitIndex
+	    + this._lastLedgerOffset;
 	  }
 
 	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
 
 	  if (remote.local_signing) {
-	    tx.sign(prepareSubmit);
-	  } else {
-	    prepareSubmit();
+	    tx.sign();
 	  }
 
+	  var submitRequest = this._prepareRequest(tx);
+	  submitRequest.once('error', submitted);
+	  submitRequest.once('success', submitted);
+
+	  tx.emit('presubmit');
+
+	  tx.submissions = submitRequest.broadcast();
+	  tx.attempts++;
+
+	  tx.emit('postsubmit');
+
+	  //XXX
+	  submitRequest.timeout(self._submissionTimeout, requestTimeout);
+
 	  return submitRequest;
-	};
-
-	TransactionManager._isNoOp = function(transaction) {
-	  return (typeof transaction === 'object')
-	      && (typeof transaction.tx_json === 'object')
-	      && (transaction.tx_json.TransactionType === 'AccountSet')
-	      && (transaction.tx_json.Flags === 0);
-	};
-
-	TransactionManager._isRemoteError = function(error) {
-	  return (typeof error === 'object')
-	      && (error.error === 'remoteError')
-	      && (typeof error.remote === 'object');
-	};
-
-	TransactionManager._isNotFound = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
-	};
-
-	TransactionManager._isTooBusy = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && (error.remote.error === 'tooBusy');
 	};
 
 	/**
@@ -11372,59 +11637,32 @@ var ripple =
 	  var self = this;
 	  var remote = this._remote;
 
-	  // If sequence number is not yet known, defer until it is.
 	  if (typeof this._nextSequence !== 'number') {
-	    this.once('sequence_loaded', this.submit.bind(this, tx));
+	    // If sequence number is not yet known, defer until it is.
+	    this.once('sequence_loaded', function() {
+	      self.submit(tx);
+	    });
 	    return;
 	  }
 
-	  // Finalized (e.g. aborted) transactions must stop all activity
 	  if (tx.finalized) {
+	    // Finalized transactions must stop all activity
 	    return;
 	  }
-
-	  function cleanup(message) {
-	    // ND: We can just remove this `tx` by identity
-	    self._pending.remove(tx);
-	    tx.emit('final', message);
-	    if (remote.trace) {
-	      log.info('transaction finalized:', tx.tx_json, self._pending.getLength());
-	    }
-	  };
-
-	  tx.once('cleanup', cleanup);
-
-	  tx.on('save', function() {
-	    self.emit('save', tx);
-	  });
-
-	  tx.once('error', function(message) {
-	    tx._errorHandler(message);
-	  });
-
-	  tx.once('success', function(message) {
-	    tx._successHandler(message);
-	  });
-
-	  tx.once('abort', function() {
-	    tx.emit('error', new RippleError('tejAbort', 'Transaction aborted'));
-	  });
 
 	  if (typeof tx.tx_json.Sequence !== 'number') {
+	    // Honor manually-set sequences
 	    tx.tx_json.Sequence = this._nextSequence++;
 	  }
 
-	  // Attach secret, associate transaction with a server, attach fee.
-	  // If the transaction can't complete, decrement sequence so that
-	  // subsequent transactions
+	  tx.once('cleanup', function() {
+	    self.getPending().remove(tx);
+	  });
+
 	  if (!tx.complete()) {
 	    this._nextSequence--;
 	    return;
 	  }
-
-	  tx.attempts = 0;
-	  tx.submissions = 0;
-	  tx.responses = 0;
 
 	  // ND: this is the ONLY place we put the tx into the queue. The
 	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
@@ -11893,7 +12131,7 @@ var ripple =
 	var Base    = __webpack_require__(7).Base;
 
 	function KeyPair() {
-	  this._curve  = sjcl.ecc.curves.c256;
+	  this._curve  = sjcl.ecc.curves.k256;
 	  this._secret = null;
 	  this._pubkey = null;
 	};
@@ -11903,7 +12141,7 @@ var ripple =
 	};
 
 	KeyPair.prototype.parse_bn_secret = function(j) {
-	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, j);
+	  this._secret = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.k256, j);
 	  return this;
 	};
 
@@ -12016,6 +12254,7 @@ var ripple =
 	// Shortcuts
 	var hex = sjcl.codec.hex;
 	var bytes = sjcl.codec.bytes;
+	var utf8 = sjcl.codec.utf8String;
 
 	var BigInteger = utils.jsbn.BigInteger;
 
@@ -12044,7 +12283,7 @@ var ripple =
 	  return val instanceof BigInteger;
 	};
 
-	function serialize_hex(so, hexData, noLength) {
+	function serializeHex(so, hexData, noLength) {
 	  var byteData = bytes.fromBits(hex.toBits(hexData));
 	  if (!noLength) {
 	    SerializedType.serialize_varint(so, byteData.length);
@@ -12055,9 +12294,17 @@ var ripple =
 	/**
 	 * parses bytes as hex
 	 */
-	function convert_bytes_to_hex (byte_array) {
+	function convertByteArrayToHex (byte_array) {
 	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
 	};
+
+	function convertStringToHex(string) {
+	  return hex.fromBits(utf8.toBits(string)).toUpperCase();
+	}
+
+	function convertHexToString(hexString) {
+	  return utf8.fromBits(hex.toBits(hexString));
+	}
 
 	SerializedType.serialize_varint = function (so, val) {
 	  if (val < 0) {
@@ -12107,7 +12354,7 @@ var ripple =
 	 *
 	 * The result is appended to the serialized object ('so').
 	 */
-	function append_byte_array(so, val, bytes) {
+	function convertIntegerToByteArray(val, bytes) {
 	  if (!isNumber(val)) {
 	    throw new Error('Value is not a number', bytes);
 	  }
@@ -12122,7 +12369,7 @@ var ripple =
 	    newBytes.unshift(val >>> (i * 8) & 0xff);
 	  }
 
-	  so.append(newBytes);
+	  return newBytes;
 	};
 
 	// Convert a certain number of bytes from the serialized object ('so') into an integer.
@@ -12144,7 +12391,7 @@ var ripple =
 
 	var STInt8 = exports.Int8 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 1);
+	    so.append(convertIntegerToByteArray(val, 1));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 1);
@@ -12155,7 +12402,7 @@ var ripple =
 
 	var STInt16 = exports.Int16 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 2);
+	    so.append(convertIntegerToByteArray(val, 2));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 2);
@@ -12166,7 +12413,7 @@ var ripple =
 
 	var STInt32 = exports.Int32 = new SerializedType({
 	  serialize: function (so, val) {
-	    append_byte_array(so, val, 4);
+	    so.append(convertIntegerToByteArray(val, 4));
 	  },
 	  parse: function (so) {
 	    return readAndSum(so, 4);
@@ -12209,7 +12456,7 @@ var ripple =
 	      hex = '0' + hex;
 	    }
 
-	    serialize_hex(so, hex, true); //noLength = true
+	    serializeHex(so, hex, true); //noLength = true
 	  },
 	  parse: function (so) {
 	    var bytes = so.read(8);
@@ -12229,7 +12476,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash128');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt128.from_bytes(so.read(16));
@@ -12244,7 +12491,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash256');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt256.from_bytes(so.read(32));
@@ -12259,7 +12506,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash160');
 	    }
-	    serialize_hex(so, hash.to_hex(), true); //noLength = true
+	    serializeHex(so, hash.to_hex(), true); //noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt160.from_bytes(so.read(20));
@@ -12286,7 +12533,7 @@ var ripple =
 	    //     UInt160 value and consider it valid. But it doesn't, so for the
 	    //     deserialization to be usable, we need to allow invalid results for now.
 	    //if (!currency.is_valid()) {
-	    //  throw new Error('Invalid currency: '+convert_bytes_to_hex(bytes));
+	    //  throw new Error('Invalid currency: '+convertByteArrayToHex(bytes));
 	    //}
 	    return currency;
 	  }
@@ -12401,15 +12648,16 @@ var ripple =
 
 	var STVL = exports.VariableLength = exports.VL = new SerializedType({
 	  serialize: function (so, val) {
+
 	    if (typeof val === 'string') {
-	      serialize_hex(so, val);
+	      serializeHex(so, val);
 	    } else {
 	      throw new Error('Unknown datatype.');
 	    }
 	  },
 	  parse: function (so) {
 	    var len = this.parse_varint(so);
-	    return convert_bytes_to_hex(so.read(len));
+	    return convertByteArrayToHex(so.read(len));
 	  }
 	});
 
@@ -12421,7 +12669,7 @@ var ripple =
 	    if (!account.is_valid()) {
 	      throw new Error('Invalid account!');
 	    }
-	    serialize_hex(so, account.to_hex());
+	    serializeHex(so, account.to_hex());
 	  },
 	  parse: function (so) {
 	    var len = this.parse_varint(so);
@@ -12433,7 +12681,6 @@ var ripple =
 	    var result = UInt160.from_bytes(so.read(len));
 	    result.set_version(Base.VER_ACCOUNT_ID);
 
-	    //console.log('PARSED 160:', result.to_json());
 	    if (false) {
 	      throw new Error('Invalid Account');
 	    }
@@ -12585,6 +12832,105 @@ var ripple =
 
 	STVector256.id = 19;
 
+	// Internal
+	var STMemo = exports.STMemo = new SerializedType({
+	  serialize: function(so, val, no_marker) {
+
+	    var keys = [];
+
+	    Object.keys(val).forEach(function (key) {
+	      // Ignore lowercase field names - they're non-serializable fields by
+	      // convention.
+	      if (key[0] === key[0].toLowerCase()) {
+	        return;
+	      }
+
+	      if (typeof binformat.fieldsInverseMap[key] === 'undefined') {
+	        throw new Error('JSON contains unknown field: "' + key + '"');
+	      }
+
+	      keys.push(key);
+	    });
+
+	    // Sort fields
+	    keys = sort_fields(keys);
+
+	    // store that we're dealing with json
+	    var isJson = val.MemoFormat === 'json';
+
+	    for (var i=0; i<keys.length; i++) {
+	      var key = keys[i];
+	      var value = val[key];
+	      switch (key) {
+
+	        // MemoType and MemoFormat are always ASCII strings
+	        case 'MemoType':
+	        case 'MemoFormat':
+	          value = convertStringToHex(value);
+	          break;
+
+	        // MemoData can be a JSON object, otherwise it's a string
+	        case 'MemoData':
+	          if (typeof value !== 'string') {
+	            if (isJson) {
+	              try {
+	                value = convertStringToHex(JSON.stringify(value));
+	              } catch (e) {
+	                throw new Error('MemoFormat json with invalid JSON in MemoData field');
+	              }
+	            } else {
+	              throw new Error('MemoData can only be a JSON object with a valid json MemoFormat');
+	            }
+	          } else if (isString(value)) {
+	            value = convertStringToHex(value);
+	          }
+	          break;
+	      }
+
+	      serialize(so, key, value);
+	    }
+
+	    if (!no_marker) {
+	      //Object ending marker
+	      STInt8.serialize(so, 0xe1);
+	    }
+
+	  },
+	  parse: function(so) {
+	    var output = {};
+	    while (so.peek(1)[0] !== 0xe1) {
+	      var keyval = parse(so);
+	      output[keyval[0]] = keyval[1];
+	    }
+
+	    if (output['MemoType'] !== void(0)) {
+	      output['parsed_memo_type'] = convertHexToString(output['MemoType']);
+	    }
+
+	    if (output['MemoFormat'] !== void(0)) {
+	      output['parsed_memo_format'] = convertHexToString(output['MemoFormat']);
+	    }
+
+	    if (output['MemoData'] !== void(0)) {
+
+	      // see if we can parse JSON
+	      if (output['parsed_memo_format'] === 'json') {
+	        try {
+	          output['parsed_memo_data'] = JSON.parse(convertHexToString(output['MemoData']));
+	        } catch(e) {
+	          // fail, which is fine, we just won't add the memo_data field
+	        }
+	      } else if(output['parsed_memo_format'] === 'text') {
+	        output['parsed_memo_data'] = convertHexToString(output['MemoData']);
+	      }
+	    }
+
+	    so.read(1);
+	    return output;
+	  }
+
+	});
+
 	exports.serialize = exports.serialize_whatever = serialize;
 
 	function serialize(so, field_name, value) {
@@ -12614,9 +12960,15 @@ var ripple =
 	    STInt8.serialize(so, field_bits);
 	  }
 
-	  // Get the serializer class (ST...) for a field based on the type bits.
-	  var serialized_object_type = exports[binformat.types[type_bits]];
-	  //do something with val[keys] and val[keys[i]];
+	  // Get the serializer class (ST...)
+	  var serialized_object_type;
+	  if (field_name === 'Memo' && typeof value === 'object') {
+	    // for Memo we override the default behavior with our STMemo serializer
+	    serialized_object_type = exports.STMemo;
+	  } else {
+	    // for a field based on the type bits.
+	    serialized_object_type = exports[binformat.types[type_bits]];
+	  }
 
 	  try {
 	    serialized_object_type.serialize(so, value);
@@ -12637,17 +12989,20 @@ var ripple =
 	    type_bits = so.read(1)[0];
 	  }
 
-	  // Get the parser class (ST...) for a field based on the type bits.
-	  var type = exports[binformat.types[type_bits]];
-
-	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
 
 	  var field_bits = tag_byte & 0x0f;
 	  var field_name = (field_bits === 0)
-	  ? field_name = binformat.fields[type_bits][so.read(1)[0]]
-	  : field_name = binformat.fields[type_bits][field_bits];
+	    ? field_name = binformat.fields[type_bits][so.read(1)[0]]
+	    : field_name = binformat.fields[type_bits][field_bits];
 
 	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
+
+	  // Get the parser class (ST...) for a field based on the type bits.
+	  var type = (field_name === 'Memo')
+	    ? exports.STMemo
+	    : exports[binformat.types[type_bits]];
+
+	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
 
 	  return [ field_name, type.parse(so) ]; //key, value
 	};
@@ -12670,18 +13025,20 @@ var ripple =
 
 	var STObject = exports.Object = new SerializedType({
 	  serialize: function (so, val, no_marker) {
-	    var keys = Object.keys(val);
+	    var keys = [];
 
-	    // Ignore lowercase field names - they're non-serializable fields by
-	    // convention.
-	    keys = keys.filter(function (key) {
-	      return key[0] !== key[0].toLowerCase();
-	    });
+	    Object.keys(val).forEach(function (key) {
+	      // Ignore lowercase field names - they're non-serializable fields by
+	      // convention.
+	      if (key[0] === key[0].toLowerCase()) {
+	        return;
+	      }
 
-	    keys.forEach(function (key) {
 	      if (typeof binformat.fieldsInverseMap[key] === 'undefined') {
 	        throw new Error('JSON contains unknown field: "' + key + '"');
 	      }
+
+	      keys.push(key);
 	    });
 
 	    // Sort fields
@@ -14680,7 +15037,7 @@ var ripple =
 /* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @fileOverview Javascript cryptography implementation.
+	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/** @fileOverview Javascript cryptography implementation.
 	 *
 	 * Crush to remove comments, shorten variable names and
 	 * generally reduce transmission size.
@@ -14692,7 +15049,7 @@ var ripple =
 
 	"use strict";
 	/*jslint indent: 2, bitwise: false, nomen: false, plusplus: false, white: false, regexp: false */
-	/*global document, window, escape, unescape */
+	/*global document, window, escape, unescape, module, require, Uint32Array */
 
 	/** @namespace The Stanford Javascript Crypto Library, top-level namespace. */
 	var sjcl = {
@@ -14750,8 +15107,13 @@ var ripple =
 	  }
 	};
 
-	if(typeof module != 'undefined' && module.exports){
+	if(typeof module !== 'undefined' && module.exports){
 	  module.exports = sjcl;
+	}
+	if (true) {
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function () {
+	        return sjcl;
+	    }.apply(null, __WEBPACK_AMD_DEFINE_ARRAY__)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	}
 
 	/** @fileOverview Low-level AES implementation.
@@ -15039,7 +15401,7 @@ var ripple =
 	      return a1.concat(a2);
 	    }
 	    
-	    var out, i, last = a1[a1.length-1], shift = sjcl.bitArray.getPartial(last);
+	    var last = a1[a1.length-1], shift = sjcl.bitArray.getPartial(last);
 	    if (shift === 32) {
 	      return a1.concat(a2);
 	    } else {
@@ -15148,6 +15510,20 @@ var ripple =
 	   */
 	  _xor4: function(x,y) {
 	    return [x[0]^y[0],x[1]^y[1],x[2]^y[2],x[3]^y[3]];
+	  },
+
+	  /** byteswap a word array inplace.
+	   * (does not handle partial words)
+	   * @param {sjcl.bitArray} a word array
+	   * @return {sjcl.bitArray} byteswapped array
+	   */
+	  byteswapM: function(a) {
+	    var i, v, m = 0xff00;
+	    for (i = 0; i < a.length; ++i) {
+	      v = a[i];
+	      a[i] = (v >>> 24) | ((v >>> 8) & m) | ((v & m) << 8) | (v << 24);
+	    }
+	    return a;
 	  }
 	};
 
@@ -15202,7 +15578,7 @@ var ripple =
 	sjcl.codec.hex = {
 	  /** Convert from a bitArray to a hex string. */
 	  fromBits: function (arr) {
-	    var out = "", i, x;
+	    var out = "", i;
 	    for (i=0; i<arr.length; i++) {
 	      out += ((arr[i]|0)+0xF00000000000).toString(16).substr(4);
 	    }
@@ -15239,7 +15615,9 @@ var ripple =
 	  /** Convert from a bitArray to a base64 string. */
 	  fromBits: function (arr, _noEquals, _url) {
 	    var out = "", i, bits=0, c = sjcl.codec.base64._chars, ta=0, bl = sjcl.bitArray.bitLength(arr);
-	    if (_url) c = c.substr(0,62) + '-_';
+	    if (_url) {
+	      c = c.substr(0,62) + '-_';
+	    }
 	    for (i=0; out.length * 6 < bl; ) {
 	      out += c.charAt((ta ^ arr[i]>>>bits) >>> 26);
 	      if (bits < 6) {
@@ -15259,7 +15637,9 @@ var ripple =
 	  toBits: function(str, _url) {
 	    str = str.replace(/\s|=/g,'');
 	    var out = [], i, bits=0, c = sjcl.codec.base64._chars, ta=0, x;
-	    if (_url) c = c.substr(0,62) + '-_';
+	    if (_url) {
+	      c = c.substr(0,62) + '-_';
+	    }
 	    for (i=0; i<str.length; i++) {
 	      x = c.indexOf(str.charAt(i));
 	      if (x < 0) {
@@ -15842,7 +16222,7 @@ var ripple =
 	      t1h += chh + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0);
 	      t1l += krl;
 	      t1h += krh + ((t1l >>> 0) < (krl >>> 0) ? 1 : 0);
-	      t1l += wrl;
+	      t1l = t1l + wrl|0;   // FF32..FF34 perf issue https://bugzilla.mozilla.org/show_bug.cgi?id=1054972
 	      t1h += wrh + ((t1l >>> 0) < (wrl >>> 0) ? 1 : 0);
 
 	      // t2 = sigma0 + maj
@@ -16030,8 +16410,7 @@ var ripple =
 	  _block:function (words) {  
 	    var t, tmp, a, b, c, d, e,
 	    w = words.slice(0),
-	    h = this._h,
-	    k = this._key;
+	    h = this._h;
 	   
 	    a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4]; 
 
@@ -16083,7 +16462,7 @@ var ripple =
 	   * @return {bitArray} The encrypted data, an array of bytes.
 	   */
 	  encrypt: function(prf, plaintext, iv, adata, tlen) {
-	    var L, i, out = plaintext.slice(0), tag, w=sjcl.bitArray, ivl = w.bitLength(iv) / 8, ol = w.bitLength(out) / 8;
+	    var L, out = plaintext.slice(0), tag, w=sjcl.bitArray, ivl = w.bitLength(iv) / 8, ol = w.bitLength(out) / 8;
 	    tlen = tlen || 64;
 	    adata = adata || [];
 	    
@@ -16117,7 +16496,7 @@ var ripple =
 	  decrypt: function(prf, ciphertext, iv, adata, tlen) {
 	    tlen = tlen || 64;
 	    adata = adata || [];
-	    var L, i, 
+	    var L,
 	        w=sjcl.bitArray,
 	        ivl = w.bitLength(iv) / 8,
 	        ol = w.bitLength(ciphertext), 
@@ -16159,7 +16538,7 @@ var ripple =
 	   */
 	  _computeTag: function(prf, plaintext, iv, adata, tlen, L) {
 	    // compute B[0]
-	    var q, mac, field = 0, offset = 24, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
+	    var mac, tmp, i, macData = [], w=sjcl.bitArray, xor = w._xor4;
 
 	    tlen /= 8;
 	  
@@ -16219,7 +16598,7 @@ var ripple =
 	   * @private
 	   */
 	  _ctrMode: function(prf, data, iv, tag, tlen, L) {
-	    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, b, l = data.length, bl=w.bitLength(data);
+	    var enc, i, w=sjcl.bitArray, xor = w._xor4, ctr, l = data.length, bl=w.bitLength(data);
 
 	    // start the ctr
 	    ctr = w.concat([w.partial(8,L-1)],iv).concat([0,0,0]).slice(0,4);
@@ -16271,17 +16650,38 @@ var ripple =
 	  
 	  this._baseHash[0].update(exKey[0]);
 	  this._baseHash[1].update(exKey[1]);
+	  this._resultHash = new Hash(this._baseHash[0]);
 	};
 
 	/** HMAC with the specified hash function.  Also called encrypt since it's a prf.
 	 * @param {bitArray|String} data The data to mac.
 	 */
 	sjcl.misc.hmac.prototype.encrypt = sjcl.misc.hmac.prototype.mac = function (data) {
-	  var w = new (this._hash)(this._baseHash[0]).update(data).finalize();
-	  return new (this._hash)(this._baseHash[1]).update(w).finalize();
+	  if (!this._updated) {
+	    this.update(data);
+	    return this.digest(data);
+	  } else {
+	    throw new sjcl.exception.invalid("encrypt on already updated hmac called!");
+	  }
 	};
 
+	sjcl.misc.hmac.prototype.reset = function () {
+	  this._resultHash = new this._hash(this._baseHash[0]);
+	  this._updated = false;
+	};
 
+	sjcl.misc.hmac.prototype.update = function (data) {
+	  this._updated = true;
+	  this._resultHash.update(data);
+	};
+
+	sjcl.misc.hmac.prototype.digest = function () {
+	  var w = this._resultHash.finalize(), result = new (this._hash)(this._baseHash[1]).update(w).finalize();
+
+	  this.reset();
+
+	  return result;
+	};
 	/** @fileOverview Password-based key-derivation function, version 2.0.
 	 *
 	 * @author Emily Stark
@@ -16296,7 +16696,7 @@ var ripple =
 	 * This is the method specified by RSA's PKCS #5 standard.
 	 *
 	 * @param {bitArray|String} password  The password.
-	 * @param {bitArray} salt The salt.  Should have lots of entropy.
+	 * @param {bitArray|String} salt The salt.  Should have lots of entropy.
 	 * @param {Number} [count=1000] The number of iterations.  Higher numbers make the function slower but more secure.
 	 * @param {Number} [length] The length of the derived key.  Defaults to the
 	                            output size of the hash function.
@@ -16312,6 +16712,10 @@ var ripple =
 	  
 	  if (typeof password === "string") {
 	    password = sjcl.codec.utf8String.toBits(password);
+	  }
+	  
+	  if (typeof salt === "string") {
+	    salt = sjcl.codec.utf8String.toBits(salt);
 	  }
 	  
 	  Prff = Prff || sjcl.misc.hmac;
@@ -16342,12 +16746,13 @@ var ripple =
 	 * @author Emily Stark
 	 * @author Mike Hamburg
 	 * @author Dan Boneh
+	 * @author Michael Brooks
 	 */
 
 	/** @constructor
 	 * @class Random number generator
-	 *
 	 * @description
+	 * <b>Use sjcl.random as a singleton for this class!</b>
 	 * <p>
 	 * This random number generator is a derivative of Ferguson and Schneier's
 	 * generator Fortuna.  It collects entropy from various events into several
@@ -16413,10 +16818,11 @@ var ripple =
 	  this._PARANOIA_LEVELS         = [0,48,64,96,128,192,256,384,512,768,1024];
 	  this._MILLISECONDS_PER_RESEED = 30000;
 	  this._BITS_PER_RESEED         = 80;
-	}
+	};
 	 
 	sjcl.prng.prototype = {
-	  /** Generate several random words, and return them in an array
+	  /** Generate several random words, and return them in an array.
+	   * A word consists of 32 bits (4 bytes)
 	   * @param {Number} nwords The number of words to generate.
 	   */
 	  randomWords: function (nwords, paranoia) {
@@ -16441,7 +16847,11 @@ var ripple =
 	    return out.slice(0,nwords);
 	  },
 	  
-	  setDefaultParanoia: function (paranoia) {
+	  setDefaultParanoia: function (paranoia, allowZeroParanoia) {
+	    if (paranoia === 0 && allowZeroParanoia !== "Setting paranoia=0 will ruin your security; use it only for testing") {
+	      throw "Setting paranoia=0 will ruin your security; use it only for testing";
+	    }
+
 	    this._defaultParanoia = paranoia;
 	  },
 	  
@@ -16458,7 +16868,7 @@ var ripple =
 	      i, tmp,
 	      t = (new Date()).valueOf(),
 	      robin = this._robins[source],
-	      oldReady = this.isReady(), err = 0;
+	      oldReady = this.isReady(), err = 0, objName;
 	      
 	    id = this._collectorIds[source];
 	    if (id === undefined) { id = this._collectorIds[source] = this._collectorIdNext ++; }
@@ -16476,7 +16886,7 @@ var ripple =
 	      break;
 	      
 	    case "object":
-	      var objName = Object.prototype.toString.call(data);
+	      objName = Object.prototype.toString.call(data);
 	      if (objName === "[object Uint32Array]") {
 	        tmp = [];
 	        for (i = 0; i < data.length; i++) {
@@ -16488,7 +16898,7 @@ var ripple =
 	          err = 1;
 	        }
 	        for (i=0; i<data.length && !err; i++) {
-	          if (typeof(data[i]) != "number") {
+	          if (typeof(data[i]) !== "number") {
 	            err = 1;
 	          }
 	        }
@@ -16573,14 +16983,25 @@ var ripple =
 	  startCollectors: function () {
 	    if (this._collectorsStarted) { return; }
 	  
+	    this._eventListener = {
+	      loadTimeCollector: this._bind(this._loadTimeCollector),
+	      mouseCollector: this._bind(this._mouseCollector),
+	      keyboardCollector: this._bind(this._keyboardCollector),
+	      accelerometerCollector: this._bind(this._accelerometerCollector),
+	      touchCollector: this._bind(this._touchCollector)
+	    };
+
 	    if (window.addEventListener) {
-	      window.addEventListener("load", this._loadTimeCollector, false);
-	      window.addEventListener("mousemove", this._mouseCollector, false);
+	      window.addEventListener("load", this._eventListener.loadTimeCollector, false);
+	      window.addEventListener("mousemove", this._eventListener.mouseCollector, false);
+	      window.addEventListener("keypress", this._eventListener.keyboardCollector, false);
+	      window.addEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
+	      window.addEventListener("touchmove", this._eventListener.touchCollector, false);
 	    } else if (document.attachEvent) {
-	      document.attachEvent("onload", this._loadTimeCollector);
-	      document.attachEvent("onmousemove", this._mouseCollector);
-	    }
-	    else {
+	      document.attachEvent("onload", this._eventListener.loadTimeCollector);
+	      document.attachEvent("onmousemove", this._eventListener.mouseCollector);
+	      document.attachEvent("keypress", this._eventListener.keyboardCollector);
+	    } else {
 	      throw new sjcl.exception.bug("can't attach event");
 	    }
 	  
@@ -16592,12 +17013,17 @@ var ripple =
 	    if (!this._collectorsStarted) { return; }
 	  
 	    if (window.removeEventListener) {
-	      window.removeEventListener("load", this._loadTimeCollector, false);
-	      window.removeEventListener("mousemove", this._mouseCollector, false);
-	    } else if (window.detachEvent) {
-	      window.detachEvent("onload", this._loadTimeCollector);
-	      window.detachEvent("onmousemove", this._mouseCollector);
+	      window.removeEventListener("load", this._eventListener.loadTimeCollector, false);
+	      window.removeEventListener("mousemove", this._eventListener.mouseCollector, false);
+	      window.removeEventListener("keypress", this._eventListener.keyboardCollector, false);
+	      window.removeEventListener("devicemotion", this._eventListener.accelerometerCollector, false);
+	      window.removeEventListener("touchmove", this._eventListener.touchCollector, false);
+	    } else if (document.detachEvent) {
+	      document.detachEvent("onload", this._eventListener.loadTimeCollector);
+	      document.detachEvent("onmousemove", this._eventListener.mouseCollector);
+	      document.detachEvent("keypress", this._eventListener.keyboardCollector);
 	    }
+
 	    this._collectorsStarted = false;
 	  },
 	  
@@ -16614,23 +17040,30 @@ var ripple =
 	  /** remove an event listener for progress or seeded-ness */
 	  removeEventListener: function (name, cb) {
 	    var i, j, cbs=this._callbacks[name], jsTemp=[];
-	  
+
 	    /* I'm not sure if this is necessary; in C++, iterating over a
 	     * collection and modifying it at the same time is a no-no.
 	     */
-	  
+
 	    for (j in cbs) {
-		if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
+	      if (cbs.hasOwnProperty(j) && cbs[j] === cb) {
 	        jsTemp.push(j);
 	      }
 	    }
-	  
+
 	    for (i=0; i<jsTemp.length; i++) {
 	      j = jsTemp[i];
 	      delete cbs[j];
 	    }
 	  },
 	  
+	  _bind: function (func) {
+	    var that = this;
+	    return function () {
+	      func.apply(that, arguments);
+	    };
+	  },
+
 	  /** Generate 4 random words, no reseed, no gate.
 	   * @private
 	   */
@@ -16702,47 +17135,134 @@ var ripple =
 	    this._reseed(reseedData);
 	  },
 	  
+	  _keyboardCollector: function () {
+	    this._addCurrentTimeToEntropy(1);
+	  },
+	  
 	  _mouseCollector: function (ev) {
-	    var x = ev.x || ev.clientX || ev.offsetX || 0, y = ev.y || ev.clientY || ev.offsetY || 0;
-	    sjcl.random.addEntropy([x,y], 2, "mouse");
+	    var x, y;
+
+	    try {
+	      x = ev.x || ev.clientX || ev.offsetX || 0;
+	      y = ev.y || ev.clientY || ev.offsetY || 0;
+	    } catch (err) {
+	      // Event originated from a secure element. No mouse position available.
+	      x = 0;
+	      y = 0;
+	    }
+
+	    if (x != 0 && y!= 0) {
+	      sjcl.random.addEntropy([x,y], 2, "mouse");
+	    }
+
+	    this._addCurrentTimeToEntropy(0);
+	  },
+
+	  _touchCollector: function(ev) {
+	    var touch = ev.touches[0] || ev.changedTouches[0];
+	    var x = touch.pageX || touch.clientX,
+	        y = touch.pageY || touch.clientY;
+
+	    sjcl.random.addEntropy([x,y],1,"touch");
+
+	    this._addCurrentTimeToEntropy(0);
 	  },
 	  
-	  _loadTimeCollector: function (ev) {
-	    sjcl.random.addEntropy((new Date()).valueOf(), 2, "loadtime");
+	  _loadTimeCollector: function () {
+	    this._addCurrentTimeToEntropy(2);
 	  },
-	  
+
+	  _addCurrentTimeToEntropy: function (estimatedEntropy) {
+	    if (typeof window !== 'undefined' && window.performance && typeof window.performance.now === "function") {
+	      //how much entropy do we want to add here?
+	      sjcl.random.addEntropy(window.performance.now(), estimatedEntropy, "loadtime");
+	    } else {
+	      sjcl.random.addEntropy((new Date()).valueOf(), estimatedEntropy, "loadtime");
+	    }
+	  },
+	  _accelerometerCollector: function (ev) {
+	    var ac = ev.accelerationIncludingGravity.x||ev.accelerationIncludingGravity.y||ev.accelerationIncludingGravity.z;
+	    if(window.orientation){
+	      var or = window.orientation;
+	      if (typeof or === "number") {
+	        sjcl.random.addEntropy(or, 1, "accelerometer");
+	      }
+	    }
+	    if (ac) {
+	      sjcl.random.addEntropy(ac, 2, "accelerometer");
+	    }
+	    this._addCurrentTimeToEntropy(0);
+	  },
+
 	  _fireEvent: function (name, arg) {
 	    var j, cbs=sjcl.random._callbacks[name], cbsTemp=[];
-	    /* TODO: there is a race condition between removing collectors and firing them */ 
+	    /* TODO: there is a race condition between removing collectors and firing them */
 
 	    /* I'm not sure if this is necessary; in C++, iterating over a
 	     * collection and modifying it at the same time is a no-no.
 	     */
-	  
+
 	    for (j in cbs) {
-	     if (cbs.hasOwnProperty(j)) {
+	      if (cbs.hasOwnProperty(j)) {
 	        cbsTemp.push(cbs[j]);
-	     }
+	      }
 	    }
-	  
+
 	    for (j=0; j<cbsTemp.length; j++) {
-	     cbsTemp[j](arg);
+	      cbsTemp[j](arg);
 	    }
 	  }
 	};
 
+	/** an instance for the prng.
+	* @see sjcl.prng
+	*/
 	sjcl.random = new sjcl.prng(6);
 
 	(function(){
-	  try {
-	    // get cryptographically strong entropy in Webkit
-	    var ab = new Uint32Array(32);
-	    crypto.getRandomValues(ab);
-	    sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
-	  } catch (e) {
-	    // no getRandomValues :-(
+	  // function for getting nodejs crypto module. catches and ignores errors.
+	  function getCryptoModule() {
+	    try {
+	      return __webpack_require__(42);
+	    }
+	    catch (e) {
+	      return null;
+	    }
 	  }
-	})();
+
+	  try {
+	    var buf, crypt, ab;
+
+	    // get cryptographically strong entropy depending on runtime environment
+	    if (typeof module !== 'undefined' && module.exports && (crypt = getCryptoModule()) && crypt.randomBytes) {
+	      buf = crypt.randomBytes(1024/8);
+	      buf = new Uint32Array(new Uint8Array(buf).buffer);
+	      sjcl.random.addEntropy(buf, 1024, "crypto.randomBytes");
+
+	    } else if (typeof window !== 'undefined' && typeof Uint32Array !== 'undefined') {
+	      ab = new Uint32Array(32);
+	      if (window.crypto && window.crypto.getRandomValues) {
+	        window.crypto.getRandomValues(ab);
+	      } else if (window.msCrypto && window.msCrypto.getRandomValues) {
+	        window.msCrypto.getRandomValues(ab);
+	      } else {
+	        return;
+	      }
+
+	      // get cryptographically strong entropy in Webkit
+	      sjcl.random.addEntropy(ab, 1024, "crypto.getRandomValues");
+
+	    } else {
+	      // no getRandomValues :-(
+	    }
+	  } catch (e) {
+	    if (typeof window !== 'undefined' && window.console) {
+	      console.log("There was an error collecting entropy from the browser:");
+	      console.log(e);
+	      //we do not want the library to fail due to randomness not being maintained.
+	    }
+	  }
+	}());
 
 	/** @fileOverview Convenince functions centered around JSON encapsulation.
 	 *
@@ -16761,13 +17281,13 @@ var ripple =
 	   * @param {String} plaintext The data to encrypt.
 	   * @param {Object} [params] The parameters including tag, iv and salt.
 	   * @param {Object} [rp] A returned version with filled-in parameters.
-	   * @return {String} The ciphertext.
+	   * @return {Object} The cipher raw data.
 	   * @throws {sjcl.exception.invalid} if a parameter is invalid.
 	   */
-	  encrypt: function (password, plaintext, params, rp) {
+	  _encrypt: function (password, plaintext, params, rp) {
 	    params = params || {};
 	    rp = rp || {};
-	    
+
 	    var j = sjcl.json, p = j._add({ iv: sjcl.random.randomWords(4,0) },
 	                                  j.defaults), tmp, prp, adata;
 	    j._add(p, params);
@@ -16778,7 +17298,7 @@ var ripple =
 	    if (typeof p.iv === "string") {
 	      p.iv = sjcl.codec.base64.toBits(p.iv);
 	    }
-	    
+
 	    if (!sjcl.mode[p.mode] ||
 	        !sjcl.cipher[p.cipher] ||
 	        (typeof password === "string" && p.iter <= 100) ||
@@ -16787,7 +17307,7 @@ var ripple =
 	        (p.iv.length < 2 || p.iv.length > 4)) {
 	      throw new sjcl.exception.invalid("json encrypt: invalid parameters");
 	    }
-	    
+
 	    if (typeof password === "string") {
 	      tmp = sjcl.misc.cachedPbkdf2(password, p);
 	      password = tmp.key.slice(0,p.ks/32);
@@ -16804,39 +17324,52 @@ var ripple =
 	      adata = sjcl.codec.utf8String.toBits(adata);
 	    }
 	    prp = new sjcl.cipher[p.cipher](password);
-	    
+
 	    /* return the json data */
 	    j._add(rp, p);
 	    rp.key = password;
-	    
+
 	    /* do the encryption */
 	    p.ct = sjcl.mode[p.mode].encrypt(prp, plaintext, p.iv, adata, p.ts);
-	    
+
 	    //return j.encode(j._subtract(p, j.defaults));
+	    return p;
+	  },
+
+	  /** Simple encryption function.
+	   * @param {String|bitArray} password The password or key.
+	   * @param {String} plaintext The data to encrypt.
+	   * @param {Object} [params] The parameters including tag, iv and salt.
+	   * @param {Object} [rp] A returned version with filled-in parameters.
+	   * @return {String} The ciphertext serialized data.
+	   * @throws {sjcl.exception.invalid} if a parameter is invalid.
+	   */
+	  encrypt: function (password, plaintext, params, rp) {
+	    var j = sjcl.json, p = j._encrypt.apply(j, arguments);
 	    return j.encode(p);
 	  },
-	  
+
 	  /** Simple decryption function.
 	   * @param {String|bitArray} password The password or key.
-	   * @param {String} ciphertext The ciphertext to decrypt.
+	   * @param {Object} ciphertext The cipher raw data to decrypt.
 	   * @param {Object} [params] Additional non-default parameters.
 	   * @param {Object} [rp] A returned object with filled parameters.
 	   * @return {String} The plaintext.
 	   * @throws {sjcl.exception.invalid} if a parameter is invalid.
 	   * @throws {sjcl.exception.corrupt} if the ciphertext is corrupt.
 	   */
-	  decrypt: function (password, ciphertext, params, rp) {
+	  _decrypt: function (password, ciphertext, params, rp) {
 	    params = params || {};
 	    rp = rp || {};
-	    
-	    var j = sjcl.json, p = j._add(j._add(j._add({},j.defaults),j.decode(ciphertext)), params, true), ct, tmp, prp, adata=p.adata;
+
+	    var j = sjcl.json, p = j._add(j._add(j._add({},j.defaults),ciphertext), params, true), ct, tmp, prp, adata=p.adata;
 	    if (typeof p.salt === "string") {
 	      p.salt = sjcl.codec.base64.toBits(p.salt);
 	    }
 	    if (typeof p.iv === "string") {
 	      p.iv = sjcl.codec.base64.toBits(p.iv);
 	    }
-	    
+
 	    if (!sjcl.mode[p.mode] ||
 	        !sjcl.cipher[p.cipher] ||
 	        (typeof password === "string" && p.iter <= 100) ||
@@ -16846,7 +17379,7 @@ var ripple =
 	        (p.iv.length < 2 || p.iv.length > 4)) {
 	      throw new sjcl.exception.invalid("json decrypt: invalid parameters");
 	    }
-	    
+
 	    if (typeof password === "string") {
 	      tmp = sjcl.misc.cachedPbkdf2(password, p);
 	      password = tmp.key.slice(0,p.ks/32);
@@ -16858,15 +17391,33 @@ var ripple =
 	      adata = sjcl.codec.utf8String.toBits(adata);
 	    }
 	    prp = new sjcl.cipher[p.cipher](password);
-	    
+
 	    /* do the decryption */
 	    ct = sjcl.mode[p.mode].decrypt(prp, p.ct, p.iv, adata, p.ts);
-	    
+
 	    /* return the json data */
 	    j._add(rp, p);
 	    rp.key = password;
-	    
-	    return sjcl.codec.utf8String.fromBits(ct);
+
+	    if (params.raw === 1) {
+	      return ct;
+	    } else {
+	      return sjcl.codec.utf8String.fromBits(ct);
+	    }
+	  },
+
+	  /** Simple decryption function.
+	   * @param {String|bitArray} password The password or key.
+	   * @param {String} ciphertext The ciphertext to decrypt.
+	   * @param {Object} [params] Additional non-default parameters.
+	   * @param {Object} [rp] A returned object with filled parameters.
+	   * @return {String} The plaintext.
+	   * @throws {sjcl.exception.invalid} if a parameter is invalid.
+	   * @throws {sjcl.exception.corrupt} if the ciphertext is corrupt.
+	   */
+	  decrypt: function (password, ciphertext, params, rp) {
+	    var j = sjcl.json;
+	    return j._decrypt(password, j.decode(ciphertext), params, rp);
 	  },
 	  
 	  /** Encode a flat structure into a JSON string.
@@ -16884,23 +17435,23 @@ var ripple =
 	        }
 	        out += comma + '"' + i + '":';
 	        comma = ',';
-	        
+
 	        switch (typeof obj[i]) {
-	        case 'number':
-	        case 'boolean':
-	          out += obj[i];
-	          break;
-	          
-	        case 'string':
-	          out += '"' + escape(obj[i]) + '"';
-	          break;
-	        
-	        case 'object':
-	          out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
-	          break;
-	        
-	        default:
-	          throw new sjcl.exception.bug("json encode: unsupported type");
+	          case 'number':
+	          case 'boolean':
+	            out += obj[i];
+	            break;
+
+	          case 'string':
+	            out += '"' + escape(obj[i]) + '"';
+	            break;
+
+	          case 'object':
+	            out += '"' + sjcl.codec.base64.fromBits(obj[i],0) + '"';
+	            break;
+
+	          default:
+	            throw new sjcl.exception.bug("json encode: unsupported type");
 	        }
 	      }
 	    }
@@ -16920,13 +17471,15 @@ var ripple =
 	    }
 	    var a = str.replace(/^\{|\}$/g, '').split(/,/), out={}, i, m;
 	    for (i=0; i<a.length; i++) {
-	      if (!(m=a[i].match(/^(?:(["']?)([a-z][a-z0-9]*)\1):(?:(\d+)|"([a-z0-9+\/%*_.@=\-]*)")$/i))) {
+	      if (!(m=a[i].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i))) {
 	        throw new sjcl.exception.invalid("json decode: this isn't json!");
 	      }
 	      if (m[3]) {
 	        out[m[2]] = parseInt(m[3],10);
-	      } else {
+	      } else if (m[4]) {
 	        out[m[2]] = m[2].match(/^(ct|salt|iv)$/) ? sjcl.codec.base64.toBits(m[4]) : unescape(m[4]);
+	      } else if (m[5]) {
+	        out[m[2]] = m[5] === 'true';
 	      }
 	    }
 	    return out;
@@ -16959,13 +17512,13 @@ var ripple =
 	   */
 	  _subtract: function (plus, minus) {
 	    var out = {}, i;
-	    
+
 	    for (i in plus) {
 	      if (plus.hasOwnProperty(i) && plus[i] !== minus[i]) {
 	        out[i] = plus[i];
 	      }
 	    }
-	    
+
 	    return out;
 	  },
 	  
@@ -17008,7 +17561,7 @@ var ripple =
 
 	/** Cached PBKDF2 key derivation.
 	 * @param {String} password The password.
-	 * @param {Object} [params] The derivation params (iteration count and optional salt).
+	 * @param {Object} [obj] The derivation params (iteration count and optional salt).
 	 * @return {Object} The derived data in key, the salt in salt.
 	 */
 	sjcl.misc.cachedPbkdf2 = function (password, obj) {
@@ -17051,7 +17604,7 @@ var ripple =
 	   * Initializes this with it, either as a bn, a number, or a hex string.
 	   */
 	  initWith: function(it) {
-	    var i=0, k, n, l;
+	    var i=0, k;
 	    switch(typeof it) {
 	    case "object":
 	      this.limbs = it.limbs.slice(0);
@@ -17360,7 +17913,7 @@ var ripple =
 	      carry = (l-m)*ipv;
 	    }
 	    if (carry === -1) {
-	      limbs[i-1] -= this.placeVal;
+	      limbs[i-1] -= pv;
 	    }
 	    return this;
 	  },
@@ -17402,7 +17955,9 @@ var ripple =
 	  }
 	};
 
-	/** @this { sjcl.bn } */
+	/** @memberOf sjcl.bn
+	* @this { sjcl.bn }
+	*/
 	sjcl.bn.fromBits = function(bits) {
 	  var Class = this, out = new Class(), words=[], w=sjcl.bitArray, t = this.prototype,
 	      l = Math.min(this.bitLength || 0x100000000, w.bitLength(bits)), e = l % t.radix || t.radix;
@@ -17426,7 +17981,9 @@ var ripple =
 	 * i.e. a prime of the form 2^e + sum(a * 2^b),where the sum is negative and sparse.
 	 */
 	sjcl.bn.pseudoMersennePrime = function(exponent, coeff) {
-	  /** @constructor */
+	  /** @constructor 
+	  * @private
+	  */
 	  function p(it) {
 	    this.initWith(it);
 	    /*if (this.limbs[this.modOffset]) {
@@ -17459,10 +18016,11 @@ var ripple =
 	  ppr.modulus.cnormalize();
 
 	  /** Approximate reduction mod p.  May leave a number which is negative or slightly larger than p.
-	   * @this {sjcl.bn}
+	   * @memberof sjcl.bn
+	   * @this { sjcl.bn }
 	   */
 	  ppr.reduce = function() {
-	    var i, k, l, mo = this.modOffset, limbs = this.limbs, aff, off = this.offset, ol = this.offset.length, fac = this.factor, ll;
+	    var i, k, l, mo = this.modOffset, limbs = this.limbs, off = this.offset, ol = this.offset.length, fac = this.factor, ll;
 
 	    i = this.minOffset;
 	    while (limbs.length > mo) {
@@ -17484,7 +18042,9 @@ var ripple =
 	    return this;
 	  };
 	  
-	  /** @this {sjcl.bn} */
+	  /** @memberof sjcl.bn
+	  * @this { sjcl.bn }
+	  */
 	  ppr._strongReduce = (ppr.fullMask === -1) ? ppr.reduce : function() {
 	    var limbs = this.limbs, i = limbs.length - 1, k, l;
 	    this.reduce();
@@ -17499,7 +18059,8 @@ var ripple =
 	  };
 
 	  /** mostly constant-time, very expensive full reduction.
-	   * @this {sjcl.bn}
+	   * @memberof sjcl.bn
+	   * @this { sjcl.bn }
 	   */
 	  ppr.fullReduce = function() {
 	    var greater, i;
@@ -17533,7 +18094,9 @@ var ripple =
 	  };
 
 
-	  /** @this {sjcl.bn} */
+	  /** @memberof sjcl.bn
+	  * @this { sjcl.bn }
+	  */
 	  ppr.inverse = function() {
 	    return (this.power(this.modulus.sub(2)));
 	  };
@@ -17544,18 +18107,24 @@ var ripple =
 	};
 
 	// a small Mersenne prime
+	var sbp = sjcl.bn.pseudoMersennePrime;
 	sjcl.bn.prime = {
-	  p127: sjcl.bn.pseudoMersennePrime(127, [[0,-1]]),
+	  p127: sbp(127, [[0,-1]]),
 
 	  // Bernstein's prime for Curve25519
-	  p25519: sjcl.bn.pseudoMersennePrime(255, [[0,-19]]),
+	  p25519: sbp(255, [[0,-19]]),
+
+	  // Koblitz primes
+	  p192k: sbp(192, [[32,-1],[12,-1],[8,-1],[7,-1],[6,-1],[3,-1],[0,-1]]),
+	  p224k: sbp(224, [[32,-1],[12,-1],[11,-1],[9,-1],[7,-1],[4,-1],[1,-1],[0,-1]]),
+	  p256k: sbp(256, [[32,-1],[9,-1],[8,-1],[7,-1],[6,-1],[4,-1],[0,-1]]),
 
 	  // NIST primes
-	  p192: sjcl.bn.pseudoMersennePrime(192, [[0,-1],[64,-1]]),
-	  p224: sjcl.bn.pseudoMersennePrime(224, [[0,1],[96,-1]]),
-	  p256: sjcl.bn.pseudoMersennePrime(256, [[0,-1],[96,1],[192,1],[224,-1]]),
-	  p384: sjcl.bn.pseudoMersennePrime(384, [[0,-1],[32,1],[96,-1],[128,-1]]),
-	  p521: sjcl.bn.pseudoMersennePrime(521, [[0,-1]])
+	  p192: sbp(192, [[0,-1],[64,-1]]),
+	  p224: sbp(224, [[0,1],[96,-1]]),
+	  p256: sbp(256, [[0,-1],[96,1],[192,1],[224,-1]]),
+	  p384: sbp(384, [[0,-1],[32,1],[96,-1],[128,-1]]),
+	  p521: sbp(521, [[0,-1]])
 	};
 
 	sjcl.bn.random = function(modulus, paranoia) {
@@ -17583,6 +18152,9 @@ var ripple =
 	};
 
 
+	/**
+	 * base class for all ecc operations.
+	 */
 	sjcl.ecc = {};
 
 	/**
@@ -17737,7 +18309,9 @@ var ripple =
 	      a  = y2.mul(this.x.mul(4)),
 	      b  = y2.square().mul(8),
 	      z2 = this.z.square(),
-	      c  = this.x.sub(z2).mul(3).mul(this.x.add(z2)),
+	      c  = this.curve.a.toString() == (new sjcl.bn(-3)).toString() ?
+	                this.x.sub(z2).mul(3).mul(this.x.add(z2)) :
+	                this.x.square().mul(3).add(z2.square().mul(this.curve.a)),
 	      x  = c.square().subM(a).subM(a),
 	      y  = a.sub(x).mul(c).subM(b),
 	      z  = this.y.add(this.y).mul(this.z);
@@ -17747,7 +18321,7 @@ var ripple =
 	  /**
 	   * Returns a copy of this point converted to affine coordinates.
 	   * @return {sjcl.ecc.point} The converted point.
-	   */  
+	   */
 	  toAffine: function() {
 	    if (this.isIdentity || this.z.equals(0)) {
 	      return new sjcl.ecc.point(this.curve);
@@ -17835,7 +18409,7 @@ var ripple =
 	 */
 	sjcl.ecc.curve = function(Field, r, a, b, x, y) {
 	  this.field = Field;
-	  this.r = Field.prototype.modulus.sub(r);
+	  this.r = new sjcl.bn(r);
 	  this.a = new Field(a);
 	  this.b = new Field(b);
 	  this.G = new sjcl.ecc.point(this, new Field(x), new Field(y));
@@ -17854,7 +18428,7 @@ var ripple =
 	sjcl.ecc.curves = {
 	  c192: new sjcl.ecc.curve(
 	    sjcl.bn.prime.p192,
-	    "0x662107c8eb94364e4b2dd7ce",
+	    "0xffffffffffffffffffffffff99def836146bc9b1b4d22831",
 	    -3,
 	    "0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1",
 	    "0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012",
@@ -17862,7 +18436,7 @@ var ripple =
 
 	  c224: new sjcl.ecc.curve(
 	    sjcl.bn.prime.p224,
-	    "0xe95c1f470fc1ec22d6baa3a3d5c4",
+	    "0xffffffffffffffffffffffffffff16a2e0b8f03e13dd29455c5c2a3d",
 	    -3,
 	    "0xb4050a850c04b3abf54132565044b0b7d7bfd8ba270b39432355ffb4",
 	    "0xb70e0cbd6bb4bf7f321390b94a03c1d356c21122343280d6115c1d21",
@@ -17870,7 +18444,7 @@ var ripple =
 
 	  c256: new sjcl.ecc.curve(
 	    sjcl.bn.prime.p256,
-	    "0x4319055358e8617b0c46353d039cdaae",
+	    "0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551",
 	    -3,
 	    "0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
 	    "0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296",
@@ -17878,71 +18452,135 @@ var ripple =
 
 	  c384: new sjcl.ecc.curve(
 	    sjcl.bn.prime.p384,
-	    "0x389cb27e0bc8d21fa7e5f24cb74f58851313e696333ad68c",
+	    "0xffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973",
 	    -3,
 	    "0xb3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
 	    "0xaa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7",
-	    "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f")
+	    "0x3617de4a96262c6f5d9e98bf9292dc29f8f41dbd289a147ce9da3113b5f0b8c00a60b1ce1d7e819d7a431d7c90ea0e5f"),
+
+	  k192: new sjcl.ecc.curve(
+	    sjcl.bn.prime.p192k,
+	    "0xfffffffffffffffffffffffe26f2fc170f69466a74defd8d",
+	    0,
+	    3,
+	    "0xdb4ff10ec057e9ae26b07d0280b7f4341da5d1b1eae06c7d",
+	    "0x9b2f2f6d9c5628a7844163d015be86344082aa88d95e2f9d"),
+
+	  k224: new sjcl.ecc.curve(
+	    sjcl.bn.prime.p224k,
+	    "0x010000000000000000000000000001dce8d2ec6184caf0a971769fb1f7",
+	    0,
+	    5,
+	    "0xa1455b334df099df30fc28a169a467e9e47075a90f7e650eb6b7a45c",
+	    "0x7e089fed7fba344282cafbd6f7e319f7c0b0bd59e2ca4bdb556d61a5"),
+
+	  k256: new sjcl.ecc.curve(
+	    sjcl.bn.prime.p256k,
+	    "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+	    0,
+	    7,
+	    "0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
+	    "0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8")
+
 	};
 
-
-	/* Diffie-Hellman-like public-key system */
-	sjcl.ecc._dh = function(cn) {
-	  sjcl.ecc[cn] = {
-	    /** @constructor */
-	    publicKey: function(curve, point) {
-	      this._curve = curve;
-	      this._curveBitLength = curve.r.bitLength();
-	      if (point instanceof Array) {
-	        this._point = curve.fromBits(point);
-	      } else {
-	        this._point = point;
-	      }
-
-	      this.get = function() {
-	        var pointbits = this._point.toBits();
-	        var len = sjcl.bitArray.bitLength(pointbits);
-	        var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
-	        var y = sjcl.bitArray.bitSlice(pointbits, len/2);
-	        return { x: x, y: y };
-	      }
-	    },
-
-	    /** @constructor */
-	    secretKey: function(curve, exponent) {
-	      this._curve = curve;
-	      this._curveBitLength = curve.r.bitLength();
-	      this._exponent = exponent;
-
-	      this.get = function() {
-	        return this._exponent.toBits();
-	      }
-	    },
-
-	    /** @constructor */
-	    generateKeys: function(curve, paranoia, sec) {
-	      if (curve === undefined) {
-	        curve = 256;
-	      }
-	      if (typeof curve === "number") {
-	        curve = sjcl.ecc.curves['c'+curve];
-	        if (curve === undefined) {
-	          throw new sjcl.exception.invalid("no such curve");
-	        }
-	      }
-	      if (sec === undefined) {
-	        var sec = sjcl.bn.random(curve.r, paranoia);
-	      }
-	      var pub = curve.G.mult(sec);
-	      return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
-	               sec: new sjcl.ecc[cn].secretKey(curve, sec) };
+	/** our basicKey classes
+	*/
+	sjcl.ecc.basicKey = {
+	  /** ecc publicKey. 
+	  * @constructor
+	  * @param {curve} curve the elliptic curve
+	  * @param {point} point the point on the curve
+	  */
+	  publicKey: function(curve, point) {
+	    this._curve = curve;
+	    this._curveBitLength = curve.r.bitLength();
+	    if (point instanceof Array) {
+	      this._point = curve.fromBits(point);
+	    } else {
+	      this._point = point;
 	    }
-	  }; 
+
+	    /** get this keys point data
+	    * @return x and y as bitArrays
+	    */
+	    this.get = function() {
+	      var pointbits = this._point.toBits();
+	      var len = sjcl.bitArray.bitLength(pointbits);
+	      var x = sjcl.bitArray.bitSlice(pointbits, 0, len/2);
+	      var y = sjcl.bitArray.bitSlice(pointbits, len/2);
+	      return { x: x, y: y };
+	    };
+	  },
+
+	  /** ecc secretKey
+	  * @constructor
+	  * @param {curve} curve the elliptic curve
+	  * @param exponent
+	  */
+	  secretKey: function(curve, exponent) {
+	    this._curve = curve;
+	    this._curveBitLength = curve.r.bitLength();
+	    this._exponent = exponent;
+
+	    /** get this keys exponent data
+	    * @return {bitArray} exponent
+	    */
+	    this.get = function () {
+	      return this._exponent.toBits();
+	    };
+	  }
 	};
 
-	sjcl.ecc._dh("elGamal");
+	/** @private */
+	sjcl.ecc.basicKey.generateKeys = function(cn) {
+	  return function generateKeys(curve, paranoia, sec) {
+	    curve = curve || 256;
+
+	    if (typeof curve === "number") {
+	      curve = sjcl.ecc.curves['c'+curve];
+	      if (curve === undefined) {
+	        throw new sjcl.exception.invalid("no such curve");
+	      }
+	    }
+	    sec = sec || sjcl.bn.random(curve.r, paranoia);
+
+	    var pub = curve.G.mult(sec);
+	    return { pub: new sjcl.ecc[cn].publicKey(curve, pub),
+	             sec: new sjcl.ecc[cn].secretKey(curve, sec) };
+	  };
+	};
+
+	/** elGamal keys */
+	sjcl.ecc.elGamal = {
+	  /** generate keys
+	  * @function
+	  * @param curve
+	  * @param {int} paranoia Paranoia for generation (default 6)
+	  * @param {secretKey} sec secret Key to use. used to get the publicKey for ones secretKey
+	  */
+	  generateKeys: sjcl.ecc.basicKey.generateKeys("elGamal"),
+	  /** elGamal publicKey. 
+	  * @constructor
+	  * @augments sjcl.ecc.basicKey.publicKey
+	  */
+	  publicKey: function (curve, point) {
+	    sjcl.ecc.basicKey.publicKey.apply(this, arguments);
+	  },
+	  /** elGamal secretKey
+	  * @constructor
+	  * @augments sjcl.ecc.basicKey.secretKey
+	  */
+	  secretKey: function (curve, exponent) {
+	    sjcl.ecc.basicKey.secretKey.apply(this, arguments);
+	  }
+	};
 
 	sjcl.ecc.elGamal.publicKey.prototype = {
+	  /** Kem function of elGamal Public Key
+	  * @param paranoia paranoia to use for randomization.
+	  * @return {object} key and tag. unkem(tag) with the corresponding secret key results in the key returned.
+	  */
 	  kem: function(paranoia) {
 	    var sec = sjcl.bn.random(this._curve.r, paranoia),
 	        tag = this._curve.G.mult(sec).toBits(),
@@ -17952,34 +18590,58 @@ var ripple =
 	};
 
 	sjcl.ecc.elGamal.secretKey.prototype = {
+	  /** UnKem function of elGamal Secret Key
+	  * @param {bitArray} tag The Tag to decrypt.
+	  * @return {bitArray} decrypted key.
+	  */
 	  unkem: function(tag) {
 	    return sjcl.hash.sha256.hash(this._curve.fromBits(tag).mult(this._exponent).toBits());
 	  },
 
+	  /** Diffie-Hellmann function
+	  * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+	  * @return {bitArray} diffie-hellmann result for this key combination.
+	  */
 	  dh: function(pk) {
 	    return sjcl.hash.sha256.hash(pk._point.mult(this._exponent).toBits());
-	  }
+	  },
+	  
+	  /** Diffie-Hellmann function, compatible with Java generateSecret
+	   * @param {elGamal.publicKey} pk The Public Key to do Diffie-Hellmann with
+	   * @return {bitArray} undigested X value, diffie-hellmann result for this key combination,
+	   * compatible with Java generateSecret().
+	   */
+	   dhJavaEc: function(pk) {
+	     return pk._point.mult(this._exponent).x.toBits();
+	   }
 	};
 
-	sjcl.ecc._dh("ecdsa");
-
-	sjcl.ecc.ecdsa.secretKey.prototype = {
-	  sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
-	    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
-	      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
-	    }
-	    var R  = this._curve.r,
-	        l  = R.bitLength(),
-	        k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
-	        r  = this._curve.G.mult(k).x.mod(R),
-	        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
-	        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
-	             : ss.mul(k.inverseMod(R)).mod(R);
-	    return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
-	  }
+	/** ecdsa keys */
+	sjcl.ecc.ecdsa = {
+	  /** generate keys
+	  * @function
+	  * @param curve
+	  * @param {int} paranoia Paranoia for generation (default 6)
+	  * @param {secretKey} sec secret Key to use. used to get the publicKey for ones secretKey
+	  */
+	  generateKeys: sjcl.ecc.basicKey.generateKeys("ecdsa")
 	};
 
+	/** ecdsa publicKey. 
+	* @constructor
+	* @augments sjcl.ecc.basicKey.publicKey
+	*/
+	sjcl.ecc.ecdsa.publicKey = function (curve, point) {
+	  sjcl.ecc.basicKey.publicKey.apply(this, arguments);
+	};
+
+	/** specific functions for ecdsa publicKey. */
 	sjcl.ecc.ecdsa.publicKey.prototype = {
+	  /** Diffie-Hellmann function
+	  * @param {bitArray} hash hash to verify. 
+	  * @param {bitArray} rs signature bitArray.
+	  * @param {boolean}  fakeLegacyVersion use old legacy version
+	  */
 	  verify: function(hash, rs, fakeLegacyVersion) {
 	    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
 	      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
@@ -18001,6 +18663,36 @@ var ripple =
 	      }
 	    }
 	    return true;
+	  }
+	};
+
+	/** ecdsa secretKey
+	* @constructor
+	* @augments sjcl.ecc.basicKey.publicKey
+	*/
+	sjcl.ecc.ecdsa.secretKey = function (curve, exponent) {
+	  sjcl.ecc.basicKey.secretKey.apply(this, arguments);
+	};
+
+	/** specific functions for ecdsa secretKey. */
+	sjcl.ecc.ecdsa.secretKey.prototype = {
+	  /** Diffie-Hellmann function
+	  * @param {bitArray} hash hash to sign. 
+	  * @param {int} paranoia paranoia for random number generation
+	  * @param {boolean} fakeLegacyVersion use old legacy version
+	  */
+	  sign: function(hash, paranoia, fakeLegacyVersion, fixedKForTesting) {
+	    if (sjcl.bitArray.bitLength(hash) > this._curveBitLength) {
+	      hash = sjcl.bitArray.clamp(hash, this._curveBitLength);
+	    }
+	    var R  = this._curve.r,
+	        l  = R.bitLength(),
+	        k  = fixedKForTesting || sjcl.bn.random(R.sub(1), paranoia).add(1),
+	        r  = this._curve.G.mult(k).x.mod(R),
+	        ss = sjcl.bn.fromBits(hash).add(r.mul(this._exponent)),
+	        s  = fakeLegacyVersion ? ss.inverseMod(R).mul(k).mod(R)
+	             : ss.mul(k.inverseMod(R)).mod(R);
+	    return sjcl.bitArray.concat(r.toBits(l), s.toBits(l));
 	  }
 	};
 
@@ -18204,18 +18896,17 @@ var ripple =
 
 	// ----- for secp256k1 ------
 
-	// Overwrite NIST-P256 with secp256k1
-	sjcl.ecc.curves.c256 = new sjcl.ecc.curve(
-	    sjcl.bn.pseudoMersennePrime(256, [[0,-1],[4,-1],[6,-1],[7,-1],[8,-1],[9,-1],[32,-1]]),
-	    "0x14551231950b75fc4402da1722fc9baee",
-	    0,
-	    7,
-	    "0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798",
-	    "0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
-	);
+	sjcl.ecc.point.prototype.toBytesCompressed = function () {
+	  var header = this.y.mod(2).toString() == "0x0" ? 0x02 : 0x03;
+	  return [header].concat(sjcl.codec.bytes.fromBits(this.x.toBits()))
+	};
 
 	// Replace point addition and doubling algorithms
 	// NIST-P256 is a=-3, we need algorithms for a=0
+	//
+	// This is a custom point addition formula that
+	// only works for a=-3 Jacobian curve. It's much
+	// faster than the generic implementation
 	sjcl.ecc.pointJac.prototype.add = function(T) {
 	  var S = this;
 	  if (S.curve !== T.curve) {
@@ -18247,7 +18938,7 @@ var ripple =
 	  var j = h.mul(i);
 	  var r = s2.sub(S.y).doubleM();
 	  var v = S.x.mul(i);
-	  
+
 	  var x = r.square().subM(j).subM(v.copy().doubleM());
 	  var y = r.mul(v.sub(x)).subM(S.y.mul(j).doubleM());
 	  var z = S.z.add(h).square().subM(z1z1).subM(hh);
@@ -18255,6 +18946,9 @@ var ripple =
 	  return new sjcl.ecc.pointJac(this.curve,x,y,z);
 	};
 
+	// This is a custom doubling algorithm that
+	// only works for a=-3 Jacobian curve. It's much
+	// faster than the generic implementation
 	sjcl.ecc.pointJac.prototype.doubl = function () {
 	  if (this.isIdentity) { return this; }
 
@@ -18270,11 +18964,12 @@ var ripple =
 	  return new sjcl.ecc.pointJac(this.curve, x, y, z);
 	};
 
-	sjcl.ecc.point.prototype.toBytesCompressed = function () {
-	  var header = this.y.mod(2).toString() == "0x0" ? 0x02 : 0x03;
-	  return [header].concat(sjcl.codec.bytes.fromBits(this.x.toBits()))
-	};
-
+	// DEPRECATED:
+	// previously the c256 curve was overridden with the secp256k1 curve
+	// since then, sjcl has been updated to support k256
+	// this override exist to keep supporting the old c256 with k256 behavior
+	// this will be removed in future release
+	sjcl.ecc.curves.c256 = sjcl.ecc.curves.k256;
 	/** @fileOverview Javascript RIPEMD-160 implementation.
 	 *
 	 * @author Artem S Vybornov <vybornov@gmail.com>
@@ -18945,7 +19640,7 @@ var ripple =
 	 *
 	 *  @param {bitArray} hash
 	 *  @param {bitArray} signature
-	 *  @param {sjcl.ecc.curve} [sjcl.ecc.curves['c256']] curve
+	 *  @param {sjcl.ecc.curve} [sjcl.ecc.curves['k256']] curve
 	 *  @returns {sjcl.ecc.ecdsa.publicKey} Public key
 	 */
 	sjcl.ecc.ecdsa.publicKey.recoverFromSignature = function(hash, signature, curve) {
@@ -18955,7 +19650,7 @@ var ripple =
 	  }
 
 	  if (!curve) {
-	    curve = sjcl.ecc.curves['c256'];
+	    curve = sjcl.ecc.curves['k256'];
 	  }
 
 	  // Convert hash to bits and determine encoding for output
@@ -20498,6 +21193,313 @@ var ripple =
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	function EventEmitter() {
+	  this._events = this._events || {};
+	  this._maxListeners = this._maxListeners || undefined;
+	}
+	module.exports = EventEmitter;
+
+	// Backwards-compat with node 0.10.x
+	EventEmitter.EventEmitter = EventEmitter;
+
+	EventEmitter.prototype._events = undefined;
+	EventEmitter.prototype._maxListeners = undefined;
+
+	// By default EventEmitters will print a warning if more than 10 listeners are
+	// added to it. This is a useful default which helps finding memory leaks.
+	EventEmitter.defaultMaxListeners = 10;
+
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!isNumber(n) || n < 0 || isNaN(n))
+	    throw TypeError('n must be a positive number');
+	  this._maxListeners = n;
+	  return this;
+	};
+
+	EventEmitter.prototype.emit = function(type) {
+	  var er, handler, len, args, i, listeners;
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events.error ||
+	        (isObject(this._events.error) && !this._events.error.length)) {
+	      er = arguments[1];
+	      if (er instanceof Error) {
+	        throw er; // Unhandled 'error' event
+	      }
+	      throw TypeError('Uncaught, unspecified "error" event.');
+	    }
+	  }
+
+	  handler = this._events[type];
+
+	  if (isUndefined(handler))
+	    return false;
+
+	  if (isFunction(handler)) {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        len = arguments.length;
+	        args = new Array(len - 1);
+	        for (i = 1; i < len; i++)
+	          args[i - 1] = arguments[i];
+	        handler.apply(this, args);
+	    }
+	  } else if (isObject(handler)) {
+	    len = arguments.length;
+	    args = new Array(len - 1);
+	    for (i = 1; i < len; i++)
+	      args[i - 1] = arguments[i];
+
+	    listeners = handler.slice();
+	    len = listeners.length;
+	    for (i = 0; i < len; i++)
+	      listeners[i].apply(this, args);
+	  }
+
+	  return true;
+	};
+
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  var m;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // To avoid recursion in the case that type === "newListener"! Before
+	  // adding it to the listeners, first emit "newListener".
+	  if (this._events.newListener)
+	    this.emit('newListener', type,
+	              isFunction(listener.listener) ?
+	              listener.listener : listener);
+
+	  if (!this._events[type])
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  else if (isObject(this._events[type]))
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+	  else
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+
+	  // Check for listener leak
+	  if (isObject(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (!isUndefined(this._maxListeners)) {
+	      m = this._maxListeners;
+	    } else {
+	      m = EventEmitter.defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(node) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      if (typeof console.trace === 'function') {
+	        // not supported in IE 10
+	        console.trace();
+	      }
+	    }
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  var fired = false;
+
+	  function g() {
+	    this.removeListener(type, g);
+
+	    if (!fired) {
+	      fired = true;
+	      listener.apply(this, arguments);
+	    }
+	  }
+
+	  g.listener = listener;
+	  this.on(type, g);
+
+	  return this;
+	};
+
+	// emits a 'removeListener' event iff the listener was removed
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  var list, position, length, i;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events || !this._events[type])
+	    return this;
+
+	  list = this._events[type];
+	  length = list.length;
+	  position = -1;
+
+	  if (list === listener ||
+	      (isFunction(list.listener) && list.listener === listener)) {
+	    delete this._events[type];
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+
+	  } else if (isObject(list)) {
+	    for (i = length; i-- > 0;) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener)) {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0)
+	      return this;
+
+	    if (list.length === 1) {
+	      list.length = 0;
+	      delete this._events[type];
+	    } else {
+	      list.splice(position, 1);
+	    }
+
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  var key, listeners;
+
+	  if (!this._events)
+	    return this;
+
+	  // not listening for removeListener, no need to emit
+	  if (!this._events.removeListener) {
+	    if (arguments.length === 0)
+	      this._events = {};
+	    else if (this._events[type])
+	      delete this._events[type];
+	    return this;
+	  }
+
+	  // emit removeListener for all listeners on all events
+	  if (arguments.length === 0) {
+	    for (key in this._events) {
+	      if (key === 'removeListener') continue;
+	      this.removeAllListeners(key);
+	    }
+	    this.removeAllListeners('removeListener');
+	    this._events = {};
+	    return this;
+	  }
+
+	  listeners = this._events[type];
+
+	  if (isFunction(listeners)) {
+	    this.removeListener(type, listeners);
+	  } else {
+	    // LIFO order
+	    while (listeners.length)
+	      this.removeListener(type, listeners[listeners.length - 1]);
+	  }
+	  delete this._events[type];
+
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  var ret;
+	  if (!this._events || !this._events[type])
+	    ret = [];
+	  else if (isFunction(this._events[type]))
+	    ret = [this._events[type]];
+	  else
+	    ret = this._events[type].slice();
+	  return ret;
+	};
+
+	EventEmitter.listenerCount = function(emitter, type) {
+	  var ret;
+	  if (!emitter._events || !emitter._events[type])
+	    ret = 0;
+	  else if (isFunction(emitter._events[type]))
+	    ret = 1;
+	  else
+	    ret = emitter._events[type].length;
+	  return ret;
+	};
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -21088,313 +22090,6 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
 
 /***/ },
-/* 38 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	function EventEmitter() {
-	  this._events = this._events || {};
-	  this._maxListeners = this._maxListeners || undefined;
-	}
-	module.exports = EventEmitter;
-
-	// Backwards-compat with node 0.10.x
-	EventEmitter.EventEmitter = EventEmitter;
-
-	EventEmitter.prototype._events = undefined;
-	EventEmitter.prototype._maxListeners = undefined;
-
-	// By default EventEmitters will print a warning if more than 10 listeners are
-	// added to it. This is a useful default which helps finding memory leaks.
-	EventEmitter.defaultMaxListeners = 10;
-
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!isNumber(n) || n < 0 || isNaN(n))
-	    throw TypeError('n must be a positive number');
-	  this._maxListeners = n;
-	  return this;
-	};
-
-	EventEmitter.prototype.emit = function(type) {
-	  var er, handler, len, args, i, listeners;
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events.error ||
-	        (isObject(this._events.error) && !this._events.error.length)) {
-	      er = arguments[1];
-	      if (er instanceof Error) {
-	        throw er; // Unhandled 'error' event
-	      }
-	      throw TypeError('Uncaught, unspecified "error" event.');
-	    }
-	  }
-
-	  handler = this._events[type];
-
-	  if (isUndefined(handler))
-	    return false;
-
-	  if (isFunction(handler)) {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        len = arguments.length;
-	        args = new Array(len - 1);
-	        for (i = 1; i < len; i++)
-	          args[i - 1] = arguments[i];
-	        handler.apply(this, args);
-	    }
-	  } else if (isObject(handler)) {
-	    len = arguments.length;
-	    args = new Array(len - 1);
-	    for (i = 1; i < len; i++)
-	      args[i - 1] = arguments[i];
-
-	    listeners = handler.slice();
-	    len = listeners.length;
-	    for (i = 0; i < len; i++)
-	      listeners[i].apply(this, args);
-	  }
-
-	  return true;
-	};
-
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  var m;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // To avoid recursion in the case that type === "newListener"! Before
-	  // adding it to the listeners, first emit "newListener".
-	  if (this._events.newListener)
-	    this.emit('newListener', type,
-	              isFunction(listener.listener) ?
-	              listener.listener : listener);
-
-	  if (!this._events[type])
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  else if (isObject(this._events[type]))
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-	  else
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-
-	  // Check for listener leak
-	  if (isObject(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (!isUndefined(this._maxListeners)) {
-	      m = this._maxListeners;
-	    } else {
-	      m = EventEmitter.defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(node) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      if (typeof console.trace === 'function') {
-	        // not supported in IE 10
-	        console.trace();
-	      }
-	    }
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  var fired = false;
-
-	  function g() {
-	    this.removeListener(type, g);
-
-	    if (!fired) {
-	      fired = true;
-	      listener.apply(this, arguments);
-	    }
-	  }
-
-	  g.listener = listener;
-	  this.on(type, g);
-
-	  return this;
-	};
-
-	// emits a 'removeListener' event iff the listener was removed
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  var list, position, length, i;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events || !this._events[type])
-	    return this;
-
-	  list = this._events[type];
-	  length = list.length;
-	  position = -1;
-
-	  if (list === listener ||
-	      (isFunction(list.listener) && list.listener === listener)) {
-	    delete this._events[type];
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-
-	  } else if (isObject(list)) {
-	    for (i = length; i-- > 0;) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener)) {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0)
-	      return this;
-
-	    if (list.length === 1) {
-	      list.length = 0;
-	      delete this._events[type];
-	    } else {
-	      list.splice(position, 1);
-	    }
-
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  var key, listeners;
-
-	  if (!this._events)
-	    return this;
-
-	  // not listening for removeListener, no need to emit
-	  if (!this._events.removeListener) {
-	    if (arguments.length === 0)
-	      this._events = {};
-	    else if (this._events[type])
-	      delete this._events[type];
-	    return this;
-	  }
-
-	  // emit removeListener for all listeners on all events
-	  if (arguments.length === 0) {
-	    for (key in this._events) {
-	      if (key === 'removeListener') continue;
-	      this.removeAllListeners(key);
-	    }
-	    this.removeAllListeners('removeListener');
-	    this._events = {};
-	    return this;
-	  }
-
-	  listeners = this._events[type];
-
-	  if (isFunction(listeners)) {
-	    this.removeListener(type, listeners);
-	  } else {
-	    // LIFO order
-	    while (listeners.length)
-	      this.removeListener(type, listeners[listeners.length - 1]);
-	  }
-	  delete this._events[type];
-
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  var ret;
-	  if (!this._events || !this._events[type])
-	    ret = [];
-	  else if (isFunction(this._events[type]))
-	    ret = [this._events[type]];
-	  else
-	    ret = this._events[type].slice();
-	  return ret;
-	};
-
-	EventEmitter.listenerCount = function(emitter, type) {
-	  var ret;
-	  if (!emitter._events || !emitter._events[type])
-	    ret = 0;
-	  else if (isFunction(emitter._events[type]))
-	    ret = 1;
-	  else
-	    ret = emitter._events[type].length;
-	  return ret;
-	};
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-
-
-/***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -21425,7 +22120,7 @@ var ripple =
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(37);
+	var util = __webpack_require__(38);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -21880,67 +22575,6 @@ var ripple =
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
-
-	function error () {
-	  var m = [].slice.call(arguments).join(' ')
-	  throw new Error([
-	    m,
-	    'we accept pull requests',
-	    'http://github.com/dominictarr/crypto-browserify'
-	    ].join('\n'))
-	}
-
-	exports.createHash = __webpack_require__(54)
-
-	exports.createHmac = __webpack_require__(55)
-
-	exports.randomBytes = function(size, callback) {
-	  if (callback && callback.call) {
-	    try {
-	      callback.call(this, undefined, new Buffer(rng(size)))
-	    } catch (err) { callback(err) }
-	  } else {
-	    return new Buffer(rng(size))
-	  }
-	}
-
-	function each(a, f) {
-	  for(var i in a)
-	    f(a[i], i)
-	}
-
-	exports.getHashes = function () {
-	  return ['sha1', 'sha256', 'md5', 'rmd160']
-
-	}
-
-	var p = __webpack_require__(56)(exports.createHmac)
-	exports.pbkdf2 = p.pbkdf2
-	exports.pbkdf2Sync = p.pbkdf2Sync
-
-
-	// the least I can do is make error messages for the rest of the node.js/crypto api.
-	each(['createCredentials'
-	, 'createCipher'
-	, 'createCipheriv'
-	, 'createDecipher'
-	, 'createDecipheriv'
-	, 'createSign'
-	, 'createVerify'
-	, 'createDiffieHellman'
-	], function (name) {
-	  exports[name] = function () {
-	    error('sorry,', name, 'is not implemented yet')
-	  }
-	})
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
-
-/***/ },
-/* 42 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
 	 * The buffer module from node.js, for the browser.
 	 *
@@ -21949,7 +22583,7 @@ var ripple =
 	 */
 
 	var base64 = __webpack_require__(70)
-	var ieee754 = __webpack_require__(66)
+	var ieee754 = __webpack_require__(65)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = Buffer
@@ -23051,7 +23685,68 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+
+/***/ },
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
+
+	function error () {
+	  var m = [].slice.call(arguments).join(' ')
+	  throw new Error([
+	    m,
+	    'we accept pull requests',
+	    'http://github.com/dominictarr/crypto-browserify'
+	    ].join('\n'))
+	}
+
+	exports.createHash = __webpack_require__(54)
+
+	exports.createHmac = __webpack_require__(55)
+
+	exports.randomBytes = function(size, callback) {
+	  if (callback && callback.call) {
+	    try {
+	      callback.call(this, undefined, new Buffer(rng(size)))
+	    } catch (err) { callback(err) }
+	  } else {
+	    return new Buffer(rng(size))
+	  }
+	}
+
+	function each(a, f) {
+	  for(var i in a)
+	    f(a[i], i)
+	}
+
+	exports.getHashes = function () {
+	  return ['sha1', 'sha256', 'md5', 'rmd160']
+
+	}
+
+	var p = __webpack_require__(56)(exports.createHmac)
+	exports.pbkdf2 = p.pbkdf2
+	exports.pbkdf2Sync = p.pbkdf2Sync
+
+
+	// the least I can do is make error messages for the rest of the node.js/crypto api.
+	each(['createCredentials'
+	, 'createCipher'
+	, 'createCipheriv'
+	, 'createDecipher'
+	, 'createDecipheriv'
+	, 'createSign'
+	, 'createVerify'
+	, 'createDiffieHellman'
+	], function (name) {
+	  exports[name] = function () {
+	    error('sorry,', name, 'is not implemented yet')
+	  }
+	})
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 43 */
@@ -23778,22 +24473,23 @@ var ripple =
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
-	
+	var LRU = __webpack_require__(48);
+	var Transaction = __webpack_require__(5).Transaction;
+
 	/**
 	 * Manager for pending transactions
 	 */
 
-	var LRU = __webpack_require__(48);
-	var Transaction = __webpack_require__(5).Transaction;
-
 	function TransactionQueue() {
 	  this._queue = [ ];
-	  this._idCache = LRU();
-	  this._sequenceCache = LRU();
+	  this._idCache = LRU({ max: 200 });
+	  this._sequenceCache = LRU({ max: 200 });
 	};
 
 	/**
 	 * Store received (validated) sequence
+	 *
+	 * @param {Number} sequence
 	 */
 
 	TransactionQueue.prototype.addReceivedSequence = function(sequence) {
@@ -23803,6 +24499,9 @@ var ripple =
 	/**
 	 * Check that sequence number has been consumed by a validated
 	 * transaction
+	 *
+	 * @param {Number} sequence
+	 * @return {Boolean}
 	 */
 
 	TransactionQueue.prototype.hasSequence = function(sequence) {
@@ -23811,6 +24510,9 @@ var ripple =
 
 	/**
 	 * Store received (validated) ID transaction
+	 *
+	 * @param {String} transaction id
+	 * @param {Transaction} transaction
 	 */
 
 	TransactionQueue.prototype.addReceivedId = function(id, transaction) {
@@ -23819,6 +24521,9 @@ var ripple =
 
 	/**
 	 * Get received (validated) transaction by ID
+	 *
+	 * @param {String} transaction id
+	 * @return {Object}
 	 */
 
 	TransactionQueue.prototype.getReceived = function(id) {
@@ -23828,6 +24533,9 @@ var ripple =
 	/**
 	 * Get a submitted transaction by ID. Transactions
 	 * may have multiple associated IDs.
+	 *
+	 * @param {String} transaction id
+	 * @return {Transaction}
 	 */
 
 	TransactionQueue.prototype.getSubmission = function(id) {
@@ -23844,7 +24552,31 @@ var ripple =
 	};
 
 	/**
+	 * Get earliest ledger in the pending queue
+	 *
+	 * @return {Number} ledger
+	 */
+
+	TransactionQueue.prototype.getMinLedger = function() {
+	  var result = Infinity;
+
+	  for (var i=0, tx; (tx=this._queue[i]); i++) {
+	    if (tx.initialSubmitIndex < result) {
+	      result = tx.initialSubmitIndex;
+	    }
+	  }
+
+	  if (!isFinite(result)) {
+	    result = -1;
+	  }
+
+	  return result;
+	};
+
+	/**
 	 * Remove a transaction from the queue
+	 *
+	 * @param {String|Transaction} transaction or id
 	 */
 
 	TransactionQueue.prototype.remove = function(tx) {
@@ -23867,13 +24599,29 @@ var ripple =
 	  }
 	};
 
+	/**
+	 * Add a transaction to pending queue
+	 *
+	 * @param {Transaction} transaction
+	 */
+
 	TransactionQueue.prototype.push = function(tx) {
 	  this._queue.push(tx);
 	};
 
+	/**
+	 * Iterate over pending transactions
+	 *
+	 * @param {Function} iterator
+	 */
+
 	TransactionQueue.prototype.forEach = function(fn) {
 	  this._queue.forEach(fn);
 	};
+
+	/**
+	 * @return {Number} length of pending queue
+	 */
 
 	TransactionQueue.prototype.length =
 	TransactionQueue.prototype.getLength = function() {
@@ -25550,8 +26298,8 @@ var ripple =
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(71);
-	var reduce = __webpack_require__(72);
+	var Emitter = __webpack_require__(72);
+	var reduce = __webpack_require__(71);
 
 	/**
 	 * Root reference for iframes.
@@ -26645,7 +27393,7 @@ var ripple =
 
 	}())
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 54 */
@@ -26653,7 +27401,7 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(73)
 
-	var md5 = toConstructor(__webpack_require__(65))
+	var md5 = toConstructor(__webpack_require__(66))
 	var rmd160 = toConstructor(__webpack_require__(75))
 
 	function toConstructor (fn) {
@@ -26682,7 +27430,7 @@ var ripple =
 	  return createHash(alg)
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 55 */
@@ -26730,7 +27478,7 @@ var ripple =
 	}
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 56 */
@@ -26819,7 +27567,7 @@ var ripple =
 	  return exports
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 57 */
@@ -27286,6 +28034,96 @@ var ripple =
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
+	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
+	  var e, m,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      nBits = -7,
+	      i = isLE ? (nBytes - 1) : 0,
+	      d = isLE ? -1 : 1,
+	      s = buffer[offset + i];
+
+	  i += d;
+
+	  e = s & ((1 << (-nBits)) - 1);
+	  s >>= (-nBits);
+	  nBits += eLen;
+	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  m = e & ((1 << (-nBits)) - 1);
+	  e >>= (-nBits);
+	  nBits += mLen;
+	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
+
+	  if (e === 0) {
+	    e = 1 - eBias;
+	  } else if (e === eMax) {
+	    return m ? NaN : ((s ? -1 : 1) * Infinity);
+	  } else {
+	    m = m + Math.pow(2, mLen);
+	    e = e - eBias;
+	  }
+	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+	};
+
+	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+	  var e, m, c,
+	      eLen = nBytes * 8 - mLen - 1,
+	      eMax = (1 << eLen) - 1,
+	      eBias = eMax >> 1,
+	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
+	      i = isLE ? 0 : (nBytes - 1),
+	      d = isLE ? 1 : -1,
+	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+	  value = Math.abs(value);
+
+	  if (isNaN(value) || value === Infinity) {
+	    m = isNaN(value) ? 1 : 0;
+	    e = eMax;
+	  } else {
+	    e = Math.floor(Math.log(value) / Math.LN2);
+	    if (value * (c = Math.pow(2, -e)) < 1) {
+	      e--;
+	      c *= 2;
+	    }
+	    if (e + eBias >= 1) {
+	      value += rt / c;
+	    } else {
+	      value += rt * Math.pow(2, 1 - eBias);
+	    }
+	    if (value * c >= 2) {
+	      e++;
+	      c /= 2;
+	    }
+
+	    if (e + eBias >= eMax) {
+	      m = 0;
+	      e = eMax;
+	    } else if (e + eBias >= 1) {
+	      m = (value * c - 1) * Math.pow(2, mLen);
+	      e = e + eBias;
+	    } else {
+	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+	      e = 0;
+	    }
+	  }
+
+	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
+
+	  e = (e << mLen) | m;
+	  eLen += mLen;
+	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
+
+	  buffer[offset + i - d] |= s * 128;
+	};
+
+
+/***/ },
+/* 66 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -27440,96 +28278,6 @@ var ripple =
 
 	module.exports = function md5(buf) {
 	  return helpers.hash(buf, core_md5, 16);
-	};
-
-
-/***/ },
-/* 66 */
-/***/ function(module, exports, __webpack_require__) {
-
-	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-	  var e, m,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      nBits = -7,
-	      i = isLE ? (nBytes - 1) : 0,
-	      d = isLE ? -1 : 1,
-	      s = buffer[offset + i];
-
-	  i += d;
-
-	  e = s & ((1 << (-nBits)) - 1);
-	  s >>= (-nBits);
-	  nBits += eLen;
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  m = e & ((1 << (-nBits)) - 1);
-	  e >>= (-nBits);
-	  nBits += mLen;
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-	  if (e === 0) {
-	    e = 1 - eBias;
-	  } else if (e === eMax) {
-	    return m ? NaN : ((s ? -1 : 1) * Infinity);
-	  } else {
-	    m = m + Math.pow(2, mLen);
-	    e = e - eBias;
-	  }
-	  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-	};
-
-	exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-	  var e, m, c,
-	      eLen = nBytes * 8 - mLen - 1,
-	      eMax = (1 << eLen) - 1,
-	      eBias = eMax >> 1,
-	      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-	      i = isLE ? 0 : (nBytes - 1),
-	      d = isLE ? 1 : -1,
-	      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-	  value = Math.abs(value);
-
-	  if (isNaN(value) || value === Infinity) {
-	    m = isNaN(value) ? 1 : 0;
-	    e = eMax;
-	  } else {
-	    e = Math.floor(Math.log(value) / Math.LN2);
-	    if (value * (c = Math.pow(2, -e)) < 1) {
-	      e--;
-	      c *= 2;
-	    }
-	    if (e + eBias >= 1) {
-	      value += rt / c;
-	    } else {
-	      value += rt * Math.pow(2, 1 - eBias);
-	    }
-	    if (value * c >= 2) {
-	      e++;
-	      c /= 2;
-	    }
-
-	    if (e + eBias >= eMax) {
-	      m = 0;
-	      e = eMax;
-	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen);
-	      e = e + eBias;
-	    } else {
-	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-	      e = 0;
-	    }
-	  }
-
-	  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-	  e = (e << mLen) | m;
-	  eLen += mLen;
-	  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-	  buffer[offset + i - d] |= s * 128;
 	};
 
 
@@ -28325,6 +29073,35 @@ var ripple =
 
 	
 	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
 	 * Expose `Emitter`.
 	 */
 
@@ -28490,35 +29267,6 @@ var ripple =
 
 
 /***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
-
-/***/ },
 /* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -28575,7 +29323,7 @@ var ripple =
 
 	module.exports = { hash: hash };
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 75 */
@@ -28787,7 +29535,7 @@ var ripple =
 
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 76 */
@@ -28907,7 +29655,7 @@ var ripple =
 	 */
 	module.exports = function (Buffer, Hash) {
 
-	  var inherits = __webpack_require__(37).inherits
+	  var inherits = __webpack_require__(38).inherits
 
 	  inherits(Sha1, Hash)
 
@@ -29071,7 +29819,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(37).inherits
+	var inherits = __webpack_require__(38).inherits
 	var BE       = false
 	var LE       = true
 	var u        = __webpack_require__(82)
@@ -30411,7 +31159,7 @@ var ripple =
 	  if (!test) throw new Error(message || 'Failed assertion')
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 82 */
