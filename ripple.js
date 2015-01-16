@@ -133,7 +133,7 @@ var ripple =
 	var EventEmitter     = __webpack_require__(39).EventEmitter;
 	var util             = __webpack_require__(41);
 	var assert           = __webpack_require__(40);
-	var LRU              = __webpack_require__(47);
+	var LRU              = __webpack_require__(48);
 	var async            = __webpack_require__(50);
 	var Server           = __webpack_require__(18).Server;
 	var Request          = __webpack_require__(2).Request;
@@ -5992,7 +5992,7 @@ var ripple =
 	var extend    = __webpack_require__(46);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var utils = __webpack_require__(17);
-	var Float = __webpack_require__(31).Float;
+	var Float = __webpack_require__(30).Float;
 
 	//
 	// Currency support
@@ -6533,7 +6533,7 @@ var ripple =
 
 	var utils  = __webpack_require__(17);
 	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(30).UInt;
+	var UInt   = __webpack_require__(31).UInt;
 
 	//
 	// UInt128 support
@@ -6566,7 +6566,7 @@ var ripple =
 
 	var BigInteger = utils.jsbn.BigInteger;
 
-	var UInt = __webpack_require__(30).UInt;
+	var UInt = __webpack_require__(31).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6673,7 +6673,7 @@ var ripple =
 
 	var utils  = __webpack_require__(17);
 	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(30).UInt;
+	var UInt   = __webpack_require__(31).UInt;
 
 	//
 	// UInt256 support
@@ -6711,7 +6711,7 @@ var ripple =
 	var BigInteger = utils.jsbn.BigInteger;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(30).UInt;
+	var UInt    = __webpack_require__(31).UInt;
 	var UInt256 = __webpack_require__(10).UInt256;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var KeyPair = __webpack_require__(32).KeyPair;
@@ -8303,7 +8303,7 @@ var ripple =
 
 	var util         = __webpack_require__(41);
 	var url          = __webpack_require__(45);
-	var LRU          = __webpack_require__(47);
+	var LRU          = __webpack_require__(48);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var RangeSet     = __webpack_require__(22).RangeSet;
@@ -9225,7 +9225,7 @@ var ripple =
 
 	var sjcl = __webpack_require__(17).sjcl;
 
-	var WalletGenerator = __webpack_require__(48)({
+	var WalletGenerator = __webpack_require__(47)({
 	  sjcl: sjcl
 	});
 
@@ -9410,7 +9410,7 @@ var ripple =
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var LRU = __webpack_require__(47);
+	var LRU = __webpack_require__(48);
 	var Transaction = __webpack_require__(5).Transaction;
 
 	/**
@@ -12615,6 +12615,118 @@ var ripple =
 /* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// Convert a JavaScript number to IEEE-754 Double Precision
+	// value represented as an array of 8 bytes (octets)
+	//
+	// Based on:
+	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
+	//
+	// Found and modified from:
+	// https://gist.github.com/bartaz/1119041
+
+	var Float = exports.Float = {};
+
+	Float.toIEEE754 = function(v, ebits, fbits) {
+
+	  var bias = (1 << (ebits - 1)) - 1;
+
+	  // Compute sign, exponent, fraction
+	  var s, e, f;
+	  if (isNaN(v)) {
+	    e = (1 << bias) - 1; f = 1; s = 0;
+	  }
+	  else if (v === Infinity || v === -Infinity) {
+	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
+	  }
+	  else if (v === 0) {
+	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
+	  }
+	  else {
+	    s = v < 0;
+	    v = Math.abs(v);
+
+	    if (v >= Math.pow(2, 1 - bias)) {
+	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
+	      e = ln + bias;
+	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
+	    }
+	    else {
+	      e = 0;
+	      f = v / Math.pow(2, 1 - bias - fbits);
+	    }
+	  }
+
+	  // Pack sign, exponent, fraction
+	  var i, bits = [];
+	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
+	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
+	  bits.push(s ? 1 : 0);
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Bits to bytes
+	  var bytes = [];
+	  while (str.length) {
+	    bytes.push(parseInt(str.substring(0, 8), 2));
+	    str = str.substring(8);
+	  }
+	  return bytes;
+	}
+
+	Float.fromIEEE754 = function(bytes, ebits, fbits) {
+
+	  // Bytes to bits
+	  var bits = [];
+	  for (var i = bytes.length; i; i -= 1) {
+	    var byte = bytes[i - 1];
+	    for (var j = 8; j; j -= 1) {
+	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
+	    }
+	  }
+	  bits.reverse();
+	  var str = bits.join('');
+
+	  // Unpack sign, exponent, fraction
+	  var bias = (1 << (ebits - 1)) - 1;
+	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
+	  var e = parseInt(str.substring(1, 1 + ebits), 2);
+	  var f = parseInt(str.substring(1 + ebits), 2);
+
+	  // Produce number
+	  if (e === (1 << ebits) - 1) {
+	    return f !== 0 ? NaN : s * Infinity;
+	  }
+	  else if (e > 0) {
+	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
+	  }
+	  else if (f !== 0) {
+	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
+	  }
+	  else {
+	    return s * 0;
+	  }
+	}
+
+	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
+	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
+	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
+	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
+
+
+	// Convert array of octets to string binary representation
+	// by bartaz
+
+	Float.toIEEE754DoubleString = function(v) {
+	  return exports.toIEEE754Double(v)
+	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
+	    .join('')
+	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
+	}
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var utils   = __webpack_require__(17);
 	var sjcl    = utils.sjcl;
 	var config  = __webpack_require__(24);
@@ -12917,118 +13029,6 @@ var ripple =
 
 	// vim:sw=2:sts=2:ts=8:et
 
-
-/***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Convert a JavaScript number to IEEE-754 Double Precision
-	// value represented as an array of 8 bytes (octets)
-	//
-	// Based on:
-	// http://cautionsingularityahead.blogspot.com/2010/04/javascript-and-ieee754-redux.html
-	//
-	// Found and modified from:
-	// https://gist.github.com/bartaz/1119041
-
-	var Float = exports.Float = {};
-
-	Float.toIEEE754 = function(v, ebits, fbits) {
-
-	  var bias = (1 << (ebits - 1)) - 1;
-
-	  // Compute sign, exponent, fraction
-	  var s, e, f;
-	  if (isNaN(v)) {
-	    e = (1 << bias) - 1; f = 1; s = 0;
-	  }
-	  else if (v === Infinity || v === -Infinity) {
-	    e = (1 << bias) - 1; f = 0; s = (v < 0) ? 1 : 0;
-	  }
-	  else if (v === 0) {
-	    e = 0; f = 0; s = (1 / v === -Infinity) ? 1 : 0;
-	  }
-	  else {
-	    s = v < 0;
-	    v = Math.abs(v);
-
-	    if (v >= Math.pow(2, 1 - bias)) {
-	      var ln = Math.min(Math.floor(Math.log(v) / Math.LN2), bias);
-	      e = ln + bias;
-	      f = v * Math.pow(2, fbits - ln) - Math.pow(2, fbits);
-	    }
-	    else {
-	      e = 0;
-	      f = v / Math.pow(2, 1 - bias - fbits);
-	    }
-	  }
-
-	  // Pack sign, exponent, fraction
-	  var i, bits = [];
-	  for (i = fbits; i; i -= 1) { bits.push(f % 2 ? 1 : 0); f = Math.floor(f / 2); }
-	  for (i = ebits; i; i -= 1) { bits.push(e % 2 ? 1 : 0); e = Math.floor(e / 2); }
-	  bits.push(s ? 1 : 0);
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Bits to bytes
-	  var bytes = [];
-	  while (str.length) {
-	    bytes.push(parseInt(str.substring(0, 8), 2));
-	    str = str.substring(8);
-	  }
-	  return bytes;
-	}
-
-	Float.fromIEEE754 = function(bytes, ebits, fbits) {
-
-	  // Bytes to bits
-	  var bits = [];
-	  for (var i = bytes.length; i; i -= 1) {
-	    var byte = bytes[i - 1];
-	    for (var j = 8; j; j -= 1) {
-	      bits.push(byte % 2 ? 1 : 0); byte = byte >> 1;
-	    }
-	  }
-	  bits.reverse();
-	  var str = bits.join('');
-
-	  // Unpack sign, exponent, fraction
-	  var bias = (1 << (ebits - 1)) - 1;
-	  var s = parseInt(str.substring(0, 1), 2) ? -1 : 1;
-	  var e = parseInt(str.substring(1, 1 + ebits), 2);
-	  var f = parseInt(str.substring(1 + ebits), 2);
-
-	  // Produce number
-	  if (e === (1 << ebits) - 1) {
-	    return f !== 0 ? NaN : s * Infinity;
-	  }
-	  else if (e > 0) {
-	    return s * Math.pow(2, e - bias) * (1 + f / Math.pow(2, fbits));
-	  }
-	  else if (f !== 0) {
-	    return s * Math.pow(2, -(bias-1)) * (f / Math.pow(2, fbits));
-	  }
-	  else {
-	    return s * 0;
-	  }
-	}
-
-	Float.fromIEEE754Double = function(b) { return Float.fromIEEE754(b, 11, 52); }
-	Float.toIEEE754Double = function(v) { return   Float.toIEEE754(v, 11, 52); }
-	Float.fromIEEE754Single = function(b) { return Float.fromIEEE754(b,  8, 23); }
-	Float.toIEEE754Single = function(v) { return   Float.toIEEE754(v,  8, 23); }
-
-
-	// Convert array of octets to string binary representation
-	// by bartaz
-
-	Float.toIEEE754DoubleString = function(v) {
-	  return exports.toIEEE754Double(v)
-	    .map(function(n){ for(n = n.toString(2);n.length < 8;n="0"+n); return n })
-	    .join('')
-	    .replace(/(.)(.{11})(.{52})/, "$1 $2 $3")
-	}
 
 /***/ },
 /* 32 */
@@ -21076,7 +21076,7 @@ var ripple =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(67);
+	exports.inherits = __webpack_require__(69);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -22486,7 +22486,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(69);
+	    querystring = __webpack_require__(67);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && typeof(url) === 'object' && url.href) return url;
@@ -23114,6 +23114,104 @@ var ripple =
 /* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
+	module.exports = function(options) {
+	  var sjcl = options.sjcl; // inject sjcl dependency
+
+	  var base58 = __webpack_require__(57)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(58)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(59)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(60)({ sjcl: options.sjcl });
+
+	  function firstHalfOfSHA512(bytes) {
+	    return sjcl.bitArray.bitSlice(
+	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
+	      0, 256
+	    );
+	  }
+
+	  function append_int(a, i) {
+	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
+	  }
+
+	  function RippleWallet(secret){
+	    this.secret = secret;
+
+	    if (!this.secret) {
+	      throw "Invalid secret."
+	    }
+	  }
+
+	  RippleWallet.prototype = {
+
+	    getPrivateKey: function(secret){
+	      var self = this;
+	      return base58.decode_base_check(33, self.secret);
+	    },
+
+	    getPrivateGenerator: function(privateKey){
+	      var i = 0;
+	      do {
+	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
+	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
+	      return privateGenerator; 
+	    },
+
+	    getPublicGenerator: function (){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
+	    },
+
+	    getPublicKey: function(publicGenerator){
+	      var sec;
+	      var i = 0;
+	      do {
+	        // Compute the hash of the public generator with the sub-sequence number
+	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
+	        i++;
+	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
+	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
+	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
+	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
+	    },
+
+	    getAddress: function(){
+	      var privateKey = this.getPrivateKey(this.secret);
+	      var privateGenerator = this.getPrivateGenerator(privateKey);
+	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
+	      var publicKey = this.getPublicKey(publicGenerator);
+	      return RippleAddress.fromPublicKey(publicKey);
+	    }
+	  }
+
+	  RippleWallet.getRandom = function(){
+	    var secretKey = MasterKey.getRandom().value;
+	    return new RippleWallet(secretKey);
+	  };
+
+	  RippleWallet.generate = function() {
+	    /* Generate a 128-bit master key that can be used to make 
+	       any number of private / public key pairs and accounts
+	    */
+	    var secretKey = MasterKey.getRandom().value;
+	    var wallet = new RippleWallet(secretKey);
+	    return {
+	      address: wallet.getAddress().value,
+	      secret: secretKey 
+	    };
+	  };
+
+	  return RippleWallet;
+	};
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
 	;(function () { // closure for web browsers
 
 	if (typeof module === 'object' && module.exports) {
@@ -23366,104 +23464,6 @@ var ripple =
 	}
 
 	})()
-
-
-/***/ },
-/* 48 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = function(options) {
-	  var sjcl = options.sjcl; // inject sjcl dependency
-
-	  var base58 = __webpack_require__(57)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(58)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(59)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(60)({ sjcl: options.sjcl });
-
-	  function firstHalfOfSHA512(bytes) {
-	    return sjcl.bitArray.bitSlice(
-	      sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
-	      0, 256
-	    );
-	  }
-
-	  function append_int(a, i) {
-	    return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff)
-	  }
-
-	  function RippleWallet(secret){
-	    this.secret = secret;
-
-	    if (!this.secret) {
-	      throw "Invalid secret."
-	    }
-	  }
-
-	  RippleWallet.prototype = {
-
-	    getPrivateKey: function(secret){
-	      var self = this;
-	      return base58.decode_base_check(33, self.secret);
-	    },
-
-	    getPrivateGenerator: function(privateKey){
-	      var i = 0;
-	      do {
-	        // Compute the hash of the 128-bit privateKey and the sequenceuence number
-	        privateGenerator = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(privateKey, i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment sequenceuence and try agin
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(privateGenerator));
-	      return privateGenerator; 
-	    },
-
-	    getPublicGenerator: function (){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      return PublicGenerator.fromPrivateGenerator(privateGenerator);
-	    },
-
-	    getPublicKey: function(publicGenerator){
-	      var sec;
-	      var i = 0;
-	      do {
-	        // Compute the hash of the public generator with the sub-sequence number
-	        sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(publicGenerator.toBytesCompressed(), 0), i)));
-	        i++;
-	        // If the hash is equal to or greater than the SECp256k1 order, increment the sequenceuence and retry
-	      } while (!sjcl.ecc.curves.c256.r.greaterEquals(sec));
-	      // Treating this hash as a private key, compute the corresponding public key as an EC point. 
-	      return sjcl.ecc.curves.c256.G.mult(sec).toJac().add(publicGenerator).toAffine();
-	    },
-
-	    getAddress: function(){
-	      var privateKey = this.getPrivateKey(this.secret);
-	      var privateGenerator = this.getPrivateGenerator(privateKey);
-	      var publicGenerator = PublicGenerator.fromPrivateGenerator(privateGenerator).value;
-	      var publicKey = this.getPublicKey(publicGenerator);
-	      return RippleAddress.fromPublicKey(publicKey);
-	    }
-	  }
-
-	  RippleWallet.getRandom = function(){
-	    var secretKey = MasterKey.getRandom().value;
-	    return new RippleWallet(secretKey);
-	  };
-
-	  RippleWallet.generate = function() {
-	    /* Generate a 128-bit master key that can be used to make 
-	       any number of private / public key pairs and accounts
-	    */
-	    var secretKey = MasterKey.getRandom().value;
-	    var wallet = new RippleWallet(secretKey);
-	    return {
-	      address: wallet.getAddress().value,
-	      secret: secretKey 
-	    };
-	  };
-
-	  return RippleWallet;
-	};
 
 
 /***/ },
@@ -33690,29 +33690,114 @@ var ripple =
 /* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
+	var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// Query String Utilities
+
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = (function(require, exports, module, undefined) {
+	"use strict";
+
+	var QueryString = exports;
+
+	function charCode(c) {
+	  return c.charCodeAt(0);
 	}
+
+	QueryString.unescape = decodeURIComponent;
+	QueryString.escape = encodeURIComponent;
+
+	var stringifyPrimitive = function(v) {
+	  switch (typeof v) {
+	    case 'string':
+	      return v;
+
+	    case 'boolean':
+	      return v ? 'true' : 'false';
+
+	    case 'number':
+	      return isFinite(v) ? v : '';
+
+	    default:
+	      return '';
+	  }
+	};
+
+
+	QueryString.stringify = QueryString.encode = function(obj, sep, eq, name) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  obj = (obj === null) ? undefined : obj;
+
+	  switch (typeof obj) {
+	    case 'object':
+	      return Object.keys(obj).map(function(k) {
+	        if (Array.isArray(obj[k])) {
+	          return obj[k].map(function(v) {
+	            return QueryString.escape(stringifyPrimitive(k)) +
+	                   eq +
+	                   QueryString.escape(stringifyPrimitive(v));
+	          }).join(sep);
+	        } else {
+	          return QueryString.escape(stringifyPrimitive(k)) +
+	                 eq +
+	                 QueryString.escape(stringifyPrimitive(obj[k]));
+	        }
+	      }).join(sep);
+
+	    default:
+	      if (!name) return '';
+	      return QueryString.escape(stringifyPrimitive(name)) + eq +
+	             QueryString.escape(stringifyPrimitive(obj));
+	  }
+	};
+
+	// Parse a key=val string.
+	QueryString.parse = QueryString.decode = function(qs, sep, eq) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  var obj = {};
+
+	  if (typeof qs !== 'string' || qs.length === 0) {
+	    return obj;
+	  }
+
+	  qs.split(sep).forEach(function(kvp) {
+	    var x = kvp.split(eq);
+	    var k = QueryString.unescape(x[0], true);
+	    var v = QueryString.unescape(x.slice(1).join(eq), true);
+
+	    if (!(k in obj)) {
+	      obj[k] = v;
+	    } else if (!Array.isArray(obj[k])) {
+	      obj[k] = [obj[k], v];
+	    } else {
+	      obj[k].push(v);
+	    }
+	  });
+
+	  return obj;
+	};
+
+	}.call(exports, __webpack_require__, exports, module)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
@@ -34236,114 +34321,29 @@ var ripple =
 /* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// Query String Utilities
-
-	!(__WEBPACK_AMD_DEFINE_RESULT__ = (function(require, exports, module, undefined) {
-	"use strict";
-
-	var QueryString = exports;
-
-	function charCode(c) {
-	  return c.charCodeAt(0);
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
 	}
-
-	QueryString.unescape = decodeURIComponent;
-	QueryString.escape = encodeURIComponent;
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-
-	QueryString.stringify = QueryString.encode = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  obj = (obj === null) ? undefined : obj;
-
-	  switch (typeof obj) {
-	    case 'object':
-	      return Object.keys(obj).map(function(k) {
-	        if (Array.isArray(obj[k])) {
-	          return obj[k].map(function(v) {
-	            return QueryString.escape(stringifyPrimitive(k)) +
-	                   eq +
-	                   QueryString.escape(stringifyPrimitive(v));
-	          }).join(sep);
-	        } else {
-	          return QueryString.escape(stringifyPrimitive(k)) +
-	                 eq +
-	                 QueryString.escape(stringifyPrimitive(obj[k]));
-	        }
-	      }).join(sep);
-
-	    default:
-	      if (!name) return '';
-	      return QueryString.escape(stringifyPrimitive(name)) + eq +
-	             QueryString.escape(stringifyPrimitive(obj));
-	  }
-	};
-
-	// Parse a key=val string.
-	QueryString.parse = QueryString.decode = function(qs, sep, eq) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  qs.split(sep).forEach(function(kvp) {
-	    var x = kvp.split(eq);
-	    var k = QueryString.unescape(x[0], true);
-	    var v = QueryString.unescape(x.slice(1).join(eq), true);
-
-	    if (!(k in obj)) {
-	      obj[k] = v;
-	    } else if (!Array.isArray(obj[k])) {
-	      obj[k] = [obj[k], v];
-	    } else {
-	      obj[k].push(v);
-	    }
-	  });
-
-	  return obj;
-	};
-
-	}.call(exports, __webpack_require__, exports, module)), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 
 /***/ },
