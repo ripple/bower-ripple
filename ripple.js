@@ -45,28 +45,30 @@ var ripple =
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports.Remote           = __webpack_require__(1).Remote;
-	exports.Request          = __webpack_require__(2).Request;
-	exports.Amount           = __webpack_require__(3).Amount;
-	exports.Account          = __webpack_require__(4).Account;
-	exports.Transaction      = __webpack_require__(5).Transaction;
-	exports.Currency         = __webpack_require__(6).Currency;
-	exports.Base             = __webpack_require__(7).Base;
-	exports.UInt128          = __webpack_require__(8).UInt128;
-	exports.UInt160          = __webpack_require__(9).UInt160;
-	exports.UInt256          = __webpack_require__(10).UInt256;
-	exports.Seed             = __webpack_require__(11).Seed;
-	exports.Meta             = __webpack_require__(12).Meta;
+	'use strict';
+	exports.Remote = __webpack_require__(1).Remote;
+	exports.Request = __webpack_require__(2).Request;
+	exports.Amount = __webpack_require__(3).Amount;
+	exports.Account = __webpack_require__(4).Account;
+	exports.Transaction = __webpack_require__(5).Transaction;
+	exports.Currency = __webpack_require__(6).Currency;
+	exports.Base = __webpack_require__(7).Base;
+	exports.UInt128 = __webpack_require__(8).UInt128;
+	exports.UInt160 = __webpack_require__(9).UInt160;
+	exports.UInt256 = __webpack_require__(10).UInt256;
+	exports.Seed = __webpack_require__(11).Seed;
+	exports.Meta = __webpack_require__(12).Meta;
 	exports.SerializedObject = __webpack_require__(13).SerializedObject;
-	exports.RippleError      = __webpack_require__(14).RippleError;
-	exports.Message          = __webpack_require__(15).Message;
-	exports.binformat        = __webpack_require__(16);
-	exports.utils            = __webpack_require__(17);
-	exports.Server           = __webpack_require__(18).Server;
-	exports.Wallet           = __webpack_require__(19);
-	exports.Ledger           = __webpack_require__(20).Ledger;
+	exports.RippleError = __webpack_require__(14).RippleError;
+	exports.Message = __webpack_require__(15).Message;
+	exports.binformat = __webpack_require__(16);
+	exports.utils = __webpack_require__(17);
+	exports.Server = __webpack_require__(18).Server;
+	exports.Wallet = __webpack_require__(19);
+	exports.Ledger = __webpack_require__(20).Ledger;
 	exports.TransactionQueue = __webpack_require__(21).TransactionQueue;
-	exports.RangeSet         = __webpack_require__(22).RangeSet;
+	exports.RangeSet = __webpack_require__(22).RangeSet;
+	exports.convertBase = __webpack_require__(23);
 
 	// Important: We do not guarantee any specific version of SJCL or for any
 	// specific features to be included. The version and configuration may change at
@@ -75,35 +77,35 @@ var ripple =
 	// However, for programs that are tied to a specific version of ripple.js like
 	// the official client, it makes sense to expose the SJCL instance so we don't
 	// have to include it twice.
-	exports.sjcl   = __webpack_require__(17).sjcl;
-	exports.types  = __webpack_require__(23);
+	exports.sjcl = __webpack_require__(17).sjcl;
+	exports.types = __webpack_require__(24);
 
-	exports.config = __webpack_require__(24);
+	exports.config = __webpack_require__(25);
 
 	// camelCase to under_scored API conversion
-	function attachUnderscored(c) {
-	  var o = exports[c];
+	function attachUnderscored(name) {
+	 var o = exports[name];
 
-	  Object.keys(o.prototype).forEach(function(key) {
-	    var UPPERCASE = /([A-Z]{1})[a-z]+/g;
+	 Object.keys(o.prototype).forEach(function(key) {
+	   var UPPERCASE = /([A-Z]{1})[a-z]+/g;
 
-	    if (!UPPERCASE.test(key)) {
-	      return;
-	    }
+	   if (!UPPERCASE.test(key)) {
+	     return;
+	   }
 
-	    var underscored = key.replace(UPPERCASE, function(c) {
-	      return '_' + c.toLowerCase();
-	    });
+	   var underscored = key.replace(UPPERCASE, function(c) {
+	     return '_' + c.toLowerCase();
+	   });
 
-	    o.prototype[underscored] = o.prototype[key];
-	  });
-	};
+	   o.prototype[underscored] = o.prototype[key];
+	 });
+	}
 
-	[ 'Remote',
-	  'Request',
-	  'Transaction',
-	  'Account',
-	  'Server'
+	['Remote',
+	 'Request',
+	 'Transaction',
+	 'Account',
+	 'Server'
 	].forEach(attachUnderscored);
 
 	// vim:sw=2:sts=2:ts=8:et
@@ -112,6 +114,8 @@ var ripple =
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
+
+	 'use strict';
 
 	// Interface to manage connections to rippled servers
 	//
@@ -126,15 +130,14 @@ var ripple =
 	// has not yet been implemented. However, this class has been designed for it
 	// to be a very simple drop option.
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util = __webpack_require__(40);
 	var assert = __webpack_require__(41);
-	var LRU = __webpack_require__(48);
-	var async = __webpack_require__(49);
+	var LRU = __webpack_require__(47);
+	var async = __webpack_require__(48);
 	var lodash = __webpack_require__(45);
 	var Server = __webpack_require__(18).Server;
 	var Request = __webpack_require__(2).Request;
-	var Server = __webpack_require__(18).Server;
 	var Amount = __webpack_require__(3).Amount;
 	var Currency = __webpack_require__(6).Currency;
 	var UInt160 = __webpack_require__(9).UInt160;
@@ -142,15 +145,15 @@ var ripple =
 	var Transaction = __webpack_require__(5).Transaction;
 	var Account = __webpack_require__(4).Account;
 	var Meta = __webpack_require__(12).Meta;
-	var OrderBook = __webpack_require__(25).OrderBook;
-	var PathFind = __webpack_require__(26).PathFind;
+	var OrderBook = __webpack_require__(26).OrderBook;
+	var PathFind = __webpack_require__(27).PathFind;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var RippleError = __webpack_require__(14).RippleError;
 	var utils = __webpack_require__(17);
 	var sjcl = __webpack_require__(17).sjcl;
-	var hashprefixes = __webpack_require__(27);
-	var config = __webpack_require__(24);
-	var log = __webpack_require__(28).internal.sub('remote');
+	var hashprefixes = __webpack_require__(28);
+	var config = __webpack_require__(25);
+	var log = __webpack_require__(29).internal.sub('remote');
 
 	/**
 	 * Interface to manage connections to rippled servers
@@ -162,31 +165,31 @@ var ripple =
 	  EventEmitter.call(this);
 
 	  var self = this;
-	  var opts = opts || { };
+	  opts = opts || { };
 
-	  Object.keys(Remote.DEFAULTS).forEach(function(config) {
-	    if (opts.hasOwnProperty(config)) {
-	      this[config] = opts[config];
+	  Object.keys(Remote.DEFAULTS).forEach(function(option) {
+	    if (opts.hasOwnProperty(option)) {
+	      this[option] = opts[option];
 	    } else {
-	      this[config] = Remote.DEFAULTS[config];
+	      this[option] = Remote.DEFAULTS[option];
 	    }
 	  }, this);
 
 	  this.state = 'offline'; // 'online', 'offline'
 	  this._server_fatal = false; // server exited
-	  this._stand_alone = void(0);
-	  this._testnet = void(0);
+	  this._stand_alone = undefined;
+	  this._testnet = undefined;
 
-	  this._ledger_current_index = void(0);
-	  this._ledger_hash = void(0);
-	  this._ledger_time = void(0);
+	  this._ledger_current_index = undefined;
+	  this._ledger_hash = undefined;
+	  this._ledger_time = undefined;
 
 	  this._connection_count = 0;
 	  this._connected = false;
 	  this._should_connect = true;
 
 	  this._transaction_listeners = 0;
-	  this._received_tx = new LRU({ max: 100 });
+	  this._received_tx = new LRU({max: 100});
 	  this._cur_path_find = null;
 
 	  if (this.local_signing) {
@@ -196,7 +199,7 @@ var ripple =
 	  }
 
 	  this._servers = [ ];
-	  this._primary_server = void(0);
+	  this._primary_server = undefined;
 
 	  // Cache information for accounts.
 	  // DEPRECATED, will be removed
@@ -289,7 +292,7 @@ var ripple =
 	          break;
 	      }
 	    }
-	  };
+	  }
 
 	  this.on('newListener', function(event) {
 	    listenersModified('add', event);
@@ -298,7 +301,7 @@ var ripple =
 	  this.on('removeListener', function(event) {
 	    listenersModified('remove', event);
 	  });
-	};
+	}
 
 	util.inherits(Remote, EventEmitter);
 
@@ -364,7 +367,7 @@ var ripple =
 	        remote.setSecret(accountInfo.account, accountInfo.secret);
 	      }
 	    }
-	  };
+	  }
 
 	  if (config.accounts) {
 	    Object.keys(config.accounts).forEach(initializeAccount);
@@ -476,7 +479,7 @@ var ripple =
 	 */
 
 	Remote.prototype.setTrace = function(trace) {
-	  this.trace = (trace === void(0) || trace);
+	  this.trace = (trace === undefined || trace);
 	  return this;
 	};
 
@@ -505,7 +508,7 @@ var ripple =
 
 	  function serverMessage(data) {
 	    self._handleMessage(data, server);
-	  };
+	  }
 
 	  server.on('message', serverMessage);
 
@@ -521,7 +524,7 @@ var ripple =
 	    if (self._connection_count === self._servers.length) {
 	      self.emit('ready');
 	    }
-	  };
+	  }
 
 	  server.on('connect', serverConnect);
 
@@ -530,7 +533,7 @@ var ripple =
 	    if (self._connection_count === 0) {
 	      self._setState('offline');
 	    }
-	  };
+	  }
 
 	  server.on('disconnect', serverDisconnect);
 
@@ -553,8 +556,6 @@ var ripple =
 	  this._servers.forEach(function(server) {
 	    server.reconnect();
 	  });
-
-	  return this;
 	};
 
 	/**
@@ -594,7 +595,9 @@ var ripple =
 	    throw new Error('No servers available, not disconnecting');
 	  }
 
-	  var callback = (typeof callback === 'function') ? callback : function(){};
+	  if (typeof callback !== 'function') {
+	    callback = function() {};
+	  }
 
 	  this._should_connect = false;
 
@@ -748,7 +751,8 @@ var ripple =
 	    }, this);
 	  } else {
 	    // Transaction could be from proposed transaction stream
-	    [ 'Account', 'Destination' ].forEach(function(prop) {
+	    // XX
+	    ['Account', 'Destination'].forEach(function(prop) {
 	      if (this._accounts[message.transaction[prop]]) {
 	        this._accounts[message.transaction[prop]].notify(message);
 	      }
@@ -1051,9 +1055,12 @@ var ripple =
 	 * Get the contents of a specified ledger
 	 *
 	 * @param {Object} options
-	 * @property {Boolean} [options.binary]       - Flag which determines if rippled returns binary or parsed JSON
-	 * @property {String|Number} [options.ledger] - Hash or sequence of a ledger to get contents for
-	 * @property {Number} [options.limit]         - Number of contents to retrieve from the ledger
+	 * @property {Boolean} [options.binary]- Flag which determines if rippled
+	 * returns binary or parsed JSON
+	 * @property {String|Number} [options.ledger] - Hash or sequence of a ledger
+	 * to get contents for
+	 * @property {Number} [options.limit] - Number of contents to retrieve
+	 * from the ledger
 	 * @property {Function} callback
 	 *
 	 * @callback
@@ -1080,7 +1087,7 @@ var ripple =
 	      async.setImmediate(function() {
 	        next(null, Remote.parseBinaryLedgerData(ledgerData));
 	      });
-	    };
+	    }
 
 	    function complete(err, state) {
 	      if (err) {
@@ -1089,7 +1096,7 @@ var ripple =
 	        res.state = state;
 	        request.emit('state', res);
 	      }
-	    };
+	    }
 
 	    async.mapSeries(res.state, iterator, complete);
 	  });
@@ -1143,7 +1150,7 @@ var ripple =
 	          // Emulate fetch of ledger entry.
 	          // console.log('request_ledger_entry: emulating');
 	          // YYY Missing lots of fields.
-	          request.emit('success', { node: node });
+	          request.emit('success', {node: node});
 	          bDefault = false;
 	        } else { // Was not cached.
 	          // XXX Only allow with trusted mode.  Must sync response with advance
@@ -1188,7 +1195,7 @@ var ripple =
 	  var request = new Request(this, 'subscribe');
 
 	  if (streams) {
-	    request.message.streams = Array.isArray(streams) ? streams : [ streams ];
+	    request.message.streams = Array.isArray(streams) ? streams : [streams];
 	  }
 
 	  request.callback(callback);
@@ -1208,7 +1215,7 @@ var ripple =
 	  var request = new Request(this, 'unsubscribe');
 
 	  if (streams) {
-	    request.message.streams = Array.isArray(streams) ? streams : [ streams ];
+	    request.message.streams = Array.isArray(streams) ? streams : [streams];
 	  }
 
 	  request.callback(callback);
@@ -1225,7 +1232,8 @@ var ripple =
 	 * @return {Request} request
 	 */
 
-	Remote.prototype.requestTransactionEntry = function(hash, ledgerHash, callback) {
+	Remote.prototype.requestTransactionEntry =
+	function(hash, ledgerHash, callback) {
 	  // If not trusted, need to check proof, maybe talk packet protocol.
 	  // utils.assert(this.trusted);
 	  var request = new Request(this, 'transaction_entry');
@@ -1234,7 +1242,7 @@ var ripple =
 	    ledgerHash = hash.ledger || hash.ledger_hash || hash.ledger_index;
 	    hash = hash.hash || hash.tx || hash.transaction;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1266,7 +1274,8 @@ var ripple =
 	 *
 	 * @param {Object|String} hash
 	 * @property {String} hash.hash           - Transaction hash
-	 * @property {Boolean} [hash.binary=true] - Flag which determines if rippled returns binary or parsed JSON
+	 * @property {Boolean} [hash.binary=true] - Flag which determines if rippled
+	 * returns binary or parsed JSON
 	 * @param [Function] callback
 	 * @return {Request} request
 	 */
@@ -1276,8 +1285,8 @@ var ripple =
 	  var options;
 
 	  if (typeof hash === 'string') {
-	    options = { hash: hash };
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    options = {hash: hash};
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  } else {
 	    options = hash;
@@ -1334,7 +1343,7 @@ var ripple =
 	    limit = options.limit;
 	    marker = options.marker;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1502,15 +1511,15 @@ var ripple =
 
 	  options.binary = options.binary !== false;
 
-	  if (options.min_ledger !== void(0)) {
+	  if (options.min_ledger !== undefined) {
 	    options.ledger_index_min = options.min_ledger;
 	  }
 
-	  if (options.max_ledger !== void(0)) {
+	  if (options.max_ledger !== undefined) {
 	    options.ledger_index_max = options.max_ledger;
 	  }
 
-	  if (options.binary && options.parseBinary === void(0)) {
+	  if (options.binary && options.parseBinary === undefined) {
 	    options.parseBinary = true;
 	  }
 
@@ -1543,7 +1552,7 @@ var ripple =
 	      async.setImmediate(function() {
 	        next(null, Remote.parseBinaryAccountTransaction(transaction));
 	      });
-	    };
+	    }
 
 	    function complete(err, transactions) {
 	      if (err) {
@@ -1552,7 +1561,7 @@ var ripple =
 	        res.transactions = transactions;
 	        request.emit('transactions', res);
 	      }
-	    };
+	    }
 
 	    async.mapSeries(res.transactions, iterator, complete);
 	  });
@@ -1609,15 +1618,18 @@ var ripple =
 	  tx_result.meta = meta;
 	  tx_result.validated = transaction.validated;
 
-	  if (typeof meta.DeliveredAmount === 'string' || typeof meta.DeliveredAmount === 'object') {
-	    tx_result.meta.delivered_amount = meta.DeliveredAmount;
-	  } else {
-	    switch (typeof tx_obj.Amount) {
-	      case 'string':
-	      case 'object':
-	        tx_result.meta.delivered_amount = tx_obj.Amount;
-	        break;
-	    }
+	  switch (typeof meta.DeliveredAmount) {
+	    case 'string':
+	    case 'object':
+	      tx_result.meta.delivered_amount = meta.DeliveredAmount;
+	      break;
+	    default:
+	      switch (typeof tx_obj.Amount) {
+	        case 'string':
+	        case 'object':
+	          tx_result.meta.delivered_amount = tx_obj.Amount;
+	          break;
+	      }
 	  }
 
 	  return tx_result;
@@ -1663,7 +1675,7 @@ var ripple =
 	  if (typeof start === 'object') {
 	    start = start.start;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1703,7 +1715,7 @@ var ripple =
 	    ledger = options.ledger;
 	    limit = options.limit;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1769,7 +1781,7 @@ var ripple =
 	  if (typeof seed === 'object') {
 	    seed = seed.seed;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1797,7 +1809,7 @@ var ripple =
 	    tx_json = secret.tx_json;
 	    secret = secret.secret;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1833,7 +1845,7 @@ var ripple =
 
 	Remote.prototype._serverPrepareSubscribe = function(server, callback) {
 	  var self = this;
-	  var feeds = [ 'ledger', 'server' ];
+	  var feeds = ['ledger', 'server'];
 
 	  if (typeof server === 'function') {
 	    callback = server;
@@ -1862,7 +1874,7 @@ var ripple =
 	    self._handleLedgerClosed(message, server);
 
 	    self.emit('subscribed');
-	  };
+	  }
 
 	  request.on('error', function(err) {
 	    if (self.trace) {
@@ -1890,12 +1902,14 @@ var ripple =
 
 	Remote.prototype.ledgerAccept =
 	Remote.prototype.requestLedgerAccept = function(callback) {
+	  /* eslint-disable consistent-return */
+	  var request = new Request(this, 'ledger_accept');
+
 	  if (!this._stand_alone) {
+	    // XXX This should emit error on the request
 	    this.emit('error', new RippleError('notStandAlone'));
 	    return;
 	  }
-
-	  var request = new Request(this, 'ledger_accept');
 
 	  this.once('ledger_closed', function(ledger) {
 	    request.emit('ledger_closed', ledger);
@@ -1905,6 +1919,7 @@ var ripple =
 	  request.request();
 
 	  return request;
+	  /* eslint-enable consistent-return */
 	};
 
 	/**
@@ -1914,13 +1929,14 @@ var ripple =
 	 * @api private
 	 */
 
-	Remote.accountRootRequest = function(type, responseFilter, account, ledger, callback) {
+	Remote.accountRootRequest =
+	function(type, responseFilter, account, ledger, callback) {
 	  if (typeof account === 'object') {
 	    callback = ledger;
 	    ledger = account.ledger;
 	    account = account.account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -1956,7 +1972,7 @@ var ripple =
 	Remote.prototype.requestAccountBalance = function() {
 	  function responseFilter(message) {
 	    return Amount.from_json(message.node.Balance);
-	  };
+	  }
 
 	  var args = Array.prototype.concat.apply(
 	    ['account_balance', responseFilter],
@@ -1979,7 +1995,7 @@ var ripple =
 	Remote.prototype.requestAccountFlags = function() {
 	  function responseFilter(message) {
 	    return message.node.Flags;
-	  };
+	  }
 
 	  var args = Array.prototype.concat.apply(
 	    ['account_flags', responseFilter],
@@ -2002,7 +2018,7 @@ var ripple =
 	Remote.prototype.requestOwnerCount = function() {
 	  function responseFilter(message) {
 	    return message.node.OwnerCount;
-	  };
+	  }
 
 	  var args = Array.prototype.concat.apply(
 	    ['owner_count', responseFilter],
@@ -2064,7 +2080,8 @@ var ripple =
 	 */
 
 	Remote.prototype.pathFind =
-	Remote.prototype.createPathFind = function(src_account, dst_account, dst_amount, src_currencies) {
+	Remote.prototype.createPathFind =
+	function(src_account, dst_account, dst_amount, src_currencies) {
 	  if (typeof src_account === 'object') {
 	    var options = src_account;
 	    src_currencies = options.src_currencies;
@@ -2072,7 +2089,7 @@ var ripple =
 	    dst_account = options.dst_account;
 	    src_account = options.src_account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2105,7 +2122,8 @@ var ripple =
 	 */
 
 	Remote.prototype.book =
-	Remote.prototype.createOrderBook = function(currency_gets, issuer_gets, currency_pays, issuer_pays) {
+	Remote.prototype.createOrderBook =
+	function(currency_gets, issuer_gets, currency_pays, issuer_pays) {
 	  if (typeof currency_gets === 'object') {
 	    var options = currency_gets;
 	    issuer_pays = options.issuer_pays;
@@ -2113,7 +2131,7 @@ var ripple =
 	    issuer_gets = options.issuer_gets;
 	    currency_gets = options.currency_gets;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2147,15 +2165,15 @@ var ripple =
 
 	Remote.prototype.accountSeq =
 	Remote.prototype.getAccountSequence = function(account, advance) {
-	  var account = UInt160.json_rewrite(account);
+	  account = UInt160.json_rewrite(account);
 	  var accountInfo = this.accounts[account];
 
 	  if (!accountInfo) {
-	    return;
+	    return NaN;
 	  }
 
 	  var seq = accountInfo.seq;
-	  var change = { ADVANCE: 1, REWIND: -1 }[advance.toUpperCase()] || 0;
+	  var change = {ADVANCE: 1, REWIND: -1}[advance.toUpperCase()] || 0;
 
 	  accountInfo.seq += change;
 
@@ -2171,7 +2189,7 @@ var ripple =
 
 	Remote.prototype.setAccountSequence =
 	Remote.prototype.setAccountSeq = function(account, sequence) {
-	  var account = UInt160.json_rewrite(account);
+	  account = UInt160.json_rewrite(account);
 
 	  if (!this.accounts.hasOwnProperty(account)) {
 	    this.accounts[account] = { };
@@ -2196,7 +2214,7 @@ var ripple =
 	    ledger = options.ledger;
 	    account = options.account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2214,13 +2232,13 @@ var ripple =
 	    account_info.seq = seq;
 
 	    request.emit('success_cache', message);
-	  };
+	  }
 
 	  function accountRootError(message) {
 	    delete account_info.caching_seq_request;
 
 	    request.emit('error_cache', message);
-	  };
+	  }
 
 	  if (!request) {
 	    request = this.requestLedgerEntry('account_root');
@@ -2244,7 +2262,7 @@ var ripple =
 	 */
 
 	Remote.prototype.dirtyAccountRoot = function(account) {
-	  var account = UInt160.json_rewrite(account);
+	  account = UInt160.json_rewrite(account);
 	  delete this.ledgers.current.account_root[account];
 	};
 
@@ -2255,7 +2273,8 @@ var ripple =
 	 *   @param {String|Number} options.ledger
 	 *   @param {String} [options.account]  - Required unless using options.index
 	 *   @param {Number} [options.sequence] - Required unless using options.index
-	 *   @param {String} [options.index]    - Required only if options.account and options.sequence not provided
+	 *   @param {String} [options.index]    - Required only if options.account and
+	 *   options.sequence not provided
 	 *
 	 * @callback
 	 * @param {Error} error
@@ -2296,7 +2315,8 @@ var ripple =
 	 * @return {Request}
 	 */
 
-	Remote.prototype.requestRippleBalance = function(account, issuer, currency, ledger, callback) {
+	Remote.prototype.requestRippleBalance =
+	function(account, issuer, currency, ledger, callback) {
 	  if (typeof account === 'object') {
 	    var options = account;
 	    callback = issuer;
@@ -2305,7 +2325,7 @@ var ripple =
 	    issuer = options.issuer;
 	    account = options.account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2353,7 +2373,7 @@ var ripple =
 	        ? node.HighQualityOut
 	        : node.LowQualityOut)
 	    });
-	  };
+	  }
 
 	  request.once('success', rippleState);
 	  request.callback(callback, 'ripple_state');
@@ -2385,7 +2405,8 @@ var ripple =
 	 * @return {Request}
 	 */
 
-	Remote.prototype.requestRipplePathFind = function(src_account, dst_account, dst_amount, src_currencies, callback) {
+	Remote.prototype.requestRipplePathFind =
+	function(src_account, dst_account, dst_amount, src_currencies, callback) {
 	  if (typeof src_account === 'object') {
 	    var options = src_account;
 	    callback = dst_account;
@@ -2394,7 +2415,7 @@ var ripple =
 	    dst_account = options.dst_account;
 	    src_account = options.src_account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2422,7 +2443,8 @@ var ripple =
 	 * @return {Request}
 	 */
 
-	Remote.prototype.requestPathFindCreate = function(src_account, dst_account, dst_amount, src_currencies, callback) {
+	Remote.prototype.requestPathFindCreate =
+	function(src_account, dst_account, dst_amount, src_currencies, callback) {
 	  if (typeof src_account === 'object') {
 	    var options = src_account;
 	    callback = dst_account;
@@ -2431,7 +2453,7 @@ var ripple =
 	    dst_account = options.dst_account;
 	    src_account = options.src_account;
 	  } else {
-	    console.error('DEPRECATED: First argument to request constructor should be'
+	    log.warn('DEPRECATED: First argument to request constructor should be'
 	      + ' an object containing request properties');
 	  }
 
@@ -2495,7 +2517,7 @@ var ripple =
 
 	  if (comment) {
 	    // note is not specified anywhere, should remove?
-	    request.message.comment = void(0);
+	    request.message.comment = undefined;
 	  }
 
 	  request.callback(callback);
@@ -2661,9 +2683,9 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util         = __webpack_require__(39);
-	var async        = __webpack_require__(49);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util         = __webpack_require__(40);
+	var async        = __webpack_require__(48);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(14).RippleError;
@@ -3229,16 +3251,18 @@ var ripple =
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
+	 'use strict';
+
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert    = __webpack_require__(41);
-	var extend    = __webpack_require__(46);
-	var utils     = __webpack_require__(17);
-	var UInt160   = __webpack_require__(9).UInt160;
-	var Seed      = __webpack_require__(11).Seed;
-	var Currency  = __webpack_require__(6).Currency;
-	var GlobalBigNumber = __webpack_require__(50);
+	var assert = __webpack_require__(41);
+	var extend = __webpack_require__(46);
+	var utils = __webpack_require__(17);
+	var UInt160 = __webpack_require__(9).UInt160;
+	var Seed = __webpack_require__(11).Seed;
+	var Currency = __webpack_require__(6).Currency;
+	var GlobalBigNumber = __webpack_require__(49);
 
 	var BigNumber = GlobalBigNumber.another({
 	  ROUNDING_MODE: GlobalBigNumber.ROUND_HALF_UP,
@@ -3255,40 +3279,46 @@ var ripple =
 	  //  integer : XRP
 	  //  { 'value' : ..., 'currency' : ..., 'issuer' : ...}
 
-	  this._value       = new BigNumber(NaN);
-	  this._is_native   = true; // Default to XRP. Only valid if value is not NaN.
-	  this._currency    = new Currency();
-	  this._issuer      = new UInt160();
+	  this._value = new BigNumber(NaN);
+	  this._is_native = true; // Default to XRP. Only valid if value is not NaN.
+	  this._currency = new Currency();
+	  this._issuer = new UInt160();
 	}
 
+	/**
+	 * Set strict_mode = false to disable amount range checking
+	 */
+
+	Amount.strict_mode = true;
+
 	var consts = {
-	  currency_xns:      0,
-	  currency_one:      1,
-	  xns_precision:     6,
+	  currency_xns: 0,
+	  currency_one: 1,
+	  xns_precision: 6,
 
 	  // bi_ prefix refers to "big integer"
 	  // TODO: we shouldn't expose our BigNumber library publicly
-	  bi_5:              new BigNumber(5),
-	  bi_7:              new BigNumber(7),
-	  bi_10:             new BigNumber(10),
-	  bi_1e14:           new BigNumber(1e14),
-	  bi_1e16:           new BigNumber(1e16),
-	  bi_1e17:           new BigNumber(1e17),
-	  bi_1e32:           new BigNumber(1e32),
-	  bi_man_max_value:  new BigNumber('9999999999999999'),
-	  bi_man_min_value:  new BigNumber(1e15),
-	  bi_xns_max:        new BigNumber(1e17),
-	  bi_xns_min:        new BigNumber(-1e17),
-	  bi_xns_unit:       new BigNumber(1e6),
+	  bi_5: new BigNumber(5),
+	  bi_7: new BigNumber(7),
+	  bi_10: new BigNumber(10),
+	  bi_1e14: new BigNumber(1e14),
+	  bi_1e16: new BigNumber(1e16),
+	  bi_1e17: new BigNumber(1e17),
+	  bi_1e32: new BigNumber(1e32),
+	  bi_man_max_value: new BigNumber('9999999999999999'),
+	  bi_man_min_value: new BigNumber(1e15),
+	  bi_xns_max: new BigNumber(1e17),
+	  bi_xns_min: new BigNumber(-1e17),
+	  bi_xns_unit: new BigNumber(1e6),
 
-	  cMinOffset:        -96,
-	  cMaxOffset:        80,
+	  cMinOffset: -96,
+	  cMaxOffset: 80,
 
 	  // Maximum possible amount for non-XRP currencies using the maximum mantissa
 	  // with maximum exponent. Corresponds to hex 0xEC6386F26FC0FFFF.
-	  max_value:         '9999999999999999e80',
+	  max_value: '9999999999999999e80',
 	  // Minimum possible amount for non-XRP currencies.
-	  min_value:         '-1000000000000000e-96'
+	  min_value: '-1000000000000000e-96'
 	};
 
 	var MAX_XRP_VALUE = new BigNumber(1e11);
@@ -3358,7 +3388,7 @@ var ripple =
 	  var addendAmount = Amount.from_json(addend);
 
 	  if (!this.is_comparable(addendAmount)) {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 
 	  return this._copy(this._value.plus(addendAmount._value));
@@ -3411,24 +3441,28 @@ var ripple =
 	 * @this {Amount} The numerator (top half) of the fraction.
 	 * @param {Amount} denominator The denominator (bottom half) of the fraction.
 	 * @param opts Options for the calculation.
-	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
-	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
+	 * @param opts.reference_date {Date|Number} Date based on which
+	 * demurrage/interest should be applied. Can be given as JavaScript Date or int
+	 * for Ripple epoch.
 	 * @return {Amount} The resulting ratio. Unit will be the same as numerator.
 	 */
 
 	Amount.prototype.ratio_human = function(denominator, opts) {
 	  opts = extend({ }, opts);
 
+	  /*eslint-disable consistent-this */
 	  var numerator = this;
+	  /*eslint-enable consistent-this */
+
 	  denominator = Amount.from_json(denominator);
 
 	  // If either operand is NaN, the result is NaN.
 	  if (!numerator.is_valid() || !denominator.is_valid()) {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 
 	  if (denominator.is_zero()) {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 
 	  // Apply interest/demurrage
@@ -3470,11 +3504,11 @@ var ripple =
 	 *
 	 * @see Amount#ratio_human
 	 *
-	 * @this {Amount} The first factor of the product.
 	 * @param {Amount} factor The second factor of the product.
-	 * @param opts Options for the calculation.
-	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
-	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
+	 * @param {Object} opts Options for the calculation.
+	 * @param {Date|Number} opts.reference_date Date based on which
+	 * demurrage/interest should be applied. Can be given as JavaScript Date or int
+	 * for Ripple epoch.
 	 * @return {Amount} The product. Unit will be the same as the first factor.
 	 */
 	Amount.prototype.product_human = function(factor, opts) {
@@ -3484,7 +3518,7 @@ var ripple =
 
 	  // If either operand is NaN, the result is NaN.
 	  if (!this.is_valid() || !factor.is_valid()) {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 
 	  // Apply interest/demurrage
@@ -3511,6 +3545,7 @@ var ripple =
 	/**
 	 * Turn this amount into its inverse.
 	 *
+	 * @return {Amount} self
 	 * @private
 	 */
 	Amount.prototype._invert = function() {
@@ -3532,7 +3567,8 @@ var ripple =
 	 * Canonicalize amount value
 	 *
 	 * Mirrors rippled's internal Amount representation
-	 * From https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol/STAmount.h#L31-L40
+	 * From https://github.com/ripple/rippled/blob/develop/src/ripple/data
+	 * /protocol/STAmount.h#L31-L40
 	 *
 	 * Internal form:
 	 * 1: If amount is zero, then value is zero and offset is -100
@@ -3553,22 +3589,24 @@ var ripple =
 	 * - maximum: (10^16)-1 x 10^80 -> 9999999999999999e80
 	 *
 	 * @returns {Amount}
-	 * @throws {Error} if offset exceeds legal ranges, meaning the amount value is bigger than supported
+	 * @throws {Error} if offset exceeds legal ranges, meaning the amount value is
+	 * bigger than supported
 	 */
 
 	Amount.prototype.canonicalize = function(roundingMode) {
 	  if (this._is_native) {
 	    this._value = this._value.round(6, BigNumber.ROUND_DOWN);
+	  } else if (roundingMode) {
+	    this._value = new BigNumber(this._value.toPrecision(16, roundingMode));
 	  } else {
-	    if (roundingMode) {
-	      this._value = new BigNumber(this._value.toPrecision(16, roundingMode));
-	    } else {
-	      this._value = new BigNumber(this._value.toPrecision(16));
-	    }
+	    this._value = new BigNumber(this._value.toPrecision(16));
 	  }
 	};
 
 	Amount.prototype._check_limits = function() {
+	  if (!Amount.strict_mode) {
+	    return this;
+	  }
 	  if (this._value.isNaN() || this._value.isZero()) {
 	    return this;
 	  }
@@ -3601,7 +3639,7 @@ var ripple =
 	Amount.prototype.compareTo = function(to) {
 	  var toAmount = Amount.from_json(to);
 	  if (!this.is_comparable(toAmount)) {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 	  return this._value.comparedTo(toAmount._value);
 	};
@@ -3609,10 +3647,10 @@ var ripple =
 	// Make d a copy of this. Returns d.
 	// Modification of objects internally refered to is not allowed.
 	Amount.prototype.copyTo = function(d, negate) {
-	  d._value     = negate ? this._value.negated() : this._value;
+	  d._value = negate ? this._value.negated() : this._value;
 	  d._is_native = this._is_native;
-	  d._currency  = this._currency;
-	  d._issuer    = this._issuer;
+	  d._currency = this._currency;
+	  d._issuer = this._issuer;
 	  return d;
 	};
 
@@ -3655,7 +3693,9 @@ var ripple =
 	};
 
 	Amount.prototype.is_valid_full = function() {
-	  return this.is_valid() && this._currency.is_valid() && this._issuer.is_valid();
+	  return this.is_valid()
+	  && this._currency.is_valid()
+	  && this._issuer.is_valid();
 	};
 
 	Amount.prototype.is_zero = function() {
@@ -3682,11 +3722,15 @@ var ripple =
 	 *   100         => 100000000/XRP
 	 *
 	 *
-	 * The regular expression below matches above cases, broken down for better understanding:
+	 * The regular expression below matches above cases, broken down for better
+	 * understanding:
 	 *
-	 * ([A-z]{3}|[0-9]{3})          // either 3 letter alphabetic currency-code or 3 digit numeric currency-code. See ISO 4217
-	 * $                            // end of string
+	 * // either 3 letter alphabetic currency-code or 3 digit numeric currency-code.
+	 * // See ISO 4217
+	 * ([A-z]{3}|[0-9]{3})
 	 *
+	 * // end of string
+	 * $
 	 */
 
 	Amount.prototype.parse_human = function(j, opts) {
@@ -3698,7 +3742,9 @@ var ripple =
 	  var value;
 	  var currency;
 
-	  var words = j.split(' ').filter(function(word) { return word !== ''; });
+	  var words = j.split(' ').filter(function(word) {
+	    return word !== '';
+	  });
 
 	  function isNumber(s) {
 	    return isFinite(s) && s !== '' && s !== null;
@@ -3712,7 +3758,7 @@ var ripple =
 	      value = words[0].slice(0, -3);
 	      currency = words[0].slice(-3);
 	      if (!(isNumber(value) && currency.match(currency_RE))) {
-	        return Amount.NaN();
+	        return new Amount(NaN);
 	      }
 	    }
 	  } else if (words.length === 2) {
@@ -3726,10 +3772,10 @@ var ripple =
 	      value = words[0];
 	      currency = words[1];
 	    } else {
-	      return Amount.NaN();
+	      return new Amount(NaN);
 	    }
 	  } else {
-	    return Amount.NaN();
+	    return new Amount(NaN);
 	  }
 
 	  currency = currency.toUpperCase();
@@ -3747,7 +3793,7 @@ var ripple =
 	};
 
 	Amount.prototype.parse_issuer = function(issuer) {
-	  this._issuer  = UInt160.from_json(issuer);
+	  this._issuer = UInt160.from_json(issuer);
 	  return this;
 	};
 
@@ -3764,41 +3810,43 @@ var ripple =
 	 * Prices involving demurraging currencies are tricky, since they depend on the
 	 * base and counter currencies.
 	 *
-	 * @param quality {String} 8 hex bytes quality or 32 hex bytes BookDirectory
+	 * @param {String} quality 8 hex bytes quality or 32 hex bytes BookDirectory
 	 *   index.
-	 * @param counterCurrency {Currency|String} Currency of the resulting Amount
+	 * @param {Currency|String} counterCurrency currency of the resulting Amount
 	 *   object.
-	 * @param counterIssuer {Issuer|String} Issuer of the resulting Amount object.
-	 * @param opts Additional options
-	 * @param opts.inverse {Boolean} If true, return the inverse of the price
+	 * @param {Issuer|String} counterIssuer Issuer of the resulting Amount object.
+	 * @param {Object} opts Additional options
+	 * @param {Boolean} opts.inverse If true, return the inverse of the price
 	 *   encoded in the quality.
-	 * @param opts.base_currency {Currency|String} The other currency. This plays a
+	 * @param {Currency|String} opts.base_currency The other currency. This plays a
 	 *   role with interest-bearing or demurrage currencies. In that case the
 	 *   demurrage has to be applied when the quality is decoded, otherwise the
 	 *   price will be false.
-	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
-	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
-	 * @param opts.xrp_as_drops {Boolean} Whether XRP amount should be treated as
+	 * @param {Date|Number} opts.reference_date Date based on which
+	 * demurrage/interest should be applied. Can be given as JavaScript Date or int
+	 * for Ripple epoch.
+	 * @param {Boolean} opts.xrp_as_drops Whether XRP amount should be treated as
 	 *   drops. When the base currency is XRP, the quality is calculated in drops.
 	 *   For human use however, we want to think of 1000000 drops as 1 XRP and
 	 *   prices as per-XRP instead of per-drop.
+	 * @return {Amount} self
 	 */
-	Amount.prototype.parse_quality = function(quality, counterCurrency, counterIssuer, opts)
-	{
+	Amount.prototype.parse_quality =
+	function(quality, counterCurrency, counterIssuer, opts) {
 	  opts = opts || {};
 
 	  var baseCurrency = Currency.from_json(opts.base_currency);
 
-	  var mantissa_hex  = quality.substring(quality.length-14);
-	  var offset_hex    = quality.substring(quality.length-16, quality.length-14);
-	  var mantissa      = new BigNumber(mantissa_hex, 16);
-	  var offset        = parseInt(offset_hex, 16) - 100;
+	  var mantissa_hex = quality.substring(quality.length - 14);
+	  var offset_hex = quality.substring(quality.length - 16, quality.length - 14);
+	  var mantissa = new BigNumber(mantissa_hex, 16);
+	  var offset = parseInt(offset_hex, 16) - 100;
 
 	  var value = new BigNumber(mantissa.toString() + 'e' + offset.toString());
 
-	  this._currency    = Currency.from_json(counterCurrency);
-	  this._issuer      = UInt160.from_json(counterIssuer);
-	  this._is_native   = this._currency.is_native();
+	  this._currency = Currency.from_json(counterCurrency);
+	  this._issuer = UInt160.from_json(counterIssuer);
+	  this._is_native = this._currency.is_native();
 
 	  if (this._is_native && baseCurrency.is_native()) {
 	    throw new Error('XRP/XRP quality is not allowed');
@@ -3839,7 +3887,8 @@ var ripple =
 
 	  this._set_value(nativeAdjusted);
 
-	  if (opts.reference_date && baseCurrency.is_valid() && baseCurrency.has_interest()) {
+	  if (opts.reference_date && baseCurrency.is_valid()
+	    && baseCurrency.has_interest()) {
 	    var interest = baseCurrency.get_interest_at(opts.reference_date);
 	    this._set_value(this._value.dividedBy(interest.toString()));
 	  }
@@ -3848,9 +3897,9 @@ var ripple =
 	};
 
 	Amount.prototype.parse_number = function(n) {
-	  this._is_native   = false;
-	  this._currency    = Currency.from_json(1);
-	  this._issuer      = UInt160.from_json(1);
+	  this._is_native = false;
+	  this._currency = Currency.from_json(1);
+	  this._issuer = UInt160.from_json(1);
 	  this._set_value(new BigNumber(n));
 	  return this;
 	};
@@ -3859,21 +3908,22 @@ var ripple =
 	Amount.prototype.parse_json = function(j) {
 	  switch (typeof j) {
 	    case 'string':
-	      // .../.../... notation is not a wire format.  But allowed for easier testing.
+	      // .../.../... notation is not a wire format.  But allowed for easier
+	      // testing.
 	      var m = j.match(/^([^/]+)\/([^/]+)(?:\/(.+))?$/);
 
 	      if (m) {
-	        this._currency  = Currency.from_json(m[2]);
+	        this._currency = Currency.from_json(m[2]);
 	        if (m[3]) {
-	          this._issuer  = UInt160.from_json(m[3]);
+	          this._issuer = UInt160.from_json(m[3]);
 	        } else {
-	          this._issuer  = UInt160.from_json('1');
+	          this._issuer = UInt160.from_json('1');
 	        }
 	        this.parse_value(m[1]);
 	      } else {
 	        this.parse_native(j);
-	        this._currency  = Currency.from_json('0');
-	        this._issuer    = UInt160.from_json('0');
+	        this._currency = Currency.from_json('0');
+	        this._issuer = UInt160.from_json('0');
 	      }
 	      break;
 
@@ -3912,9 +3962,9 @@ var ripple =
 	// - float = with precision 6
 	// XXX Improvements: disallow leading zeros.
 	Amount.prototype.parse_native = function(j) {
-	  if (typeof j === 'string' && !isNaN(parseInt(j))) {
+	  if (j && typeof j === 'string' && !isNaN(j)) {
 	    if (j.indexOf('.') >= 0) {
-	      throw new Error('Native amounts must be specified in integer drops')
+	      throw new Error('Native amounts must be specified in integer drops');
 	    }
 	    var value = new BigNumber(j);
 	    this._is_native = true;
@@ -3935,7 +3985,7 @@ var ripple =
 	};
 
 	Amount.prototype.set_currency = function(c) {
-	  this._currency  = Currency.from_json(c);
+	  this._currency = Currency.from_json(c);
 	  this._is_native = this._currency.is_native();
 	  return this;
 	};
@@ -3972,18 +4022,18 @@ var ripple =
 	    // Use e notation.
 	    // XXX Clamp output.
 	    return sign + mantissa.toString() + 'e' + offset.toString();
-	  } else {
-	    var val    = '000000000000000000000000000' + mantissa.toString()
-	               + '00000000000000000000000';
-	    var pre    = val.substring(0, offset + 43);
-	    var post   = val.substring(offset + 43);
-	    var s_pre  = pre.match(/[1-9].*$/);  // Everything but leading zeros.
-	    var s_post = post.match(/[1-9]0*$/); // Last non-zero plus trailing zeros.
-
-	    return sign + (s_pre ? s_pre[0] : '0')
-	      + (s_post ? '.' + post.substring(0, 1 + post.length - s_post[0].length) : '');
 	  }
 
+	  var val = '000000000000000000000000000'
+	  + mantissa.toString()
+	  + '00000000000000000000000';
+	  var pre = val.substring(0, offset + 43);
+	  var post = val.substring(offset + 43);
+	  var s_pre = pre.match(/[1-9].*$/);  // Everything but leading zeros.
+	  var s_post = post.match(/[1-9]0*$/); // Last non-zero plus trailing zeros.
+
+	  return sign + (s_pre ? s_pre[0] : '0')
+	  + (s_post ? '.' + post.substring(0, 1 + post.length - s_post[0].length) : '');
 	};
 
 	/**
@@ -3994,7 +4044,7 @@ var ripple =
 	 * User should not store amount objects after the interest is applied. This is
 	 * intended by display functions such as toHuman().
 	 *
-	 * @param referenceDate {Date|Number} Date based on which demurrage/interest
+	 * @param {Date|Number} referenceDate Date based on which demurrage/interest
 	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
 	 * @return {Amount} The amount with interest applied.
 	 */
@@ -4012,21 +4062,23 @@ var ripple =
 	 * @example
 	 *   var pretty = amount.to_human({precision: 2});
 	 *
-	 * @param opts Options for formatter.
-	 * @param opts.precision {Number} Max. number of digits after decimal point.
-	 * @param opts.min_precision {Number} Min. number of digits after dec. point.
-	 * @param opts.skip_empty_fraction {Boolean} Don't show fraction if it is zero,
+	 * @param {Object} opts Options for formatter.
+	 * @param {Number} opts.precision Max. number of digits after decimal point.
+	 * @param {Number} opts.min_precision Min. number of digits after dec. point.
+	 * @param {Boolean} opts.skip_empty_fraction Don't show fraction if it is zero,
 	 *   even if min_precision is set.
-	 * @param opts.max_sig_digits {Number} Maximum number of significant digits.
+	 * @param {Number} opts.max_sig_digits Maximum number of significant digits.
 	 *   Will cut fractional part, but never integer part.
-	 * @param opts.group_sep {Boolean|String} Whether to show a separator every n
+	 * @param {Boolean|String} opts.group_sep Whether to show a separator every n
 	 *   digits, if a string, that value will be used as the separator. Default: ','
-	 * @param opts.group_width {Number} How many numbers will be grouped together,
+	 * @param {Number} opts.group_width How many numbers will be grouped together,
 	 *   default: 3.
-	 * @param opts.signed {Boolean|String} Whether negative numbers will have a
+	 * @param {Boolean|String} opts.signed Whether negative numbers will have a
 	 *   prefix. If String, that string will be used as the prefix. Default: '-'
-	 * @param opts.reference_date {Date|Number} Date based on which demurrage/interest
-	 *   should be applied. Can be given as JavaScript Date or int for Ripple epoch.
+	 * @param {Date|Number} opts.reference_date Date based on which
+	 * demurrage/interest should be applied. Can be given as JavaScript Date or int
+	 * for Ripple epoch.
+	 * @return {String} amount string
 	 */
 	Amount.prototype.to_human = function(opts) {
 	  opts = opts || {};
@@ -4035,16 +4087,19 @@ var ripple =
 	    return 'NaN';
 	  }
 
+	  /* eslint-disable consistent-this */
 	  // Apply demurrage/interest
 	  var ref = this;
+	  /* eslint-enable consistent-this */
+
 	  if (opts.reference_date) {
 	    ref = this.applyInterest(opts.reference_date);
 	  }
 
-	  var isNegative    = ref._value.isNegative();
-	  var valueString   = ref._value.abs().toString();
-	  var parts         = valueString.split('.');
-	  var int_part      = parts[0];
+	  var isNegative = ref._value.isNegative();
+	  var valueString = ref._value.abs().toString();
+	  var parts = valueString.split('.');
+	  var int_part = parts[0];
 	  var fraction_part = parts.length === 2 ? parts[1] : '';
 
 	  int_part = int_part.replace(/^0*/, '');
@@ -4078,7 +4133,9 @@ var ripple =
 
 	      // Don't count leading zeros in the fractional part if the integer part is
 	      // zero.
-	      var sig_frac = int_is_zero ? fraction_part.replace(/^0*/, '') : fraction_part;
+	      var sig_frac = int_is_zero
+	      ? fraction_part.replace(/^0*/, '')
+	      : fraction_part;
 	      digits += sig_frac.length;
 
 	      // Now we calculate where we are compared to the maximum
@@ -4113,7 +4170,7 @@ var ripple =
 	  }
 
 	  var formatted = '';
-	  if(isNegative && opts.signed !== false) {
+	  if (isNegative && opts.signed !== false) {
 	    formatted += '-';
 	  }
 
@@ -4135,17 +4192,19 @@ var ripple =
 	Amount.prototype.to_json = function() {
 	  if (this._is_native) {
 	    return this.to_text();
-	  } else {
-	    var amount_json = {
-	      value : this.to_text(),
-	      currency : this._currency.has_interest() ?
-	        this._currency.to_hex() : this._currency.to_json()
-	    };
-	    if (this._issuer.is_valid()) {
-	      amount_json.issuer = this._issuer.to_json();
-	    }
-	    return amount_json;
 	  }
+
+	  var amount_json = {
+	    value: this.to_text(),
+	    currency: this._currency.has_interest() ?
+	    this._currency.to_hex() : this._currency.to_json()
+	  };
+
+	  if (this._issuer.is_valid()) {
+	    amount_json.issuer = this._issuer.to_json();
+	  }
+
+	  return amount_json;
 	};
 
 	Amount.prototype.to_text_full = function(opts) {
@@ -4185,17 +4244,20 @@ var ripple =
 	      return 'Non-XRP currency differs.';
 	    }
 	    if (!ignore_issuer && !this._issuer.equals(d._issuer)) {
-	      return 'Non-XRP issuer differs: ' + d._issuer.to_json() + '/' + this._issuer.to_json();
+	      return 'Non-XRP issuer differs: '
+	      + d._issuer.to_json()
+	      + '/'
+	      + this._issuer.to_json();
 	    }
 	  }
 	};
 
-	exports.Amount   = Amount;
+	exports.Amount = Amount;
 
 	// DEPRECATED: Include the corresponding files instead.
 	exports.Currency = Currency;
-	exports.Seed     = Seed;
-	exports.UInt160  = UInt160;
+	exports.Seed = Seed;
+	exports.UInt160 = UInt160;
 
 	// vim:sw=2:sts=2:ts=8:et
 
@@ -4216,13 +4278,13 @@ var ripple =
 	//
 
 	// var network = require('./network.js');
-	var async              = __webpack_require__(49);
-	var util               = __webpack_require__(39);
+	var async              = __webpack_require__(48);
+	var util               = __webpack_require__(40);
 	var extend             = __webpack_require__(46);
-	var EventEmitter       = __webpack_require__(40).EventEmitter;
+	var EventEmitter       = __webpack_require__(39).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(9).UInt160;
-	var TransactionManager = __webpack_require__(29).TransactionManager;
+	var TransactionManager = __webpack_require__(30).TransactionManager;
 	var sjcl               = __webpack_require__(17).sjcl;
 	var Base               = __webpack_require__(7).Base;
 
@@ -4606,9 +4668,9 @@ var ripple =
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util             = __webpack_require__(39);
+	var util             = __webpack_require__(40);
 	var assert           = __webpack_require__(41);
-	var EventEmitter     = __webpack_require__(40).EventEmitter;
+	var EventEmitter     = __webpack_require__(39).EventEmitter;
 	var utils            = __webpack_require__(17);
 	var sjcl             = __webpack_require__(17).sjcl;
 	var Amount           = __webpack_require__(3).Amount;
@@ -4617,9 +4679,9 @@ var ripple =
 	var Seed             = __webpack_require__(11).Seed;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var RippleError      = __webpack_require__(14).RippleError;
-	var hashprefixes     = __webpack_require__(27);
-	var config           = __webpack_require__(24);
-	var log              = __webpack_require__(28).internal.sub('transaction');
+	var hashprefixes     = __webpack_require__(28);
+	var config           = __webpack_require__(25);
+	var log              = __webpack_require__(29).internal.sub('transaction');
 
 	/**
 	 * @constructor Transaction
@@ -5831,10 +5893,12 @@ var ripple =
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var extend    = __webpack_require__(46);
+	'use strict';
+
+	var extend = __webpack_require__(46);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var utils = __webpack_require__(17);
-	var Float = __webpack_require__(30).Float;
+	var Float = __webpack_require__(31).Float;
 
 	//
 	// Currency support
@@ -5849,8 +5913,7 @@ var ripple =
 	  //  3-letter code: ...
 	  // XXX Should support hex, C++ doesn't currently allow it.
 
-	  this._value  = NaN;
-
+	  this._value = NaN;
 	  this._update();
 	}, UInt160);
 
@@ -5865,25 +5928,37 @@ var ripple =
 	 * Examples:
 	 *
 	 *  USD                               => currency
-	 *  USD - Dollar                      => currency with optional full currency name
-	 *  XAU (-0.5%pa)                     => XAU with 0.5% effective demurrage rate per year
+	 *  USD - Dollar                      => currency with optional full currency
+	 *                                       name
+	 *  XAU (-0.5%pa)                     => XAU with 0.5% effective demurrage rate
+	 *                                       per year
 	 *  XAU - Gold (-0.5%pa)              => Optionally allowed full currency name
-	 *  USD (1%pa)                        => US dollars with 1% effective interest per year
+	 *  USD (1%pa)                        => US dollars with 1% effective interest
+	 *                                       per year
 	 *  INR - Indian Rupees               => Optional full currency name with spaces
-	 *  TYX - 30-Year Treasuries          => Optional full currency with numbers and a dash
-	 *  TYX - 30-Year Treasuries (1.5%pa) => Optional full currency with numbers, dash and interest rate
+	 *  TYX - 30-Year Treasuries          => Optional full currency with numbers
+	 *                                       and a dash
+	 *  TYX - 30-Year Treasuries (1.5%pa) => Optional full currency with numbers,
+	 *                                       dash and interest rate
 	 *
-	 *  The regular expression below matches above cases, broken down for better understanding:
+	 *  The regular expression below matches above cases, broken down for better
+	 *  understanding:
 	 *
 	 *  ^\s*                      // start with any amount of whitespace
-	 *  ([a-zA-Z]{3}|[0-9]{3})    // either 3 letter alphabetic currency-code or 3 digit numeric currency-code. See ISO 4217
-	 *  (\s*-\s*[- \w]+)          // optional full currency name following the dash after currency code,
-	 *                               full currency code can contain letters, numbers and dashes
-	 *  (\s*\(-?\d+\.?\d*%pa\))?  // optional demurrage rate, has optional - and . notation (-0.5%pa)
+	 *  ([a-zA-Z]{3}|[0-9]{3})    // either 3 letter alphabetic currency-code or 3
+	 *                               digit numeric currency-code. See ISO 4217
+	 *  (\s*-\s*[- \w]+)          // optional full currency name following the dash
+	 *                               after currency code, full currency code can
+	 *                               contain letters, numbers and dashes
+	 *  (\s*\(-?\d+\.?\d*%pa\))?  // optional demurrage rate, has optional - and
+	 *                               . notation (-0.5%pa)
 	 *  \s*$                      // end with any amount of whitespace
 	 *
 	 */
-	Currency.prototype.human_RE = /^\s*([a-zA-Z0-9]{3})(\s*-\s*[- \w]+)?(\s*\(-?\d+\.?\d*%pa\))?\s*$/;
+
+	/*eslint-disable max-len*/
+	Currency.prototype.human_RE = /^\s*([a-zA-Z0-9\<\>\(\)\{\}\[\]\|\?\!\@\#\$\%\^\&]{3})(\s*-\s*[- \w]+)?(\s*\(-?\d+\.?\d*%pa\))?\s*$/;
+	/*eslint-enable max-len*/
 
 	Currency.from_json = function(j, shouldInterpretXrpAsIou) {
 	    return (new Currency()).parse_json(j, shouldInterpretXrpAsIou);
@@ -5891,39 +5966,65 @@ var ripple =
 
 	Currency.from_human = function(j, opts) {
 	  return (new Currency().parse_human(j, opts));
-	}
+	};
 
 	// this._value = NaN on error.
 	Currency.prototype.parse_json = function(j, shouldInterpretXrpAsIou) {
 	  this._value = NaN;
 
-	  switch (typeof j) {
-	    case 'string':
+	  if (j instanceof Currency) {
+	    this._value = j.copyTo({})._value;
+	    this._update();
+	    return this;
+	  }
 
-	      // if an empty string is given, fall back to XRP
+	  switch (typeof j) {
+	    case 'number':
+	      if (!isNaN(j)) {
+	        this.parse_number(j);
+	      }
+	      break;
+	    case 'string':
 	      if (!j || j === '0') {
-	        this.parse_hex(shouldInterpretXrpAsIou ? Currency.HEX_CURRENCY_BAD : Currency.HEX_ZERO);
+	        // Empty string or XRP
+	        this.parse_hex(shouldInterpretXrpAsIou
+	          ? Currency.HEX_CURRENCY_BAD
+	          : Currency.HEX_ZERO);
+	        break;
+	      }
+
+	      if (j === '1') {
+	        // 'no currency'
+	        this.parse_hex(Currency.HEX_ONE);
+	        break;
+	      }
+
+	      if (/^[A-F0-9]{40}$/.test(j)) {
+	        // Hex format
+	        this.parse_hex(j);
 	        break;
 	      }
 
 	      // match the given string to see if it's in an allowed format
-	      var matches = String(j).match(this.human_RE);
+	      var matches = j.match(this.human_RE);
 
 	      if (matches) {
-
 	        var currencyCode = matches[1];
 
 	        // for the currency 'XRP' case
 	        // we drop everything else that could have been provided
 	        // e.g. 'XRP - Ripple'
 	        if (!currencyCode || /^(0|XRP)$/.test(currencyCode)) {
-	          this.parse_hex(shouldInterpretXrpAsIou ? Currency.HEX_CURRENCY_BAD : Currency.HEX_ZERO);
+	          this.parse_hex(shouldInterpretXrpAsIou
+	            ? Currency.HEX_CURRENCY_BAD
+	            : Currency.HEX_ZERO);
 
 	          // early break, we can't have interest on XRP
 	          break;
 	        }
 
-	        // the full currency is matched as it is part of the valid currency format, but not stored
+	        // the full currency is matched as it is part of the valid currency
+	        // format, but not stored
 	        // var full_currency = matches[2] || '';
 	        var interest = matches[3] || '';
 
@@ -5950,25 +6051,28 @@ var ripple =
 	          currencyData[2] = currencyCode.charCodeAt(1) & 0xff;
 	          currencyData[3] = currencyCode.charCodeAt(2) & 0xff;
 
-	          // byte 5-8 are for reference date, but should always be 0 so we won't fill it
+	          // byte 5-8 are for reference date, but should always be 0 so we
+	          // won't fill it
 
 	          // byte 9-16 are for the interest
 	          percentage = parseFloat(percentage[0]);
 
-	          // the interest or demurrage is expressed as a yearly (per annum) value
+	          // the interest or demurrage is expressed as a yearly (per annum)
+	          // value
 	          var secondsPerYear = 31536000; // 60 * 60 * 24 * 365
 
 	          // Calculating the interest e-fold
 	          // 0.5% demurrage is expressed 0.995, 0.005 less than 1
 	          // 0.5% interest is expressed as 1.005, 0.005 more than 1
-	          var interestEfold = secondsPerYear / Math.log(1 + percentage/100);
+	          var interestEfold = secondsPerYear / Math.log(1 + percentage / 100);
 	          var bytes = Float.toIEEE754Double(interestEfold);
 
-	          for (var i=0; i<=bytes.length; i++) {
+	          for (var i = 0; i <= bytes.length; i++) {
 	            currencyData[8 + i] = bytes[i] & 0xff;
 	          }
 
-	          // the last 4 bytes are reserved for future use, so we won't fill those
+	          // the last 4 bytes are reserved for future use, so we won't fill
+	          // those
 
 	        } else {
 	          currencyData[12] = currencyCode.charCodeAt(0) & 0xff;
@@ -5977,28 +6081,12 @@ var ripple =
 	        }
 
 	        this.parse_bytes(currencyData);
-	      } else {
-	        this.parse_hex(j);
-	      }
-	      break;
-
-	    case 'number':
-	      if (!isNaN(j)) {
-	        this.parse_number(j);
-	      }
-	      break;
-
-	    case 'object':
-	      if (j instanceof Currency) {
-	        this._value = j.copyTo({})._value;
-	        this._update();
 	      }
 	      break;
 	  }
 
 	  return this;
 	};
-
 
 	Currency.prototype.parse_human = function(j) {
 	  return this.parse_json(j);
@@ -6009,6 +6097,7 @@ var ripple =
 	 *
 	 * You should never need to call this.
 	 */
+
 	Currency.prototype._update = function() {
 	  var bytes = this.to_bytes();
 
@@ -6016,7 +6105,7 @@ var ripple =
 	  var isZeroExceptInStandardPositions = true;
 
 	  if (!bytes) {
-	    return 'XRP';
+	    return;
 	  }
 
 	  this._native = false;
@@ -6025,8 +6114,9 @@ var ripple =
 	  this._interest_period = NaN;
 	  this._iso_code = '';
 
-	  for (var i=0; i<20; i++) {
-	    isZeroExceptInStandardPositions = isZeroExceptInStandardPositions && (i===12 || i===13 || i===14 || bytes[i]===0);
+	  for (var i = 0; i < 20; i++) {
+	    isZeroExceptInStandardPositions = isZeroExceptInStandardPositions
+	    && (i === 12 || i === 13 || i === 14 || bytes[i] === 0);
 	  }
 
 	  if (isZeroExceptInStandardPositions) {
@@ -6034,7 +6124,7 @@ var ripple =
 	                   + String.fromCharCode(bytes[13])
 	                   + String.fromCharCode(bytes[14]);
 
-	    if (this._iso_code === '\0\0\0') {
+	    if (this._iso_code === '\u0000\u0000\u0000') {
 	      this._native = true;
 	      this._iso_code = 'XRP';
 	    }
@@ -6048,8 +6138,8 @@ var ripple =
 	    this._type = 1;
 	    this._interest_start = (bytes[4] << 24) +
 	                           (bytes[5] << 16) +
-	                           (bytes[6] <<  8) +
-	                           (bytes[7]      );
+	                           (bytes[6] << 8) +
+	                           (bytes[7]);
 	    this._interest_period = Float.fromIEEE754Double(bytes.slice(8, 16));
 	  }
 	};
@@ -6063,7 +6153,8 @@ var ripple =
 	    var isZeroExceptInStandardPositions = true;
 
 	    for (var i=0; i<20; i++) {
-	      isZeroExceptInStandardPositions = isZeroExceptInStandardPositions && (i===12 || i===13 || i===14 || byte_array[0]===0)
+	      isZeroExceptInStandardPositions = isZeroExceptInStandardPositions
+	      && (i===12 || i===13 || i===14 || byte_array[0]===0)
 	    }
 
 	    if (isZeroExceptInStandardPositions) {
@@ -6093,20 +6184,25 @@ var ripple =
 	};
 
 	/**
-	 * Whether this currency is an interest-bearing/demurring currency.
+	 * @return {Boolean} whether this currency is an interest-bearing currency
 	 */
+
 	Currency.prototype.has_interest = function() {
-	  return this._type === 1 && !isNaN(this._interest_start) && !isNaN(this._interest_period);
+	  return this._type === 1
+	  && !isNaN(this._interest_start)
+	  && !isNaN(this._interest_period);
 	};
 
 	/**
 	 *
-	 * @param referenceDate - number of seconds since the Ripple Epoch (0:00 on January 1, 2000 UTC)
-	 *                        used to calculate the interest over provided interval
-	 *                        pass in one years worth of seconds to ge the yearly interest
-	 * @returns {number} - interest for provided interval, can be negative for demurred currencies
+	 * @param {number} referenceDate number of seconds since the Ripple Epoch
+	 * (0:00 on January 1, 2000 UTC) used to calculate the
+	 * interest over provided interval pass in one years
+	 * worth of seconds to ge the yearly interest
+	 * @returns {number} interest for provided interval, can be negative for
+	 * demurred currencies
 	 */
-	Currency.prototype.get_interest_at = function(referenceDate, decimals) {
+	Currency.prototype.get_interest_at = function(referenceDate) {
 	  if (!this.has_interest()) {
 	    return 0;
 	  }
@@ -6121,18 +6217,20 @@ var ripple =
 	  }
 
 	  // calculate interest by e-fold number
-	  return Math.exp((referenceDate - this._interest_start) / this._interest_period);
+	  return Math.exp((referenceDate - this._interest_start)
+	                / this._interest_period);
 	};
 
-	Currency.prototype.get_interest_percentage_at = function(referenceDate, decimals) {
+	Currency.prototype.get_interest_percentage_at
+	= function(referenceDate, decimals) {
 	  var interest = this.get_interest_at(referenceDate, decimals);
 
 	  // convert to percentage
-	  var interest = (interest*100)-100;
-	  var decimalMultiplier = decimals ? Math.pow(10,decimals) : 100;
+	  interest = (interest * 100) - 100;
+	  var decimalMultiplier = decimals ? Math.pow(10, decimals) : 100;
 
 	  // round to two decimals behind the dot
-	  return Math.round(interest*decimalMultiplier) / decimalMultiplier;
+	  return Math.round(interest * decimalMultiplier) / decimalMultiplier;
 	};
 
 	// XXX Currently we inherit UInt.prototype.is_valid, which is mostly fine.
@@ -6140,9 +6238,9 @@ var ripple =
 	//     We could be doing further checks into the internal format of the
 	//     currency data, since there are some values that are invalid.
 	//
-	//Currency.prototype.is_valid = function() {
+	// Currency.prototype.is_valid = function() {
 	//  return UInt.prototype.is_valid() && ...;
-	//};
+	// };
 
 	Currency.prototype.to_json = function(opts) {
 	  if (!this.is_valid()) {
@@ -6150,28 +6248,35 @@ var ripple =
 	    return 'XRP';
 	  }
 
-	  var opts = opts || {};
+	  if (!opts) {
+	    opts = {};
+	  }
 
 	  var currency;
 	  var fullName = opts && opts.full_name ? ' - ' + opts.full_name : '';
-	  opts.show_interest = opts.show_interest !== void(0) ? opts.show_interest : this.has_interest();
+	  opts.show_interest = opts.show_interest !== undefined
+	  ? opts.show_interest
+	  : this.has_interest();
 
 	  if (!opts.force_hex && /^[A-Z0-9]{3}$/.test(this._iso_code)) {
 	    currency = this._iso_code + fullName;
 	    if (opts.show_interest) {
-	      var decimals = !isNaN(opts.decimals) ? opts.decimals : void(0);
-	      var interestPercentage = this.has_interest() ? this.get_interest_percentage_at(this._interest_start + 3600 * 24 * 365, decimals) : 0;
+	      var decimals = !isNaN(opts.decimals) ? opts.decimals : undefined;
+	      var interestPercentage = this.has_interest()
+	      ? this.get_interest_percentage_at(
+	          this._interest_start + 3600 * 24 * 365, decimals
+	        )
+	      : 0;
 	      currency += ' (' + interestPercentage + '%pa)';
 	    }
 
 	  } else {
-
 	    // Fallback to returning the raw currency hex
 	    currency = this.to_hex();
 
-	    // XXX This is to maintain backwards compatibility, but it is very, very odd
-	    //     behavior, so we should deprecate it and get rid of it as soon as
-	    //     possible.
+	    // XXX This is to maintain backwards compatibility, but it is very, very
+	    // odd behavior, so we should deprecate it and get rid of it as soon as
+	    //  possible.
 	    if (currency === Currency.HEX_ONE) {
 	      currency = 1;
 	    }
@@ -6191,152 +6296,79 @@ var ripple =
 
 	exports.Currency = Currency;
 
-	// vim:sw=2:sts=2:ts=8:et
-
 
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var sjcl    = __webpack_require__(17).sjcl;
-	var utils   = __webpack_require__(17);
-	var extend  = __webpack_require__(46);
+	'use strict';
+	var _ = __webpack_require__(45);
+	var sjcl = __webpack_require__(17).sjcl;
+	var utils = __webpack_require__(17);
+	var extend = __webpack_require__(46);
+	var convertBase = __webpack_require__(23);
 
 	var Base = {};
 
 	var alphabets = Base.alphabets = {
-	  ripple:  'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz',
-	  tipple:  'RPShNAF39wBUDnEGHJKLM4pQrsT7VWXYZ2bcdeCg65jkm8ofqi1tuvaxyz',
-	  bitcoin:  '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+	  ripple: 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz',
+	  tipple: 'RPShNAF39wBUDnEGHJKLM4pQrsT7VWXYZ2bcdeCg65jkm8ofqi1tuvaxyz',
+	  bitcoin: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 	};
 
 	extend(Base, {
-	  VER_NONE              : 1,
-	  VER_NODE_PUBLIC       : 28,
-	  VER_NODE_PRIVATE      : 32,
-	  VER_ACCOUNT_ID        : 0,
-	  VER_ACCOUNT_PUBLIC    : 35,
-	  VER_ACCOUNT_PRIVATE   : 34,
-	  VER_FAMILY_GENERATOR  : 41,
-	  VER_FAMILY_SEED       : 33
+	  VER_NONE: 1,
+	  VER_NODE_PUBLIC: 28,
+	  VER_NODE_PRIVATE: 32,
+	  VER_ACCOUNT_ID: 0,
+	  VER_ACCOUNT_PUBLIC: 35,
+	  VER_ACCOUNT_PRIVATE: 34,
+	  VER_FAMILY_GENERATOR: 41,
+	  VER_FAMILY_SEED: 33
 	});
 
 	function sha256(bytes) {
-	  return sjcl.codec.bytes.fromBits(sjcl.hash.sha256.hash(sjcl.codec.bytes.toBits(bytes)));
+	  return sjcl.codec.bytes.fromBits(
+	    sjcl.hash.sha256.hash(sjcl.codec.bytes.toBits(bytes)));
 	}
 
-	function sha256hash(bytes) {
-	  return sha256(sha256(bytes));
-	}
+	function encodeString(alphabet, input) {
+	  if (input.length === 0) {
+	    return '';
+	  }
 
-	function divmod58(number, startAt) {
-	    var remainder = 0;
-	    for (var i = startAt; i < number.length; i++) {
-	        var digit256 = number[i] & 0xFF;
-	        var temp = remainder * 256 + digit256;
-	        number[i] = (temp / 58);
-	        remainder = temp % 58;
+	  var leadingZeros = _.takeWhile(input, function(d) {
+	    return d === 0;
+	  });
+	  var out = convertBase(input, 256, 58).map(function(digit) {
+	    if (digit < 0 || digit >= alphabet.length) {
+	      throw new Error('Value ' + digit + ' is out of bounds for encoding');
 	    }
-	    return remainder;
+	    return alphabet[digit];
+	  });
+	  var prefix = leadingZeros.map(function() {
+	    return alphabet[0];
+	  });
+	  return prefix.concat(out).join('');
 	}
 
-	function  divmod256(number58, startAt) {
-	    var remainder = 0;
-	    for (var i = startAt; i < number58.length; i++) {
-	        var digit58 = number58[i] & 0xFF;
-	        var temp = remainder * 58 + digit58;
-	        number58[i] = (temp / 256);
-	        remainder = temp % 256;
-	    }
-	    return remainder;
-	}
-
-	function encodeString (alphabet, input) {
-	  if (input.length == 0) {
+	function decodeString(indexes, input) {
+	  if (input.length === 0) {
 	    return [];
 	  }
 
-	  // we need to copy the buffer for calc
-	  scratch = input.slice();
-
-	  // Count leading zeroes.
-	  var zeroCount = 0;
-	  while (zeroCount < scratch.length &&
-	           scratch[zeroCount] == 0)
-	    ++zeroCount;
-
-	  // The actual encoding.
-	  var out = new Array(scratch.length * 2);
-	  var j = out.length;
-	  var startAt = zeroCount;
-
-	  while (startAt < scratch.length) {
-	    var mod = divmod58(scratch, startAt);
-	    if (scratch[startAt] == 0) {
-	      ++startAt;
+	  var input58 = input.split('').map(function(c) {
+	    var charCode = c.charCodeAt(0);
+	    if (charCode >= indexes.length) {
+	      throw new Error('Character ' + c + ' is not valid for encoding');
 	    }
-	    out[--j] = alphabet[mod];
-	  }
-
-	  // Strip extra 'r' if there are some after decoding.
-	  while (j < out.length && out[j] == alphabet[0]) ++j;
-	  // Add as many leading 'r' as there were leading zeros.
-	  while (--zeroCount >= 0) out[--j] = alphabet[0];
-	  while(j--) out.shift();
-
-	  return out.join('');
-	}
-
-	function decodeString(indexes, input)  {
-	  var isString = typeof input === 'string';
-
-	  if (input.length == 0) {
-	    return [];
-	  }
-
-	  input58 = new Array(input.length);
-
-	  // Transform the String to a base58 byte sequence
-	  for (var i = 0; i < input.length; ++i) {
-	    if (isString) {
-	      var c = input.charCodeAt(i);
-	    }
-
-	    var digit58 = -1;
-	    if (c >= 0 && c < 128) {
-	      digit58 = indexes[c];
-	    }
-	    if (digit58 < 0) {
-	      throw new Error("Illegal character " + c + " at " + i);
-	    }
-
-	    input58[i] = digit58;
-	  }
-	  // Count leading zeroes
-	  var zeroCount = 0;
-	  while (zeroCount < input58.length && input58[zeroCount] == 0) {
-	    ++zeroCount;
-	  }
-	  // The encoding
-	  out = utils.arraySet(input.length, 0);
-	  var j = out.length;
-
-	  var startAt = zeroCount;
-	  while (startAt < input58.length) {
-	    var mod = divmod256(input58, startAt);
-	    if (input58[startAt] == 0) {
-	      ++startAt;
-	    }
-	    out[--j] = mod;
-	  }
-
-	  // Do no add extra leading zeroes, move j to first non null byte.
-	  while (j < out.length && (out[j] == 0)) ++j;
-
-	  j -= zeroCount;
-	  while(j--) out.shift();
-
-	  return out;
+	    return indexes[charCode];
+	  });
+	  var leadingZeros = _.takeWhile(input58, function(d) {
+	    return d === 0;
+	  });
+	  var out = convertBase(input58, 58, 256);
+	  return leadingZeros.concat(out);
 	}
 
 	function Base58(alphabet) {
@@ -6351,8 +6383,8 @@ var ripple =
 	}
 
 	Base.encoders = {};
-	Object.keys(alphabets).forEach(function(alphabet){
-	  Base.encoders[alphabet] = Base58(alphabets[alphabet]);
+	Object.keys(alphabets).forEach(function(alphabet) {
+	  Base.encoders[alphabet] = new Base58(alphabets[alphabet]);
 	});
 
 	// --> input: big-endian array of bytes.
@@ -6365,36 +6397,26 @@ var ripple =
 	// <-- array of bytes or undefined.
 	Base.decode = function(input, alpha) {
 	  if (typeof input !== 'string') {
-	    return void(0);
+	    return undefined;
 	  }
 	  try {
 	    return this.encoders[alpha || 'ripple'].decode(input);
-	  }
-	  catch(e) {
-	    return (void 0);
+	  } catch (e) {
+	    return undefined;
 	  }
 	};
 
 	Base.verify_checksum = function(bytes) {
-	  var computed = sha256hash(bytes.slice(0, -4)).slice(0, 4);
+	  var computed = sha256(sha256(bytes.slice(0, -4))).slice(0, 4);
 	  var checksum = bytes.slice(-4);
-	  var result = true;
-
-	  for (var i=0; i<4; i++) {
-	    if (computed[i] !== checksum[i]) {
-	      result = false;
-	      break;
-	    }
-	  }
-
-	  return result;
+	  return _.isEqual(computed, checksum);
 	};
 
 	// --> input: Array
 	// <-- String
 	Base.encode_check = function(version, input, alphabet) {
 	  var buffer = [].concat(version, input);
-	  var check  = sha256(sha256(buffer)).slice(0, 4);
+	  var check = sha256(sha256(buffer)).slice(0, 4);
 
 	  return Base.encode([].concat(buffer, check), alphabet);
 	};
@@ -6414,16 +6436,10 @@ var ripple =
 	  }
 
 	  // Multiple allowed versions
-	  if (Array.isArray(version)) {
-	    var match = false;
-
-	    for (var i=0, l=version.length; i<l; i++) {
-	      match |= version[i] === buffer[0];
-	    }
-
-	    if (!match) {
-	      return NaN;
-	    }
+	  if (Array.isArray(version) && _.every(version, function(v) {
+	          return v !== buffer[0];
+	      })) {
+	    return NaN;
 	  }
 
 	  if (!Base.verify_checksum(buffer)) {
@@ -6434,7 +6450,7 @@ var ripple =
 	  // intrepret the value as a negative number
 	  buffer[0] = 0;
 
-	  return sjcl.bn.fromBits (
+	  return sjcl.bn.fromBits(
 	      sjcl.codec.bytes.toBits(buffer.slice(0, -4)));
 	};
 
@@ -6447,7 +6463,7 @@ var ripple =
 
 	var utils  = __webpack_require__(17);
 	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(31).UInt;
+	var UInt   = __webpack_require__(32).UInt;
 
 	//
 	// UInt128 support
@@ -6474,10 +6490,10 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils   = __webpack_require__(17);
-	var config  = __webpack_require__(24);
+	var config  = __webpack_require__(25);
 	var extend  = __webpack_require__(46);
 
-	var UInt = __webpack_require__(31).UInt;
+	var UInt = __webpack_require__(32).UInt;
 	var Base = __webpack_require__(7).Base;
 
 	//
@@ -6583,7 +6599,7 @@ var ripple =
 
 	var utils  = __webpack_require__(17);
 	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(31).UInt;
+	var UInt   = __webpack_require__(32).UInt;
 
 	//
 	// UInt256 support
@@ -6618,10 +6634,10 @@ var ripple =
 	var sjcl   = utils.sjcl;
 
 	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(31).UInt;
+	var UInt    = __webpack_require__(32).UInt;
 	var UInt256 = __webpack_require__(10).UInt256;
 	var UInt160 = __webpack_require__(9).UInt160;
-	var KeyPair = __webpack_require__(32).KeyPair;
+	var KeyPair = __webpack_require__(33).KeyPair;
 
 	var Seed = extend(function () {
 	  this._curve = sjcl.ecc.curves.k256;
@@ -7037,8 +7053,8 @@ var ripple =
 	var assert    = __webpack_require__(41);
 	var extend    = __webpack_require__(46);
 	var binformat = __webpack_require__(16);
-	var stypes    = __webpack_require__(23);
-	var Crypt     = __webpack_require__(33).Crypt;
+	var stypes    = __webpack_require__(24);
+	var Crypt     = __webpack_require__(34).Crypt;
 	var utils     = __webpack_require__(17);
 
 	var sjcl = utils.sjcl;
@@ -7376,7 +7392,7 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(39);
+	var util   = __webpack_require__(40);
 	var extend = __webpack_require__(46);
 
 	function RippleError(code, message) {
@@ -7415,12 +7431,12 @@ var ripple =
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async              = __webpack_require__(49);
+	var async              = __webpack_require__(48);
 	var crypto             = __webpack_require__(43);
 	var sjcl               = __webpack_require__(17).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
 	var Seed               = __webpack_require__(11).Seed;
-	var KeyPair            = __webpack_require__(32).KeyPair;
+	var KeyPair            = __webpack_require__(33).KeyPair;
 	var Account            = __webpack_require__(4).Account;
 	var UInt160            = __webpack_require__(9).UInt160;
 
@@ -7624,16 +7640,22 @@ var ripple =
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	/*eslint no-multi-spaces:0,space-in-brackets:0,key-spacing:0,comma-spacing:0*/
+
 	/**
 	 * Data type map.
 	 *
 	 * Mapping of type ids to data types. The type id is specified by the high
 	 *
 	 * For reference, see rippled's definition:
-	 * https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol/SField.cpp
+	 * https://github.com/ripple/rippled/blob/develop/src/ripple/data/protocol
+	 *                                                              /SField.cpp
 	 */
-	var TYPES_MAP = exports.types = [
-	  void(0),
+
+	exports.types = [
+	  undefined,
 
 	  // Common
 	  'Int16',    // 1
@@ -7646,11 +7668,11 @@ var ripple =
 	  'Account',  // 8
 
 	  // 9-13 reserved
-	  void(0),    // 9
-	  void(0),    // 10
-	  void(0),    // 11
-	  void(0),    // 12
-	  void(0),    // 13
+	  undefined,    // 9
+	  undefined,    // 10
+	  undefined,    // 11
+	  undefined,    // 12
+	  undefined,    // 13
 
 	  'Object',   // 14
 	  'Array',    // 15
@@ -7777,7 +7799,7 @@ var ripple =
 	    8: 'RegularKey'
 	  },
 	  14: { // Object
-	    1: void(0),  //end of Object
+	    1: undefined,  // end of Object
 	    2: 'TransactionMetaData',
 	    3: 'CreatedNode',
 	    4: 'DeletedNode',
@@ -7789,7 +7811,7 @@ var ripple =
 	    10: 'Memo'
 	  },
 	  15: { // Array
-	    1: void(0),  //end of Array
+	    1: undefined,  // end of Array
 	    2: 'SigningAccounts',
 	    3: 'TxnSignatures',
 	    4: 'Signatures',
@@ -7830,7 +7852,6 @@ var ripple =
 	  });
 	});
 
-
 	var REQUIRED = exports.REQUIRED = 0,
 	    OPTIONAL = exports.OPTIONAL = 1,
 	    DEFAULT  = exports.DEFAULT  = 2;
@@ -7855,7 +7876,9 @@ var ripple =
 	    [ 'WalletSize'         , OPTIONAL ],
 	    [ 'MessageKey'         , OPTIONAL ],
 	    [ 'Domain'             , OPTIONAL ],
-	    [ 'TransferRate'       , OPTIONAL ]
+	    [ 'TransferRate'       , OPTIONAL ],
+	    [ 'SetFlag'            , OPTIONAL ],
+	    [ 'ClearFlag'          , OPTIONAL ]
 	  ]),
 	  TrustSet: [20].concat(base, [
 	    [ 'LimitAmount'        , OPTIONAL ],
@@ -7865,13 +7888,14 @@ var ripple =
 	  OfferCreate: [7].concat(base, [
 	    [ 'TakerPays'          , REQUIRED ],
 	    [ 'TakerGets'          , REQUIRED ],
-	    [ 'Expiration'         , OPTIONAL ]
+	    [ 'Expiration'         , OPTIONAL ],
+	    [ 'OfferSequence'      , OPTIONAL ]
 	  ]),
 	  OfferCancel: [8].concat(base, [
 	    [ 'OfferSequence'      , REQUIRED ]
 	  ]),
 	  SetRegularKey: [5].concat(base, [
-	    [ 'RegularKey'         , REQUIRED ]
+	    [ 'RegularKey'         , OPTIONAL ]
 	  ]),
 	  Payment: [0].concat(base, [
 	    [ 'Destination'        , REQUIRED ],
@@ -7897,11 +7921,21 @@ var ripple =
 	  EnableFeature: [100].concat(base, [
 	    [ 'Feature'            , REQUIRED ]
 	  ]),
+	  EnableAmendment: [100].concat(base, [
+	    [ 'Amendment'          , REQUIRED ]
+	  ]),
 	  SetFee: [101].concat(base, [
 	    [ 'BaseFee'            , REQUIRED ],
 	    [ 'ReferenceFeeUnits'  , REQUIRED ],
 	    [ 'ReserveBase'        , REQUIRED ],
 	    [ 'ReserveIncrement'   , REQUIRED ]
+	  ]),
+	  TicketCreate: [10].concat(base, [
+	    [ 'Target'             , OPTIONAL ],
+	    [ 'Expiration'         , OPTIONAL ]
+	  ]),
+	  TicketCancel: [11].concat(base, [
+	    [ 'TicketID'           , REQUIRED ]
 	  ])
 	};
 
@@ -8039,7 +8073,10 @@ var ripple =
 	  tecNO_TARGET             : 138,
 	  tecNO_PERMISSION         : 139,
 	  tecNO_ENTRY              : 140,
-	  tecINSUFFICIENT_RESERVE  : 141
+	  tecINSUFFICIENT_RESERVE  : 141,
+	  tecNEED_MASTER_KEY       : 142,
+	  tecDST_TAG_NEEDED        : 143,
+	  tecINTERNAL              : 144
 	};
 
 
@@ -8047,12 +8084,7 @@ var ripple =
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var packageJson = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"../../../package.json\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
-
-	function getPackageVersion() {
-	  return packageJson.version;
-	}
-
+	
 	function getMantissaDecimalString(bignum) {
 	  var mantissa = bignum.toPrecision(16)
 	    .replace(/\./, '')      // remove decimal point
@@ -8224,7 +8256,6 @@ var ripple =
 	exports.toTimestamp   = toTimestamp;
 	exports.fromTimestamp = fromTimestamp;
 	exports.getMantissaDecimalString = getMantissaDecimalString;
-	exports.getPackageVersion = getPackageVersion;
 
 	// Going up three levels is needed to escape the src-cov folder used for the
 	// test coverage stuff.
@@ -8237,14 +8268,13 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(40);
 	var url          = __webpack_require__(44);
-	var LRU          = __webpack_require__(48);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
+	var LRU          = __webpack_require__(47);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var RangeSet     = __webpack_require__(22).RangeSet;
-	var log          = __webpack_require__(28).internal.sub('server');
-	var utils        = __webpack_require__(17);
+	var log          = __webpack_require__(29).internal.sub('server');
 
 	/**
 	 *  @constructor Server
@@ -8663,9 +8693,7 @@ var ripple =
 	    log.info(this.getServerID(), 'connect');
 	  }
 
-	  var ws = this._ws = new WebSocket(this._opts.url, {
-	    headers: { 'User-Agent': 'ripple-lib/' + utils.getPackageVersion() }
-	  });
+	  var ws = this._ws = new WebSocket(this._opts.url);
 
 	  this._shouldConnect = true;
 
@@ -9164,7 +9192,7 @@ var ripple =
 
 	var sjcl = __webpack_require__(17).sjcl;
 
-	var WalletGenerator = __webpack_require__(51)({
+	var WalletGenerator = __webpack_require__(50)({
 	  sjcl: sjcl
 	});
 
@@ -9182,12 +9210,12 @@ var ripple =
 	var SHAMap = __webpack_require__(36).SHAMap;
 	var SHAMapTreeNode = __webpack_require__(36).SHAMapTreeNode;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
-	var stypes = __webpack_require__(23);
+	var stypes = __webpack_require__(24);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
-	var stypes = __webpack_require__(23);
+	var stypes = __webpack_require__(24);
 	var sjcl  = __webpack_require__(17).sjcl;
-	var Crypt = __webpack_require__(33).Crypt;
+	var Crypt = __webpack_require__(34).Crypt;
 
 	function Ledger()
 	{
@@ -9349,7 +9377,10 @@ var ripple =
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var LRU = __webpack_require__(48);
+	'use strict';
+
+	var lodash = __webpack_require__(45);
+	var LRU = __webpack_require__(47);
 	var Transaction = __webpack_require__(5).Transaction;
 
 	/**
@@ -9358,9 +9389,9 @@ var ripple =
 
 	function TransactionQueue() {
 	  this._queue = [ ];
-	  this._idCache = LRU({ max: 200 });
-	  this._sequenceCache = LRU({ max: 200 });
-	};
+	  this._idCache = new LRU({max: 200});
+	  this._sequenceCache = new LRU({max: 200});
+	}
 
 	/**
 	 * Store received (validated) sequence
@@ -9415,16 +9446,9 @@ var ripple =
 	 */
 
 	TransactionQueue.prototype.getSubmission = function(id) {
-	  var result = void(0);
-
-	  for (var i=0, tx; (tx=this._queue[i]); i++) {
-	    if (~tx.submittedIDs.indexOf(id)) {
-	      result = tx;
-	      break;
-	    }
-	  }
-
-	  return result;
+	  return lodash.find(this._queue, function(tx) {
+	    return lodash.contains(tx.submittedIDs, id);
+	  });
 	};
 
 	/**
@@ -9434,11 +9458,15 @@ var ripple =
 	 */
 
 	TransactionQueue.prototype.getMinLedger = function() {
+	  if (this.length() < 1) {
+	    return -1;
+	  }
+
 	  var result = Infinity;
 
-	  for (var i=0, tx; (tx=this._queue[i]); i++) {
-	    if (tx.initialSubmitIndex < result) {
-	      result = tx.initialSubmitIndex;
+	  for (var i = 0; i < this.length(); i++) {
+	    if (this._queue[i].initialSubmitIndex < result) {
+	      result = this._queue[i].initialSubmitIndex;
 	    }
 	  }
 
@@ -9502,6 +9530,14 @@ var ripple =
 	TransactionQueue.prototype.length =
 	TransactionQueue.prototype.getLength = function() {
 	  return this._queue.length;
+	};
+
+	/**
+	 * @return {Array} pending queue
+	 */
+
+	TransactionQueue.prototype.getQueue = function() {
+	  return this._queue;
 	};
 
 	exports.TransactionQueue = TransactionQueue;
@@ -9584,6 +9620,46 @@ var ripple =
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	function normalize(digitArray) {
+	  while (digitArray[0] === 0) {
+	    digitArray.shift();
+	  }
+	  return digitArray;
+	}
+
+	function divmod(digitArray, base, divisor) {
+	  var remainder = 0;
+	  var quotient = [];
+	  for (var j = 0; j < digitArray.length; j++) {
+	    var temp = remainder * base + parseInt(digitArray[j], 10);
+	    quotient.push(Math.floor(temp / divisor));
+	    remainder = temp % divisor;
+	  }
+	  return {quotient: normalize(quotient), remainder: remainder};
+	}
+
+	function convertBase(digitArray, fromBase, toBase) {
+	  var result = [];
+	  var dividend = digitArray;
+	  while (dividend.length > 0) {
+	    var qr = divmod(dividend, fromBase, toBase);
+	    result.unshift(qr.remainder);
+	    dividend = qr.quotient;
+	  }
+	  return normalize(result);
+	}
+
+	module.exports = convertBase;
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
 	/**
 	 * Type definitions for binary format.
 	 *
@@ -9592,30 +9668,29 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert    = __webpack_require__(41);
-	var extend    = __webpack_require__(46);
+	var assert = __webpack_require__(41);
+	var extend = __webpack_require__(46);
+	var GlobalBigNumber = __webpack_require__(49);
+	var Amount = __webpack_require__(3).Amount;
+	var Currency = __webpack_require__(6).Currency;
 	var binformat = __webpack_require__(16);
-	var utils     = __webpack_require__(17);
-	var sjcl      = utils.sjcl;
-	var GlobalBigNumber = __webpack_require__(50);
+	var utils = __webpack_require__(17);
+	var sjcl = utils.sjcl;
+	var SJCL_BN = sjcl.bn;
 
-	var UInt128   = __webpack_require__(8).UInt128;
-	var UInt160   = __webpack_require__(9).UInt160;
-	var UInt256   = __webpack_require__(10).UInt256;
-	var Base      = __webpack_require__(7).Base;
-
-	var amount    = __webpack_require__(3);
-	var Amount    = amount.Amount;
-	var Currency  = amount.Currency;
+	var UInt128 = __webpack_require__(8).UInt128;
+	var UInt160 = __webpack_require__(9).UInt160;
+	var UInt256 = __webpack_require__(10).UInt256;
+	var Base = __webpack_require__(7).Base;
 
 	var BigNumber = GlobalBigNumber.another({
 	  ROUNDING_MODE: GlobalBigNumber.ROUND_HALF_UP,
 	  DECIMAL_PLACES: 40
 	});
 
-	var SerializedType = function (methods) {
+	function SerializedType(methods) {
 	  extend(this, methods);
-	};
+	}
 
 	function isNumber(val) {
 	  return typeof val === 'number' && isFinite(val);
@@ -9643,14 +9718,36 @@ var ripple =
 
 	/**
 	 * parses bytes as hex
+	 *
+	 * @param {Array} byte_array bytes
+	 * @return {String} hex string
 	 */
-	function convertByteArrayToHex (byte_array) {
-	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array)).toUpperCase();
+	function convertByteArrayToHex(byte_array) {
+	  return sjcl.codec.hex.fromBits(sjcl.codec.bytes.toBits(byte_array))
+	  .toUpperCase();
 	}
 
 	function convertHexToString(hexString) {
 	  var bits = sjcl.codec.hex.toBits(hexString);
 	  return sjcl.codec.utf8String.fromBits(bits);
+	}
+
+	function sort_fields(keys) {
+	  function sort_field_compare(a, b) {
+	    var a_field_coordinates = binformat.fieldsInverseMap[a];
+	    var a_type_bits = a_field_coordinates[0];
+	    var a_field_bits = a_field_coordinates[1];
+	    var b_field_coordinates = binformat.fieldsInverseMap[b];
+	    var b_type_bits = b_field_coordinates[0];
+	    var b_field_bits = b_field_coordinates[1];
+
+	    // Sort by type id first, then by field id
+	    return a_type_bits !== b_type_bits
+	    ? a_type_bits - b_type_bits
+	    : a_field_bits - b_field_bits;
+	  }
+
+	  return keys.sort(sort_field_compare);
 	}
 
 	SerializedType.serialize_varint = function (so, val) {
@@ -9665,7 +9762,7 @@ var ripple =
 	    so.append([193 + (val >>> 8), val & 0xff]);
 	  } else if (val <= 918744) {
 	    val -= 12481;
-	    so.append([ 241 + (val >>> 16), val >>> 8 & 0xff, val & 0xff ]);
+	    so.append([241 + (val >>> 16), val >>> 8 & 0xff, val & 0xff]);
 	  } else {
 	    throw new Error('Variable integer overflow.');
 	  }
@@ -9693,13 +9790,18 @@ var ripple =
 	  return result;
 	};
 
-	// In the following, we assume that the inputs are in the proper range. Is this correct?
+	// In the following, we assume that the inputs are in the proper range. Is this
+	// correct?
 	// Helper functions for 1-, 2-, and 4-byte integers.
 
 	/**
 	 * Convert an integer value into an array of bytes.
 	 *
 	 * The result is appended to the serialized object ('so').
+	 *
+	 * @param {Number} val value
+	 * @param {Number} bytes byte size
+	 * @return {Array} byte array
 	 */
 	function convertIntegerToByteArray(val, bytes) {
 	  if (!isNumber(val)) {
@@ -9712,14 +9814,15 @@ var ripple =
 
 	  var newBytes = [ ];
 
-	  for (var i=0; i<bytes; i++) {
+	  for (var i = 0; i < bytes; i++) {
 	    newBytes.unshift(val >>> (i * 8) & 0xff);
 	  }
 
 	  return newBytes;
 	}
 
-	// Convert a certain number of bytes from the serialized object ('so') into an integer.
+	// Convert a certain number of bytes from the serialized object ('so') into an
+	// integer.
 	function readAndSum(so, bytes) {
 	  var sum = 0;
 
@@ -9727,7 +9830,7 @@ var ripple =
 	    throw new Error('This function only supports up to four bytes.');
 	  }
 
-	  for (var i=0; i<bytes; i++) {
+	  for (var i = 0; i < bytes; i++) {
 	    var byte = so.read(1)[0];
 	    sum += (byte << (8 * (bytes - i - 1)));
 	  }
@@ -9746,6 +9849,89 @@ var ripple =
 	});
 
 	STInt8.id = 16;
+
+	function serialize(so, field_name, value) {
+	  // so: a byte-stream to serialize into.
+	  // field_name: a string for the field name ('LedgerEntryType' etc.)
+	  // value: the value of that field.
+	  var field_coordinates = binformat.fieldsInverseMap[field_name];
+	  var type_bits = field_coordinates[0];
+	  var field_bits = field_coordinates[1];
+	  var tag_byte = (type_bits < 16
+	    ? type_bits << 4
+	    : 0) | (field_bits < 16
+	      ? field_bits
+	      : 0);
+
+	  if (field_name === 'LedgerEntryType' && typeof value === 'string') {
+	    value = binformat.ledger[value][0];
+	  }
+
+	  if (field_name === 'TransactionResult' && typeof value === 'string') {
+	    value = binformat.ter[value];
+	  }
+
+	  STInt8.serialize(so, tag_byte);
+
+	  if (type_bits >= 16) {
+	    STInt8.serialize(so, type_bits);
+	  }
+
+	  if (field_bits >= 16) {
+	    STInt8.serialize(so, field_bits);
+	  }
+
+	  // Get the serializer class (ST...)
+	  var serialized_object_type;
+
+	  if (field_name === 'Memo' && typeof value === 'object') {
+	    // for Memo we override the default behavior with our STMemo serializer
+	    serialized_object_type = exports.STMemo;
+	  } else {
+	    // for a field based on the type bits.
+	    serialized_object_type = exports[binformat.types[type_bits]];
+	  }
+
+	  try {
+	    serialized_object_type.serialize(so, value);
+	  } catch (e) {
+	    e.message += ' (' + field_name + ')';
+	    throw e;
+	  }
+	}
+
+	exports.serialize = exports.serialize_whatever = serialize;
+
+	// Take the serialized object, figure out what type/field it is, and return the
+	// parsing of that.
+
+	function parse(so) {
+	  var tag_byte = so.read(1)[0];
+	  var type_bits = tag_byte >> 4;
+
+	  if (type_bits === 0) {
+	    type_bits = so.read(1)[0];
+	  }
+
+	  var field_bits = tag_byte & 0x0f;
+	  var field_name = (field_bits === 0)
+	    ? field_name = binformat.fields[type_bits][so.read(1)[0]]
+	    : field_name = binformat.fields[type_bits][field_bits];
+
+	  assert(field_name, 'Unknown field - header byte is 0x'
+	    + tag_byte.toString(16));
+
+	  // Get the parser class (ST...) for a field based on the type bits.
+	  var type = (field_name === 'Memo')
+	    ? exports.STMemo
+	    : exports[binformat.types[type_bits]];
+
+	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
+
+	  return [field_name, type.parse(so)]; // key, value
+	}
+
+	exports.parse = exports.parse_whatever = parse;
 
 	var STInt16 = exports.Int16 = new SerializedType({
 	  serialize: function (so, val) {
@@ -9778,13 +9964,13 @@ var ripple =
 	      if (val < 0) {
 	        throw new Error('Negative value for unsigned Int64 is invalid.');
 	      }
-	      bigNumObject = new sjcl.bn(val, 10);
+	      bigNumObject = new SJCL_BN(val, 10);
 	    } else if (isString(val)) {
 	      if (!isHexInt64String(val)) {
 	        throw new Error('Not a valid hex Int64.');
 	      }
-	      bigNumObject = new sjcl.bn(val, 16);
-	    } else if (val instanceof sjcl.bn) {
+	      bigNumObject = new SJCL_BN(val, 16);
+	    } else if (val instanceof SJCL_BN) {
 	      if (!val.greaterEquals(0)) {
 	        throw new Error('Negative value for unsigned Int64 is invalid.');
 	      }
@@ -9792,11 +9978,11 @@ var ripple =
 	    } else {
 	      throw new Error('Invalid type for Int64');
 	    }
-	    serializeBits(so, bigNumObject.toBits(64), true); //noLength = true
+	    serializeBits(so, bigNumObject.toBits(64), true); // noLength = true
 	  },
 	  parse: function (so) {
 	    var bytes = so.read(8);
-	    return sjcl.bn.fromBits(sjcl.codec.bytes.toBits(bytes));
+	    return SJCL_BN.fromBits(sjcl.codec.bytes.toBits(bytes));
 	  }
 	});
 
@@ -9808,7 +9994,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash128');
 	    }
-	    serializeBits(so, hash.to_bits(), true); //noLength = true
+	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt128.from_bytes(so.read(16));
@@ -9823,7 +10009,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash256');
 	    }
-	    serializeBits(so, hash.to_bits(), true); //noLength = true
+	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt256.from_bytes(so.read(32));
@@ -9838,7 +10024,7 @@ var ripple =
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash160');
 	    }
-	    serializeBits(so, hash.to_bits(), true); //noLength = true
+	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
 	  parse: function (so) {
 	    return UInt160.from_bytes(so.read(20));
@@ -9853,7 +10039,8 @@ var ripple =
 	    var currencyData = val.to_bytes();
 
 	    if (!currencyData) {
-	      throw new Error('Tried to serialize invalid/unimplemented currency type.');
+	      throw new Error(
+	        'Tried to serialize invalid/unimplemented currency type.');
 	    }
 
 	    so.append(currencyData);
@@ -9863,10 +10050,11 @@ var ripple =
 	    var currency = Currency.from_bytes(bytes);
 	    // XXX Disabled check. Theoretically, the Currency class should support any
 	    //     UInt160 value and consider it valid. But it doesn't, so for the
-	    //     deserialization to be usable, we need to allow invalid results for now.
-	    //if (!currency.is_valid()) {
-	    //  throw new Error('Invalid currency: '+convertByteArrayToHex(bytes));
-	    //}
+	    //     deserialization to be usable, we need to allow invalid results for
+	    //     now.
+	    // if (!currency.is_valid()) {
+	    //   throw new Error('Invalid currency: '+convertByteArrayToHex(bytes));
+	    // }
 	    return currency;
 	  }
 	});
@@ -9874,6 +10062,7 @@ var ripple =
 	var STAmount = exports.Amount = new SerializedType({
 	  serialize: function (so, val) {
 	    var amount = Amount.from_json(val);
+
 	    if (!amount.is_valid()) {
 	      throw new Error('Not a valid Amount object.');
 	    }
@@ -9887,12 +10076,12 @@ var ripple =
 	    if (amount.is_native()) {
 	      var valueHex = value.abs().toString(16);
 
-	      if (value.abs().greaterThan(Amount.bi_xns_max)) {
+	      if (Amount.strict_mode && value.abs().greaterThan(Amount.bi_xns_max)) {
 	        throw new Error('Value out of bounds');
 	      }
 
 	      // Enforce correct length (64 bits)
-	      if (valueHex.length > 16) {
+	      if (Amount.strict_mode && valueHex.length > 16) {
 	        throw new Error('Value out of bounds');
 	      }
 
@@ -9952,14 +10141,14 @@ var ripple =
 	    var value_bytes = so.read(8);
 	    var is_zero = !(value_bytes[0] & 0x7f);
 
-	    for (var i=1; i<8; i++) {
+	    for (var i = 1; i < 8; i++) {
 	      is_zero = is_zero && !value_bytes[i];
 	    }
 
 	    var is_negative = !is_zero && !(value_bytes[0] & 0x40);
 
 	    if (value_bytes[0] & 0x80) {
-	      //non-native
+	      // non-native
 	      var currency = STCurrency.parse(so);
 	      var issuer_bytes = so.read(20);
 	      var issuer = UInt160.from_bytes(issuer_bytes);
@@ -9976,14 +10165,14 @@ var ripple =
 	        issuer: issuer.to_json(),
 	        value: valueString
 	      });
-	    } else {
-	      //native
-	      var integer_bytes = value_bytes.slice();
-	      integer_bytes[0] &= 0x3f;
-	      var integer_hex = utils.arrayToHex(integer_bytes);
-	      var value = new BigNumber(integer_hex, 16);
-	      return Amount.from_json((is_negative ? '-' : '') + value.toString());
 	    }
+
+	    // native
+	    var integer_bytes = value_bytes.slice();
+	    integer_bytes[0] &= 0x3f;
+	    var integer_hex = utils.arrayToHex(integer_bytes);
+	    var value = new BigNumber(integer_hex, 16);
+	    return Amount.from_json((is_negative ? '-' : '') + value.toString());
 	  }
 	});
 
@@ -9991,7 +10180,6 @@ var ripple =
 
 	var STVL = exports.VariableLength = exports.VL = new SerializedType({
 	  serialize: function (so, val) {
-
 	    if (typeof val === 'string') {
 	      serializeHex(so, val);
 	    } else {
@@ -10035,21 +10223,21 @@ var ripple =
 	STAccount.id = 8;
 
 	var STPathSet = exports.PathSet = new SerializedType({
-	  typeBoundary:  0xff,
-	  typeEnd:       0x00,
-	  typeAccount:   0x01,
-	  typeCurrency:  0x10,
-	  typeIssuer:    0x20,
+	  typeBoundary: 0xff,
+	  typeEnd: 0x00,
+	  typeAccount: 0x01,
+	  typeCurrency: 0x10,
+	  typeIssuer: 0x20,
 	  serialize: function (so, val) {
-	    for (var i=0, l=val.length; i<l; i++) {
+	    for (var i = 0, l = val.length; i < l; i++) {
 	      // Boundary
 	      if (i) {
 	        STInt8.serialize(so, this.typeBoundary);
 	      }
 
-	      for (var j=0, l2=val[i].length; j<l2; j++) {
+	      for (var j = 0, l2 = val[i].length; j < l2; j++) {
 	        var entry = val[i][j];
-	        //if (entry.hasOwnProperty('_value')) {entry = entry._value;}
+	        // if (entry.hasOwnProperty('_value')) {entry = entry._value;}
 	        var type = 0;
 
 	        if (entry.account) {
@@ -10091,41 +10279,39 @@ var ripple =
 	       []
 	       ]
 
-	       each entry has one or more of the following attributes: amount, currency, issuer.
+	       each entry has one or more of the following attributes:
+	       amount, currency, issuer.
 	       */
 
-	    var path_list    = [];
+	    var path_list = [];
 	    var current_path = [];
 	    var tag_byte;
 
+	    /* eslint-disable no-cond-assign */
+
 	    while ((tag_byte = so.read(1)[0]) !== this.typeEnd) {
-	      //TODO: try/catch this loop, and catch when we run out of data without reaching the end of the data structure.
-	      //Now determine: is this an end, boundary, or entry-begin-tag?
-	      //console.log('Tag byte:', tag_byte);
+	      // TODO: try/catch this loop, and catch when we run out of data without
+	      // reaching the end of the data structure.
+	      // Now determine: is this an end, boundary, or entry-begin-tag?
+	      // console.log('Tag byte:', tag_byte);
 	      if (tag_byte === this.typeBoundary) {
-	        //console.log('Boundary');
-	        if (current_path) { //close the current path, if there is one,
+	        if (current_path) { // close the current path, if there is one,
 	          path_list.push(current_path);
 	        }
-	        current_path = [ ]; //and start a new one.
+	        current_path = [ ]; // and start a new one.
 	        continue;
 	      }
 
-	      //It's an entry-begin tag.
-	      //console.log('It's an entry-begin tag.');
+	      // It's an entry-begin tag.
 	      var entry = {};
 	      var type = 0;
 
 	      if (tag_byte & this.typeAccount) {
-	        //console.log('entry.account');
-	        /*var bta = so.read(20);
-	          console.log('BTA:', bta);*/
 	        entry.account = STHash160.parse(so);
 	        entry.account.set_version(Base.VER_ACCOUNT_ID);
 	        type = type | this.typeAccount;
 	      }
 	      if (tag_byte & this.typeCurrency) {
-	        //console.log('entry.currency');
 	        entry.currency = STCurrency.parse(so);
 	        if (entry.currency.to_json() === 'XRP' && !entry.currency.is_native()) {
 	          entry.non_native = true;
@@ -10133,27 +10319,24 @@ var ripple =
 	        type = type | this.typeCurrency;
 	      }
 	      if (tag_byte & this.typeIssuer) {
-	        //console.log('entry.issuer');
 	        entry.issuer = STHash160.parse(so);
 	        // Enable and set correct type of base-58 encoding
 	        entry.issuer.set_version(Base.VER_ACCOUNT_ID);
-	        //console.log('DONE WITH ISSUER!');
-
 	        type = type | this.typeIssuer;
 	      }
 
 	      if (entry.account || entry.currency || entry.issuer) {
 	        entry.type = type;
 	        entry.type_hex = ('000000000000000' + type.toString(16)).slice(-16);
-
 	        current_path.push(entry);
 	      } else {
-	        throw new Error('Invalid path entry'); //It must have at least something in it.
+	        // It must have at least something in it.
+	        throw new Error('Invalid path entry');
 	      }
 	    }
 
 	    if (current_path) {
-	      //close the current path, if there is one,
+	      // close the current path, if there is one,
 	      path_list.push(current_path);
 	    }
 
@@ -10164,9 +10347,10 @@ var ripple =
 	STPathSet.id = 18;
 
 	var STVector256 = exports.Vector256 = new SerializedType({
-	  serialize: function (so, val) { //Assume val is an array of STHash256 objects.
+	  serialize: function(so, val) {
+	    // Assume val is an array of STHash256 objects.
 	    SerializedType.serialize_varint(so, val.length * 32);
-	    for (var i=0, l=val.length; i<l; i++) {
+	    for (var i = 0, l = val.length; i < l; i++) {
 	      STHash256.serialize(so, val[i]);
 	    }
 	  },
@@ -10174,7 +10358,7 @@ var ripple =
 	    var length = this.parse_varint(so);
 	    var output = [];
 	    // length is number of bytes not number of Hash256
-	    for (var i=0; i<length / 32; i++) {
+	    for (var i = 0; i < length / 32; i++) {
 	      output.push(STHash256.parse(so));
 	    }
 	    return output;
@@ -10186,7 +10370,6 @@ var ripple =
 	// Internal
 	exports.STMemo = new SerializedType({
 	  serialize: function(so, val, no_marker) {
-
 	    var keys = [];
 
 	    Object.keys(val).forEach(function (key) {
@@ -10206,26 +10389,24 @@ var ripple =
 	    // Sort fields
 	    keys = sort_fields(keys);
 
-	    for (var i=0; i<keys.length; i++) {
-	      var key = keys[i];
-	      var value = val[key];
-	      serialize(so, key, value);
-	    }
+	    keys.forEach(function(key) {
+	      serialize(so, key, val[key]);
+	    });
 
 	    if (!no_marker) {
-	      //Object ending marker
+	      // Object ending marker
 	      STInt8.serialize(so, 0xe1);
 	    }
-
 	  },
 	  parse: function(so) {
 	    var output = {};
+
 	    while (so.peek(1)[0] !== 0xe1) {
 	      var keyval = parse(so);
 	      output[keyval[0]] = keyval[1];
 	    }
 
-	    if (output.MemoType !== void(0)) {
+	    if (output.MemoType !== undefined) {
 	      try {
 	        var parsedType = convertHexToString(output.MemoType);
 
@@ -10233,34 +10414,39 @@ var ripple =
 	          output.parsed_memo_type = parsedType;
 	        }
 	      } catch (e) {
-	        // we don't know what's in the binary, apparently it's not a UTF-8 string
+	        // we don't know what's in the binary, apparently it's not a UTF-8
+	        // string
 	        // this is fine, we won't add the parsed_memo_type field
 	      }
 	    }
 
-	    if (output.MemoFormat !== void(0)) {
+	    if (output.MemoFormat !== undefined) {
 	      try {
 	        output.parsed_memo_format = convertHexToString(output.MemoFormat);
 	      } catch (e) {
-	        // we don't know what's in the binary, apparently it's not a UTF-8 string
+	        // we don't know what's in the binary, apparently it's not a UTF-8
+	        // string
 	        // this is fine, we won't add the parsed_memo_format field
 	      }
 	    }
 
-	    if (output.MemoData !== void(0)) {
+	    if (output.MemoData !== undefined) {
 
 	      try {
 	        if (output.parsed_memo_format === 'json') {
 	          // see if we can parse JSON
-	          output.parsed_memo_data = JSON.parse(convertHexToString(output.MemoData));
+	          output.parsed_memo_data =
+	          JSON.parse(convertHexToString(output.MemoData));
 
-	        } else if(output.parsed_memo_format === 'text') {
+	        } else if (output.parsed_memo_format === 'text') {
 	          // otherwise see if we can parse text
 	          output.parsed_memo_data = convertHexToString(output.MemoData);
 	        }
 	      } catch(e) {
-	        // we'll fail in case the content does not match what the MemoFormat described
-	        // this is fine, we won't add the parsed_memo_data, the user has to parse themselves
+	        // we'll fail in case the content does not match what the MemoFormat
+	        // described
+	        // this is fine, we won't add the parsed_memo_data, the user has to
+	        // parse themselves
 	      }
 	    }
 
@@ -10269,98 +10455,6 @@ var ripple =
 	  }
 
 	});
-
-	exports.serialize = exports.serialize_whatever = serialize;
-
-	function serialize(so, field_name, value) {
-	  //so: a byte-stream to serialize into.
-	  //field_name: a string for the field name ('LedgerEntryType' etc.)
-	  //value: the value of that field.
-	  var field_coordinates = binformat.fieldsInverseMap[field_name];
-	  var type_bits         = field_coordinates[0];
-	  var field_bits        = field_coordinates[1];
-	  var tag_byte          = (type_bits < 16 ? type_bits << 4 : 0) | (field_bits < 16 ? field_bits : 0);
-
-	  if (field_name === 'LedgerEntryType' && 'string' === typeof value) {
-	    value = binformat.ledger[value][0];
-	  }
-
-	  if (field_name === 'TransactionResult' && 'string' === typeof value) {
-	    value = binformat.ter[value];
-	  }
-
-	  STInt8.serialize(so, tag_byte);
-
-	  if (type_bits >= 16) {
-	    STInt8.serialize(so, type_bits);
-	  }
-
-	  if (field_bits >= 16) {
-	    STInt8.serialize(so, field_bits);
-	  }
-
-	  // Get the serializer class (ST...)
-	  var serialized_object_type;
-	  if (field_name === 'Memo' && typeof value === 'object') {
-	    // for Memo we override the default behavior with our STMemo serializer
-	    serialized_object_type = exports.STMemo;
-	  } else {
-	    // for a field based on the type bits.
-	    serialized_object_type = exports[binformat.types[type_bits]];
-	  }
-
-	  try {
-	    serialized_object_type.serialize(so, value);
-	  } catch (e) {
-	    e.message += ' (' + field_name + ')';
-	    throw e;
-	  }
-	}
-
-	//Take the serialized object, figure out what type/field it is, and return the parsing of that.
-	exports.parse = exports.parse_whatever = parse;
-
-	function parse(so) {
-	  var tag_byte   = so.read(1)[0];
-	  var type_bits  = tag_byte >> 4;
-
-	  if (type_bits === 0) {
-	    type_bits = so.read(1)[0];
-	  }
-
-
-	  var field_bits = tag_byte & 0x0f;
-	  var field_name = (field_bits === 0)
-	    ? field_name = binformat.fields[type_bits][so.read(1)[0]]
-	    : field_name = binformat.fields[type_bits][field_bits];
-
-	  assert(field_name, 'Unknown field - header byte is 0x' + tag_byte.toString(16));
-
-	  // Get the parser class (ST...) for a field based on the type bits.
-	  var type = (field_name === 'Memo')
-	    ? exports.STMemo
-	    : exports[binformat.types[type_bits]];
-
-	  assert(type, 'Unknown type - header byte is 0x' + tag_byte.toString(16));
-
-	  return [ field_name, type.parse(so) ]; //key, value
-	}
-
-	function sort_fields(keys) {
-	  function sort_field_compare(a, b) {
-	    var a_field_coordinates = binformat.fieldsInverseMap[a];
-	    var a_type_bits         = a_field_coordinates[0];
-	    var a_field_bits        = a_field_coordinates[1];
-	    var b_field_coordinates = binformat.fieldsInverseMap[b];
-	    var b_type_bits         = b_field_coordinates[0];
-	    var b_field_bits        = b_field_coordinates[1];
-
-	    // Sort by type id first, then by field id
-	    return a_type_bits !== b_type_bits ? a_type_bits - b_type_bits : a_field_bits - b_field_bits;
-	  }
-
-	  return keys.sort(sort_field_compare);
-	}
 
 	var STObject = exports.Object = new SerializedType({
 	  serialize: function (so, val, no_marker) {
@@ -10383,12 +10477,12 @@ var ripple =
 	    // Sort fields
 	    keys = sort_fields(keys);
 
-	    for (var i=0; i<keys.length; i++) {
+	    for (var i = 0; i < keys.length; i++) {
 	      serialize(so, keys[i], val[keys[i]]);
 	    }
 
 	    if (!no_marker) {
-	      //Object ending marker
+	      // Object ending marker
 	      STInt8.serialize(so, 0xe1);
 	    }
 	  },
@@ -10408,11 +10502,12 @@ var ripple =
 
 	var STArray = exports.Array = new SerializedType({
 	  serialize: function (so, val) {
-	    for (var i=0, l=val.length; i<l; i++) {
+	    for (var i = 0, l = val.length; i < l; i++) {
 	      var keys = Object.keys(val[i]);
 
 	      if (keys.length !== 1) {
-	        throw Error('Cannot serialize an array containing non-single-key objects');
+	        throw new Error(
+	          'Cannot serialize an array containing non-single-key objects');
 	      }
 
 	      var field_name = keys[0];
@@ -10420,7 +10515,7 @@ var ripple =
 	      serialize(so, field_name, value);
 	    }
 
-	    //Array ending marker
+	    // Array ending marker
 	    STInt8.serialize(so, 0xf1);
 	  },
 
@@ -10444,7 +10539,7 @@ var ripple =
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// This object serves as a singleton to store config options
@@ -10460,7 +10555,7 @@ var ripple =
 
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Routines for working with an orderbook.
@@ -10473,16 +10568,22 @@ var ripple =
 	//  - trade
 	//  - transaction
 
-	var _            = __webpack_require__(45);
-	var util         = __webpack_require__(39);
-	var extend       = __webpack_require__(46);
-	var assert       = __webpack_require__(41);
-	var async        = __webpack_require__(49);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var Amount       = __webpack_require__(3).Amount;
-	var UInt160      = __webpack_require__(9).UInt160;
-	var Currency     = __webpack_require__(6).Currency;
-	var log          = __webpack_require__(28).internal.sub('orderbook');
+	'use strict';
+
+	var _ = __webpack_require__(45);
+	var util = __webpack_require__(40);
+	var extend = __webpack_require__(46);
+	var assert = __webpack_require__(41);
+	var async = __webpack_require__(48);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var Amount = __webpack_require__(3).Amount;
+	var UInt160 = __webpack_require__(9).UInt160;
+	var Currency = __webpack_require__(6).Currency;
+	var log = __webpack_require__(29).internal.sub('orderbook');
+
+	function assertValidNumber(number, message) {
+	  assert(!_.isNull(number) && !isNaN(number), message);
+	}
 
 	/**
 	 * @constructor OrderBook
@@ -10538,11 +10639,11 @@ var ripple =
 	          break;
 	      }
 	    }
-	  };
+	  }
 
 	  function updateFundedAmountsWrapper (transaction) {
 	    self.updateFundedAmounts(transaction);
-	  };
+	  }
 
 	  this.on('newListener', function(event) {
 	    listenersModified('add', event);
@@ -10572,7 +10673,7 @@ var ripple =
 	  });
 
 	  return this;
-	};
+	}
 
 	util.inherits(OrderBook, EventEmitter);
 
@@ -10601,12 +10702,11 @@ var ripple =
 	  var result = {};
 	  var keys = Object.keys(offer);
 
-	  for (var i=0, l=keys.length; i<l; i++) {
+	  for (var i = 0, l = keys.length; i < l; i++) {
 	    var key = keys[i];
 	    switch (key) {
 	      case 'PreviousTxnID':
 	      case 'PreviousTxnLgrSeq':
-	      case 'quality':
 	        break;
 	      default:
 	        result[key] = offer[key];
@@ -10647,9 +10747,7 @@ var ripple =
 	    }
 	  ];
 
-	  async.series(steps, function(err, res) {
-	    //XXX What now?
-	  });
+	  async.series(steps);
 	};
 
 	/**
@@ -10686,7 +10784,7 @@ var ripple =
 	  var self = this;
 
 	  if (typeof callback !== 'function') {
-	    callback = function(){};
+	    callback = function() {};
 	  }
 
 	  if (!this._shouldSubscribe) {
@@ -10712,7 +10810,7 @@ var ripple =
 	    self.emit('model', self._offers);
 
 	    callback(null, self._offers);
-	  };
+	  }
 
 	  function handleError(err) {
 	    // XXX What now?
@@ -10721,7 +10819,7 @@ var ripple =
 	    }
 
 	    callback(err);
-	  };
+	  }
 
 	  var request = this._remote.requestBookOffers(this.toJSON());
 	  request.once('success', handleOffers);
@@ -10741,7 +10839,7 @@ var ripple =
 	  var self = this;
 
 	  if (typeof callback !== 'function') {
-	    callback = function(){};
+	    callback = function() {};
 	  }
 
 	  if (!this._shouldSubscribe) {
@@ -10760,7 +10858,7 @@ var ripple =
 	    self._subscribed = true;
 
 	    callback(null, res);
-	  };
+	  }
 
 	  function handleError(err) {
 	    if (self._remote.trace) {
@@ -10768,7 +10866,7 @@ var ripple =
 	    }
 
 	    callback(err);
-	  };
+	  }
 
 	  var request = this._remote.requestSubscribe();
 	  request.addStream('transactions');
@@ -10798,7 +10896,7 @@ var ripple =
 
 	OrderBook.prototype.hasOwnerFunds = function(account) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  return this._ownerFunds[account] !== void(0);
+	  return this._ownerFunds[account] !== undefined;
 	};
 
 	/**
@@ -10820,12 +10918,25 @@ var ripple =
 	 * Get owner's cached, transfer rate adjusted, funds
 	 *
 	 * @param {String} account - owner's account address
-	 * @return {String}
+	 * @return {Amount}
 	 */
 
 	OrderBook.prototype.getOwnerFunds = function(account) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  return this._ownerFunds[account];
+
+	  var amount;
+
+	  if (this.hasOwnerFunds(account)) {
+	    if (this._currencyGets.is_native()) {
+	      amount = Amount.from_json(this._ownerFunds[account]);
+	    } else {
+	      amount = Amount.from_json(
+	        this._ownerFunds[account] + OrderBook.IOU_SUFFIX
+	      );
+	    }
+	  }
+
+	  return amount;
 	};
 
 	/**
@@ -10848,7 +10959,7 @@ var ripple =
 
 	OrderBook.prototype.deleteOwnerFunds = function(account) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  this._ownerFunds[account] = void(0);
+	  this._ownerFunds[account] = undefined;
 	};
 
 	/**
@@ -10901,23 +11012,27 @@ var ripple =
 	 * Add amount sum being offered for owner
 	 *
 	 * @param {String} account - owner's account address
-	 * @param {Object|String} amount - offer amount as native string or IOU currency format
+	 * @param {Object|String} amount - offer amount as native string or IOU
+	 *                                 currency format
 	 * @return {Amount}
 	 */
 
 	OrderBook.prototype.addOwnerOfferTotal = function(account, amount) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
 	  var previousAmount = this.getOwnerOfferTotal(account);
-	  var newAmount = previousAmount.add(Amount.from_json(amount));
-	  this._ownerOffersTotal[account] = newAmount;
-	  return newAmount;
+	  var currentAmount = previousAmount.add(Amount.from_json(amount));
+
+	  this._ownerOffersTotal[account] = currentAmount;
+
+	  return currentAmount;
 	};
 
 	/**
 	 * Subtract amount sum being offered for owner
 	 *
 	 * @param {String} account - owner's account address
-	 * @param {Object|String} amount - offer amount as native string or IOU currency format
+	 * @param {Object|String} amount - offer amount as native string or IOU
+	 *                                 currency format
 	 * @return {Amount}
 	 */
 
@@ -10943,7 +11058,7 @@ var ripple =
 	  assert(UInt160.is_valid(account), 'Account is invalid');
 
 	  var amount = this._ownerOffersTotal[account];
-	  
+
 	  if (!amount) {
 	    if (this._currencyGets.is_native()) {
 	      amount = Amount.from_json('0');
@@ -10961,6 +11076,7 @@ var ripple =
 	 * @param {String} account - owner's account address
 	 * @return {Amount}
 	 */
+
 	OrderBook.prototype.resetOwnerOfferTotal = function(account) {
 	  var amount;
 
@@ -10976,15 +11092,29 @@ var ripple =
 	};
 
 	/**
-	 * Compute adjusted balance that would be left after issuer's transfer fee is deducted
+	 * Casts and returns offer's taker gets funded amount as a default IOU amount
+	 *
+	 * @param {Object} offer
+	 * @return {Amount}
+	 */
+
+	OrderBook.prototype.getOfferTakerGetsFunded = function(offer) {
+	  assertValidNumber(offer.taker_gets_funded, 'Taker gets funded is invalid');
+
+	  return Amount.from_json(offer.taker_gets_funded + OrderBook.IOU_SUFFIX);
+	};
+
+	/**
+	 * Compute adjusted balance that would be left after issuer's transfer fee is
+	 * deducted
 	 *
 	 * @param {String} balance
-	 * @return {Amount}
+	 * @return {String}
 	 */
 
 	OrderBook.prototype.applyTransferRate = function(balance) {
 	  assert(!isNaN(balance), 'Balance is invalid');
-	  assert(!_.isNull(this._issuerTransferRate) && !isNaN(this._issuerTransferRate), 'Transfer rate is invalid');
+	  assertValidNumber(this._issuerTransferRate, 'Transfer rate is invalid');
 
 	  var adjustedBalance = Amount.from_json(balance + OrderBook.IOU_SUFFIX)
 	  .divide(this._issuerTransferRate)
@@ -11018,40 +11148,42 @@ var ripple =
 	    return callback(null, this._issuerTransferRate);
 	  }
 
-	  this._remote.requestAccountInfo({ account: this._issuerGets }, function(err, info) {
+	  function handleAccountInfo(err, info) {
 	    if (err) {
 	      return callback(err);
 	    }
 
-	    // When transfer rate is not explicitly set on account, it implies the default transfer rate
-	    self._issuerTransferRate = info.account_data.TransferRate || OrderBook.DEFAULT_TRANSFER_RATE;
+	    // When transfer rate is not explicitly set on account, it implies the
+	    // default transfer rate
+	    self._issuerTransferRate = info.account_data.TransferRate ||
+	                               OrderBook.DEFAULT_TRANSFER_RATE;
 
 	    callback(null, self._issuerTransferRate);
-	  });
-	};
+	  }
 
+	  this._remote.requestAccountInfo(
+	    {account: this._issuerGets},
+	    handleAccountInfo
+	  );
+	};
 
 	/**
 	 * Set funded amount on offer with its owner's cached funds
-	 * 
-	 * Offers have is_fully_funded, indicating whether these funds are sufficient for the offer placed.
-	 * Offers have taker_gets_funded, reflecting the amount this account can afford to offer.
-	 * Offers have taker_pays_funded, reflecting an adjusted TakerPays in the case of a partially funded order.
+	 *
+	 * is_fully_funded indicates if these funds are sufficient for the offer placed.
+	 * taker_gets_funded indicates the amount this account can afford to offer.
+	 * taker_pays_funded indicates adjusted TakerPays for partially funded offer.
 	 *
 	 * @param {Object} offer
 	 * @return offer
 	 */
+
 	OrderBook.prototype.setOfferFundedAmount = function(offer) {
 	  assert.strictEqual(typeof offer, 'object', 'Offer is invalid');
-	  assert(!isNaN(this.getOwnerFunds(offer.Account)), 'Funds is invalid');
 
-	  var fundedAmount = Amount.from_json(
-	    this._currencyGets.is_native()
-	    ? this.getOwnerFunds(offer.Account)
-	    : this.getOwnerFunds(offer.Account) + OrderBook.IOU_SUFFIX
-	  );
+	  var fundedAmount = this.getOwnerFunds(offer.Account);
 	  var previousOfferSum = this.getOwnerOfferTotal(offer.Account);
-	  var currentOfferSum = Amount.from_json(offer.TakerGets).add(previousOfferSum);
+	  var currentOfferSum = previousOfferSum.add(Amount.from_json(offer.TakerGets));
 
 	  offer.owner_funds = this.getUnadjustedOwnerFunds(offer.Account);
 
@@ -11061,23 +11193,15 @@ var ripple =
 	    offer.taker_gets_funded = Amount.from_json(offer.TakerGets).to_text();
 	    offer.taker_pays_funded = Amount.from_json(offer.TakerPays).to_text();
 	  } else if (previousOfferSum.compareTo(fundedAmount) < 0) {
-	    var takerGetsFunded = fundedAmount.subtract(previousOfferSum);
+	    offer.taker_gets_funded = fundedAmount.subtract(previousOfferSum).to_text();
 
-	    var takerPaysValue = this._currencyPays.is_native()
-	    ? offer.TakerPays
-	    : offer.TakerPays.value;
-	    var takerPays = Amount.from_json(takerPaysValue + OrderBook.IOU_SUFFIX);
+	    var takerPaysFunded = this.getOfferQuality(offer).multiply(
+	      this.getOfferTakerGetsFunded(offer)
+	    );
 
-	    var takerGetsValue = this._currencyGets.is_native()
-	    ? offer.TakerGets
-	    : offer.TakerGets.value;
-	    var takerGets = Amount.from_json(takerGetsValue + OrderBook.IOU_SUFFIX);
-
-	    var quality = takerPays.divide(takerGets);
-	    var takerPaysFunded = Amount.from_json(takerGetsFunded.to_text() + OrderBook.IOU_SUFFIX).multiply(quality);
-
-	    offer.taker_gets_funded = takerGetsFunded.to_text();
-	    offer.taker_pays_funded = this._currencyPays.is_native() ? String(parseInt(takerPaysFunded.to_json().value, 10)) : takerPaysFunded.to_json().value;
+	    offer.taker_pays_funded = this._currencyPays.is_native()
+	      ? String(Math.floor(takerPaysFunded.to_number()))
+	      : takerPaysFunded.to_json().value;
 	  } else {
 	    offer.taker_gets_funded = '0';
 	    offer.taker_pays_funded = '0';
@@ -11092,10 +11216,11 @@ var ripple =
 	 * @param {Object} node - RippleState or AccountRoot meta node
 	 * @return {Object}
 	 */
+
 	OrderBook.prototype.parseAccountBalanceFromNode = function(node) {
 	  var result = {
-	    account: void(0),
-	    balance: void(0)
+	    account: undefined,
+	    balance: undefined
 	  };
 
 	  switch (node.entryType) {
@@ -11160,7 +11285,7 @@ var ripple =
 	};
 
 	/**
-	 * Updates funded amounts/balances using ModifiedNode
+	 * Updates funded amounts/balances using modified balance nodes
 	 *
 	 * Update owner funds using modified AccountRoot and RippleState nodes.
 	 * Update funded amounts for offers in the orderbook using owner funds.
@@ -11214,7 +11339,9 @@ var ripple =
 	  var self = this;
 
 	  if (this._remote.trace) {
-	    log.info('updating offer funds', this._key, account, this.getOwnerFunds(account));
+	    var ownerFunds = this.getOwnerFunds(account).to_text();
+
+	    log.info('updating offer funds', this._key, account, ownerFunds);
 	  }
 
 	  this.resetOwnerOfferTotal(account);
@@ -11226,21 +11353,19 @@ var ripple =
 
 	    // Save a copy of the old offer so we can show how the offer has changed
 	    var previousOffer = extend({}, offer);
-	    var previousFundedGetsValue = offer.taker_gets_funded;
 	    var previousFundedGets;
 
-	    if (_.isString(previousFundedGetsValue)) {
-	      previousFundedGets = Amount.from_json(
-	        offer.taker_gets_funded + OrderBook.IOU_SUFFIX
-	      );
+	    if (_.isString(offer.taker_gets_funded)) {
+	      // Offer is not new, so we should consider it for offer_changed and
+	      // offer_funds_changed events
+	      previousFundedGets = self.getOfferTakerGetsFunded(offer);
 	    }
 
 	    self.setOfferFundedAmount(offer);
 	    self.addOwnerOfferTotal(offer.Account, offer.TakerGets);
 
-	    var areFundsChanged = previousFundedGets && !previousFundedGets.equals(
-	      Amount.from_json(offer.taker_gets_funded + OrderBook.IOU_SUFFIX)
-	    );
+	    var areFundsChanged = previousFundedGets
+	      && !self.getOfferTakerGetsFunded(offer).equals(previousFundedGets);
 
 	    if (areFundsChanged) {
 	      self.emit('offer_changed', previousOffer, offer);
@@ -11283,18 +11408,19 @@ var ripple =
 	  var takerGetsTotal = Amount.from_json(
 	    '0' + ((Currency.from_json(this._currencyGets).is_native())
 	           ? ''
-	           : ('/' + this._currencyGets + '/' + this._issuerGets))
+	           : ('/' + this._currencyGets.to_human() + '/' + this._issuerGets))
 	  );
 
 	  var takerPaysTotal = Amount.from_json(
 	    '0' + ((Currency.from_json(this._currencyPays).is_native())
 	           ? ''
-	           : ('/' + this._currencyPays + '/' + this._issuerPays))
+	           : ('/' + this._currencyPays.to_human() + '/' + this._issuerPays))
 	  );
 
-	  function handleNode(node) {
-	    var isOfferCancel = transaction.transaction.TransactionType === 'OfferCancel';
+	  var isOfferCancel = transaction.transaction.TransactionType === 'OfferCancel';
+	  var transactionOwnerFunds = transaction.transaction.owner_funds;
 
+	  function handleNode(node) {
 	    switch (node.nodeType) {
 	      case 'DeletedNode':
 	        self.deleteOffer(node, isOfferCancel);
@@ -11309,16 +11435,21 @@ var ripple =
 	      case 'ModifiedNode':
 	        self.modifyOffer(node);
 
-	        takerGetsTotal = takerGetsTotal.add(node.fieldsPrev.TakerGets).subtract(node.fieldsFinal.TakerGets);
-	        takerPaysTotal = takerPaysTotal.add(node.fieldsPrev.TakerPays).subtract(node.fieldsFinal.TakerPays);
+	        takerGetsTotal = takerGetsTotal
+	          .add(node.fieldsPrev.TakerGets)
+	          .subtract(node.fieldsFinal.TakerGets);
+
+	        takerPaysTotal = takerPaysTotal
+	          .add(node.fieldsPrev.TakerPays)
+	          .subtract(node.fieldsFinal.TakerPays);
 	        break;
 
 	      case 'CreatedNode':
-	        self.setOwnerFunds(node.fields.Account, transaction.transaction.owner_funds);
+	        self.setOwnerFunds(node.fields.Account, transactionOwnerFunds);
 	        self.insertOffer(node);
 	        break;
 	    }
-	  };
+	  }
 
 	  _.each(affectedNodes, handleNode);
 
@@ -11332,8 +11463,8 @@ var ripple =
 	/**
 	 * Insert an offer into the orderbook
 	 *
-	 * NOTE: We *MUST* update offers' funded amounts when a new offer is placed because funds go
-	 *       to the highest quality offers first.
+	 * NOTE: We *MUST* update offers' funded amounts when a new offer is placed
+	 *       because funds go to the highest quality offers first.
 	 *
 	 * @param {Object} node - Offer node
 	 */
@@ -11344,33 +11475,26 @@ var ripple =
 	  }
 
 	  var offer = OrderBook.offerRewrite(node.fields);
+	  var takerGets = this.normalizeAmount(this._currencyGets, offer.TakerGets);
+	  var takerPays = this.normalizeAmount(this._currencyPays, offer.TakerPays);
 
 	  offer.LedgerEntryType = node.entryType;
 	  offer.index = node.ledgerIndex;
 
-	  var DATE_REF = {
-	    reference_date: new Date()
-	  };
+	  // We're safe to calculate quality for newly created offers
+	  offer.quality = takerPays.divide(takerGets).to_text();
 
-	  // XXX Should use Amount#from_quality
-	  var price = Amount.from_json(
-	    offer.TakerPays
-	  ).ratio_human(offer.TakerGets, DATE_REF);
-
+	  var quality = this.getOfferQuality(offer);
 	  var originalLength = this._offers.length;
 
-	  for (var i=0; i<originalLength; i++) {
-	    var currentOffer = this._offers[i];
-	    
-	    var priceItem = Amount.from_json(
-	      currentOffer.TakerPays
-	    ).ratio_human(currentOffer.TakerGets, DATE_REF);
+	  for (var i = 0; i < originalLength; i++) {
+	    var existingOfferQuality = this.getOfferQuality(this._offers[i]);
 
-	    if (price.compareTo(priceItem) <= 0) {
+	    if (quality.compareTo(existingOfferQuality) <= 0) {
 	      this._offers.splice(i, 0, offer);
 
 	      break;
-	    } 
+	    }
 	  }
 
 	  if (this._offers.length === originalLength) {
@@ -11385,6 +11509,47 @@ var ripple =
 	};
 
 	/**
+	 * Retrieve offer quality
+	 *
+	 * @param {Object} offer
+	 */
+
+	OrderBook.prototype.getOfferQuality = function(offer) {
+	  var amount;
+
+	  if (this._currencyGets.has_interest()) {
+	    // XXX Should use Amount#from_quality
+	    amount = Amount.from_json(
+	      offer.TakerPays
+	    ).ratio_human(offer.TakerGets, {
+	      reference_date: new Date()
+	    });
+	  } else {
+	    amount = Amount.from_json(offer.quality + OrderBook.IOU_SUFFIX);
+	  }
+
+	  return amount;
+	};
+
+	/**
+	 * Convert any amount into default IOU
+	 *
+	 * NOTE: This is necessary in some places because Amount.js arithmetic
+	 * does not deal with native and non-native amounts well.
+	 *
+	 * @param {Currency} currency
+	 * @param {Object} amountObj
+	 */
+
+	OrderBook.prototype.normalizeAmount = function(currency, amountObj) {
+	  var value = currency.is_native()
+	  ? amountObj
+	  : amountObj.value;
+
+	  return Amount.from_json(value + OrderBook.IOU_SUFFIX);
+	};
+
+	/**
 	 * Modify an existing offer in the orderbook
 	 *
 	 * @param {Object} node - Offer node
@@ -11395,7 +11560,7 @@ var ripple =
 	    log.info('modifying offer', this._key, node.fields);
 	  }
 
-	  for (var i=0; i<this._offers.length; i++) {
+	  for (var i = 0; i < this._offers.length; i++) {
 	    var offer = this._offers[i];
 
 	    if (offer.index === node.ledgerIndex) {
@@ -11410,7 +11575,7 @@ var ripple =
 	  this.updateOwnerOffersFundedAmount(node.fields.Account);
 	};
 
-	/** 
+	/**
 	 * Delete an existing offer in the orderbook
 	 *
 	 * NOTE: We only update funded amounts when the node comes from an OfferCancel
@@ -11418,7 +11583,7 @@ var ripple =
 	 *       other existing offers in the book
 	 *
 	 * @param {Object} node - Offer node
-	 * @param {Boolean} isOfferCancel - whether node came from an OfferCancel transaction
+	 * @param {Boolean} isOfferCancel - whether node came from an OfferCancel
 	 */
 
 	OrderBook.prototype.deleteOffer = function(node, isOfferCancel) {
@@ -11426,7 +11591,7 @@ var ripple =
 	    log.info('deleting offer', this._key, node.fields);
 	  }
 
-	  for (var i=0; i<this._offers.length; i++) {
+	  for (var i = 0; i < this._offers.length; i++) {
 	    var offer = this._offers[i];
 
 	    if (offer.index === node.ledgerIndex) {
@@ -11465,14 +11630,15 @@ var ripple =
 	    var offer = OrderBook.offerRewrite(rawOffer);
 
 	    if (offer.hasOwnProperty('owner_funds')) {
-	      // The first offer from book_offers contains owner balance of offer's output
+	      // The first offer of each owner from book_offers contains owner balance
+	      // of offer's output
 	      self.setOwnerFunds(offer.Account, offer.owner_funds);
 	    }
 
 	    self.incrementOwnerOfferCount(offer.Account);
-	      
+
 	    self.setOfferFundedAmount(offer);
-	    self.addOwnerOfferTotal(rawOffer.Account, rawOffer.TakerGets);
+	    self.addOwnerOfferTotal(offer.Account, offer.TakerGets);
 
 	    return offer;
 	  });
@@ -11495,8 +11661,6 @@ var ripple =
 	OrderBook.prototype.offers =
 	OrderBook.prototype.getOffers = function(callback) {
 	  assert.strictEqual(typeof callback, 'function', 'Callback missing');
-
-	  var self = this;
 
 	  if (this._synchronized) {
 	    callback(null, this._offers);
@@ -11574,12 +11738,13 @@ var ripple =
 
 	exports.OrderBook = OrderBook;
 
+
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util         = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util         = __webpack_require__(40);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(46);
 
@@ -11666,7 +11831,7 @@ var ripple =
 
 
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -11697,10 +11862,126 @@ var ripple =
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var exports = module.exports = __webpack_require__(47);
+	'use strict';
+
+	/**
+	 * Logging functionality for ripple-lib and any applications built on it.
+	 *
+	 * @param {String} namespace logging prefix
+	 * @return {Void} this function does not return...
+	 */
+	function Log(namespace) {
+	  if (!namespace) {
+	    this._namespace = [];
+	  } else if (Array.isArray(namespace)) {
+	    this._namespace = namespace;
+	  } else {
+	    this._namespace = [String(namespace)];
+	  }
+
+	  this._prefix = this._namespace.concat(['']).join(': ');
+	}
+
+	/**
+	 * Create a sub-logger.
+	 *
+	 * You can have a hierarchy of loggers.
+	 *
+	 * @example
+	 *
+	 *   var log = require('ripple').log.sub('server');
+	 *
+	 *   log.info('connection successful');
+	 *   // prints: 'server: connection successful'
+	 *
+	 * @param {String} namespace logging prefix
+	 * @return {Log} sub logger
+	 */
+	Log.prototype.sub = function(namespace) {
+	  var subNamespace = this._namespace.slice();
+
+	  if (namespace && typeof namespace === 'string') {
+	    subNamespace.push(namespace);
+	  }
+
+	  var subLogger = new Log(subNamespace);
+	  subLogger._setParent(this);
+	  return subLogger;
+	};
+
+	Log.prototype._setParent = function(parentLogger) {
+	  this._parent = parentLogger;
+	};
+
+	Log.makeLevel = function(level) {
+	  return function() {
+	    var args = Array.prototype.slice.apply(arguments);
+	    args[0] = this._prefix + args[0];
+	    Log.engine.logObject.apply(Log, [level].concat(args[0], [args.slice(2)]));
+	  };
+	};
+
+	Log.prototype.debug = Log.makeLevel(1);
+	Log.prototype.info = Log.makeLevel(2);
+	Log.prototype.warn = Log.makeLevel(3);
+	Log.prototype.error = Log.makeLevel(4);
+
+	/**
+	 * @param {String} message
+	 * @param {Array} details
+	 * @return {Array} prepared log info
+	 */
+
+	function getLogInfo(message, args) {
+	  return [
+	    // Timestamp
+	    '[' + new Date().toISOString() + ']',
+	    message,
+	    '--',
+	    // Location
+	    (new Error()).stack.split('\n')[4].replace(/^\s+/, ''),
+	    '\n'
+	  ].concat(args);
+	}
+
+	/**
+	 * @param {Number} log level
+	 * @param {Array} log info
+	 */
+
+	function logMessage(logLevel, args) {
+	  switch (logLevel) {
+	    case 1:
+	    case 2:
+	      console.log.apply(console, args);
+	      break;
+	    case 3:
+	      console.warn.apply(console, args);
+	      break;
+	    case 4:
+	      console.error.apply(console, args);
+	      break;
+	  }
+	}
+
+	/**
+	 * Basic logging connector.
+	 *
+	 * This engine has no formatting and works with the most basic of 'console.log'
+	 * implementations. This is the logging engine used in Node.js.
+	 */
+	var BasicLogEngine = {
+	  logObject: function logObject(level, message, args) {
+	    args = args.map(function(arg) {
+	      return JSON.stringify(arg, null, 2);
+	    });
+
+	    logMessage(level, getLogInfo(message, args));
+	  }
+	};
 
 	/**
 	 * Log engine for browser consoles.
@@ -11710,41 +11991,67 @@ var ripple =
 	 * function without any stringification.
 	 */
 	var InteractiveLogEngine = {
-	  logObject: function (msg, obj) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
+	  logObject: function(level, message, args) {
 	    args = args.map(function(arg) {
-	      if (/MSIE/.test(navigator.userAgent)) {
-	        return JSON.stringify(arg, null, 2);
-	      } else {
-	        return arg;
-	      }
+	      return /MSIE/.test(navigator.userAgent)
+	      ? JSON.stringify(arg, null, 2)
+	      : arg;
 	    });
 
-	    args.unshift(msg);
-	    args.unshift('[' + new Date().toISOString() + ']');
-
-	    console.log.apply(console, args);
+	    logMessage(level, getLogInfo(message, args));
 	  }
 	};
+	/**
+	 * Null logging connector.
+	 *
+	 * This engine simply swallows all messages. Used when console.log is not
+	 * available.
+	 */
+	var NullLogEngine = {
+	  logObject: function() {}
+	};
 
-	if (window.console && window.console.log) {
-	  exports.Log.engine = InteractiveLogEngine;
+	if (typeof window !== 'undefined' && typeof console !== 'undefined') {
+	  Log.engine = InteractiveLogEngine;
+	} else if (typeof console !== 'undefined' && console.log) {
+	  Log.engine = BasicLogEngine;
+	} else {
+	  Log.engine = NullLogEngine;
 	}
+
+	/**
+	 * Provide a root logger as our main export.
+	 *
+	 * This means you can use the logger easily on the fly:
+	 *     ripple.log.debug('My object is', myObj);
+	 */
+	module.exports = new Log();
+
+	/**
+	 * This is the logger for ripple-lib internally.
+	 */
+	module.exports.internal = module.exports.sub();
+
+	/**
+	 * Expose the class as well.
+	 */
+	module.exports.Log = Log;
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
-	var assert       = __webpack_require__(41);
-	var async        = __webpack_require__(49);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var Transaction  = __webpack_require__(5).Transaction;
-	var RippleError  = __webpack_require__(14).RippleError;
+	'use strict';
+
+	var util = __webpack_require__(40);
+	var assert = __webpack_require__(41);
+	var async = __webpack_require__(48);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var Transaction = __webpack_require__(5).Transaction;
+	var RippleError = __webpack_require__(14).RippleError;
 	var PendingQueue = __webpack_require__(21).TransactionQueue;
-	var log          = __webpack_require__(28).internal.sub('transactionmanager');
+	var log = __webpack_require__(29).internal.sub('transactionmanager');
 
 	/**
 	 * @constructor TransactionManager
@@ -11759,7 +12066,7 @@ var ripple =
 	  this._account = account;
 	  this._accountID = account._account_id;
 	  this._remote = account._remote;
-	  this._nextSequence = void(0);
+	  this._nextSequence = undefined;
 	  this._maxFee = this._remote.max_fee;
 	  this._maxAttempts = this._remote.max_attempts;
 	  this._submissionTimeout = this._remote.submission_timeout;
@@ -11776,7 +12083,7 @@ var ripple =
 
 	  function updatePendingStatus(ledger) {
 	    self._updatePendingStatus(ledger);
-	  };
+	  }
 
 	  this._remote.on('ledger_closed', updatePendingStatus);
 
@@ -11786,7 +12093,7 @@ var ripple =
 	      // hooking back into ledger_closed
 	      self._remote.on('ledger_closed', updatePendingStatus);
 	    });
-	  };
+	  }
 
 	  this._remote.on('disconnect', function() {
 	    self._remote.removeListener('ledger_closed', updatePendingStatus);
@@ -11795,7 +12102,7 @@ var ripple =
 
 	  // Query server for next account transaction sequence
 	  this._loadSequence();
-	};
+	}
 
 	util.inherits(TransactionManager, EventEmitter);
 
@@ -11835,7 +12142,7 @@ var ripple =
 	  var transaction = { };
 	  var keys = Object.keys(tx);
 
-	  for (var i=0; i<keys.length; i++) {
+	  for (var i = 0; i < keys.length; i++) {
 	    var k = keys[i];
 	    switch (k) {
 	      case 'transaction':
@@ -11901,7 +12208,8 @@ var ripple =
 
 	  if (!(submission instanceof Transaction)) {
 	    // The received transaction does not correlate to one submitted
-	    return this._pending.addReceivedId(hash, transaction);
+	    this._pending.addReceivedId(hash, transaction);
+	    return;
 	  }
 
 	  // ND: A `success` handler will `finalize` this later
@@ -11936,7 +12244,7 @@ var ripple =
 	    transaction.once('presubmit', function() {
 	      transaction.emit('error', 'tejMaxFeeExceeded');
 	    });
-	  };
+	  }
 
 	  this._pending.forEach(function(transaction) {
 	    if (transaction._setFixedFee) {
@@ -11948,7 +12256,8 @@ var ripple =
 
 	    if (Number(newFee) > self._maxFee) {
 	      // Max transaction fee exceeded, abort submission
-	      return maxFeeExceeded(transaction);
+	      maxFeeExceeded(transaction);
+	      return;
 	    }
 
 	    transaction.tx_json.Fee = newFee;
@@ -11983,6 +12292,10 @@ var ripple =
 	  assert.strictEqual(typeof ledger.ledger_index, 'number');
 
 	  this._pending.forEach(function(transaction) {
+	    if (transaction.finalized) {
+	      return;
+	    }
+
 	    switch (ledger.ledger_index - transaction.submitIndex) {
 	      case 4:
 	        transaction.emit('missing', ledger);
@@ -11990,10 +12303,6 @@ var ripple =
 	      case 8:
 	        transaction.emit('lost', ledger);
 	        break;
-	    }
-
-	    if (transaction.finalized) {
-	      return;
 	    }
 
 	    if (ledger.ledger_index > transaction.tx_json.LastLedgerSequence) {
@@ -12004,46 +12313,54 @@ var ripple =
 	  });
 	};
 
-	//Fill an account transaction sequence
+	// Fill an account transaction sequence
 	TransactionManager.prototype._fillSequence = function(tx, callback) {
 	  var self = this;
 
-	  function submitFill(sequence, callback) {
-	    var fill = self._remote.transaction();
-	    fill.account_set(self._accountID);
-	    fill.tx_json.Sequence = sequence;
-	    fill.once('submitted', callback);
+	  function submitFill(sequence, fCallback) {
+	    var fillTransaction = self._remote.createTransaction('AccountSet', {
+	      account: self._accountID
+	    });
+	    fillTransaction.tx_json.Sequence = sequence;
 
 	    // Secrets may be set on a per-transaction basis
 	    if (tx._secret) {
-	      fill.secret(tx._secret);
+	      fillTransaction.secret(tx._secret);
 	    }
 
-	    fill.submit();
-	  };
+	    fillTransaction.once('submitted', fCallback);
+	    fillTransaction.submit();
+	  }
 
 	  function sequenceLoaded(err, sequence) {
 	    if (typeof sequence !== 'number') {
-	      return callback(new Error('Failed to fetch account transaction sequence'));
+	      log.info('fill sequence: failed to fetch account transaction sequence');
+	      return callback();
 	    }
 
-	    var sequenceDif = tx.tx_json.Sequence - sequence;
+	    var sequenceDiff = tx.tx_json.Sequence - sequence;
 	    var submitted = 0;
 
-	    ;(function nextFill(sequence) {
-	      if (sequence >= tx.tx_json.Sequence) {
-	        return;
-	      }
-
-	      submitFill(sequence, function() {
-	        if (++submitted === sequenceDif) {
+	    async.whilst(
+	      function() {
+	        return submitted < sequenceDiff;
+	      },
+	      function(asyncCallback) {
+	        submitFill(sequence, function(res) {
+	          ++submitted;
+	          if (res.engine_result === 'tesSUCCESS') {
+	            self.emit('sequence_filled', err);
+	          }
+	          asyncCallback();
+	        });
+	      },
+	      function() {
+	        if (callback) {
 	          callback();
-	        } else {
-	          nextFill(sequence + 1);
 	        }
-	      });
-	    })(sequence);
-	  };
+	      }
+	    );
+	  }
 
 	  this._loadSequence(sequenceLoaded);
 	};
@@ -12057,7 +12374,7 @@ var ripple =
 
 	TransactionManager.prototype._loadSequence = function(callback) {
 	  var self = this;
-	  var callback = (typeof callback === 'function') ? callback : function(){};
+	  callback = (typeof callback === 'function') ? callback : function() {};
 
 	  function sequenceLoaded(err, sequence) {
 	    if (err || typeof sequence !== 'number') {
@@ -12070,7 +12387,7 @@ var ripple =
 	    self._nextSequence = sequence;
 	    self.emit('sequence_loaded', sequence);
 	    callback(err, sequence);
-	  };
+	  }
 
 	  this._account.getNextSequence(sequenceLoaded);
 	};
@@ -12085,10 +12402,11 @@ var ripple =
 
 	TransactionManager.prototype._handleReconnect = function(callback) {
 	  var self = this;
-	  var callback = (typeof callback === 'function') ? callback : function(){};
+	  callback = (typeof callback === 'function') ? callback : function() {};
 
 	  if (!this._pending.length()) {
-	    return callback();
+	    callback();
+	    return;
 	  }
 
 	  function handleTransactions(err, transactions) {
@@ -12111,7 +12429,7 @@ var ripple =
 	      // Resubmit pending transactions after sequence is loaded
 	      self._resubmit();
 	    });
-	  };
+	  }
 
 	  var options = {
 	    account: this._accountID,
@@ -12149,7 +12467,7 @@ var ripple =
 	      self._remote.removeListener('ledger_closed', ledgerClosed);
 	      callback();
 	    }
-	  };
+	  }
 
 	  this._remote.on('ledger_closed', ledgerClosed);
 	};
@@ -12165,8 +12483,16 @@ var ripple =
 
 	TransactionManager.prototype._resubmit = function(ledgers, pending) {
 	  var self = this;
-	  var ledgers = ledgers || 0;
-	  var pending = pending ? [ pending ] : this._pending;
+
+	  if (ledgers && typeof ledgers !== 'number') {
+	    pending = ledgers;
+	    ledgers = 0;
+	  }
+
+	  ledgers = ledgers || 0;
+	  pending = pending instanceof Transaction
+	  ? [pending]
+	  : this.getPending().getQueue();
 
 	  function resubmitTransaction(transaction, next) {
 	    if (!transaction || transaction.finalized) {
@@ -12188,7 +12514,7 @@ var ripple =
 	    }
 
 	    while (self._pending.hasSequence(transaction.tx_json.Sequence)) {
-	      //Sequence number has been consumed by another transaction
+	      // Sequence number has been consumed by another transaction
 	      transaction.tx_json.Sequence += 1;
 
 	      if (self._remote.trace) {
@@ -12206,7 +12532,7 @@ var ripple =
 	    });
 
 	    self._request(transaction);
-	  };
+	  }
 
 	  this._waitLedgers(ledgers, function() {
 	    async.eachSeries(pending, resubmitTransaction);
@@ -12267,8 +12593,8 @@ var ripple =
 	  }
 
 	  if (tx.attempts > 0 && !remote.local_signing) {
-	    var message = 'Automatic resubmission requires local signing';
-	    tx.emit('error', new RippleError('tejLocalSigningRequired', message));
+	    var errMessage = 'Automatic resubmission requires local signing';
+	    tx.emit('error', new RippleError('tejLocalSigningRequired', errMessage));
 	    return;
 	  }
 
@@ -12281,22 +12607,22 @@ var ripple =
 	      // Transaction may succeed after Sequence is updated
 	      self._resubmit(1, tx);
 	    }
-	  };
+	  }
 
-	  function transactionRetry(message) {
+	  function transactionRetry() {
 	    // XXX This may no longer be necessary. Instead, update sequence numbers
 	    // after a transaction fails definitively
 	    self._fillSequence(tx, function() {
 	      self._resubmit(1, tx);
 	    });
-	  };
+	  }
 
 	  function transactionFailedLocal(message) {
 	    if (message.engine_result === 'telINSUF_FEE_P') {
 	      // Transaction may succeed after Fee is updated
 	      self._resubmit(1, tx);
 	    }
-	  };
+	  }
 
 	  function submissionError(error) {
 	    // Either a tem-class error or generic server error such as tooBusy. This
@@ -12307,7 +12633,7 @@ var ripple =
 	      self._nextSequence--;
 	      tx.emit('error', error);
 	    }
-	  };
+	  }
 
 	  function submitted(message) {
 	    if (tx.finalized) {
@@ -12350,7 +12676,7 @@ var ripple =
 	        // tem
 	        submissionError(message);
 	    }
-	  };
+	  }
 
 	  function requestTimeout() {
 	    // ND: What if the response is just slow and we get a response that
@@ -12369,7 +12695,7 @@ var ripple =
 	      }
 	      self._resubmit(1, tx);
 	    }
-	  };
+	  }
 
 	  tx.submitIndex = this._remote._ledger_current_index;
 
@@ -12400,10 +12726,7 @@ var ripple =
 
 	  tx.emit('postsubmit');
 
-	  //XXX
 	  submitRequest.timeout(self._submissionTimeout, requestTimeout);
-
-	  return submitRequest;
 	};
 
 	/**
@@ -12414,7 +12737,6 @@ var ripple =
 
 	TransactionManager.prototype.submit = function(tx) {
 	  var self = this;
-	  var remote = this._remote;
 
 	  if (typeof this._nextSequence !== 'number') {
 	    // If sequence number is not yet known, defer until it is.
@@ -12455,7 +12777,7 @@ var ripple =
 
 
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Convert a JavaScript number to IEEE-754 Double Precision
@@ -12567,12 +12889,12 @@ var ripple =
 	}
 
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils   = __webpack_require__(17);
 	var sjcl    = utils.sjcl;
-	var config  = __webpack_require__(24);
+	var config  = __webpack_require__(25);
 
 	//
 	// Abstract UInt class
@@ -12854,7 +13176,7 @@ var ripple =
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var sjcl    = __webpack_require__(17).sjcl;
@@ -12958,7 +13280,7 @@ var ripple =
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var sjcl        = __webpack_require__(17).sjcl;
@@ -12966,8 +13288,8 @@ var ripple =
 	var Seed        = __webpack_require__(11).Seed;
 	var UInt160     = __webpack_require__(9).UInt160;
 	var UInt256     = __webpack_require__(10).UInt256;
-	var request     = __webpack_require__(68);
-	var querystring = __webpack_require__(52);
+	var request     = __webpack_require__(67);
+	var querystring = __webpack_require__(51);
 	var extend      = __webpack_require__(46);
 	var parser      = __webpack_require__(44);
 	var Crypt       = { };
@@ -13297,7 +13619,6 @@ var ripple =
 
 
 /***/ },
-/* 34 */,
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -18195,10 +18516,10 @@ var ripple =
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(40);
 	var sjcl = __webpack_require__(17).sjcl;
-	var stypes = __webpack_require__(23);
-	var hashprefixes = __webpack_require__(27);
+	var stypes = __webpack_require__(24);
+	var hashprefixes = __webpack_require__(28);
 
 	var UInt256 = __webpack_require__(10).UInt256;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
@@ -18440,6 +18761,313 @@ var ripple =
 
 /***/ },
 /* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	function EventEmitter() {
+	  this._events = this._events || {};
+	  this._maxListeners = this._maxListeners || undefined;
+	}
+	module.exports = EventEmitter;
+
+	// Backwards-compat with node 0.10.x
+	EventEmitter.EventEmitter = EventEmitter;
+
+	EventEmitter.prototype._events = undefined;
+	EventEmitter.prototype._maxListeners = undefined;
+
+	// By default EventEmitters will print a warning if more than 10 listeners are
+	// added to it. This is a useful default which helps finding memory leaks.
+	EventEmitter.defaultMaxListeners = 10;
+
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!isNumber(n) || n < 0 || isNaN(n))
+	    throw TypeError('n must be a positive number');
+	  this._maxListeners = n;
+	  return this;
+	};
+
+	EventEmitter.prototype.emit = function(type) {
+	  var er, handler, len, args, i, listeners;
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events.error ||
+	        (isObject(this._events.error) && !this._events.error.length)) {
+	      er = arguments[1];
+	      if (er instanceof Error) {
+	        throw er; // Unhandled 'error' event
+	      }
+	      throw TypeError('Uncaught, unspecified "error" event.');
+	    }
+	  }
+
+	  handler = this._events[type];
+
+	  if (isUndefined(handler))
+	    return false;
+
+	  if (isFunction(handler)) {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        len = arguments.length;
+	        args = new Array(len - 1);
+	        for (i = 1; i < len; i++)
+	          args[i - 1] = arguments[i];
+	        handler.apply(this, args);
+	    }
+	  } else if (isObject(handler)) {
+	    len = arguments.length;
+	    args = new Array(len - 1);
+	    for (i = 1; i < len; i++)
+	      args[i - 1] = arguments[i];
+
+	    listeners = handler.slice();
+	    len = listeners.length;
+	    for (i = 0; i < len; i++)
+	      listeners[i].apply(this, args);
+	  }
+
+	  return true;
+	};
+
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  var m;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // To avoid recursion in the case that type === "newListener"! Before
+	  // adding it to the listeners, first emit "newListener".
+	  if (this._events.newListener)
+	    this.emit('newListener', type,
+	              isFunction(listener.listener) ?
+	              listener.listener : listener);
+
+	  if (!this._events[type])
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  else if (isObject(this._events[type]))
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+	  else
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+
+	  // Check for listener leak
+	  if (isObject(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (!isUndefined(this._maxListeners)) {
+	      m = this._maxListeners;
+	    } else {
+	      m = EventEmitter.defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(node) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      if (typeof console.trace === 'function') {
+	        // not supported in IE 10
+	        console.trace();
+	      }
+	    }
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  var fired = false;
+
+	  function g() {
+	    this.removeListener(type, g);
+
+	    if (!fired) {
+	      fired = true;
+	      listener.apply(this, arguments);
+	    }
+	  }
+
+	  g.listener = listener;
+	  this.on(type, g);
+
+	  return this;
+	};
+
+	// emits a 'removeListener' event iff the listener was removed
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  var list, position, length, i;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events || !this._events[type])
+	    return this;
+
+	  list = this._events[type];
+	  length = list.length;
+	  position = -1;
+
+	  if (list === listener ||
+	      (isFunction(list.listener) && list.listener === listener)) {
+	    delete this._events[type];
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+
+	  } else if (isObject(list)) {
+	    for (i = length; i-- > 0;) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener)) {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0)
+	      return this;
+
+	    if (list.length === 1) {
+	      list.length = 0;
+	      delete this._events[type];
+	    } else {
+	      list.splice(position, 1);
+	    }
+
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  var key, listeners;
+
+	  if (!this._events)
+	    return this;
+
+	  // not listening for removeListener, no need to emit
+	  if (!this._events.removeListener) {
+	    if (arguments.length === 0)
+	      this._events = {};
+	    else if (this._events[type])
+	      delete this._events[type];
+	    return this;
+	  }
+
+	  // emit removeListener for all listeners on all events
+	  if (arguments.length === 0) {
+	    for (key in this._events) {
+	      if (key === 'removeListener') continue;
+	      this.removeAllListeners(key);
+	    }
+	    this.removeAllListeners('removeListener');
+	    this._events = {};
+	    return this;
+	  }
+
+	  listeners = this._events[type];
+
+	  if (isFunction(listeners)) {
+	    this.removeListener(type, listeners);
+	  } else {
+	    // LIFO order
+	    while (listeners.length)
+	      this.removeListener(type, listeners[listeners.length - 1]);
+	  }
+	  delete this._events[type];
+
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  var ret;
+	  if (!this._events || !this._events[type])
+	    ret = [];
+	  else if (isFunction(this._events[type]))
+	    ret = [this._events[type]];
+	  else
+	    ret = this._events[type].slice();
+	  return ret;
+	};
+
+	EventEmitter.listenerCount = function(emitter, type) {
+	  var ret;
+	  if (!emitter._events || !emitter._events[type])
+	    ret = 0;
+	  else if (isFunction(emitter._events[type]))
+	    ret = 1;
+	  else
+	    ret = emitter._events[type].length;
+	  return ret;
+	};
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+
+
+/***/ },
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -18967,7 +19595,7 @@ var ripple =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(57);
+	exports.isBuffer = __webpack_require__(56);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -19011,7 +19639,7 @@ var ripple =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(71);
+	exports.inherits = __webpack_require__(70);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -19029,314 +19657,7 @@ var ripple =
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	function EventEmitter() {
-	  this._events = this._events || {};
-	  this._maxListeners = this._maxListeners || undefined;
-	}
-	module.exports = EventEmitter;
-
-	// Backwards-compat with node 0.10.x
-	EventEmitter.EventEmitter = EventEmitter;
-
-	EventEmitter.prototype._events = undefined;
-	EventEmitter.prototype._maxListeners = undefined;
-
-	// By default EventEmitters will print a warning if more than 10 listeners are
-	// added to it. This is a useful default which helps finding memory leaks.
-	EventEmitter.defaultMaxListeners = 10;
-
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!isNumber(n) || n < 0 || isNaN(n))
-	    throw TypeError('n must be a positive number');
-	  this._maxListeners = n;
-	  return this;
-	};
-
-	EventEmitter.prototype.emit = function(type) {
-	  var er, handler, len, args, i, listeners;
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events.error ||
-	        (isObject(this._events.error) && !this._events.error.length)) {
-	      er = arguments[1];
-	      if (er instanceof Error) {
-	        throw er; // Unhandled 'error' event
-	      }
-	      throw TypeError('Uncaught, unspecified "error" event.');
-	    }
-	  }
-
-	  handler = this._events[type];
-
-	  if (isUndefined(handler))
-	    return false;
-
-	  if (isFunction(handler)) {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        len = arguments.length;
-	        args = new Array(len - 1);
-	        for (i = 1; i < len; i++)
-	          args[i - 1] = arguments[i];
-	        handler.apply(this, args);
-	    }
-	  } else if (isObject(handler)) {
-	    len = arguments.length;
-	    args = new Array(len - 1);
-	    for (i = 1; i < len; i++)
-	      args[i - 1] = arguments[i];
-
-	    listeners = handler.slice();
-	    len = listeners.length;
-	    for (i = 0; i < len; i++)
-	      listeners[i].apply(this, args);
-	  }
-
-	  return true;
-	};
-
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  var m;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // To avoid recursion in the case that type === "newListener"! Before
-	  // adding it to the listeners, first emit "newListener".
-	  if (this._events.newListener)
-	    this.emit('newListener', type,
-	              isFunction(listener.listener) ?
-	              listener.listener : listener);
-
-	  if (!this._events[type])
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  else if (isObject(this._events[type]))
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-	  else
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-
-	  // Check for listener leak
-	  if (isObject(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (!isUndefined(this._maxListeners)) {
-	      m = this._maxListeners;
-	    } else {
-	      m = EventEmitter.defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(node) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      if (typeof console.trace === 'function') {
-	        // not supported in IE 10
-	        console.trace();
-	      }
-	    }
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  var fired = false;
-
-	  function g() {
-	    this.removeListener(type, g);
-
-	    if (!fired) {
-	      fired = true;
-	      listener.apply(this, arguments);
-	    }
-	  }
-
-	  g.listener = listener;
-	  this.on(type, g);
-
-	  return this;
-	};
-
-	// emits a 'removeListener' event iff the listener was removed
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  var list, position, length, i;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events || !this._events[type])
-	    return this;
-
-	  list = this._events[type];
-	  length = list.length;
-	  position = -1;
-
-	  if (list === listener ||
-	      (isFunction(list.listener) && list.listener === listener)) {
-	    delete this._events[type];
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-
-	  } else if (isObject(list)) {
-	    for (i = length; i-- > 0;) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener)) {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0)
-	      return this;
-
-	    if (list.length === 1) {
-	      list.length = 0;
-	      delete this._events[type];
-	    } else {
-	      list.splice(position, 1);
-	    }
-
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  var key, listeners;
-
-	  if (!this._events)
-	    return this;
-
-	  // not listening for removeListener, no need to emit
-	  if (!this._events.removeListener) {
-	    if (arguments.length === 0)
-	      this._events = {};
-	    else if (this._events[type])
-	      delete this._events[type];
-	    return this;
-	  }
-
-	  // emit removeListener for all listeners on all events
-	  if (arguments.length === 0) {
-	    for (key in this._events) {
-	      if (key === 'removeListener') continue;
-	      this.removeAllListeners(key);
-	    }
-	    this.removeAllListeners('removeListener');
-	    this._events = {};
-	    return this;
-	  }
-
-	  listeners = this._events[type];
-
-	  if (isFunction(listeners)) {
-	    this.removeListener(type, listeners);
-	  } else {
-	    // LIFO order
-	    while (listeners.length)
-	      this.removeListener(type, listeners[listeners.length - 1]);
-	  }
-	  delete this._events[type];
-
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  var ret;
-	  if (!this._events || !this._events[type])
-	    ret = [];
-	  else if (isFunction(this._events[type]))
-	    ret = [this._events[type]];
-	  else
-	    ret = this._events[type].slice();
-	  return ret;
-	};
-
-	EventEmitter.listenerCount = function(emitter, type) {
-	  var ret;
-	  if (!emitter._events || !emitter._events[type])
-	    ret = 0;
-	  else if (isFunction(emitter._events[type]))
-	    ret = 1;
-	  else
-	    ret = emitter._events[type].length;
-	  return ret;
-	};
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(61)))
 
 /***/ },
 /* 41 */
@@ -19369,7 +19690,7 @@ var ripple =
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(40);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -20766,7 +21087,7 @@ var ripple =
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(53)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(52)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -20777,9 +21098,9 @@ var ripple =
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(54)
+	exports.createHash = __webpack_require__(53)
 
-	exports.createHmac = __webpack_require__(55)
+	exports.createHmac = __webpack_require__(54)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -20800,10 +21121,10 @@ var ripple =
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 
-	var p = __webpack_require__(56)(exports)
+	var p = __webpack_require__(55)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
-	__webpack_require__(69)(exports, module.exports);
+	__webpack_require__(68)(exports, module.exports);
 
 	// the least I can do is make error messages for the rest of the node.js/crypto api.
 	each(['createCredentials'
@@ -20843,7 +21164,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(63);
+	var punycode = __webpack_require__(62);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -20915,7 +21236,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(52);
+	    querystring = __webpack_require__(51);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -21537,10 +21858,10 @@ var ripple =
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
 	 * @license
-	 * lodash 3.1.0 (Custom Build) <https://lodash.com/>
+	 * lodash 3.3.1 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern -d -o ./index.js`
 	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
-	 * Based on Underscore.js 1.7.0 <http://underscorejs.org/LICENSE>
+	 * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
@@ -21550,7 +21871,7 @@ var ripple =
 	  var undefined;
 
 	  /** Used as the semantic version number. */
-	  var VERSION = '3.1.0';
+	  var VERSION = '3.3.1';
 
 	  /** Used to compose bitmasks for wrapper metadata. */
 	  var BIND_FLAG = 1,
@@ -21861,6 +22182,20 @@ var ripple =
 	      }
 	    }
 	    return -1;
+	  }
+
+	  /**
+	   * The base implementation of `_.isFunction` without support for environments
+	   * with incorrect `typeof` results.
+	   *
+	   * @private
+	   * @param {*} value The value to check.
+	   * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	   */
+	  function baseIsFunction(value) {
+	    // Avoid a Chakra JIT bug in compatibility modes of IE 11.
+	    // See https://github.com/jashkenas/underscore/issues/1621 for more details.
+	    return typeof value == 'function' || false;
 	  }
 
 	  /**
@@ -22265,7 +22600,6 @@ var ripple =
 	        setTimeout = context.setTimeout,
 	        splice = arrayProto.splice,
 	        Uint8Array = isNative(Uint8Array = context.Uint8Array) && Uint8Array,
-	        unshift = arrayProto.unshift,
 	        WeakMap = isNative(WeakMap = context.WeakMap) && WeakMap;
 
 	    /** Used to clone array buffers. */
@@ -22317,7 +22651,7 @@ var ripple =
 	    /*------------------------------------------------------------------------*/
 
 	    /**
-	     * Creates a `lodash` object which wraps `value` to enable intuitive chaining.
+	     * Creates a `lodash` object which wraps `value` to enable implicit chaining.
 	     * Methods that operate on and return arrays, collections, and functions can
 	     * be chained together. Methods that return a boolean or single value will
 	     * automatically end the chain returning the unwrapped value. Explicit chaining
@@ -22336,29 +22670,31 @@ var ripple =
 	     * `concat`, `join`, `pop`, `push`, `reverse`, `shift`, `slice`, `sort`, `splice`,
 	     * and `unshift`
 	     *
-	     * The wrapper functions that support shortcut fusion are:
-	     * `drop`, `dropRight`, `dropRightWhile`, `dropWhile`, `filter`, `first`,
-	     * `initial`, `last`, `map`, `pluck`, `reject`, `rest`, `reverse`, `slice`,
-	     * `take`, `takeRight`, `takeRightWhile`, `takeWhile`, and `where`
+	     * The wrapper methods that support shortcut fusion are:
+	     * `compact`, `drop`, `dropRight`, `dropRightWhile`, `dropWhile`, `filter`,
+	     * `first`, `initial`, `last`, `map`, `pluck`, `reject`, `rest`, `reverse`,
+	     * `slice`, `take`, `takeRight`, `takeRightWhile`, `takeWhile`, `toArray`,
+	     * and `where`
 	     *
-	     * The chainable wrapper functions are:
+	     * The chainable wrapper methods are:
 	     * `after`, `ary`, `assign`, `at`, `before`, `bind`, `bindAll`, `bindKey`,
-	     * `callback`, `chain`, `chunk`, `compact`, `concat`, `constant`, `countBy`,
-	     * `create`, `curry`, `debounce`, `defaults`, `defer`, `delay`, `difference`,
-	     * `drop`, `dropRight`, `dropRightWhile`, `dropWhile`, `filter`, `flatten`,
-	     * `flattenDeep`, `flow`, `flowRight`, `forEach`, `forEachRight`, `forIn`,
-	     * `forInRight`, `forOwn`, `forOwnRight`, `functions`, `groupBy`, `indexBy`,
-	     * `initial`, `intersection`, `invert`, `invoke`, `keys`, `keysIn`, `map`,
-	     * `mapValues`, `matches`, `memoize`, `merge`, `mixin`, `negate`, `noop`,
-	     * `omit`, `once`, `pairs`, `partial`, `partialRight`, `partition`, `pick`,
-	     * `pluck`, `property`, `propertyOf`, `pull`, `pullAt`, `push`, `range`,
-	     * `rearg`, `reject`, `remove`, `rest`, `reverse`, `shuffle`, `slice`, `sort`,
-	     * `sortBy`, `sortByAll`, `splice`, `take`, `takeRight`, `takeRightWhile`,
-	     * `takeWhile`, `tap`, `throttle`, `thru`, `times`, `toArray`, `toPlainObject`,
-	     * `transform`, `union`, `uniq`, `unshift`, `unzip`, `values`, `valuesIn`,
-	     * `where`, `without`, `wrap`, `xor`, `zip`, and `zipObject`
+	     * `callback`, `chain`, `chunk`, `commit`, `compact`, `concat`, `constant`,
+	     * `countBy`, `create`, `curry`, `debounce`, `defaults`, `defer`, `delay`,
+	     * `difference`, `drop`, `dropRight`, `dropRightWhile`, `dropWhile`, `fill`,
+	     * `filter`, `flatten`, `flattenDeep`, `flow`, `flowRight`, `forEach`,
+	     * `forEachRight`, `forIn`, `forInRight`, `forOwn`, `forOwnRight`, `functions`,
+	     * `groupBy`, `indexBy`, `initial`, `intersection`, `invert`, `invoke`, `keys`,
+	     * `keysIn`, `map`, `mapValues`, `matches`, `matchesProperty`, `memoize`, `merge`,
+	     * `mixin`, `negate`, `noop`, `omit`, `once`, `pairs`, `partial`, `partialRight`,
+	     * `partition`, `pick`, `plant`, `pluck`, `property`, `propertyOf`, `pull`,
+	     * `pullAt`, `push`, `range`, `rearg`, `reject`, `remove`, `rest`, `reverse`,
+	     * `shuffle`, `slice`, `sort`, `sortBy`, `sortByAll`, `splice`, `spread`,
+	     * `take`, `takeRight`, `takeRightWhile`, `takeWhile`, `tap`, `throttle`,
+	     * `thru`, `times`, `toArray`, `toPlainObject`, `transform`, `union`, `uniq`,
+	     * `unshift`, `unzip`, `values`, `valuesIn`, `where`, `without`, `wrap`, `xor`,
+	     * `zip`, and `zipObject`
 	     *
-	     * The wrapper functions that are **not** chainable by default are:
+	     * The wrapper methods that are **not** chainable by default are:
 	     * `attempt`, `camelCase`, `capitalize`, `clone`, `cloneDeep`, `deburr`,
 	     * `endsWith`, `escape`, `escapeRegExp`, `every`, `find`, `findIndex`, `findKey`,
 	     * `findLast`, `findLastIndex`, `findLastKey`, `findWhere`, `first`, `has`,
@@ -22373,24 +22709,28 @@ var ripple =
 	     * `startCase`, `startsWith`, `template`, `trim`, `trimLeft`, `trimRight`,
 	     * `trunc`, `unescape`, `uniqueId`, `value`, and `words`
 	     *
-	     * The wrapper function `sample` will return a wrapped value when `n` is provided,
+	     * The wrapper method `sample` will return a wrapped value when `n` is provided,
 	     * otherwise an unwrapped value is returned.
 	     *
 	     * @name _
 	     * @constructor
 	     * @category Chain
 	     * @param {*} value The value to wrap in a `lodash` instance.
-	     * @returns {Object} Returns a `lodash` instance.
+	     * @returns {Object} Returns the new `lodash` wrapper instance.
 	     * @example
 	     *
 	     * var wrapped = _([1, 2, 3]);
 	     *
 	     * // returns an unwrapped value
-	     * wrapped.reduce(function(sum, n) { return sum + n; });
+	     * wrapped.reduce(function(sum, n) {
+	     *   return sum + n;
+	     * });
 	     * // => 6
 	     *
 	     * // returns a wrapped value
-	     * var squares = wrapped.map(function(n) { return n * n; });
+	     * var squares = wrapped.map(function(n) {
+	     *   return n * n;
+	     * });
 	     *
 	     * _.isArray(squares);
 	     * // => false
@@ -22399,15 +22739,24 @@ var ripple =
 	     * // => true
 	     */
 	    function lodash(value) {
-	      if (isObjectLike(value) && !isArray(value)) {
+	      if (isObjectLike(value) && !isArray(value) && !(value instanceof LazyWrapper)) {
 	        if (value instanceof LodashWrapper) {
 	          return value;
 	        }
-	        if (hasOwnProperty.call(value, '__wrapped__')) {
-	          return new LodashWrapper(value.__wrapped__, value.__chain__, arrayCopy(value.__actions__));
+	        if (hasOwnProperty.call(value, '__chain__') && hasOwnProperty.call(value, '__wrapped__')) {
+	          return wrapperClone(value);
 	        }
 	      }
 	      return new LodashWrapper(value);
+	    }
+
+	    /**
+	     * The function whose prototype all chaining wrappers inherit from.
+	     *
+	     * @private
+	     */
+	    function baseLodash() {
+	      // No operation performed.
 	    }
 
 	    /**
@@ -22419,9 +22768,9 @@ var ripple =
 	     * @param {Array} [actions=[]] Actions to peform to resolve the unwrapped value.
 	     */
 	    function LodashWrapper(value, chainAll, actions) {
+	      this.__wrapped__ = value;
 	      this.__actions__ = actions || [];
 	      this.__chain__ = !!chainAll;
-	      this.__wrapped__ = value;
 	    }
 
 	    /**
@@ -22554,14 +22903,14 @@ var ripple =
 	     * @param {*} value The value to wrap.
 	     */
 	    function LazyWrapper(value) {
-	      this.actions = null;
-	      this.dir = 1;
-	      this.dropCount = 0;
-	      this.filtered = false;
-	      this.iteratees = null;
-	      this.takeCount = POSITIVE_INFINITY;
-	      this.views = null;
-	      this.wrapped = value;
+	      this.__wrapped__ = value;
+	      this.__actions__ = null;
+	      this.__dir__ = 1;
+	      this.__dropCount__ = 0;
+	      this.__filtered__ = false;
+	      this.__iteratees__ = null;
+	      this.__takeCount__ = POSITIVE_INFINITY;
+	      this.__views__ = null;
 	    }
 
 	    /**
@@ -22573,18 +22922,18 @@ var ripple =
 	     * @returns {Object} Returns the cloned `LazyWrapper` object.
 	     */
 	    function lazyClone() {
-	      var actions = this.actions,
-	          iteratees = this.iteratees,
-	          views = this.views,
-	          result = new LazyWrapper(this.wrapped);
+	      var actions = this.__actions__,
+	          iteratees = this.__iteratees__,
+	          views = this.__views__,
+	          result = new LazyWrapper(this.__wrapped__);
 
-	      result.actions = actions ? arrayCopy(actions) : null;
-	      result.dir = this.dir;
-	      result.dropCount = this.dropCount;
-	      result.filtered = this.filtered;
-	      result.iteratees = iteratees ? arrayCopy(iteratees) : null;
-	      result.takeCount = this.takeCount;
-	      result.views = views ? arrayCopy(views) : null;
+	      result.__actions__ = actions ? arrayCopy(actions) : null;
+	      result.__dir__ = this.__dir__;
+	      result.__dropCount__ = this.__dropCount__;
+	      result.__filtered__ = this.__filtered__;
+	      result.__iteratees__ = iteratees ? arrayCopy(iteratees) : null;
+	      result.__takeCount__ = this.__takeCount__;
+	      result.__views__ = views ? arrayCopy(views) : null;
 	      return result;
 	    }
 
@@ -22597,13 +22946,13 @@ var ripple =
 	     * @returns {Object} Returns the new reversed `LazyWrapper` object.
 	     */
 	    function lazyReverse() {
-	      if (this.filtered) {
+	      if (this.__filtered__) {
 	        var result = new LazyWrapper(this);
-	        result.dir = -1;
-	        result.filtered = true;
+	        result.__dir__ = -1;
+	        result.__filtered__ = true;
 	      } else {
 	        result = this.clone();
-	        result.dir *= -1;
+	        result.__dir__ *= -1;
 	      }
 	      return result;
 	    }
@@ -22617,20 +22966,20 @@ var ripple =
 	     * @returns {*} Returns the unwrapped value.
 	     */
 	    function lazyValue() {
-	      var array = this.wrapped.value();
+	      var array = this.__wrapped__.value();
 	      if (!isArray(array)) {
-	        return baseWrapperValue(array, this.actions);
+	        return baseWrapperValue(array, this.__actions__);
 	      }
-	      var dir = this.dir,
+	      var dir = this.__dir__,
 	          isRight = dir < 0,
-	          view = getView(0, array.length, this.views),
+	          view = getView(0, array.length, this.__views__),
 	          start = view.start,
 	          end = view.end,
 	          length = end - start,
-	          dropCount = this.dropCount,
-	          takeCount = nativeMin(length, this.takeCount - dropCount),
+	          dropCount = this.__dropCount__,
+	          takeCount = nativeMin(length, this.__takeCount__),
 	          index = isRight ? end : start - 1,
-	          iteratees = this.iteratees,
+	          iteratees = this.__iteratees__,
 	          iterLength = iteratees ? iteratees.length : 0,
 	          resIndex = 0,
 	          result = [];
@@ -23075,7 +23424,7 @@ var ripple =
 	        return baseCopy(source, object, props);
 	      }
 	      var index = -1,
-	          length = props.length
+	          length = props.length;
 
 	      while (++index < length) {
 	        var key = props[index],
@@ -23182,10 +23531,12 @@ var ripple =
 	      if (func == null) {
 	        return identity;
 	      }
-	      // Handle "_.property" and "_.matches" style callback shorthands.
-	      return type == 'object'
-	        ? baseMatches(func)
-	        : baseProperty(func + '');
+	      if (type == 'object') {
+	        return baseMatches(func);
+	      }
+	      return typeof thisArg == 'undefined'
+	        ? baseProperty(func + '')
+	        : baseMatchesProperty(func + '', thisArg);
 	    }
 
 	    /**
@@ -23286,7 +23637,7 @@ var ripple =
 	     * @returns {number} Returns the timer id.
 	     */
 	    function baseDelay(func, wait, args, fromIndex) {
-	      if (!isFunction(func)) {
+	      if (typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      return setTimeout(function() { func.apply(undefined, baseSlice(args, fromIndex)); }, wait);
@@ -23311,7 +23662,7 @@ var ripple =
 	      var index = -1,
 	          indexOf = getIndexOf(),
 	          isCommon = indexOf == baseIndexOf,
-	          cache = isCommon && values.length >= 200 && createCache(values),
+	          cache = (isCommon && values.length >= 200) ? createCache(values) : null,
 	          valuesLength = values.length;
 
 	      if (cache) {
@@ -23404,6 +23755,36 @@ var ripple =
 	        return result;
 	      });
 	      return result;
+	    }
+
+	    /**
+	     * The base implementation of `_.fill` without an iteratee call guard.
+	     *
+	     * @private
+	     * @param {Array} array The array to fill.
+	     * @param {*} value The value to fill `array` with.
+	     * @param {number} [start=0] The start position.
+	     * @param {number} [end=array.length] The end position.
+	     * @returns {Array} Returns `array`.
+	     */
+	    function baseFill(array, value, start, end) {
+	      var length = array.length;
+
+	      start = start == null ? 0 : (+start || 0);
+	      if (start < 0) {
+	        start = -start > length ? 0 : (length + start);
+	      }
+	      end = (typeof end == 'undefined' || end > length) ? length : (+end || 0);
+	      if (end < 0) {
+	        end += length;
+	      }
+	      length = start > end ? 0 : end >>> 0;
+	      start >>>= 0;
+
+	      while (start < length) {
+	        array[start++] = value;
+	      }
+	      return array;
 	    }
 
 	    /**
@@ -23738,7 +24119,7 @@ var ripple =
 	     * shorthands or `this` binding.
 	     *
 	     * @private
-	     * @param {Object} source The object to inspect.
+	     * @param {Object} object The object to inspect.
 	     * @param {Array} props The source property names to match.
 	     * @param {Array} values The source values to match.
 	     * @param {Array} strictCompareFlags Strict comparison flags for source values.
@@ -23800,8 +24181,7 @@ var ripple =
 	    }
 
 	    /**
-	     * The base implementation of `_.matches` which supports specifying whether
-	     * `source` should be cloned.
+	     * The base implementation of `_.matches` which does not clone `source`.
 	     *
 	     * @private
 	     * @param {Object} source The object of property values to match.
@@ -23817,7 +24197,7 @@ var ripple =
 
 	        if (isStrictComparable(value)) {
 	          return function(object) {
-	            return object != null && value === object[key] && hasOwnProperty.call(object, key);
+	            return object != null && object[key] === value && hasOwnProperty.call(object, key);
 	          };
 	        }
 	      }
@@ -23835,6 +24215,26 @@ var ripple =
 	    }
 
 	    /**
+	     * The base implementation of `_.matchesProperty` which does not coerce `key`
+	     * to a string.
+	     *
+	     * @private
+	     * @param {string} key The key of the property to get.
+	     * @param {*} value The value to compare.
+	     * @returns {Function} Returns the new function.
+	     */
+	    function baseMatchesProperty(key, value) {
+	      if (isStrictComparable(value)) {
+	        return function(object) {
+	          return object != null && object[key] === value;
+	        };
+	      }
+	      return function(object) {
+	        return object != null && baseIsEqual(value, object[key], null, true);
+	      };
+	    }
+
+	    /**
 	     * The base implementation of `_.merge` without support for argument juggling,
 	     * multiple sources, and `this` binding `customizer` functions.
 	     *
@@ -23847,8 +24247,10 @@ var ripple =
 	     * @returns {Object} Returns the destination object.
 	     */
 	    function baseMerge(object, source, customizer, stackA, stackB) {
+	      if (!isObject(object)) {
+	        return object;
+	      }
 	      var isSrcArr = isLength(source.length) && (isArray(source) || isTypedArray(source));
-
 	      (isSrcArr ? arrayEach : baseForOwn)(source, function(srcValue, key, source) {
 	        if (isObjectLike(srcValue)) {
 	          stackA || (stackA = []);
@@ -23996,7 +24398,7 @@ var ripple =
 	      eachFunc(collection, function(value, index, collection) {
 	        accumulator = initFromCollection
 	          ? (initFromCollection = false, value)
-	          : iteratee(accumulator, value, index, collection)
+	          : iteratee(accumulator, value, index, collection);
 	      });
 	      return accumulator;
 	    }
@@ -24080,7 +24482,7 @@ var ripple =
 	          length = array.length,
 	          isCommon = indexOf == baseIndexOf,
 	          isLarge = isCommon && length >= 200,
-	          seen = isLarge && createCache(),
+	          seen = isLarge ? createCache() : null,
 	          result = [];
 
 	      if (seen) {
@@ -24372,8 +24774,7 @@ var ripple =
 	    /**
 	     * Creates a function that aggregates a collection, creating an accumulator
 	     * object composed from the results of running each element in the collection
-	     * through an iteratee. The `setter` sets the keys and values of the accumulator
-	     * object. If `initializer` is provided initializes the accumulator object.
+	     * through an iteratee.
 	     *
 	     * @private
 	     * @param {Function} setter The function to set keys and values of the accumulator object.
@@ -24710,7 +25111,7 @@ var ripple =
 	     */
 	    function createWrapper(func, bitmask, thisArg, partials, holders, argPos, ary, arity) {
 	      var isBindKey = bitmask & BIND_KEY_FLAG;
-	      if (!isBindKey && !isFunction(func)) {
+	      if (!isBindKey && typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      var length = partials ? partials.length : 0;
@@ -24740,9 +25141,9 @@ var ripple =
 	      if (bitmask == BIND_FLAG) {
 	        var result = createBindWrapper(newData[0], newData[2]);
 	      } else if ((bitmask == PARTIAL_FLAG || bitmask == (BIND_FLAG | PARTIAL_FLAG)) && !newData[4].length) {
-	        result = createPartialWrapper.apply(null, newData);
+	        result = createPartialWrapper.apply(undefined, newData);
 	      } else {
-	        result = createHybridWrapper.apply(null, newData);
+	        result = createHybridWrapper.apply(undefined, newData);
 	      }
 	      var setter = data ? baseSetData : setData;
 	      return setter(result, newData);
@@ -25133,7 +25534,11 @@ var ripple =
 	      } else {
 	        prereq = type == 'string' && index in object;
 	      }
-	      return prereq && object[index] === value;
+	      if (prereq) {
+	        var other = object[index];
+	        return value === value ? value === other : other !== other;
+	      }
+	      return false;
 	    }
 
 	    /**
@@ -25430,6 +25835,19 @@ var ripple =
 	      return isObject(value) ? value : Object(value);
 	    }
 
+	    /**
+	     * Creates a clone of `wrapper`.
+	     *
+	     * @private
+	     * @param {Object} wrapper The wrapper to clone.
+	     * @returns {Object} Returns the cloned wrapper.
+	     */
+	    function wrapperClone(wrapper) {
+	      return wrapper instanceof LazyWrapper
+	        ? wrapper.clone()
+	        : new LodashWrapper(wrapper.__wrapped__, wrapper.__chain__, arrayCopy(wrapper.__actions__));
+	    }
+
 	    /*------------------------------------------------------------------------*/
 
 	    /**
@@ -25441,7 +25859,7 @@ var ripple =
 	     * @memberOf _
 	     * @category Array
 	     * @param {Array} array The array to process.
-	     * @param {numer} [size=1] The length of each chunk.
+	     * @param {number} [size=1] The length of each chunk.
 	     * @param- {Object} [guard] Enables use as a callback for functions like `_.map`.
 	     * @returns {Array} Returns the new array containing chunks.
 	     * @example
@@ -25515,7 +25933,7 @@ var ripple =
 	     * @returns {Array} Returns the new array of filtered values.
 	     * @example
 	     *
-	     * _.difference([1, 2, 3], [5, 2, 10]);
+	     * _.difference([1, 2, 3], [4, 2]);
 	     * // => [1, 3]
 	     */
 	    function difference() {
@@ -25536,7 +25954,6 @@ var ripple =
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {number} [n=1] The number of elements to drop.
@@ -25572,7 +25989,6 @@ var ripple =
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {number} [n=1] The number of elements to drop.
@@ -25609,40 +26025,49 @@ var ripple =
 	     * Elements are dropped until `predicate` returns falsey. The predicate is
 	     * bound to `thisArg` and invoked with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that match the properties of the given
 	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per element.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
-	     * _.dropRightWhile([1, 2, 3], function(n) { return n > 1; });
+	     * _.dropRightWhile([1, 2, 3], function(n) {
+	     *   return n > 1;
+	     * });
 	     * // => [1]
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'status': 'busy', 'active': false },
-	     *   { 'user': 'fred',    'status': 'busy', 'active': true },
-	     *   { 'user': 'pebbles', 'status': 'away', 'active': true }
+	     *   { 'user': 'barney',  'active': true },
+	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'pebbles', 'active': false }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.dropRightWhile(users, 'active'), 'user');
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.dropRightWhile(users, { 'user': pebbles, 'active': false }), 'user');
+	     * // => ['barney', 'fred']
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.dropRightWhile(users, 'active', false), 'user');
 	     * // => ['barney']
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.dropRightWhile(users, { 'status': 'away' }), 'user');
-	     * // => ['barney', 'fred']
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.dropRightWhile(users, 'active'), 'user');
+	     * // => ['barney', 'fred', 'pebbles']
 	     */
 	    function dropRightWhile(array, predicate, thisArg) {
 	      var length = array ? array.length : 0;
@@ -25659,40 +26084,49 @@ var ripple =
 	     * Elements are dropped until `predicate` returns falsey. The predicate is
 	     * bound to `thisArg` and invoked with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per element.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
-	     * _.dropWhile([1, 2, 3], function(n) { return n < 3; });
+	     * _.dropWhile([1, 2, 3], function(n) {
+	     *   return n < 3;
+	     * });
 	     * // => [3]
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'status': 'busy', 'active': true },
-	     *   { 'user': 'fred',    'status': 'busy', 'active': false },
-	     *   { 'user': 'pebbles', 'status': 'away', 'active': true }
+	     *   { 'user': 'barney',  'active': false },
+	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'pebbles', 'active': true }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.dropWhile(users, 'active'), 'user');
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.dropWhile(users, { 'user': 'barney', 'active': false }), 'user');
 	     * // => ['fred', 'pebbles']
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.dropWhile(users, { 'status': 'busy' }), 'user');
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.dropWhile(users, 'active', false), 'user');
 	     * // => ['pebbles']
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.dropWhile(users, 'active'), 'user');
+	     * // => ['barney', 'fred', 'pebbles']
 	     */
 	    function dropWhile(array, predicate, thisArg) {
 	      var length = array ? array.length : 0;
@@ -25706,13 +26140,44 @@ var ripple =
 	    }
 
 	    /**
+	     * Fills elements of `array` with `value` from `start` up to, but not
+	     * including, `end`.
+	     *
+	     * **Note:** This method mutates `array`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Array
+	     * @param {Array} array The array to fill.
+	     * @param {*} value The value to fill `array` with.
+	     * @param {number} [start=0] The start position.
+	     * @param {number} [end=array.length] The end position.
+	     * @returns {Array} Returns `array`.
+	     */
+	    function fill(array, value, start, end) {
+	      var length = array ? array.length : 0;
+	      if (!length) {
+	        return [];
+	      }
+	      if (start && typeof start != 'number' && isIterateeCall(array, value, start)) {
+	        start = 0;
+	        end = length;
+	      }
+	      return baseFill(array, value, start, end);
+	    }
+
+	    /**
 	     * This method is like `_.find` except that it returns the index of the first
 	     * element `predicate` returns truthy for, instead of the element itself.
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -25721,28 +26186,33 @@ var ripple =
 	     * @category Array
 	     * @param {Array} array The array to search.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'age': 36, 'active': false },
-	     *   { 'user': 'fred',    'age': 40, 'active': true },
-	     *   { 'user': 'pebbles', 'age': 1,  'active': false }
+	     *   { 'user': 'barney',  'active': false },
+	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'pebbles', 'active': true }
 	     * ];
 	     *
-	     * _.findIndex(users, function(chr) { return chr.age < 40; });
+	     * _.findIndex(users, function(chr) {
+	     *   return chr.user == 'barney';
+	     * });
 	     * // => 0
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.findIndex(users, { 'age': 1 });
-	     * // => 2
-	     *
-	     * // using the "_.property" callback shorthand
-	     * _.findIndex(users, 'active');
+	     * // using the `_.matches` callback shorthand
+	     * _.findIndex(users, { 'user': 'fred', 'active': false });
 	     * // => 1
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.findIndex(users, 'active', false);
+	     * // => 0
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.findIndex(users, 'active');
+	     * // => 2
 	     */
 	    function findIndex(array, predicate, thisArg) {
 	      var index = -1,
@@ -25761,10 +26231,14 @@ var ripple =
 	     * This method is like `_.findIndex` except that it iterates over elements
 	     * of `collection` from right to left.
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -25773,26 +26247,31 @@ var ripple =
 	     * @category Array
 	     * @param {Array} array The array to search.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {number} Returns the index of the found element, else `-1`.
 	     * @example
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'age': 36, 'active': true },
-	     *   { 'user': 'fred',    'age': 40, 'active': false },
-	     *   { 'user': 'pebbles', 'age': 1,  'active': false }
+	     *   { 'user': 'barney',  'active': true },
+	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'pebbles', 'active': false }
 	     * ];
 	     *
-	     * _.findLastIndex(users, function(chr) { return chr.age < 40; });
+	     * _.findLastIndex(users, function(chr) {
+	     *   return chr.user == 'pebbles';
+	     * });
 	     * // => 2
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.findLastIndex(users, { 'age': 40 });
+	     * // using the `_.matches` callback shorthand
+	     * _.findLastIndex(users, { 'user': 'barney', 'active': true });
+	     * // => 0
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.findLastIndex(users, 'active', false);
 	     * // => 1
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.findLastIndex(users, 'active');
 	     * // => 0
 	     */
@@ -25841,11 +26320,11 @@ var ripple =
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
-	     * _.flatten([1, [2], [3, [[4]]]]);
-	     * // => [1, 2, 3, [[4]]];
+	     * _.flatten([1, [2, 3, [4]]]);
+	     * // => [1, 2, 3, [4]];
 	     *
 	     * // using `isDeep`
-	     * _.flatten([1, [2], [3, [[4]]]], true);
+	     * _.flatten([1, [2, 3, [4]]], true);
 	     * // => [1, 2, 3, 4];
 	     */
 	    function flatten(array, isDeep, guard) {
@@ -25866,7 +26345,7 @@ var ripple =
 	     * @returns {Array} Returns the new flattened array.
 	     * @example
 	     *
-	     * _.flattenDeep([1, [2], [3, [[4]]]]);
+	     * _.flattenDeep([1, [2, 3, [4]]]);
 	     * // => [1, 2, 3, 4];
 	     */
 	    function flattenDeep(array) {
@@ -25895,15 +26374,15 @@ var ripple =
 	     * @returns {number} Returns the index of the matched value, else `-1`.
 	     * @example
 	     *
-	     * _.indexOf([1, 2, 3, 1, 2, 3], 2);
+	     * _.indexOf([1, 2, 1, 2], 2);
 	     * // => 1
 	     *
 	     * // using `fromIndex`
-	     * _.indexOf([1, 2, 3, 1, 2, 3], 2, 3);
-	     * // => 4
+	     * _.indexOf([1, 2, 1, 2], 2, 2);
+	     * // => 3
 	     *
 	     * // performing a binary search
-	     * _.indexOf([4, 4, 5, 5, 6, 6], 5, true);
+	     * _.indexOf([1, 1, 2, 2], 2, true);
 	     * // => 2
 	     */
 	    function indexOf(array, value, fromIndex) {
@@ -25954,9 +26433,8 @@ var ripple =
 	     * @param {...Array} [arrays] The arrays to inspect.
 	     * @returns {Array} Returns the new array of shared values.
 	     * @example
-	     *
-	     * _.intersection([1, 2, 3], [5, 2, 1, 4], [2, 1]);
-	     * // => [1, 2]
+	     * _.intersection([1, 2], [4, 2], [2, 1]);
+	     * // => [2]
 	     */
 	    function intersection() {
 	      var args = [],
@@ -25970,7 +26448,7 @@ var ripple =
 	        var value = arguments[argsIndex];
 	        if (isArray(value) || isArguments(value)) {
 	          args.push(value);
-	          caches.push(isCommon && value.length >= 120 && createCache(argsIndex && value));
+	          caches.push((isCommon && value.length >= 120) ? createCache(argsIndex && value) : null);
 	        }
 	      }
 	      argsLength = args.length;
@@ -26032,15 +26510,15 @@ var ripple =
 	     * @returns {number} Returns the index of the matched value, else `-1`.
 	     * @example
 	     *
-	     * _.lastIndexOf([1, 2, 3, 1, 2, 3], 2);
-	     * // => 4
+	     * _.lastIndexOf([1, 2, 1, 2], 2);
+	     * // => 3
 	     *
 	     * // using `fromIndex`
-	     * _.lastIndexOf([1, 2, 3, 1, 2, 3], 2, 3);
+	     * _.lastIndexOf([1, 2, 1, 2], 2, 2);
 	     * // => 1
 	     *
 	     * // performing a binary search
-	     * _.lastIndexOf([4, 4, 5, 5, 6, 6], 5, true);
+	     * _.lastIndexOf([1, 1, 2, 2], 2, true);
 	     * // => 3
 	     */
 	    function lastIndexOf(array, value, fromIndex) {
@@ -26086,6 +26564,7 @@ var ripple =
 	     * @example
 	     *
 	     * var array = [1, 2, 3, 1, 2, 3];
+	     *
 	     * _.pull(array, 2, 3);
 	     * console.log(array);
 	     * // => [1, 1]
@@ -26127,7 +26606,7 @@ var ripple =
 	     * @example
 	     *
 	     * var array = [5, 10, 15, 20];
-	     * var evens = _.pullAt(array, [1, 3]);
+	     * var evens = _.pullAt(array, 1, 3);
 	     *
 	     * console.log(array);
 	     * // => [5, 15]
@@ -26144,10 +26623,14 @@ var ripple =
 	     * and returns an array of the removed elements. The predicate is bound to
 	     * `thisArg` and invoked with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -26158,14 +26641,15 @@ var ripple =
 	     * @category Array
 	     * @param {Array} array The array to modify.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the new array of removed elements.
 	     * @example
 	     *
 	     * var array = [1, 2, 3, 4];
-	     * var evens = _.remove(array, function(n) { return n % 2 == 0; });
+	     * var evens = _.remove(array, function(n) {
+	     *   return n % 2 == 0;
+	     * });
 	     *
 	     * console.log(array);
 	     * // => [1, 3]
@@ -26241,10 +26725,14 @@ var ripple =
 	     * to compute their sort ranking. The iteratee is bound to `thisArg` and
 	     * invoked with one argument; (value).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -26254,8 +26742,7 @@ var ripple =
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
@@ -26264,7 +26751,7 @@ var ripple =
 	     * _.sortedIndex([30, 50], 40);
 	     * // => 1
 	     *
-	     * _.sortedIndex([4, 4, 5, 5, 6, 6], 5);
+	     * _.sortedIndex([4, 4, 5, 5], 5);
 	     * // => 2
 	     *
 	     * var dict = { 'data': { 'thirty': 30, 'forty': 40, 'fifty': 50 } };
@@ -26275,7 +26762,7 @@ var ripple =
 	     * }, dict);
 	     * // => 1
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.sortedIndex([{ 'x': 30 }, { 'x': 50 }], { 'x': 40 }, 'x');
 	     * // => 1
 	     */
@@ -26297,14 +26784,13 @@ var ripple =
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     * @example
 	     *
-	     * _.sortedLastIndex([4, 4, 5, 5, 6, 6], 5);
+	     * _.sortedLastIndex([4, 4, 5, 5], 5);
 	     * // => 4
 	     */
 	    function sortedLastIndex(array, value, iteratee, thisArg) {
@@ -26319,7 +26805,6 @@ var ripple =
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {number} [n=1] The number of elements to take.
@@ -26355,7 +26840,6 @@ var ripple =
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {number} [n=1] The number of elements to take.
@@ -26392,40 +26876,49 @@ var ripple =
 	     * taken until `predicate` returns falsey. The predicate is bound to `thisArg`
 	     * and invoked with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per element.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
-	     * _.takeRightWhile([1, 2, 3], function(n) { return n > 1; });
+	     * _.takeRightWhile([1, 2, 3], function(n) {
+	     *   return n > 1;
+	     * });
 	     * // => [2, 3]
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'status': 'busy', 'active': false },
-	     *   { 'user': 'fred',    'status': 'busy', 'active': true },
-	     *   { 'user': 'pebbles', 'status': 'away', 'active': true }
+	     *   { 'user': 'barney',  'active': true },
+	     *   { 'user': 'fred',    'active': false },
+	     *   { 'user': 'pebbles', 'active': false }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.takeRightWhile(users, 'active'), 'user');
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.takeRightWhile(users, { 'user': 'pebbles', 'active': false }), 'user');
+	     * // => ['pebbles']
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.takeRightWhile(users, 'active', false), 'user');
 	     * // => ['fred', 'pebbles']
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.takeRightWhile(users, { 'status': 'away' }), 'user');
-	     * // => ['pebbles']
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.takeRightWhile(users, 'active'), 'user');
+	     * // => []
 	     */
 	    function takeRightWhile(array, predicate, thisArg) {
 	      var length = array ? array.length : 0;
@@ -26442,40 +26935,49 @@ var ripple =
 	     * are taken until `predicate` returns falsey. The predicate is bound to
 	     * `thisArg` and invoked with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Array
 	     * @param {Array} array The array to query.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per element.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the slice of `array`.
 	     * @example
 	     *
-	     * _.takeWhile([1, 2, 3], function(n) { return n < 3; });
+	     * _.takeWhile([1, 2, 3], function(n) {
+	     *   return n < 3;
+	     * });
 	     * // => [1, 2]
 	     *
 	     * var users = [
-	     *   { 'user': 'barney',  'status': 'busy', 'active': true },
-	     *   { 'user': 'fred',    'status': 'busy', 'active': false },
-	     *   { 'user': 'pebbles', 'status': 'away', 'active': true }
+	     *   { 'user': 'barney',  'active': false },
+	     *   { 'user': 'fred',    'active': false},
+	     *   { 'user': 'pebbles', 'active': true }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.takeWhile(users, 'active'), 'user');
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.takeWhile(users, { 'user': 'barney', 'active': false }), 'user');
 	     * // => ['barney']
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.takeWhile(users, { 'status': 'busy' }), 'user');
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.takeWhile(users, 'active', false), 'user');
 	     * // => ['barney', 'fred']
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.takeWhile(users, 'active'), 'user');
+	     * // => []
 	     */
 	    function takeWhile(array, predicate, thisArg) {
 	      var length = array ? array.length : 0;
@@ -26504,8 +27006,8 @@ var ripple =
 	     * @returns {Array} Returns the new array of combined values.
 	     * @example
 	     *
-	     * _.union([1, 2, 3], [5, 2, 1, 4], [2, 1]);
-	     * // => [1, 2, 3, 5, 4]
+	     * _.union([1, 2], [4, 2], [2, 1]);
+	     * // => [1, 2, 4]
 	     */
 	    function union() {
 	      return baseUniq(baseFlatten(arguments, false, true));
@@ -26519,10 +27021,14 @@ var ripple =
 	     * uniqueness is computed. The `iteratee` is bound to `thisArg` and invoked
 	     * with three arguments; (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -26538,8 +27044,6 @@ var ripple =
 	     * @param {Array} array The array to inspect.
 	     * @param {boolean} [isSorted] Specify the array is sorted.
 	     * @param {Function|Object|string} [iteratee] The function invoked per iteration.
-	     *  If a property name or object is provided it is used to create a "_.property"
-	     *  or "_.matches" style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Array} Returns the new duplicate-value-free array.
 	     * @example
@@ -26552,10 +27056,12 @@ var ripple =
 	     * // => [1, 2]
 	     *
 	     * // using an iteratee function
-	     * _.uniq([1, 2.5, 1.5, 2], function(n) { return this.floor(n); }, Math);
+	     * _.uniq([1, 2.5, 1.5, 2], function(n) {
+	     *   return this.floor(n);
+	     * }, Math);
 	     * // => [1, 2.5]
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.uniq([{ 'x': 1 }, { 'x': 2 }, { 'x': 1 }], 'x');
 	     * // => [{ 'x': 1 }, { 'x': 2 }]
 	     */
@@ -26564,8 +27070,7 @@ var ripple =
 	      if (!length) {
 	        return [];
 	      }
-	      // Juggle arguments.
-	      if (typeof isSorted != 'boolean' && isSorted != null) {
+	      if (isSorted != null && typeof isSorted != 'boolean') {
 	        thisArg = iteratee;
 	        iteratee = isIterateeCall(array, isSorted, thisArg) ? null : isSorted;
 	        isSorted = false;
@@ -26625,8 +27130,8 @@ var ripple =
 	     * @returns {Array} Returns the new array of filtered values.
 	     * @example
 	     *
-	     * _.without([1, 2, 1, 0, 3, 1, 4], 0, 1);
-	     * // => [2, 3, 4]
+	     * _.without([1, 2, 1, 3], 1, 2);
+	     * // => [3]
 	     */
 	    function without(array) {
 	      return baseDifference(array, baseSlice(arguments, 1));
@@ -26644,11 +27149,8 @@ var ripple =
 	     * @returns {Array} Returns the new array of values.
 	     * @example
 	     *
-	     * _.xor([1, 2, 3], [5, 2, 1, 4]);
-	     * // => [3, 5, 4]
-	     *
-	     * _.xor([1, 2, 5], [2, 3, 5], [3, 4, 5]);
-	     * // => [1, 4, 5]
+	     * _.xor([1, 2], [4, 2]);
+	     * // => [1, 4]
 	     */
 	    function xor() {
 	      var index = -1,
@@ -26736,7 +27238,7 @@ var ripple =
 	     * @memberOf _
 	     * @category Chain
 	     * @param {*} value The value to wrap.
-	     * @returns {Object} Returns the new `lodash` object.
+	     * @returns {Object} Returns the new `lodash` wrapper instance.
 	     * @example
 	     *
 	     * var users = [
@@ -26747,7 +27249,9 @@ var ripple =
 	     *
 	     * var youngest = _.chain(users)
 	     *   .sortBy('age')
-	     *   .map(function(chr) { return chr.user + ' is ' + chr.age; })
+	     *   .map(function(chr) {
+	     *     return chr.user + ' is ' + chr.age;
+	     *   })
 	     *   .first()
 	     *   .value();
 	     * // => 'pebbles is 1'
@@ -26774,7 +27278,9 @@ var ripple =
 	     * @example
 	     *
 	     * _([1, 2, 3])
-	     *  .tap(function(array) { array.pop(); })
+	     *  .tap(function(array) {
+	     *    array.pop();
+	     *  })
 	     *  .reverse()
 	     *  .value();
 	     * // => [2, 1]
@@ -26798,7 +27304,9 @@ var ripple =
 	     *
 	     * _([1, 2, 3])
 	     *  .last()
-	     *  .thru(function(value) { return [value]; })
+	     *  .thru(function(value) {
+	     *    return [value];
+	     *  })
 	     *  .value();
 	     * // => [3]
 	     */
@@ -26812,7 +27320,7 @@ var ripple =
 	     * @name chain
 	     * @memberOf _
 	     * @category Chain
-	     * @returns {*} Returns the `lodash` object.
+	     * @returns {Object} Returns the new `lodash` wrapper instance.
 	     * @example
 	     *
 	     * var users = [
@@ -26836,6 +27344,76 @@ var ripple =
 	    }
 
 	    /**
+	     * Executes the chained sequence and returns the wrapped result.
+	     *
+	     * @name commit
+	     * @memberOf _
+	     * @category Chain
+	     * @returns {Object} Returns the new `lodash` wrapper instance.
+	     * @example
+	     *
+	     * var array = [1, 2];
+	     * var wrapper = _(array).push(3);
+	     *
+	     * console.log(array);
+	     * // => [1, 2]
+	     *
+	     * wrapper = wrapper.commit();
+	     * console.log(array);
+	     * // => [1, 2, 3]
+	     *
+	     * wrapper.last();
+	     * // => 3
+	     *
+	     * console.log(array);
+	     * // => [1, 2, 3]
+	     */
+	    function wrapperCommit() {
+	      return new LodashWrapper(this.value(), this.__chain__);
+	    }
+
+	    /**
+	     * Creates a clone of the chained sequence planting `value` as the wrapped value.
+	     *
+	     * @name plant
+	     * @memberOf _
+	     * @category Chain
+	     * @returns {Object} Returns the new `lodash` wrapper instance.
+	     * @example
+	     *
+	     * var array = [1, 2];
+	     * var wrapper = _(array).map(function(value) {
+	     *   return Math.pow(value, 2);
+	     * });
+	     *
+	     * var other = [3, 4];
+	     * var otherWrapper = wrapper.plant(other);
+	     *
+	     * otherWrapper.value();
+	     * // => [9, 16]
+	     *
+	     * wrapper.value();
+	     * // => [1, 4]
+	     */
+	    function wrapperPlant(value) {
+	      var result,
+	          parent = this;
+
+	      while (parent instanceof baseLodash) {
+	        var clone = wrapperClone(parent);
+	        if (result) {
+	          previous.__wrapped__ = clone;
+	        } else {
+	          result = clone;
+	        }
+	        var previous = clone;
+	        parent = parent.__wrapped__;
+	      }
+	      previous.__wrapped__ = value;
+	      return result;
+	    }
+
+	    /**
 	     * Reverses the wrapped array so the first element becomes the last, the
 	     * second element becomes the second to last, and so on.
 	     *
@@ -26844,7 +27422,7 @@ var ripple =
 	     * @name reverse
 	     * @memberOf _
 	     * @category Chain
-	     * @returns {Object} Returns the new reversed `lodash` object.
+	     * @returns {Object} Returns the new reversed `lodash` wrapper instance.
 	     * @example
 	     *
 	     * var array = [1, 2, 3];
@@ -26861,7 +27439,7 @@ var ripple =
 	        if (this.__actions__.length) {
 	          value = new LazyWrapper(this);
 	        }
-	        return new LodashWrapper(value.reverse());
+	        return new LodashWrapper(value.reverse(), this.__chain__);
 	      }
 	      return this.thru(function(value) {
 	        return value.reverse();
@@ -26889,7 +27467,7 @@ var ripple =
 	     *
 	     * @name value
 	     * @memberOf _
-	     * @alias toJSON, valueOf
+	     * @alias run, toJSON, valueOf
 	     * @category Chain
 	     * @returns {*} Returns the resolved unwrapped value.
 	     * @example
@@ -26917,8 +27495,8 @@ var ripple =
 	     * @returns {Array} Returns the new array of picked elements.
 	     * @example
 	     *
-	     * _.at(['a', 'b', 'c', 'd', 'e'], [0, 2, 4]);
-	     * // => ['a', 'c', 'e']
+	     * _.at(['a', 'b', 'c'], [0, 2]);
+	     * // => ['a', 'c']
 	     *
 	     * _.at(['fred', 'barney', 'pebbles'], 0, 2);
 	     * // => ['fred', 'pebbles']
@@ -26930,6 +27508,389 @@ var ripple =
 	      }
 	      return baseAt(collection, baseFlatten(arguments, false, false, 1));
 	    }
+
+	    /**
+	     * Creates an object composed of keys generated from the results of running
+	     * each element of `collection` through `iteratee`. The corresponding value
+	     * of each key is the number of times the key was returned by `iteratee`.
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * (value, index|key, collection).
+	     *
+	     * If a property name is provided for `predicate` the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `iteratee`.
+	     * @returns {Object} Returns the composed aggregate object.
+	     * @example
+	     *
+	     * _.countBy([4.3, 6.1, 6.4], function(n) {
+	     *   return Math.floor(n);
+	     * });
+	     * // => { '4': 1, '6': 2 }
+	     *
+	     * _.countBy([4.3, 6.1, 6.4], function(n) {
+	     *   return this.floor(n);
+	     * }, Math);
+	     * // => { '4': 1, '6': 2 }
+	     *
+	     * _.countBy(['one', 'two', 'three'], 'length');
+	     * // => { '3': 2, '5': 1 }
+	     */
+	    var countBy = createAggregator(function(result, value, key) {
+	      hasOwnProperty.call(result, key) ? ++result[key] : (result[key] = 1);
+	    });
+
+	    /**
+	     * Checks if `predicate` returns truthy for **all** elements of `collection`.
+	     * The predicate is bound to `thisArg` and invoked with three arguments;
+	     * (value, index|key, collection).
+	     *
+	     * If a property name is provided for `predicate` the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @alias all
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `predicate`.
+	     * @returns {boolean} Returns `true` if all elements pass the predicate check,
+	     *  else `false`.
+	     * @example
+	     *
+	     * _.every([true, 1, null, 'yes'], Boolean);
+	     * // => false
+	     *
+	     * var users = [
+	     *   { 'user': 'barney', 'active': false },
+	     *   { 'user': 'fred',   'active': false }
+	     * ];
+	     *
+	     * // using the `_.matches` callback shorthand
+	     * _.every(users, { 'user': 'barney', 'active': false });
+	     * // => false
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.every(users, 'active', false);
+	     * // => true
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.every(users, 'active');
+	     * // => false
+	     */
+	    function every(collection, predicate, thisArg) {
+	      var func = isArray(collection) ? arrayEvery : baseEvery;
+	      if (typeof predicate != 'function' || typeof thisArg != 'undefined') {
+	        predicate = getCallback(predicate, thisArg, 3);
+	      }
+	      return func(collection, predicate);
+	    }
+
+	    /**
+	     * Iterates over elements of `collection`, returning an array of all elements
+	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
+	     * invoked with three arguments; (value, index|key, collection).
+	     *
+	     * If a property name is provided for `predicate` the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @alias select
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `predicate`.
+	     * @returns {Array} Returns the new filtered array.
+	     * @example
+	     *
+	     * _.filter([4, 5, 6], function(n) {
+	     *   return n % 2 == 0;
+	     * });
+	     * // => [4, 6]
+	     *
+	     * var users = [
+	     *   { 'user': 'barney', 'age': 36, 'active': true },
+	     *   { 'user': 'fred',   'age': 40, 'active': false }
+	     * ];
+	     *
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.filter(users, { 'age': 36, 'active': true }), 'user');
+	     * // => ['barney']
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.filter(users, 'active', false), 'user');
+	     * // => ['fred']
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.filter(users, 'active'), 'user');
+	     * // => ['barney']
+	     */
+	    function filter(collection, predicate, thisArg) {
+	      var func = isArray(collection) ? arrayFilter : baseFilter;
+	      predicate = getCallback(predicate, thisArg, 3);
+	      return func(collection, predicate);
+	    }
+
+	    /**
+	     * Iterates over elements of `collection`, returning the first element
+	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
+	     * invoked with three arguments; (value, index|key, collection).
+	     *
+	     * If a property name is provided for `predicate` the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @alias detect
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to search.
+	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `predicate`.
+	     * @returns {*} Returns the matched element, else `undefined`.
+	     * @example
+	     *
+	     * var users = [
+	     *   { 'user': 'barney',  'age': 36, 'active': true },
+	     *   { 'user': 'fred',    'age': 40, 'active': false },
+	     *   { 'user': 'pebbles', 'age': 1,  'active': true }
+	     * ];
+	     *
+	     * _.result(_.find(users, function(chr) {
+	     *   return chr.age < 40;
+	     * }), 'user');
+	     * // => 'barney'
+	     *
+	     * // using the `_.matches` callback shorthand
+	     * _.result(_.find(users, { 'age': 1, 'active': true }), 'user');
+	     * // => 'pebbles'
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.result(_.find(users, 'active', false), 'user');
+	     * // => 'fred'
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.result(_.find(users, 'active'), 'user');
+	     * // => 'barney'
+	     */
+	    function find(collection, predicate, thisArg) {
+	      if (isArray(collection)) {
+	        var index = findIndex(collection, predicate, thisArg);
+	        return index > -1 ? collection[index] : undefined;
+	      }
+	      predicate = getCallback(predicate, thisArg, 3);
+	      return baseFind(collection, predicate, baseEach);
+	    }
+
+	    /**
+	     * This method is like `_.find` except that it iterates over elements of
+	     * `collection` from right to left.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to search.
+	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `predicate`.
+	     * @returns {*} Returns the matched element, else `undefined`.
+	     * @example
+	     *
+	     * _.findLast([1, 2, 3, 4], function(n) {
+	     *   return n % 2 == 1;
+	     * });
+	     * // => 3
+	     */
+	    function findLast(collection, predicate, thisArg) {
+	      predicate = getCallback(predicate, thisArg, 3);
+	      return baseFind(collection, predicate, baseEachRight);
+	    }
+
+	    /**
+	     * Performs a deep comparison between each element in `collection` and the
+	     * source object, returning the first element that has equivalent property
+	     * values.
+	     *
+	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
+	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
+	     * their own, not inherited, enumerable properties. For comparing a single
+	     * own or inherited property value see `_.matchesProperty`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to search.
+	     * @param {Object} source The object of property values to match.
+	     * @returns {*} Returns the matched element, else `undefined`.
+	     * @example
+	     *
+	     * var users = [
+	     *   { 'user': 'barney', 'age': 36, 'active': true },
+	     *   { 'user': 'fred',   'age': 40, 'active': false }
+	     * ];
+	     *
+	     * _.result(_.findWhere(users, { 'age': 36, 'active': true }), 'user');
+	     * // => 'barney'
+	     *
+	     * _.result(_.findWhere(users, { 'age': 40, 'active': false }), 'user');
+	     * // => 'fred'
+	     */
+	    function findWhere(collection, source) {
+	      return find(collection, baseMatches(source));
+	    }
+
+	    /**
+	     * Iterates over elements of `collection` invoking `iteratee` for each element.
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * (value, index|key, collection). Iterator functions may exit iteration early
+	     * by explicitly returning `false`.
+	     *
+	     * **Note:** As with other "Collections" methods, objects with a `length` property
+	     * are iterated like arrays. To avoid this behavior `_.forIn` or `_.forOwn`
+	     * may be used for object iteration.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @alias each
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	     * @param {*} [thisArg] The `this` binding of `iteratee`.
+	     * @returns {Array|Object|string} Returns `collection`.
+	     * @example
+	     *
+	     * _([1, 2]).forEach(function(n) {
+	     *   console.log(n);
+	     * }).value();
+	     * // => logs each value from left to right and returns the array
+	     *
+	     * _.forEach({ 'a': 1, 'b': 2 }, function(n, key) {
+	     *   console.log(n, key);
+	     * });
+	     * // => logs each value-key pair and returns the object (iteration order is not guaranteed)
+	     */
+	    function forEach(collection, iteratee, thisArg) {
+	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
+	        ? arrayEach(collection, iteratee)
+	        : baseEach(collection, bindCallback(iteratee, thisArg, 3));
+	    }
+
+	    /**
+	     * This method is like `_.forEach` except that it iterates over elements of
+	     * `collection` from right to left.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @alias eachRight
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
+	     * @param {*} [thisArg] The `this` binding of `iteratee`.
+	     * @returns {Array|Object|string} Returns `collection`.
+	     * @example
+	     *
+	     * _([1, 2]).forEachRight(function(n) {
+	     *   console.log(n);
+	     * }).join(',');
+	     * // => logs each value from right to left and returns the array
+	     */
+	    function forEachRight(collection, iteratee, thisArg) {
+	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
+	        ? arrayEachRight(collection, iteratee)
+	        : baseEachRight(collection, bindCallback(iteratee, thisArg, 3));
+	    }
+
+	    /**
+	     * Creates an object composed of keys generated from the results of running
+	     * each element of `collection` through `iteratee`. The corresponding value
+	     * of each key is an array of the elements responsible for generating the key.
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * (value, index|key, collection).
+	     *
+	     * If a property name is provided for `predicate` the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Collection
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+	     *  per iteration.
+	     * @param {*} [thisArg] The `this` binding of `iteratee`.
+	     * @returns {Object} Returns the composed aggregate object.
+	     * @example
+	     *
+	     * _.groupBy([4.2, 6.1, 6.4], function(n) {
+	     *   return Math.floor(n);
+	     * });
+	     * // => { '4': [4.2], '6': [6.1, 6.4] }
+	     *
+	     * _.groupBy([4.2, 6.1, 6.4], function(n) {
+	     *   return this.floor(n);
+	     * }, Math);
+	     * // => { '4': [4.2], '6': [6.1, 6.4] }
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.groupBy(['one', 'two', 'three'], 'length');
+	     * // => { '3': ['one', 'two'], '5': ['three'] }
+	     */
+	    var groupBy = createAggregator(function(result, value, key) {
+	      if (hasOwnProperty.call(result, key)) {
+	        result[key].push(value);
+	      } else {
+	        result[key] = [value];
+	      }
+	    });
 
 	    /**
 	     * Checks if `value` is in `collection` using `SameValueZero` for equality
@@ -26985,346 +27946,18 @@ var ripple =
 	    /**
 	     * Creates an object composed of keys generated from the results of running
 	     * each element of `collection` through `iteratee`. The corresponding value
-	     * of each key is the number of times the key was returned by `iteratee`.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
-	     * (value, index|key, collection).
-	     *
-	     * If a property name is provided for `predicate` the created "_.property"
-	     * style callback returns the property value of the given element.
-	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
-	     * object, else `false`.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `iteratee`.
-	     * @returns {Object} Returns the composed aggregate object.
-	     * @example
-	     *
-	     * _.countBy([4.3, 6.1, 6.4], function(n) { return Math.floor(n); });
-	     * // => { '4': 1, '6': 2 }
-	     *
-	     * _.countBy([4.3, 6.1, 6.4], function(n) { return this.floor(n); }, Math);
-	     * // => { '4': 1, '6': 2 }
-	     *
-	     * _.countBy(['one', 'two', 'three'], 'length');
-	     * // => { '3': 2, '5': 1 }
-	     */
-	    var countBy = createAggregator(function(result, value, key) {
-	      hasOwnProperty.call(result, key) ? ++result[key] : (result[key] = 1);
-	    });
-
-	    /**
-	     * Checks if `predicate` returns truthy for **all** elements of `collection`.
-	     * The predicate is bound to `thisArg` and invoked with three arguments;
-	     * (value, index|key, collection).
-	     *
-	     * If a property name is provided for `predicate` the created "_.property"
-	     * style callback returns the property value of the given element.
-	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
-	     * object, else `false`.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @alias all
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `predicate`.
-	     * @returns {boolean} Returns `true` if all elements pass the predicate check,
-	     *  else `false`.
-	     * @example
-	     *
-	     * _.every([true, 1, null, 'yes']);
-	     * // => false
-	     *
-	     * var users = [
-	     *   { 'user': 'barney', 'age': 36 },
-	     *   { 'user': 'fred',   'age': 40 }
-	     * ];
-	     *
-	     * // using the "_.property" callback shorthand
-	     * _.every(users, 'age');
-	     * // => true
-	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.every(users, { 'age': 36 });
-	     * // => false
-	     */
-	    function every(collection, predicate, thisArg) {
-	      var func = isArray(collection) ? arrayEvery : baseEvery;
-	      if (typeof predicate != 'function' || typeof thisArg != 'undefined') {
-	        predicate = getCallback(predicate, thisArg, 3);
-	      }
-	      return func(collection, predicate);
-	    }
-
-	    /**
-	     * Iterates over elements of `collection`, returning an array of all elements
-	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
-	     * invoked with three arguments; (value, index|key, collection).
-	     *
-	     * If a property name is provided for `predicate` the created "_.property"
-	     * style callback returns the property value of the given element.
-	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
-	     * object, else `false`.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @alias select
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `predicate`.
-	     * @returns {Array} Returns the new filtered array.
-	     * @example
-	     *
-	     * var evens = _.filter([1, 2, 3, 4], function(n) { return n % 2 == 0; });
-	     * // => [2, 4]
-	     *
-	     * var users = [
-	     *   { 'user': 'barney', 'age': 36, 'active': false },
-	     *   { 'user': 'fred',   'age': 40, 'active': true }
-	     * ];
-	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.filter(users, 'active'), 'user');
-	     * // => ['fred']
-	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.filter(users, { 'age': 36 }), 'user');
-	     * // => ['barney']
-	     */
-	    function filter(collection, predicate, thisArg) {
-	      var func = isArray(collection) ? arrayFilter : baseFilter;
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return func(collection, predicate);
-	    }
-
-	    /**
-	     * Iterates over elements of `collection`, returning the first element
-	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
-	     * invoked with three arguments; (value, index|key, collection).
-	     *
-	     * If a property name is provided for `predicate` the created "_.property"
-	     * style callback returns the property value of the given element.
-	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
-	     * object, else `false`.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @alias detect
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to search.
-	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `predicate`.
-	     * @returns {*} Returns the matched element, else `undefined`.
-	     * @example
-	     *
-	     * var users = [
-	     *   { 'user': 'barney',  'age': 36, 'active': false },
-	     *   { 'user': 'fred',    'age': 40, 'active': true },
-	     *   { 'user': 'pebbles', 'age': 1,  'active': false }
-	     * ];
-	     *
-	     * _.result(_.find(users, function(chr) { return chr.age < 40; }), 'user');
-	     * // => 'barney'
-	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.result(_.find(users, { 'age': 1 }), 'user');
-	     * // => 'pebbles'
-	     *
-	     * // using the "_.property" callback shorthand
-	     * _.result(_.find(users, 'active'), 'user');
-	     * // => 'fred'
-	     */
-	    function find(collection, predicate, thisArg) {
-	      if (isArray(collection)) {
-	        var index = findIndex(collection, predicate, thisArg);
-	        return index > -1 ? collection[index] : undefined;
-	      }
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(collection, predicate, baseEach);
-	    }
-
-	    /**
-	     * This method is like `_.find` except that it iterates over elements of
-	     * `collection` from right to left.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to search.
-	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `predicate`.
-	     * @returns {*} Returns the matched element, else `undefined`.
-	     * @example
-	     *
-	     * _.findLast([1, 2, 3, 4], function(n) { return n % 2 == 1; });
-	     * // => 3
-	     */
-	    function findLast(collection, predicate, thisArg) {
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(collection, predicate, baseEachRight);
-	    }
-
-	    /**
-	     * Performs a deep comparison between each element in `collection` and the
-	     * source object, returning the first element that has equivalent property
-	     * values.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to search.
-	     * @param {Object} source The object of property values to match.
-	     * @returns {*} Returns the matched element, else `undefined`.
-	     * @example
-	     *
-	     * var users = [
-	     *   { 'user': 'barney', 'age': 36, 'status': 'busy' },
-	     *   { 'user': 'fred',   'age': 40, 'status': 'busy' }
-	     * ];
-	     *
-	     * _.result(_.findWhere(users, { 'status': 'busy' }), 'user');
-	     * // => 'barney'
-	     *
-	     * _.result(_.findWhere(users, { 'age': 40 }), 'user');
-	     * // => 'fred'
-	     */
-	    function findWhere(collection, source) {
-	      return find(collection, baseMatches(source));
-	    }
-
-	    /**
-	     * Iterates over elements of `collection` invoking `iteratee` for each element.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
-	     * (value, index|key, collection). Iterator functions may exit iteration early
-	     * by explicitly returning `false`.
-	     *
-	     * **Note:** As with other "Collections" methods, objects with a `length` property
-	     * are iterated like arrays. To avoid this behavior `_.forIn` or `_.forOwn`
-	     * may be used for object iteration.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @alias each
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
-	     * @param {*} [thisArg] The `this` binding of `iteratee`.
-	     * @returns {Array|Object|string} Returns `collection`.
-	     * @example
-	     *
-	     * _([1, 2, 3]).forEach(function(n) { console.log(n); }).value();
-	     * // => logs each value from left to right and returns the array
-	     *
-	     * _.forEach({ 'one': 1, 'two': 2, 'three': 3 }, function(n, key) { console.log(n, key); });
-	     * // => logs each value-key pair and returns the object (iteration order is not guaranteed)
-	     */
-	    function forEach(collection, iteratee, thisArg) {
-	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
-	        ? arrayEach(collection, iteratee)
-	        : baseEach(collection, bindCallback(iteratee, thisArg, 3));
-	    }
-
-	    /**
-	     * This method is like `_.forEach` except that it iterates over elements of
-	     * `collection` from right to left.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @alias eachRight
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function} [iteratee=_.identity] The function invoked per iteration.
-	     * @param {*} [thisArg] The `this` binding of `iteratee`.
-	     * @returns {Array|Object|string} Returns `collection`.
-	     * @example
-	     *
-	     * _([1, 2, 3]).forEachRight(function(n) { console.log(n); }).join(',');
-	     * // => logs each value from right to left and returns the array
-	     */
-	    function forEachRight(collection, iteratee, thisArg) {
-	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
-	        ? arrayEachRight(collection, iteratee)
-	        : baseEachRight(collection, bindCallback(iteratee, thisArg, 3));
-	    }
-
-	    /**
-	     * Creates an object composed of keys generated from the results of running
-	     * each element of `collection` through `iteratee`. The corresponding value
-	     * of each key is an array of the elements responsible for generating the key.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
-	     * (value, index|key, collection).
-	     *
-	     * If a property name is provided for `predicate` the created "_.property"
-	     * style callback returns the property value of the given element.
-	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
-	     * callback returns `true` for elements that have the properties of the given
-	     * object, else `false`.
-	     *
-	     * @static
-	     * @memberOf _
-	     * @category Collection
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
-	     * @param {*} [thisArg] The `this` binding of `iteratee`.
-	     * @returns {Object} Returns the composed aggregate object.
-	     * @example
-	     *
-	     * _.groupBy([4.2, 6.1, 6.4], function(n) { return Math.floor(n); });
-	     * // => { '4': [4.2], '6': [6.1, 6.4] }
-	     *
-	     * _.groupBy([4.2, 6.1, 6.4], function(n) { return this.floor(n); }, Math);
-	     * // => { '4': [4.2], '6': [6.1, 6.4] }
-	     *
-	     * // using the "_.property" callback shorthand
-	     * _.groupBy(['one', 'two', 'three'], 'length');
-	     * // => { '3': ['one', 'two'], '5': ['three'] }
-	     */
-	    var groupBy = createAggregator(function(result, value, key) {
-	      if (hasOwnProperty.call(result, key)) {
-	        result[key].push(value);
-	      } else {
-	        result[key] = [value];
-	      }
-	    });
-
-	    /**
-	     * Creates an object composed of keys generated from the results of running
-	     * each element of `collection` through `iteratee`. The corresponding value
 	     * of each key is the last element responsible for generating the key. The
 	     * iteratee function is bound to `thisArg` and invoked with three arguments;
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27333,8 +27966,7 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Object} Returns the composed aggregate object.
 	     * @example
@@ -27347,10 +27979,14 @@ var ripple =
 	     * _.indexBy(keyData, 'dir');
 	     * // => { 'left': { 'dir': 'left', 'code': 97 }, 'right': { 'dir': 'right', 'code': 100 } }
 	     *
-	     * _.indexBy(keyData, function(object) { return String.fromCharCode(object.code); });
+	     * _.indexBy(keyData, function(object) {
+	     *   return String.fromCharCode(object.code);
+	     * });
 	     * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
 	     *
-	     * _.indexBy(keyData, function(object) { return this.fromCharCode(object.code); }, String);
+	     * _.indexBy(keyData, function(object) {
+	     *   return this.fromCharCode(object.code);
+	     * }, String);
 	     * // => { 'a': { 'dir': 'left', 'code': 97 }, 'd': { 'dir': 'right', 'code': 100 } }
 	     */
 	    var indexBy = createAggregator(function(result, value, key) {
@@ -27388,12 +28024,25 @@ var ripple =
 	     * `iteratee`. The `iteratee` is bound to `thisArg` and invoked with three
 	     * arguments; (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
+	     *
+	     * Many lodash methods are guarded to work as interatees for methods like
+	     * `_.every`, `_.filter`, `_.map`, `_.mapValues`, `_.reject`, and `_.some`.
+	     *
+	     * The guarded methods are:
+	     * `ary`, `callback`, `chunk`, `clone`, `create`, `curry`, `curryRight`, `drop`,
+	     * `dropRight`, `fill`, `flatten`, `invert`, `max`, `min`, `parseInt`, `slice`,
+	     * `sortBy`, `take`, `takeRight`, `template`, `trim`, `trimLeft`, `trimRight`,
+	     * `trunc`, `random`, `range`, `sample`, `uniq`, and `words`
 	     *
 	     * @static
 	     * @memberOf _
@@ -27401,24 +28050,28 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
+	     *  create a `_.property` or `_.matches` style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Array} Returns the new mapped array.
 	     * @example
 	     *
-	     * _.map([1, 2, 3], function(n) { return n * 3; });
-	     * // => [3, 6, 9]
+	     * function timesThree(n) {
+	     *   return n * 3;
+	     * }
 	     *
-	     * _.map({ 'one': 1, 'two': 2, 'three': 3 }, function(n) { return n * 3; });
-	     * // => [3, 6, 9] (iteration order is not guaranteed)
+	     * _.map([1, 2], timesThree);
+	     * // => [3, 6]
+	     *
+	     * _.map({ 'a': 1, 'b': 2 }, timesThree);
+	     * // => [3, 6] (iteration order is not guaranteed)
 	     *
 	     * var users = [
 	     *   { 'user': 'barney' },
 	     *   { 'user': 'fred' }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.map(users, 'user');
 	     * // => ['barney', 'fred']
 	     */
@@ -27435,10 +28088,14 @@ var ripple =
 	     * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
 	     * arguments; (value, index, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27447,8 +28104,6 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [iteratee] The function invoked per iteration.
-	     *  If a property name or object is provided it is used to create a "_.property"
-	     *  or "_.matches" style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {*} Returns the maximum value.
 	     * @example
@@ -27464,10 +28119,12 @@ var ripple =
 	     *   { 'user': 'fred',   'age': 40 }
 	     * ];
 	     *
-	     * _.max(users, function(chr) { return chr.age; });
+	     * _.max(users, function(chr) {
+	     *   return chr.age;
+	     * });
 	     * // => { 'user': 'fred', 'age': 40 };
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.max(users, 'age');
 	     * // => { 'user': 'fred', 'age': 40 };
 	     */
@@ -27480,10 +28137,14 @@ var ripple =
 	     * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
 	     * arguments; (value, index, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27492,8 +28153,6 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [iteratee] The function invoked per iteration.
-	     *  If a property name or object is provided it is used to create a "_.property"
-	     *  or "_.matches" style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {*} Returns the minimum value.
 	     * @example
@@ -27509,10 +28168,12 @@ var ripple =
 	     *   { 'user': 'fred',   'age': 40 }
 	     * ];
 	     *
-	     * _.min(users, function(chr) { return chr.age; });
+	     * _.min(users, function(chr) {
+	     *   return chr.age;
+	     * });
 	     * // => { 'user': 'barney', 'age': 36 };
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.min(users, 'age');
 	     * // => { 'user': 'barney', 'age': 36 };
 	     */
@@ -27524,10 +28185,14 @@ var ripple =
 	     * contains elements `predicate` returns falsey for. The predicate is bound
 	     * to `thisArg` and invoked with three arguments; (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27536,16 +28201,19 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the array of grouped elements.
 	     * @example
 	     *
-	     * _.partition([1, 2, 3], function(n) { return n % 2; });
+	     * _.partition([1, 2, 3], function(n) {
+	     *   return n % 2;
+	     * });
 	     * // => [[1, 3], [2]]
 	     *
-	     * _.partition([1.2, 2.3, 3.4], function(n) { return this.floor(n) % 2; }, Math);
+	     * _.partition([1.2, 2.3, 3.4], function(n) {
+	     *   return this.floor(n) % 2;
+	     * }, Math);
 	     * // => [[1, 3], [2]]
 	     *
 	     * var users = [
@@ -27554,12 +28222,20 @@ var ripple =
 	     *   { 'user': 'pebbles', 'age': 1,  'active': false }
 	     * ];
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.map(_.partition(users, { 'age': 1 }), function(array) { return _.pluck(array, 'user'); });
+	     * var mapper = function(array) {
+	     *   return _.pluck(array, 'user');
+	     * };
+	     *
+	     * // using the `_.matches` callback shorthand
+	     * _.map(_.partition(users, { 'age': 1, 'active': false }), mapper);
 	     * // => [['pebbles'], ['barney', 'fred']]
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.map(_.partition(users, 'active'), function(array) { return _.pluck(array, 'user'); });
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.map(_.partition(users, 'active', false), mapper);
+	     * // => [['barney', 'pebbles'], ['fred']]
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.map(_.partition(users, 'active'), mapper);
 	     * // => [['fred'], ['barney', 'pebbles']]
 	     */
 	    var partition = createAggregator(function(result, value, key) {
@@ -27590,7 +28266,7 @@ var ripple =
 	     * // => [36, 40] (iteration order is not guaranteed)
 	     */
 	    function pluck(collection, key) {
-	      return map(collection, baseProperty(key + ''));
+	      return map(collection, baseProperty(key));
 	    }
 
 	    /**
@@ -27600,6 +28276,12 @@ var ripple =
 	     * is not provided the first element of `collection` is used as the initial
 	     * value. The `iteratee` is bound to `thisArg`and invoked with four arguments;
 	     * (accumulator, value, index|key, collection).
+	     *
+	     * Many lodash methods are guarded to work as interatees for methods like
+	     * `_.reduce`, `_.reduceRight`, and `_.transform`.
+	     *
+	     * The guarded methods are:
+	     * `assign`, `defaults`, `merge`, and `sortAllBy`
 	     *
 	     * @static
 	     * @memberOf _
@@ -27612,14 +28294,16 @@ var ripple =
 	     * @returns {*} Returns the accumulated value.
 	     * @example
 	     *
-	     * var sum = _.reduce([1, 2, 3], function(sum, n) { return sum + n; });
-	     * // => 6
+	     * _.reduce([1, 2], function(sum, n) {
+	     *   return sum + n;
+	     * });
+	     * // => 3
 	     *
-	     * var mapped = _.reduce({ 'a': 1, 'b': 2, 'c': 3 }, function(result, n, key) {
+	     * _.reduce({ 'a': 1, 'b': 2 }, function(result, n, key) {
 	     *   result[key] = n * 3;
 	     *   return result;
 	     * }, {});
-	     * // => { 'a': 3, 'b': 6, 'c': 9 } (iteration order is not guaranteed)
+	     * // => { 'a': 3, 'b': 6 } (iteration order is not guaranteed)
 	     */
 	    function reduce(collection, iteratee, accumulator, thisArg) {
 	      var func = isArray(collection) ? arrayReduce : baseReduce;
@@ -27642,7 +28326,10 @@ var ripple =
 	     * @example
 	     *
 	     * var array = [[0, 1], [2, 3], [4, 5]];
-	     * _.reduceRight(array, function(flattened, other) { return flattened.concat(other); }, []);
+	     *
+	     * _.reduceRight(array, function(flattened, other) {
+	     *   return flattened.concat(other);
+	     * }, []);
 	     * // => [4, 5, 2, 3, 0, 1]
 	     */
 	    function reduceRight(collection, iteratee, accumulator, thisArg) {
@@ -27654,10 +28341,14 @@ var ripple =
 	     * The opposite of `_.filter`; this method returns the elements of `collection`
 	     * that `predicate` does **not** return truthy for.
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27666,13 +28357,14 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {Array} Returns the new filtered array.
 	     * @example
 	     *
-	     * var odds = _.reject([1, 2, 3, 4], function(n) { return n % 2 == 0; });
+	     * _.reject([1, 2, 3, 4], function(n) {
+	     *   return n % 2 == 0;
+	     * });
 	     * // => [1, 3]
 	     *
 	     * var users = [
@@ -27680,13 +28372,17 @@ var ripple =
 	     *   { 'user': 'fred',   'age': 40, 'active': true }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.pluck(_.reject(users, 'active'), 'user');
+	     * // using the `_.matches` callback shorthand
+	     * _.pluck(_.reject(users, { 'age': 40, 'active': true }), 'user');
 	     * // => ['barney']
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.pluck(_.reject(users, { 'age': 36 }), 'user');
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.pluck(_.reject(users, 'active', false), 'user');
 	     * // => ['fred']
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.pluck(_.reject(users, 'active'), 'user');
+	     * // => ['barney']
 	     */
 	    function reject(collection, predicate, thisArg) {
 	      var func = isArray(collection) ? arrayFilter : baseFilter;
@@ -27768,11 +28464,11 @@ var ripple =
 	     * @returns {number} Returns the size of `collection`.
 	     * @example
 	     *
-	     * _.size([1, 2]);
-	     * // => 2
-	     *
-	     * _.size({ 'one': 1, 'two': 2, 'three': 3 });
+	     * _.size([1, 2, 3]);
 	     * // => 3
+	     *
+	     * _.size({ 'a': 1, 'b': 2 });
+	     * // => 2
 	     *
 	     * _.size('pebbles');
 	     * // => 7
@@ -27788,10 +28484,14 @@ var ripple =
 	     * over the entire collection. The predicate is bound to `thisArg` and invoked
 	     * with three arguments; (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27801,8 +28501,7 @@ var ripple =
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {boolean} Returns `true` if any element passes the predicate check,
 	     *  else `false`.
@@ -27812,17 +28511,21 @@ var ripple =
 	     * // => true
 	     *
 	     * var users = [
-	     *   { 'user': 'barney', 'age': 36, 'active': false },
-	     *   { 'user': 'fred',   'age': 40, 'active': true }
+	     *   { 'user': 'barney', 'active': true },
+	     *   { 'user': 'fred',   'active': false }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
-	     * _.some(users, 'active');
+	     * // using the `_.matches` callback shorthand
+	     * _.some(users, { 'user': 'barney', 'active': false });
+	     * // => false
+	     *
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.some(users, 'active', false);
 	     * // => true
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.some(users, { 'age': 1 });
-	     * // => false
+	     * // using the `_.property` callback shorthand
+	     * _.some(users, 'active');
+	     * // => true
 	     */
 	    function some(collection, predicate, thisArg) {
 	      var func = isArray(collection) ? arraySome : baseSome;
@@ -27839,10 +28542,14 @@ var ripple =
 	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27852,15 +28559,19 @@ var ripple =
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Array|Function|Object|string} [iteratee=_.identity] The function
 	     *  invoked per iteration. If a property name or an object is provided it is
-	     *  used to create a "_.property" or "_.matches" style callback respectively.
+	     *  used to create a `_.property` or `_.matches` style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Array} Returns the new sorted array.
 	     * @example
 	     *
-	     * _.sortBy([1, 2, 3], function(n) { return Math.sin(n); });
+	     * _.sortBy([1, 2, 3], function(n) {
+	     *   return Math.sin(n);
+	     * });
 	     * // => [3, 1, 2]
 	     *
-	     * _.sortBy([1, 2, 3], function(n) { return this.sin(n); }, Math);
+	     * _.sortBy([1, 2, 3], function(n) {
+	     *   return this.sin(n);
+	     * }, Math);
 	     * // => [3, 1, 2]
 	     *
 	     * var users = [
@@ -27869,7 +28580,7 @@ var ripple =
 	     *   { 'user': 'barney' }
 	     * ];
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.pluck(_.sortBy(users, 'user'), 'user');
 	     * // => ['barney', 'fred', 'pebbles']
 	     */
@@ -27921,7 +28632,7 @@ var ripple =
 	          props = baseFlatten(args, false, false, 1),
 	          result = isLength(length) ? Array(length) : [];
 
-	      baseEach(collection, function(value, key, collection) {
+	      baseEach(collection, function(value) {
 	        var length = props.length,
 	            criteria = Array(length);
 
@@ -27938,6 +28649,11 @@ var ripple =
 	     * source object, returning an array of all elements that have equivalent
 	     * property values.
 	     *
+	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
+	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
+	     * their own, not inherited, enumerable properties. For comparing a single
+	     * own or inherited property value see `_.matchesProperty`.
+	     *
 	     * @static
 	     * @memberOf _
 	     * @category Collection
@@ -27947,18 +28663,15 @@ var ripple =
 	     * @example
 	     *
 	     * var users = [
-	     *   { 'user': 'barney', 'age': 36, 'status': 'busy', 'pets': ['hoppy'] },
-	     *   { 'user': 'fred',   'age': 40, 'status': 'busy', 'pets': ['baby puss', 'dino'] }
+	     *   { 'user': 'barney', 'age': 36, 'active': false, 'pets': ['hoppy'] },
+	     *   { 'user': 'fred',   'age': 40, 'active': true, 'pets': ['baby puss', 'dino'] }
 	     * ];
 	     *
-	     * _.pluck(_.where(users, { 'age': 36 }), 'user');
+	     * _.pluck(_.where(users, { 'age': 36, 'active': false }), 'user');
 	     * // => ['barney']
 	     *
 	     * _.pluck(_.where(users, { 'pets': ['dino'] }), 'user');
 	     * // => ['fred']
-	     *
-	     * _.pluck(_.where(users, { 'status': 'busy' }), 'user');
-	     * // => ['barney', 'fred']
 	     */
 	    function where(collection, source) {
 	      return filter(collection, baseMatches(source));
@@ -27975,7 +28688,9 @@ var ripple =
 	     * @category Date
 	     * @example
 	     *
-	     * _.defer(function(stamp) { console.log(_.now() - stamp); }, _.now());
+	     * _.defer(function(stamp) {
+	     *   console.log(_.now() - stamp);
+	     * }, _.now());
 	     * // => logs the number of milliseconds it took for the deferred function to be invoked
 	     */
 	    var now = nativeNow || function() {
@@ -28008,8 +28723,8 @@ var ripple =
 	     * // => logs 'done saving!' after the two async saves have completed
 	     */
 	    function after(n, func) {
-	      if (!isFunction(func)) {
-	        if (isFunction(n)) {
+	      if (typeof func != 'function') {
+	        if (typeof n == 'function') {
 	          var temp = n;
 	          n = func;
 	          func = temp;
@@ -28067,8 +28782,8 @@ var ripple =
 	     */
 	    function before(n, func) {
 	      var result;
-	      if (!isFunction(func)) {
-	        if (isFunction(n)) {
+	      if (typeof func != 'function') {
+	        if (typeof n == 'function') {
 	          var temp = n;
 	          n = func;
 	          func = temp;
@@ -28151,7 +28866,9 @@ var ripple =
 	     *
 	     * var view = {
 	     *   'label': 'docs',
-	     *   'onClick': function() { console.log('clicked ' + this.label); }
+	     *   'onClick': function() {
+	     *     console.log('clicked ' + this.label);
+	     *   }
 	     * };
 	     *
 	     * _.bindAll(view);
@@ -28335,7 +29052,7 @@ var ripple =
 	     * @memberOf _
 	     * @category Function
 	     * @param {Function} func The function to debounce.
-	     * @param {number} wait The number of milliseconds to delay.
+	     * @param {number} [wait=0] The number of milliseconds to delay.
 	     * @param {Object} [options] The options object.
 	     * @param {boolean} [options.leading=false] Specify invoking on the leading
 	     *  edge of the timeout.
@@ -28390,10 +29107,10 @@ var ripple =
 	          maxWait = false,
 	          trailing = true;
 
-	      if (!isFunction(func)) {
+	      if (typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
-	      wait = wait < 0 ? 0 : wait;
+	      wait = wait < 0 ? 0 : (+wait || 0);
 	      if (options === true) {
 	        var leading = true;
 	        trailing = false;
@@ -28504,7 +29221,9 @@ var ripple =
 	     * @returns {number} Returns the timer id.
 	     * @example
 	     *
-	     * _.defer(function(text) { console.log(text); }, 'deferred');
+	     * _.defer(function(text) {
+	     *   console.log(text);
+	     * }, 'deferred');
 	     * // logs 'deferred' after one or more milliseconds
 	     */
 	    function defer(func) {
@@ -28524,7 +29243,9 @@ var ripple =
 	     * @returns {number} Returns the timer id.
 	     * @example
 	     *
-	     * _.delay(function(text) { console.log(text); }, 1000, 'later');
+	     * _.delay(function(text) {
+	     *   console.log(text);
+	     * }, 1000, 'later');
 	     * // => logs 'later' after one second
 	     */
 	    function delay(func, wait) {
@@ -28560,9 +29281,9 @@ var ripple =
 	          length = funcs.length;
 
 	      if (!length) {
-	        return function() {};
+	        return function() { return arguments[0]; };
 	      }
-	      if (!arrayEvery(funcs, isFunction)) {
+	      if (!arrayEvery(funcs, baseIsFunction)) {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      return function() {
@@ -28605,9 +29326,9 @@ var ripple =
 	          fromIndex = funcs.length - 1;
 
 	      if (fromIndex < 0) {
-	        return function() {};
+	        return function() { return arguments[0]; };
 	      }
-	      if (!arrayEvery(funcs, isFunction)) {
+	      if (!arrayEvery(funcs, baseIsFunction)) {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      return function() {
@@ -28675,7 +29396,7 @@ var ripple =
 	     * // => { 'user': 'barney' }
 	     */
 	    function memoize(func, resolver) {
-	      if (!isFunction(func) || (resolver && !isFunction(resolver))) {
+	      if (typeof func != 'function' || (resolver && typeof resolver != 'function')) {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      var memoized = function() {
@@ -28713,7 +29434,7 @@ var ripple =
 	     * // => [1, 3, 5]
 	     */
 	    function negate(predicate) {
-	      if (!isFunction(predicate)) {
+	      if (typeof predicate != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      return function() {
@@ -28728,7 +29449,6 @@ var ripple =
 	     *
 	     * @static
 	     * @memberOf _
-	     * @type Function
 	     * @category Function
 	     * @param {Function} func The function to restrict.
 	     * @returns {Function} Returns the new restricted function.
@@ -28843,12 +29563,53 @@ var ripple =
 	     * // => ['a', 'b', 'c']
 	     *
 	     * var map = _.rearg(_.map, [1, 0]);
-	     * map(function(n) { return n * 3; }, [1, 2, 3]);
+	     * map(function(n) {
+	     *   return n * 3;
+	     * }, [1, 2, 3]);
 	     * // => [3, 6, 9]
 	     */
 	    function rearg(func) {
 	      var indexes = baseFlatten(arguments, false, false, 1);
 	      return createWrapper(func, REARG_FLAG, null, null, null, indexes);
+	    }
+
+	    /**
+	     * Creates a function that invokes `func` with the `this` binding of the
+	     * created function and the array of arguments provided to the created
+	     * function much like [Function#apply](http://es5.github.io/#x15.3.4.3).
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Function
+	     * @param {Function} func The function to spread arguments over.
+	     * @returns {*} Returns the new function.
+	     * @example
+	     *
+	     * var spread = _.spread(function(who, what) {
+	     *   return who + ' says ' + what;
+	     * });
+	     *
+	     * spread(['Fred', 'hello']);
+	     * // => 'Fred says hello'
+	     *
+	     * // with a Promise
+	     * var numbers = Promise.all([
+	     *   Promise.resolve(40),
+	     *   Promise.resolve(36)
+	     * ]);
+	     *
+	     * numbers.then(_.spread(function(x, y) {
+	     *   return x + y;
+	     * }));
+	     * // => a Promise of 76
+	     */
+	    function spread(func) {
+	      if (typeof func != 'function') {
+	        throw new TypeError(FUNC_ERROR_TEXT);
+	      }
+	      return function(array) {
+	        return func.apply(this, array);
+	      };
 	    }
 
 	    /**
@@ -28870,7 +29631,7 @@ var ripple =
 	     * @memberOf _
 	     * @category Function
 	     * @param {Function} func The function to throttle.
-	     * @param {number} wait The number of milliseconds to throttle invocations to.
+	     * @param {number} [wait=0] The number of milliseconds to throttle invocations to.
 	     * @param {Object} [options] The options object.
 	     * @param {boolean} [options.leading=true] Specify invoking on the leading
 	     *  edge of the timeout.
@@ -28883,8 +29644,9 @@ var ripple =
 	     * jQuery(window).on('scroll', _.throttle(updatePosition, 100));
 	     *
 	     * // invoke `renewToken` when the click event is fired, but not more than once every 5 minutes
-	     * var throttled =  _.throttle(renewToken, 300000, { 'trailing': false })
-	     * jQuery('.interactive').on('click', throttled);
+	     * jQuery('.interactive').on('click', _.throttle(renewToken, 300000, {
+	     *   'trailing': false
+	     * }));
 	     *
 	     * // cancel a trailing throttled call
 	     * jQuery(window).on('popstate', throttled.cancel);
@@ -28893,7 +29655,7 @@ var ripple =
 	      var leading = true,
 	          trailing = true;
 
-	      if (!isFunction(func)) {
+	      if (typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
 	      if (options === false) {
@@ -28974,22 +29736,26 @@ var ripple =
 	     * // => false
 	     *
 	     * // using a customizer callback
-	     * var body = _.clone(document.body, function(value) {
-	     *   return _.isElement(value) ? value.cloneNode(false) : undefined;
+	     * var el = _.clone(document.body, function(value) {
+	     *   if (_.isElement(value)) {
+	     *     return value.cloneNode(false);
+	     *   }
 	     * });
 	     *
-	     * body === document.body
+	     * el === document.body
 	     * // => false
-	     * body.nodeName
+	     * el.nodeName
 	     * // => BODY
-	     * body.childNodes.length;
+	     * el.childNodes.length;
 	     * // => 0
 	     */
 	    function clone(value, isDeep, customizer, thisArg) {
-	      // Juggle arguments.
-	      if (typeof isDeep != 'boolean' && isDeep != null) {
+	      if (isDeep && typeof isDeep != 'boolean' && isIterateeCall(value, isDeep, customizer)) {
+	        isDeep = false;
+	      }
+	      else if (typeof isDeep == 'function') {
 	        thisArg = customizer;
-	        customizer = isIterateeCall(value, isDeep, thisArg) ? null : isDeep;
+	        customizer = isDeep;
 	        isDeep = false;
 	      }
 	      customizer = typeof customizer == 'function' && bindCallback(customizer, thisArg, 1);
@@ -29029,14 +29795,16 @@ var ripple =
 	     *
 	     * // using a customizer callback
 	     * var el = _.cloneDeep(document.body, function(value) {
-	     *   return _.isElement(value) ? value.cloneNode(true) : undefined;
+	     *   if (_.isElement(value)) {
+	     *     return value.cloneNode(true);
+	     *   }
 	     * });
 	     *
-	     * body === document.body
+	     * el === document.body
 	     * // => false
-	     * body.nodeName
+	     * el.nodeName
 	     * // => BODY
-	     * body.childNodes.length;
+	     * el.childNodes.length;
 	     * // => 20
 	     */
 	    function cloneDeep(value, customizer, thisArg) {
@@ -29054,7 +29822,7 @@ var ripple =
 	     * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
 	     * @example
 	     *
-	     * (function() { return _.isArguments(arguments); })();
+	     * _.isArguments(function() { return arguments; }());
 	     * // => true
 	     *
 	     * _.isArguments([1, 2, 3]);
@@ -29078,7 +29846,7 @@ var ripple =
 	     * _.isArray([1, 2, 3]);
 	     * // => true
 	     *
-	     * (function() { return _.isArray(arguments); })();
+	     * _.isArray(function() { return arguments; }());
 	     * // => false
 	     */
 	    var isArray = nativeIsArray || function(value) {
@@ -29199,7 +29967,8 @@ var ripple =
 	     * arguments; (value, other [, index|key]).
 	     *
 	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
-	     * numbers, `Object` objects, regexes, and strings. Functions and DOM nodes
+	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
+	     * their own, not inherited, enumerable properties. Functions and DOM nodes
 	     * are **not** supported. Provide a customizer function to extend support
 	     * for comparing other values.
 	     *
@@ -29227,7 +29996,9 @@ var ripple =
 	     * var other = ['hi', 'goodbye'];
 	     *
 	     * _.isEqual(array, other, function(value, other) {
-	     *   return _.every([value, other], RegExp.prototype.test, /^h(?:i|ello)$/) || undefined;
+	     *   if (_.every([value, other], RegExp.prototype.test, /^h(?:i|ello)$/)) {
+	     *     return true;
+	     *   }
 	     * });
 	     * // => true
 	     */
@@ -29310,20 +30081,12 @@ var ripple =
 	     * _.isFunction(/abc/);
 	     * // => false
 	     */
-	    function isFunction(value) {
-	      // Avoid a Chakra JIT bug in compatibility modes of IE 11.
-	      // See https://github.com/jashkenas/underscore/issues/1621 for more details.
-	      return typeof value == 'function' || false;
-	    }
-	    // Fallback for environments that return incorrect `typeof` operator results.
-	    if (isFunction(/x/) || (Uint8Array && !isFunction(Uint8Array))) {
-	      isFunction = function(value) {
-	        // The use of `Object#toString` avoids issues with the `typeof` operator
-	        // in older versions of Chrome and Safari which return 'function' for regexes
-	        // and Safari 8 equivalents which return 'object' for typed array constructors.
-	        return objToString.call(value) == funcTag;
-	      };
-	    }
+	    var isFunction = !(baseIsFunction(/x/) || (Uint8Array && !baseIsFunction(Uint8Array))) ? baseIsFunction : function(value) {
+	      // The use of `Object#toString` avoids issues with the `typeof` operator
+	      // in older versions of Chrome and Safari which return 'function' for regexes
+	      // and Safari 8 equivalents which return 'object' for typed array constructors.
+	      return objToString.call(value) == funcTag;
+	    };
 
 	    /**
 	     * Checks if `value` is the language type of `Object`.
@@ -29369,7 +30132,7 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Lang
-	     * @param {Object} source The object to inspect.
+	     * @param {Object} object The object to inspect.
 	     * @param {Object} source The object of property values to match.
 	     * @param {Function} [customizer] The function to customize comparing values.
 	     * @param {*} [thisArg] The `this` binding of `customizer`.
@@ -29652,7 +30415,9 @@ var ripple =
 	     * @returns {Array} Returns the converted array.
 	     * @example
 	     *
-	     * (function() { return _.toArray(arguments).slice(1); })(1, 2, 3);
+	     * (function() {
+	     *   return _.toArray(arguments).slice(1);
+	     * }(1, 2, 3));
 	     * // => [2, 3]
 	     */
 	    function toArray(value) {
@@ -29749,7 +30514,9 @@ var ripple =
 	     *   Shape.call(this);
 	     * }
 	     *
-	     * Circle.prototype = _.create(Shape.prototype, { 'constructor': Circle });
+	     * Circle.prototype = _.create(Shape.prototype, {
+	     *   'constructor': Circle
+	     * });
 	     *
 	     * var circle = new Circle;
 	     * circle instanceof Circle;
@@ -29795,10 +30562,14 @@ var ripple =
 	     * This method is like `_.findIndex` except that it returns the key of the
 	     * first element `predicate` returns truthy for, instead of the element itself.
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -29807,8 +30578,7 @@ var ripple =
 	     * @category Object
 	     * @param {Object} object The object to search.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {string|undefined} Returns the key of the matched element, else `undefined`.
 	     * @example
@@ -29819,14 +30589,20 @@ var ripple =
 	     *   'pebbles': { 'age': 1,  'active': true }
 	     * };
 	     *
-	     * _.findKey(users, function(chr) { return chr.age < 40; });
+	     * _.findKey(users, function(chr) {
+	     *   return chr.age < 40;
+	     * });
 	     * // => 'barney' (iteration order is not guaranteed)
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.findKey(users, { 'age': 1 });
+	     * // using the `_.matches` callback shorthand
+	     * _.findKey(users, { 'age': 1, 'active': true });
 	     * // => 'pebbles'
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.findKey(users, 'active', false);
+	     * // => 'fred'
+	     *
+	     * // using the `_.property` callback shorthand
 	     * _.findKey(users, 'active');
 	     * // => 'barney'
 	     */
@@ -29839,10 +30615,14 @@ var ripple =
 	     * This method is like `_.findKey` except that it iterates over elements of
 	     * a collection in the opposite order.
 	     *
-	     * If a property name is provided for `predicate` the created "_.property"
+	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `predicate` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `predicate` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -29851,8 +30631,7 @@ var ripple =
 	     * @category Object
 	     * @param {Object} object The object to search.
 	     * @param {Function|Object|string} [predicate=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `predicate`.
 	     * @returns {string|undefined} Returns the key of the matched element, else `undefined`.
 	     * @example
@@ -29863,14 +30642,20 @@ var ripple =
 	     *   'pebbles': { 'age': 1,  'active': true }
 	     * };
 	     *
-	     * _.findLastKey(users, function(chr) { return chr.age < 40; });
+	     * _.findLastKey(users, function(chr) {
+	     *   return chr.age < 40;
+	     * });
 	     * // => returns `pebbles` assuming `_.findKey` returns `barney`
 	     *
-	     * // using the "_.matches" callback shorthand
-	     * _.findLastKey(users, { 'age': 36 });
+	     * // using the `_.matches` callback shorthand
+	     * _.findLastKey(users, { 'age': 36, 'active': true });
 	     * // => 'barney'
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.matchesProperty` callback shorthand
+	     * _.findLastKey(users, 'active', false);
+	     * // => 'fred'
+	     *
+	     * // using the `_.property` callback shorthand
 	     * _.findLastKey(users, 'active');
 	     * // => 'pebbles'
 	     */
@@ -29958,10 +30743,17 @@ var ripple =
 	     * @returns {Object} Returns `object`.
 	     * @example
 	     *
-	     * _.forOwn({ '0': 'zero', '1': 'one', 'length': 2 }, function(n, key) {
+	     * function Foo() {
+	     *   this.a = 1;
+	     *   this.b = 2;
+	     * }
+	     *
+	     * Foo.prototype.c = 3;
+	     *
+	     * _.forOwn(new Foo, function(value, key) {
 	     *   console.log(key);
 	     * });
-	     * // => logs '0', '1', and 'length' (iteration order is not guaranteed)
+	     * // => logs 'a' and 'b' (iteration order is not guaranteed)
 	     */
 	    function forOwn(object, iteratee, thisArg) {
 	      if (typeof iteratee != 'function' || typeof thisArg != 'undefined') {
@@ -29983,10 +30775,17 @@ var ripple =
 	     * @returns {Object} Returns `object`.
 	     * @example
 	     *
-	     * _.forOwnRight({ '0': 'zero', '1': 'one', 'length': 2 }, function(n, key) {
+	     * function Foo() {
+	     *   this.a = 1;
+	     *   this.b = 2;
+	     * }
+	     *
+	     * Foo.prototype.c = 3;
+	     *
+	     * _.forOwnRight(new Foo, function(value, key) {
 	     *   console.log(key);
 	     * });
-	     * // => logs 'length', '1', and '0' assuming `_.forOwn` logs '0', '1', and 'length'
+	     * // => logs 'b' and 'a' assuming `_.forOwn` logs 'a' and 'b'
 	     */
 	    function forOwnRight(object, iteratee, thisArg) {
 	      iteratee = bindCallback(iteratee, thisArg, 3);
@@ -30006,7 +30805,7 @@ var ripple =
 	     * @example
 	     *
 	     * _.functions(_);
-	     * // => ['all', 'any', 'bind', ...]
+	     * // => ['after', 'ary', 'assign', ...]
 	     */
 	    function functions(object) {
 	      return baseFunctions(object, keysIn(object));
@@ -30024,7 +30823,9 @@ var ripple =
 	     * @returns {boolean} Returns `true` if `key` is a direct property, else `false`.
 	     * @example
 	     *
-	     * _.has({ 'a': 1, 'b': 2, 'c': 3 }, 'b');
+	     * var object = { 'a': 1, 'b': 2, 'c': 3 };
+	     *
+	     * _.has(object, 'b');
 	     * // => true
 	     */
 	    function has(object, key) {
@@ -30045,16 +30846,14 @@ var ripple =
 	     * @returns {Object} Returns the new inverted object.
 	     * @example
 	     *
-	     * _.invert({ 'first': 'fred', 'second': 'barney' });
-	     * // => { 'fred': 'first', 'barney': 'second' }
+	     * var object = { 'a': 1, 'b': 2, 'c': 1 };
 	     *
-	     * // without `multiValue`
-	     * _.invert({ 'first': 'fred', 'second': 'barney', 'third': 'fred' });
-	     * // => { 'fred': 'third', 'barney': 'second' }
+	     * _.invert(object);
+	     * // => { '1': 'c', '2': 'b' }
 	     *
 	     * // with `multiValue`
-	     * _.invert({ 'first': 'fred', 'second': 'barney', 'third': 'fred' }, true);
-	     * // => { 'fred': ['first', 'third'], 'barney': ['second'] }
+	     * _.invert(object, true);
+	     * // => { '1': ['a', 'c'], '2': ['b'] }
 	     */
 	    function invert(object, multiValue, guard) {
 	      if (guard && isIterateeCall(object, multiValue, guard)) {
@@ -30157,7 +30956,7 @@ var ripple =
 
 	      var Ctor = object.constructor,
 	          index = -1,
-	          isProto = typeof Ctor == 'function' && Ctor.prototype == object,
+	          isProto = typeof Ctor == 'function' && Ctor.prototype === object,
 	          result = Array(length),
 	          skipIndexes = length > 0;
 
@@ -30179,10 +30978,14 @@ var ripple =
 	     * iteratee function is bound to `thisArg` and invoked with three arguments;
 	     * (value, key, object).
 	     *
-	     * If a property name is provided for `iteratee` the created "_.property"
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
-	     * If an object is provided for `iteratee` the created "_.matches" style
+	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
+	     * style callback returns `true` for elements that have a matching property
+	     * value, else `false`.
+	     *
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -30191,21 +30994,22 @@ var ripple =
 	     * @category Object
 	     * @param {Object} object The object to iterate over.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
-	     *  per iteration. If a property name or object is provided it is used to
-	     *  create a "_.property" or "_.matches" style callback respectively.
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Object} Returns the new mapped object.
 	     * @example
 	     *
-	     * _.mapValues({ 'a': 1, 'b': 2, 'c': 3} , function(n) { return n * 3; });
-	     * // => { 'a': 3, 'b': 6, 'c': 9 }
+	     * _.mapValues({ 'a': 1, 'b': 2 }, function(n) {
+	     *   return n * 3;
+	     * });
+	     * // => { 'a': 3, 'b': 6 }
 	     *
 	     * var users = {
 	     *   'fred':    { 'user': 'fred',    'age': 40 },
 	     *   'pebbles': { 'user': 'pebbles', 'age': 1 }
 	     * };
 	     *
-	     * // using the "_.property" callback shorthand
+	     * // using the `_.property` callback shorthand
 	     * _.mapValues(users, 'age');
 	     * // => { 'fred': 40, 'pebbles': 1 } (iteration order is not guaranteed)
 	     */
@@ -30261,7 +31065,9 @@ var ripple =
 	     * };
 	     *
 	     * _.merge(object, other, function(a, b) {
-	     *   return _.isArray(a) ? a.concat(b) : undefined;
+	     *   if (_.isArray(a)) {
+	     *     return a.concat(b);
+	     *   }
 	     * });
 	     * // => { 'fruits': ['apple', 'banana'], 'vegetables': ['beet', 'carrot'] }
 	     */
@@ -30427,18 +31233,16 @@ var ripple =
 	     * @returns {*} Returns the accumulated value.
 	     * @example
 	     *
-	     * var squares = _.transform([1, 2, 3, 4, 5, 6], function(result, n) {
-	     *   n *= n;
-	     *   if (n % 2) {
-	     *     return result.push(n) < 3;
-	     *   }
+	     * _.transform([2, 3, 4], function(result, n) {
+	     *   result.push(n *= n);
+	     *   return n % 2 == 0;
 	     * });
-	     * // => [1, 9, 25]
+	     * // => [4, 9]
 	     *
-	     * var mapped = _.transform({ 'a': 1, 'b': 2, 'c': 3 }, function(result, n, key) {
+	     * _.transform({ 'a': 1, 'b': 2 }, function(result, n, key) {
 	     *   result[key] = n * 3;
 	     * });
-	     * // => { 'a': 3, 'b': 6, 'c': 9 }
+	     * // => { 'a': 3, 'b': 6 }
 	     */
 	    function transform(object, iteratee, accumulator, thisArg) {
 	      var isArr = isArray(object) || isTypedArray(object);
@@ -30450,7 +31254,7 @@ var ripple =
 	          if (isArr) {
 	            accumulator = isArray(object) ? new Ctor : [];
 	          } else {
-	            accumulator = baseCreate(typeof Ctor == 'function' && Ctor.prototype);
+	            accumulator = baseCreate(isFunction(Ctor) && Ctor.prototype);
 	          }
 	        } else {
 	          accumulator = {};
@@ -30519,6 +31323,48 @@ var ripple =
 	    }
 
 	    /*------------------------------------------------------------------------*/
+
+	    /**
+	     * Checks if `n` is between `start` and up to but not including, `end`. If
+	     * `end` is not specified it defaults to `start` with `start` becoming `0`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Number
+	     * @param {number} n The number to check.
+	     * @param {number} [start=0] The start of the range.
+	     * @param {number} end The end of the range.
+	     * @returns {boolean} Returns `true` if `n` is in the range, else `false`.
+	     * @example
+	     *
+	     * _.inRange(3, 2, 4);
+	     * // => true
+	     *
+	     * _.inRange(4, 8);
+	     * // => true
+	     *
+	     * _.inRange(4, 2);
+	     * // => false
+	     *
+	     * _.inRange(2, 2);
+	     * // => false
+	     *
+	     * _.inRange(1.2, 2);
+	     * // => true
+	     *
+	     * _.inRange(5.2, 4);
+	     * // => false
+	     */
+	    function inRange(value, start, end) {
+	      start = +start || 0;
+	      if (typeof end === 'undefined') {
+	        end = start;
+	        start = 0;
+	      } else {
+	        end = +end || 0;
+	      }
+	      return value >= start && value < end;
+	    }
 
 	    /**
 	     * Produces a random number between `min` and `max` (inclusive). If only one
@@ -30739,7 +31585,7 @@ var ripple =
 	    }
 
 	    /**
-	     * Converts `string` to kebab case (a.k.a. spinal case).
+	     * Converts `string` to kebab case.
 	     * See [Wikipedia](https://en.wikipedia.org/wiki/Letter_case#Special_case_styles) for
 	     * more details.
 	     *
@@ -31102,10 +31948,10 @@ var ripple =
 	     * var compiled = _.template('hi <%= data.user %>!', { 'variable': 'data' });
 	     * compiled.source;
 	     * // => function(data) {
-	     *   var __t, __p = '';
-	     *   __p += 'hi ' + ((__t = ( data.user )) == null ? '' : __t) + '!';
-	     *   return __p;
-	     * }
+	     * //   var __t, __p = '';
+	     * //   __p += 'hi ' + ((__t = ( data.user )) == null ? '' : __t) + '!';
+	     * //   return __p;
+	     * // }
 	     *
 	     * // using the `source` property to inline compiled templates for meaningful
 	     * // line numbers in error messages and a stack trace
@@ -31280,7 +32126,7 @@ var ripple =
 	        return string;
 	      }
 	      if (guard ? isIterateeCall(value, chars, guard) : chars == null) {
-	        return string.slice(trimmedLeftIndex(string))
+	        return string.slice(trimmedLeftIndex(string));
 	      }
 	      return string.slice(charsLeftIndex(string, (chars + '')));
 	    }
@@ -31310,7 +32156,7 @@ var ripple =
 	        return string;
 	      }
 	      if (guard ? isIterateeCall(value, chars, guard) : chars == null) {
-	        return string.slice(0, trimmedRightIndex(string) + 1)
+	        return string.slice(0, trimmedRightIndex(string) + 1);
 	      }
 	      return string.slice(0, charsRightIndex(string, (chars + '')) + 1);
 	    }
@@ -31338,13 +32184,21 @@ var ripple =
 	     * _.trunc('hi-diddly-ho there, neighborino', 24);
 	     * // => 'hi-diddly-ho there, n...'
 	     *
-	     * _.trunc('hi-diddly-ho there, neighborino', { 'length': 24, 'separator': ' ' });
+	     * _.trunc('hi-diddly-ho there, neighborino', {
+	     *   'length': 24,
+	     *   'separator': ' '
+	     * });
 	     * // => 'hi-diddly-ho there,...'
 	     *
-	     * _.trunc('hi-diddly-ho there, neighborino', { 'length': 24, 'separator': /,? +/ });
+	     * _.trunc('hi-diddly-ho there, neighborino', {
+	     *   'length': 24,
+	     *   'separator': /,? +/
+	     * });
 	     * //=> 'hi-diddly-ho there...'
 	     *
-	     * _.trunc('hi-diddly-ho there, neighborino', { 'omission': ' [...]' });
+	     * _.trunc('hi-diddly-ho there, neighborino', {
+	     *   'omission': ' [...]'
+	     * });
 	     * // => 'hi-diddly-ho there, neig [...]'
 	     */
 	    function trunc(string, options, guard) {
@@ -31453,8 +32307,8 @@ var ripple =
 	    /*------------------------------------------------------------------------*/
 
 	    /**
-	     * Attempts to invoke `func`, returning either the result or the caught
-	     * error object.
+	     * Attempts to invoke `func`, returning either the result or the caught error
+	     * object. Any additional arguments are provided to `func` when it is invoked.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31464,27 +32318,35 @@ var ripple =
 	     * @example
 	     *
 	     * // avoid throwing errors for invalid selectors
-	     * var elements = _.attempt(function() {
+	     * var elements = _.attempt(function(selector) {
 	     *   return document.querySelectorAll(selector);
-	     * });
+	     * }, '>_>');
 	     *
 	     * if (_.isError(elements)) {
 	     *   elements = [];
 	     * }
 	     */
-	    function attempt(func) {
+	    function attempt() {
+	      var length = arguments.length,
+	          func = arguments[0];
+
 	      try {
-	        return func();
+	        var args = Array(length ? length - 1 : 0);
+	        while (--length > 0) {
+	          args[length - 1] = arguments[length];
+	        }
+	        return func.apply(undefined, args);
 	      } catch(e) {
-	        return isError(e) ? e : Error(e);
+	        return isError(e) ? e : new Error(e);
 	      }
 	    }
 
 	    /**
-	     * Creates a function bound to an optional `thisArg`. If `func` is a property
-	     * name the created callback returns the property value for a given element.
-	     * If `func` is an object the created callback returns `true` for elements
-	     * that contain the equivalent object properties, otherwise it returns `false`.
+	     * Creates a function that invokes `func` with the `this` binding of `thisArg`
+	     * and arguments of the created function. If `func` is a property name the
+	     * created callback returns the property value for a given element. If `func`
+	     * is an object the created callback returns `true` for elements that contain
+	     * the equivalent object properties, otherwise it returns `false`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31508,7 +32370,9 @@ var ripple =
 	     *     return callback(func, thisArg);
 	     *   }
 	     *   return function(object) {
-	     *     return match[2] == 'gt' ? object[match[1]] > match[3] : object[match[1]] < match[3];
+	     *     return match[2] == 'gt'
+	     *       ? object[match[1]] > match[3]
+	     *       : object[match[1]] < match[3];
 	     *   };
 	     * });
 	     *
@@ -31536,6 +32400,7 @@ var ripple =
 	     *
 	     * var object = { 'user': 'fred' };
 	     * var getter = _.constant(object);
+	     *
 	     * getter() === object;
 	     * // => true
 	     */
@@ -31556,6 +32421,7 @@ var ripple =
 	     * @example
 	     *
 	     * var object = { 'user': 'fred' };
+	     *
 	     * _.identity(object) === object;
 	     * // => true
 	     */
@@ -31568,6 +32434,11 @@ var ripple =
 	     * and `source`, returning `true` if the given object has equivalent property
 	     * values, else `false`.
 	     *
+	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
+	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
+	     * their own, not inherited, enumerable properties. For comparing a single
+	     * own or inherited property value see `_.matchesProperty`.
+	     *
 	     * @static
 	     * @memberOf _
 	     * @category Utility
@@ -31576,20 +32447,44 @@ var ripple =
 	     * @example
 	     *
 	     * var users = [
-	     *   { 'user': 'fred',   'age': 40 },
-	     *   { 'user': 'barney', 'age': 36 }
+	     *   { 'user': 'barney', 'age': 36, 'active': true },
+	     *   { 'user': 'fred',   'age': 40, 'active': false }
 	     * ];
 	     *
-	     * var matchesAge = _.matches({ 'age': 36 });
-	     *
-	     * _.filter(users, matchesAge);
-	     * // => [{ 'user': 'barney', 'age': 36 }]
-	     *
-	     * _.find(users, matchesAge);
-	     * // => { 'user': 'barney', 'age': 36 }
+	     * _.filter(users, _.matches({ 'age': 40, 'active': false }));
+	     * // => [{ 'user': 'fred', 'age': 40, 'active': false }]
 	     */
 	    function matches(source) {
 	      return baseMatches(baseClone(source, true));
+	    }
+
+	    /**
+	     * Creates a function which compares the property value of `key` on a given
+	     * object to `value`.
+	     *
+	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
+	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
+	     * their own, not inherited, enumerable properties.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Utility
+	     * @param {string} key The key of the property to get.
+	     * @param {*} value The value to compare.
+	     * @returns {Function} Returns the new function.
+	     * @example
+	     *
+	     * var users = [
+	     *   { 'user': 'barney' },
+	     *   { 'user': 'fred' },
+	     *   { 'user': 'pebbles' }
+	     * ];
+	     *
+	     * _.find(users, _.matchesProperty('user', 'fred'));
+	     * // => { 'user': 'fred', 'age': 40 }
+	     */
+	    function matchesProperty(key, value) {
+	      return baseMatchesProperty(key + '', baseClone(value, true));
 	    }
 
 	    /**
@@ -31613,6 +32508,9 @@ var ripple =
 	     *     return /[aeiou]/i.test(v);
 	     *   });
 	     * }
+	     *
+	     * // use `_.runInContext` to avoid potential conflicts (esp. in Node.js)
+	     * var _ = require('lodash').runInContext();
 	     *
 	     * _.mixin({ 'vowels': vowels });
 	     * _.vowels('fred');
@@ -31694,7 +32592,8 @@ var ripple =
 	    }
 
 	    /**
-	     * A no-operation function.
+	     * A no-operation function which returns `undefined` regardless of the
+	     * arguments it receives.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31702,6 +32601,7 @@ var ripple =
 	     * @example
 	     *
 	     * var object = { 'user': 'fred' };
+	     *
 	     * _.noop(object) === undefined;
 	     * // => true
 	     */
@@ -31747,11 +32647,11 @@ var ripple =
 	     * @returns {Function} Returns the new function.
 	     * @example
 	     *
-	     * var object = { 'user': 'fred', 'age': 40, 'active': true };
-	     * _.map(['active', 'user'], _.propertyOf(object));
-	     * // => [true, 'fred']
-	     *
 	     * var object = { 'a': 3, 'b': 1, 'c': 2 };
+	     *
+	     * _.map(['a', 'c'], _.propertyOf(object));
+	     * // => [3, 2]
+	     *
 	     * _.sortBy(['a', 'b', 'c'], _.propertyOf(object));
 	     * // => ['b', 'c', 'a']
 	     */
@@ -31763,8 +32663,9 @@ var ripple =
 
 	    /**
 	     * Creates an array of numbers (positive and/or negative) progressing from
-	     * `start` up to, but not including, `end`. If `start` is less than `end` a
-	     * zero-length range is created unless a negative `step` is specified.
+	     * `start` up to, but not including, `end`. If `end` is not specified it
+	     * defaults to `start` with `start` becoming `0`. If `start` is less than
+	     * `end` a zero-length range is created unless a negative `step` is specified.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31836,10 +32737,14 @@ var ripple =
 	     * var diceRolls = _.times(3, _.partial(_.random, 1, 6, false));
 	     * // => [3, 6, 4]
 	     *
-	     * _.times(3, function(n) { mage.castSpell(n); });
+	     * _.times(3, function(n) {
+	     *   mage.castSpell(n);
+	     * });
 	     * // => invokes `mage.castSpell(n)` three times with `n` of `0`, `1`, and `2` respectively
 	     *
-	     * _.times(3, function(n) { this.cast(n); }, mage);
+	     * _.times(3, function(n) {
+	     *   this.cast(n);
+	     * }, mage);
 	     * // => also invokes `mage.castSpell(n)` three times
 	     */
 	    function times(n, iteratee, thisArg) {
@@ -31887,8 +32792,14 @@ var ripple =
 
 	    /*------------------------------------------------------------------------*/
 
-	    // Ensure `new LodashWrapper` is an instance of `lodash`.
-	    LodashWrapper.prototype = lodash.prototype;
+	    // Ensure wrappers are instances of `baseLodash`.
+	    lodash.prototype = baseLodash.prototype;
+
+	    LodashWrapper.prototype = baseCreate(baseLodash.prototype);
+	    LodashWrapper.prototype.constructor = LodashWrapper;
+
+	    LazyWrapper.prototype = baseCreate(baseLodash.prototype);
+	    LazyWrapper.prototype.constructor = LazyWrapper;
 
 	    // Add functions to the `Map` cache.
 	    MapCache.prototype['delete'] = mapDelete;
@@ -31929,6 +32840,7 @@ var ripple =
 	    lodash.dropRight = dropRight;
 	    lodash.dropRightWhile = dropRightWhile;
 	    lodash.dropWhile = dropWhile;
+	    lodash.fill = fill;
 	    lodash.filter = filter;
 	    lodash.flatten = flatten;
 	    lodash.flattenDeep = flattenDeep;
@@ -31952,6 +32864,7 @@ var ripple =
 	    lodash.map = map;
 	    lodash.mapValues = mapValues;
 	    lodash.matches = matches;
+	    lodash.matchesProperty = matchesProperty;
 	    lodash.memoize = memoize;
 	    lodash.merge = merge;
 	    lodash.mixin = mixin;
@@ -31977,6 +32890,7 @@ var ripple =
 	    lodash.slice = slice;
 	    lodash.sortBy = sortBy;
 	    lodash.sortByAll = sortByAll;
+	    lodash.spread = spread;
 	    lodash.take = take;
 	    lodash.takeRight = takeRight;
 	    lodash.takeRightWhile = takeRightWhile;
@@ -32042,6 +32956,7 @@ var ripple =
 	    lodash.identity = identity;
 	    lodash.includes = includes;
 	    lodash.indexOf = indexOf;
+	    lodash.inRange = inRange;
 	    lodash.isArguments = isArguments;
 	    lodash.isArray = isArray;
 	    lodash.isBoolean = isBoolean;
@@ -32150,14 +33065,13 @@ var ripple =
 
 	    // Add `LazyWrapper` methods that accept an `iteratee` value.
 	    arrayEach(['filter', 'map', 'takeWhile'], function(methodName, index) {
-	      var isFilter = index == LAZY_FILTER_FLAG;
+	      var isFilter = index == LAZY_FILTER_FLAG || index == LAZY_WHILE_FLAG;
 
 	      LazyWrapper.prototype[methodName] = function(iteratee, thisArg) {
 	        var result = this.clone(),
-	            filtered = result.filtered,
-	            iteratees = result.iteratees || (result.iteratees = []);
+	            iteratees = result.__iteratees__ || (result.__iteratees__ = []);
 
-	        result.filtered = filtered || isFilter || (index == LAZY_WHILE_FLAG && result.dir < 0);
+	        result.__filtered__ = result.__filtered__ || isFilter;
 	        iteratees.push({ 'iteratee': getCallback(iteratee, thisArg, 3), 'type': index });
 	        return result;
 	      };
@@ -32165,19 +33079,19 @@ var ripple =
 
 	    // Add `LazyWrapper` methods for `_.drop` and `_.take` variants.
 	    arrayEach(['drop', 'take'], function(methodName, index) {
-	      var countName = methodName + 'Count',
+	      var countName = '__' + methodName + 'Count__',
 	          whileName = methodName + 'While';
 
 	      LazyWrapper.prototype[methodName] = function(n) {
-	        n = n == null ? 1 : nativeMax(+n || 0, 0);
+	        n = n == null ? 1 : nativeMax(floor(n) || 0, 0);
 
 	        var result = this.clone();
-	        if (result.filtered) {
+	        if (result.__filtered__) {
 	          var value = result[countName];
 	          result[countName] = index ? nativeMin(value, n) : (value + n);
 	        } else {
-	          var views = result.views || (result.views = []);
-	          views.push({ 'size': n, 'type': methodName + (result.dir < 0 ? 'Right' : '') });
+	          var views = result.__views__ || (result.__views__ = []);
+	          views.push({ 'size': n, 'type': methodName + (result.__dir__ < 0 ? 'Right' : '') });
 	        }
 	        return result;
 	      };
@@ -32193,7 +33107,7 @@ var ripple =
 
 	    // Add `LazyWrapper` methods for `_.first` and `_.last`.
 	    arrayEach(['first', 'last'], function(methodName, index) {
-	      var takeName = 'take' + (index ? 'Right': '');
+	      var takeName = 'take' + (index ? 'Right' : '');
 
 	      LazyWrapper.prototype[methodName] = function() {
 	        return this[takeName](1).value()[0];
@@ -32215,27 +33129,31 @@ var ripple =
 	          createCallback = index ? baseMatches : baseProperty;
 
 	      LazyWrapper.prototype[methodName] = function(value) {
-	        return this[operationName](createCallback(index ? value : (value + '')));
+	        return this[operationName](createCallback(value));
 	      };
 	    });
 
-	    LazyWrapper.prototype.dropWhile = function(iteratee, thisArg) {
+	    LazyWrapper.prototype.compact = function() {
+	      return this.filter(identity);
+	    };
+
+	    LazyWrapper.prototype.dropWhile = function(predicate, thisArg) {
 	      var done,
 	          lastIndex,
-	          isRight = this.dir < 0;
+	          isRight = this.__dir__ < 0;
 
-	      iteratee = getCallback(iteratee, thisArg, 3);
+	      predicate = getCallback(predicate, thisArg, 3);
 	      return this.filter(function(value, index, array) {
 	        done = done && (isRight ? index < lastIndex : index > lastIndex);
 	        lastIndex = index;
-	        return done || (done = !iteratee(value, index, array));
+	        return done || (done = !predicate(value, index, array));
 	      });
 	    };
 
-	    LazyWrapper.prototype.reject = function(iteratee, thisArg) {
-	      iteratee = getCallback(iteratee, thisArg, 3);
+	    LazyWrapper.prototype.reject = function(predicate, thisArg) {
+	      predicate = getCallback(predicate, thisArg, 3);
 	      return this.filter(function(value, index, array) {
-	        return !iteratee(value, index, array);
+	        return !predicate(value, index, array);
 	      });
 	    };
 
@@ -32248,6 +33166,10 @@ var ripple =
 	        result = end < 0 ? result.dropRight(-end) : result.take(end - start);
 	      }
 	      return result;
+	    };
+
+	    LazyWrapper.prototype.toArray = function() {
+	      return this.drop(0);
 	    };
 
 	    // Add `LazyWrapper` methods to `lodash.prototype`.
@@ -32277,8 +33199,8 @@ var ripple =
 	          var wrapper = onlyLazy ? value : new LazyWrapper(this),
 	              result = func.apply(wrapper, args);
 
-	          if (!retUnwrapped && (isHybrid || result.actions)) {
-	            var actions = result.actions || (result.actions = []);
+	          if (!retUnwrapped && (isHybrid || result.__actions__)) {
+	            var actions = result.__actions__ || (result.__actions__ = []);
 	            actions.push({ 'func': thru, 'args': [interceptor], 'thisArg': lodash });
 	          }
 	          return new LodashWrapper(result, chainAll);
@@ -32309,13 +33231,15 @@ var ripple =
 	    LazyWrapper.prototype.reverse = lazyReverse;
 	    LazyWrapper.prototype.value = lazyValue;
 
-	    // Add chaining functions to the lodash wrapper.
+	    // Add chaining functions to the `lodash` wrapper.
 	    lodash.prototype.chain = wrapperChain;
+	    lodash.prototype.commit = wrapperCommit;
+	    lodash.prototype.plant = wrapperPlant;
 	    lodash.prototype.reverse = wrapperReverse;
 	    lodash.prototype.toString = wrapperToString;
-	    lodash.prototype.toJSON = lodash.prototype.valueOf = lodash.prototype.value = wrapperValue;
+	    lodash.prototype.run = lodash.prototype.toJSON = lodash.prototype.valueOf = lodash.prototype.value = wrapperValue;
 
-	    // Add function aliases to the lodash wrapper.
+	    // Add function aliases to the `lodash` wrapper.
 	    lodash.prototype.collect = lodash.prototype.map;
 	    lodash.prototype.head = lodash.prototype.first;
 	    lodash.prototype.select = lodash.prototype.filter;
@@ -32360,7 +33284,7 @@ var ripple =
 	  }
 	}.call(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(66)(module), (function() { return this; }())))
 
 /***/ },
 /* 46 */
@@ -32448,122 +33372,6 @@ var ripple =
 
 /***/ },
 /* 47 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Logging functionality for ripple-lib and any applications built on it.
-	 */
-	function Log(namespace) {
-	  if (!namespace) {
-	    this._namespace = [];
-	  } else if (Array.isArray(namespace)) {
-	    this._namespace = namespace;
-	  } else {
-	    this._namespace = [''+namespace];
-	  }
-
-	  this._prefix = this._namespace.concat(['']).join(': ');
-	};
-
-	/**
-	 * Create a sub-logger.
-	 *
-	 * You can have a hierarchy of loggers.
-	 *
-	 * @example
-	 *
-	 *   var log = require('ripple').log.sub('server');
-	 *
-	 *   log.info('connection successful');
-	 *   // prints: 'server: connection successful'
-	 */
-	Log.prototype.sub = function(namespace) {
-	  var subNamespace = this._namespace.slice();
-
-	  if (namespace && typeof namespace === 'string') {
-	    subNamespace.push(namespace);
-	  }
-
-	  var subLogger = new Log(subNamespace);
-	  subLogger._setParent(this);
-	  return subLogger;
-	};
-
-	Log.prototype._setParent = function(parentLogger) {
-	  this._parent = parentLogger;
-	};
-
-	Log.makeLevel = function(level) {
-	  return function() {
-	    var args = Array.prototype.slice.call(arguments);
-	    args[0] = this._prefix + args[0];
-	    Log.engine.logObject.apply(Log, args);
-	  };
-	};
-
-	Log.prototype.debug = Log.makeLevel(1);
-	Log.prototype.info  = Log.makeLevel(2);
-	Log.prototype.warn  = Log.makeLevel(3);
-	Log.prototype.error = Log.makeLevel(4);
-
-	/**
-	 * Basic logging connector.
-	 *
-	 * This engine has no formatting and works with the most basic of 'console.log'
-	 * implementations. This is the logging engine used in Node.js.
-	 */
-	var BasicLogEngine = {
-	  logObject: function logObject(msg) {
-	    var args = Array.prototype.slice.call(arguments, 1);
-
-	    args = args.map(function(arg) {
-	      return JSON.stringify(arg, null, 2);
-	    });
-
-	    args.unshift(msg);
-	    args.unshift('[' + new Date().toISOString() + ']');
-
-	    console.log.apply(console, args);
-	  }
-	};
-
-	/**
-	 * Null logging connector.
-	 *
-	 * This engine simply swallows all messages. Used when console.log is not
-	 * available.
-	 */
-	var NullLogEngine = {
-	  logObject: function() {}
-	};
-
-	Log.engine = NullLogEngine;
-
-	if (console && console.log) {
-	  Log.engine = BasicLogEngine;
-	}
-
-	/**
-	 * Provide a root logger as our main export.
-	 *
-	 * This means you can use the logger easily on the fly:
-	 *     ripple.log.debug('My object is', myObj);
-	 */
-	module.exports = new Log();
-
-	/**
-	 * This is the logger for ripple-lib internally.
-	 */
-	module.exports.internal = module.exports.sub();
-
-	/**
-	 * Expose the class as well.
-	 */
-	module.exports.Log = Log;
-
-
-/***/ },
-/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () { // closure for web browsers
@@ -32821,7 +33629,7 @@ var ripple =
 
 
 /***/ },
-/* 49 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, setImmediate) {/*!
@@ -33948,10 +34756,10 @@ var ripple =
 
 	}());
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62), __webpack_require__(70).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61), __webpack_require__(69).setImmediate))
 
 /***/ },
-/* 50 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.0.3 https://github.com/MikeMcl/bignumber.js/LICENCE */
@@ -36626,16 +37434,16 @@ var ripple =
 
 
 /***/ },
-/* 51 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) {
 	  var sjcl = options.sjcl; // inject sjcl dependency
 
-	  var base58 = __webpack_require__(58)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(59)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(60)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(61)({ sjcl: options.sjcl });
+	  var base58 = __webpack_require__(57)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(58)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(59)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(60)({ sjcl: options.sjcl });
 
 	  function firstHalfOfSHA512(bytes) {
 	    return sjcl.bitArray.bitSlice(
@@ -36724,23 +37532,23 @@ var ripple =
 
 
 /***/ },
-/* 52 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(72);
-	exports.encode = exports.stringify = __webpack_require__(73);
+	exports.decode = exports.parse = __webpack_require__(71);
+	exports.encode = exports.stringify = __webpack_require__(72);
 
 
 /***/ },
-/* 53 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(66)
+	    g.crypto || g.msCrypto || __webpack_require__(63)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -36767,13 +37575,13 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(42).Buffer))
 
 /***/ },
-/* 54 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(76)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(75)
 
-	var md5 = toConstructor(__webpack_require__(75))
-	var rmd160 = toConstructor(__webpack_require__(78))
+	var md5 = toConstructor(__webpack_require__(73))
+	var rmd160 = toConstructor(__webpack_require__(77))
 
 	function toConstructor (fn) {
 	  return function () {
@@ -36804,10 +37612,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 55 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(54)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(53)
 
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -36854,10 +37662,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 56 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(77)
+	var pbkdf2Export = __webpack_require__(76)
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -36872,7 +37680,7 @@ var ripple =
 
 
 /***/ },
-/* 57 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function isBuffer(arg) {
@@ -36883,7 +37691,7 @@ var ripple =
 	}
 
 /***/ },
-/* 58 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -36996,40 +37804,56 @@ var ripple =
 
 
 /***/ },
-/* 59 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
+	
 	module.exports = function(options) {
 	  var sjcl = options.sjcl;
-	  var base58 = __webpack_require__(58)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(57)({ sjcl: sjcl });
 
-	  function MasterKey(key){ 
+	  function MasterKey(key) {
 	    this.value = key;
-	  };
+	  }
 
-	  MasterKey.fromBytes = function(bytes){
+	  MasterKey.fromBytes = function(bytes) {
 	    return new MasterKey(base58.encode_base_check(33, bytes));
 	  };
 
-	  MasterKey.getRandom = function(){
-	    for (var i = 0; i < 8; i++) {
-	      sjcl.random.addEntropy(Math.random(), 32, "Math.random()");
+	  MasterKey.getRandom = function() {
+	    if (typeof window === 'object' && window.crypto) {
+	      // Browser with crypto
+	      var entropy = new Uint32Array(32);
+	      window.crypto.getRandomValues(entropy);
+	      sjcl.random.addEntropy(entropy, 1024, 'crypto.getRandomValues');
+	    } else if (typeof module === 'object' && module.exports) {
+	      // Node
+	      var entropy = __webpack_require__(43).randomBytes(128);
+	      entropy = new Uint32Array(new Uint8Array(entropy).buffer);
+	      sjcl.random.addEntropy(entropy, 1024, 'crypto.randomBytes');
+	    } else {
+	      for (var i = 0; i < 8; i++) {
+	        sjcl.random.addEntropy(Math.random(), 32, 'Math.random()');
+	      }
 	    }
+
 	    var randomBytes = sjcl.codec.bytes.fromBits(sjcl.random.randomWords(4));
+
 	    return MasterKey.fromBytes(randomBytes);
 	  };
+
 	  return MasterKey;
 	}
 
 
 /***/ },
-/* 60 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	module.exports = function(options) { // inject sjcl dependency
 	  var sjcl = options.sjcl
-	  var base58 = __webpack_require__(58)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(57)({ sjcl: sjcl });
 
 
 	  function SHA256_RIPEMD160(bits) {
@@ -37053,7 +37877,7 @@ var ripple =
 
 
 /***/ },
-/* 61 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -37086,7 +37910,7 @@ var ripple =
 
 
 /***/ },
-/* 62 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// shim for using process in browser
@@ -37178,7 +38002,7 @@ var ripple =
 
 
 /***/ },
-/* 63 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -37710,7 +38534,13 @@ var ripple =
 
 	}(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(66)(module), (function() { return this; }())))
+
+/***/ },
+/* 63 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* (ignored) */
 
 /***/ },
 /* 64 */
@@ -37845,12 +38675,6 @@ var ripple =
 /* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* (ignored) */
-
-/***/ },
-/* 67 */
-/***/ function(module, exports, __webpack_require__) {
-
 	module.exports = function(module) {
 		if(!module.webpackPolyfill) {
 			module.deprecate = function() {};
@@ -37864,14 +38688,14 @@ var ripple =
 
 
 /***/ },
-/* 68 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(84);
+	var Emitter = __webpack_require__(82);
 	var reduce = __webpack_require__(83);
 
 	/**
@@ -38919,18 +39743,18 @@ var ripple =
 
 
 /***/ },
-/* 69 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {};
-	  var ciphers = __webpack_require__(79)(crypto);
+	  var ciphers = __webpack_require__(78)(crypto);
 	  exports.createCipher = ciphers.createCipher;
 	  exports.createCipheriv = ciphers.createCipheriv;
-	  var deciphers = __webpack_require__(80)(crypto);
+	  var deciphers = __webpack_require__(79)(crypto);
 	  exports.createDecipher = deciphers.createDecipher;
 	  exports.createDecipheriv = deciphers.createDecipheriv;
-	  var modes = __webpack_require__(81);
+	  var modes = __webpack_require__(80);
 	  function listCiphers () {
 	    return Object.keys(modes);
 	  }
@@ -38940,10 +39764,10 @@ var ripple =
 
 
 /***/ },
-/* 70 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(89).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(88).nextTick;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
 	var nextImmediateId = 0;
@@ -38997,10 +39821,10 @@ var ripple =
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(70).setImmediate, __webpack_require__(70).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(69).setImmediate, __webpack_require__(69).clearImmediate))
 
 /***/ },
-/* 71 */
+/* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (typeof Object.create === 'function') {
@@ -39029,7 +39853,7 @@ var ripple =
 
 
 /***/ },
-/* 72 */
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -39119,7 +39943,7 @@ var ripple =
 
 
 /***/ },
-/* 73 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -39210,133 +40034,7 @@ var ripple =
 
 
 /***/ },
-/* 74 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-	;(function (exports) {
-		'use strict';
-
-	  var Arr = (typeof Uint8Array !== 'undefined')
-	    ? Uint8Array
-	    : Array
-
-		var PLUS   = '+'.charCodeAt(0)
-		var SLASH  = '/'.charCodeAt(0)
-		var NUMBER = '0'.charCodeAt(0)
-		var LOWER  = 'a'.charCodeAt(0)
-		var UPPER  = 'A'.charCodeAt(0)
-
-		function decode (elt) {
-			var code = elt.charCodeAt(0)
-			if (code === PLUS)
-				return 62 // '+'
-			if (code === SLASH)
-				return 63 // '/'
-			if (code < NUMBER)
-				return -1 //no match
-			if (code < NUMBER + 10)
-				return code - NUMBER + 26 + 26
-			if (code < UPPER + 26)
-				return code - UPPER
-			if (code < LOWER + 26)
-				return code - LOWER + 26
-		}
-
-		function b64ToByteArray (b64) {
-			var i, j, l, tmp, placeHolders, arr
-
-			if (b64.length % 4 > 0) {
-				throw new Error('Invalid string. Length must be a multiple of 4')
-			}
-
-			// the number of equal signs (place holders)
-			// if there are two placeholders, than the two characters before it
-			// represent one byte
-			// if there is only one, then the three characters before it represent 2 bytes
-			// this is just a cheap hack to not do indexOf twice
-			var len = b64.length
-			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-			// base64 is 4/3 + up to two characters of the original data
-			arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-			// if there are placeholders, only get up to the last complete 4 chars
-			l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-			var L = 0
-
-			function push (v) {
-				arr[L++] = v
-			}
-
-			for (i = 0, j = 0; i < l; i += 4, j += 3) {
-				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-				push((tmp & 0xFF0000) >> 16)
-				push((tmp & 0xFF00) >> 8)
-				push(tmp & 0xFF)
-			}
-
-			if (placeHolders === 2) {
-				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-				push(tmp & 0xFF)
-			} else if (placeHolders === 1) {
-				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-				push((tmp >> 8) & 0xFF)
-				push(tmp & 0xFF)
-			}
-
-			return arr
-		}
-
-		function uint8ToBase64 (uint8) {
-			var i,
-				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-				output = "",
-				temp, length
-
-			function encode (num) {
-				return lookup.charAt(num)
-			}
-
-			function tripletToBase64 (num) {
-				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-			}
-
-			// go through the array every three bytes, we'll deal with trailing stuff later
-			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-				output += tripletToBase64(temp)
-			}
-
-			// pad the end with zeros, but make sure to not forget the extra bytes
-			switch (extraBytes) {
-				case 1:
-					temp = uint8[uint8.length - 1]
-					output += encode(temp >> 2)
-					output += encode((temp << 4) & 0x3F)
-					output += '=='
-					break
-				case 2:
-					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-					output += encode(temp >> 10)
-					output += encode((temp >> 4) & 0x3F)
-					output += encode((temp << 2) & 0x3F)
-					output += '='
-					break
-			}
-
-			return output
-		}
-
-		exports.toByteArray = b64ToByteArray
-		exports.fromByteArray = uint8ToBase64
-	}(false ? (this.base64js = {}) : exports))
-
-
-/***/ },
-/* 75 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -39348,7 +40046,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(82);
+	var helpers = __webpack_require__(81);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -39497,7 +40195,133 @@ var ripple =
 
 
 /***/ },
-/* 76 */
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+	;(function (exports) {
+		'use strict';
+
+	  var Arr = (typeof Uint8Array !== 'undefined')
+	    ? Uint8Array
+	    : Array
+
+		var PLUS   = '+'.charCodeAt(0)
+		var SLASH  = '/'.charCodeAt(0)
+		var NUMBER = '0'.charCodeAt(0)
+		var LOWER  = 'a'.charCodeAt(0)
+		var UPPER  = 'A'.charCodeAt(0)
+
+		function decode (elt) {
+			var code = elt.charCodeAt(0)
+			if (code === PLUS)
+				return 62 // '+'
+			if (code === SLASH)
+				return 63 // '/'
+			if (code < NUMBER)
+				return -1 //no match
+			if (code < NUMBER + 10)
+				return code - NUMBER + 26 + 26
+			if (code < UPPER + 26)
+				return code - UPPER
+			if (code < LOWER + 26)
+				return code - LOWER + 26
+		}
+
+		function b64ToByteArray (b64) {
+			var i, j, l, tmp, placeHolders, arr
+
+			if (b64.length % 4 > 0) {
+				throw new Error('Invalid string. Length must be a multiple of 4')
+			}
+
+			// the number of equal signs (place holders)
+			// if there are two placeholders, than the two characters before it
+			// represent one byte
+			// if there is only one, then the three characters before it represent 2 bytes
+			// this is just a cheap hack to not do indexOf twice
+			var len = b64.length
+			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+			// base64 is 4/3 + up to two characters of the original data
+			arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+			// if there are placeholders, only get up to the last complete 4 chars
+			l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+			var L = 0
+
+			function push (v) {
+				arr[L++] = v
+			}
+
+			for (i = 0, j = 0; i < l; i += 4, j += 3) {
+				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+				push((tmp & 0xFF0000) >> 16)
+				push((tmp & 0xFF00) >> 8)
+				push(tmp & 0xFF)
+			}
+
+			if (placeHolders === 2) {
+				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+				push(tmp & 0xFF)
+			} else if (placeHolders === 1) {
+				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+				push((tmp >> 8) & 0xFF)
+				push(tmp & 0xFF)
+			}
+
+			return arr
+		}
+
+		function uint8ToBase64 (uint8) {
+			var i,
+				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+				output = "",
+				temp, length
+
+			function encode (num) {
+				return lookup.charAt(num)
+			}
+
+			function tripletToBase64 (num) {
+				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+			}
+
+			// go through the array every three bytes, we'll deal with trailing stuff later
+			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+				output += tripletToBase64(temp)
+			}
+
+			// pad the end with zeros, but make sure to not forget the extra bytes
+			switch (extraBytes) {
+				case 1:
+					temp = uint8[uint8.length - 1]
+					output += encode(temp >> 2)
+					output += encode((temp << 4) & 0x3F)
+					output += '=='
+					break
+				case 2:
+					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+					output += encode(temp >> 10)
+					output += encode((temp >> 4) & 0x3F)
+					output += encode((temp << 2) & 0x3F)
+					output += '='
+					break
+			}
+
+			return output
+		}
+
+		exports.toByteArray = b64ToByteArray
+		exports.fromByteArray = uint8ToBase64
+	}(false ? (this.base64js = {}) : exports))
+
+
+/***/ },
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -39507,15 +40331,15 @@ var ripple =
 	}
 
 	var Buffer = __webpack_require__(42).Buffer
-	var Hash   = __webpack_require__(85)(Buffer)
+	var Hash   = __webpack_require__(84)(Buffer)
 
-	exports.sha1 = __webpack_require__(86)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(87)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(88)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(85)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(86)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(87)(Buffer, Hash)
 
 
 /***/ },
-/* 77 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -39606,7 +40430,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 78 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -39818,15 +40642,15 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 79 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(90);
-	var Transform = __webpack_require__(91);
-	var inherits = __webpack_require__(99);
-	var modes = __webpack_require__(81);
-	var ebtk = __webpack_require__(92);
-	var StreamCipher = __webpack_require__(93);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(89);
+	var Transform = __webpack_require__(90);
+	var inherits = __webpack_require__(98);
+	var modes = __webpack_require__(80);
+	var ebtk = __webpack_require__(91);
+	var StreamCipher = __webpack_require__(92);
 	inherits(Cipher, Transform);
 	function Cipher(mode, key, iv) {
 	  if (!(this instanceof Cipher)) {
@@ -39887,11 +40711,11 @@ var ripple =
 	  return out;
 	};
 	var modelist = {
-	  ECB: __webpack_require__(94),
-	  CBC: __webpack_require__(95),
-	  CFB: __webpack_require__(96),
-	  OFB: __webpack_require__(97),
-	  CTR: __webpack_require__(98)
+	  ECB: __webpack_require__(93),
+	  CBC: __webpack_require__(94),
+	  CFB: __webpack_require__(95),
+	  OFB: __webpack_require__(96),
+	  CTR: __webpack_require__(97)
 	};
 	module.exports = function (crypto) {
 	  function createCipheriv(suite, password, iv) {
@@ -39933,15 +40757,15 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 80 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(90);
-	var Transform = __webpack_require__(91);
-	var inherits = __webpack_require__(99);
-	var modes = __webpack_require__(81);
-	var StreamCipher = __webpack_require__(93);
-	var ebtk = __webpack_require__(92);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(89);
+	var Transform = __webpack_require__(90);
+	var inherits = __webpack_require__(98);
+	var modes = __webpack_require__(80);
+	var StreamCipher = __webpack_require__(92);
+	var ebtk = __webpack_require__(91);
 
 	inherits(Decipher, Transform);
 	function Decipher(mode, key, iv) {
@@ -40009,11 +40833,11 @@ var ripple =
 	}
 
 	var modelist = {
-	  ECB: __webpack_require__(94),
-	  CBC: __webpack_require__(95),
-	  CFB: __webpack_require__(96),
-	  OFB: __webpack_require__(97),
-	  CTR: __webpack_require__(98)
+	  ECB: __webpack_require__(93),
+	  CBC: __webpack_require__(94),
+	  CFB: __webpack_require__(95),
+	  OFB: __webpack_require__(96),
+	  CTR: __webpack_require__(97)
 	};
 
 	module.exports = function (crypto) {
@@ -40057,7 +40881,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 81 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports['aes-128-ecb'] = {
@@ -40170,7 +40994,7 @@ var ripple =
 	};
 
 /***/ },
-/* 82 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -40211,36 +41035,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 83 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
-
-/***/ },
-/* 84 */
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -40410,7 +41205,36 @@ var ripple =
 
 
 /***/ },
-/* 85 */
+/* 83 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 84 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function (Buffer) {
@@ -40493,7 +41317,7 @@ var ripple =
 
 
 /***/ },
-/* 86 */
+/* 85 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -40505,7 +41329,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -40637,7 +41461,7 @@ var ripple =
 
 
 /***/ },
-/* 87 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -40649,7 +41473,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -40790,10 +41614,10 @@ var ripple =
 
 
 /***/ },
-/* 88 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
@@ -41040,7 +41864,7 @@ var ripple =
 
 
 /***/ },
-/* 89 */
+/* 88 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// shim for using process in browser
@@ -41103,7 +41927,7 @@ var ripple =
 
 
 /***/ },
-/* 90 */
+/* 89 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var uint_max = Math.pow(2, 32);
@@ -41305,11 +42129,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 91 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(101).Transform;
-	var inherits = __webpack_require__(99);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(100).Transform;
+	var inherits = __webpack_require__(98);
 
 	module.exports = CipherBase;
 	inherits(CipherBase, Transform);
@@ -41343,7 +42167,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 92 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -41406,12 +42230,12 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 93 */
+/* 92 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(90);
-	var Transform = __webpack_require__(91);
-	var inherits = __webpack_require__(99);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(89);
+	var Transform = __webpack_require__(90);
+	var inherits = __webpack_require__(98);
 
 	inherits(StreamCipher, Transform);
 	module.exports = StreamCipher;
@@ -41438,7 +42262,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 94 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports.encrypt = function (self, block) {
@@ -41449,10 +42273,10 @@ var ripple =
 	};
 
 /***/ },
-/* 95 */
+/* 94 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var xor = __webpack_require__(100);
+	var xor = __webpack_require__(99);
 	exports.encrypt = function (self, block) {
 	  var data = xor(block, self._prev);
 	  self._prev = self._cipher.encryptBlock(data);
@@ -41466,10 +42290,10 @@ var ripple =
 	};
 
 /***/ },
-/* 96 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(100);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(99);
 	exports.encrypt = function (self, data, decrypt) {
 	  var out = new Buffer('');
 	  var len;
@@ -41499,10 +42323,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 97 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(100);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(99);
 	function getBlock(self) {
 	  self._prev = self._cipher.encryptBlock(self._prev);
 	  return self._prev;
@@ -41518,10 +42342,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 98 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(100);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(99);
 	function getBlock(self) {
 	  var out = self._cipher.encryptBlock(self._prev);
 	  incr32(self._prev);
@@ -41552,7 +42376,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 99 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (typeof Object.create === 'function') {
@@ -41581,7 +42405,7 @@ var ripple =
 
 
 /***/ },
-/* 100 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = xor;
@@ -41597,7 +42421,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
 
 /***/ },
-/* 101 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -41623,15 +42447,15 @@ var ripple =
 
 	module.exports = Stream;
 
-	var EE = __webpack_require__(40).EventEmitter;
-	var inherits = __webpack_require__(107);
+	var EE = __webpack_require__(39).EventEmitter;
+	var inherits = __webpack_require__(106);
 
 	inherits(Stream, EE);
-	Stream.Readable = __webpack_require__(102);
-	Stream.Writable = __webpack_require__(103);
-	Stream.Duplex = __webpack_require__(104);
-	Stream.Transform = __webpack_require__(105);
-	Stream.PassThrough = __webpack_require__(106);
+	Stream.Readable = __webpack_require__(101);
+	Stream.Writable = __webpack_require__(102);
+	Stream.Duplex = __webpack_require__(103);
+	Stream.Transform = __webpack_require__(104);
+	Stream.PassThrough = __webpack_require__(105);
 
 	// Backwards-compat with node 0.4.x
 	Stream.Stream = Stream;
@@ -41730,23 +42554,30 @@ var ripple =
 
 
 /***/ },
+/* 101 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(107);
+	exports.Stream = __webpack_require__(100);
+	exports.Readable = exports;
+	exports.Writable = __webpack_require__(108);
+	exports.Duplex = __webpack_require__(109);
+	exports.Transform = __webpack_require__(110);
+	exports.PassThrough = __webpack_require__(111);
+
+
+/***/ },
 /* 102 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(109);
-	exports.Stream = __webpack_require__(101);
-	exports.Readable = exports;
-	exports.Writable = __webpack_require__(108);
-	exports.Duplex = __webpack_require__(110);
-	exports.Transform = __webpack_require__(111);
-	exports.PassThrough = __webpack_require__(112);
+	module.exports = __webpack_require__(108)
 
 
 /***/ },
 /* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(108)
+	module.exports = __webpack_require__(109)
 
 
 /***/ },
@@ -41765,13 +42596,6 @@ var ripple =
 
 /***/ },
 /* 106 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(112)
-
-
-/***/ },
-/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (typeof Object.create === 'function') {
@@ -41800,491 +42624,7 @@ var ripple =
 
 
 /***/ },
-/* 108 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// A bit simpler than readable streams.
-	// Implement an async ._write(chunk, cb), and it'll handle all
-	// the drain event emission and buffering.
-
-	module.exports = Writable;
-
-	/*<replacement>*/
-	var Buffer = __webpack_require__(42).Buffer;
-	/*</replacement>*/
-
-	Writable.WritableState = WritableState;
-
-
-	/*<replacement>*/
-	var util = __webpack_require__(117);
-	util.inherits = __webpack_require__(116);
-	/*</replacement>*/
-
-	var Stream = __webpack_require__(101);
-
-	util.inherits(Writable, Stream);
-
-	function WriteReq(chunk, encoding, cb) {
-	  this.chunk = chunk;
-	  this.encoding = encoding;
-	  this.callback = cb;
-	}
-
-	function WritableState(options, stream) {
-	  var Duplex = __webpack_require__(110);
-
-	  options = options || {};
-
-	  // the point at which write() starts returning false
-	  // Note: 0 is a valid value, means that we always return false if
-	  // the entire buffer is not flushed immediately on write()
-	  var hwm = options.highWaterMark;
-	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
-	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
-
-	  // object stream flag to indicate whether or not this stream
-	  // contains buffers or objects.
-	  this.objectMode = !!options.objectMode;
-
-	  if (stream instanceof Duplex)
-	    this.objectMode = this.objectMode || !!options.writableObjectMode;
-
-	  // cast to ints.
-	  this.highWaterMark = ~~this.highWaterMark;
-
-	  this.needDrain = false;
-	  // at the start of calling end()
-	  this.ending = false;
-	  // when end() has been called, and returned
-	  this.ended = false;
-	  // when 'finish' is emitted
-	  this.finished = false;
-
-	  // should we decode strings into buffers before passing to _write?
-	  // this is here so that some node-core streams can optimize string
-	  // handling at a lower level.
-	  var noDecode = options.decodeStrings === false;
-	  this.decodeStrings = !noDecode;
-
-	  // Crypto is kind of old and crusty.  Historically, its default string
-	  // encoding is 'binary' so we have to make this configurable.
-	  // Everything else in the universe uses 'utf8', though.
-	  this.defaultEncoding = options.defaultEncoding || 'utf8';
-
-	  // not an actual buffer we keep track of, but a measurement
-	  // of how much we're waiting to get pushed to some underlying
-	  // socket or file.
-	  this.length = 0;
-
-	  // a flag to see when we're in the middle of a write.
-	  this.writing = false;
-
-	  // when true all writes will be buffered until .uncork() call
-	  this.corked = 0;
-
-	  // a flag to be able to tell if the onwrite cb is called immediately,
-	  // or on a later tick.  We set this to true at first, because any
-	  // actions that shouldn't happen until "later" should generally also
-	  // not happen before the first write call.
-	  this.sync = true;
-
-	  // a flag to know if we're processing previously buffered items, which
-	  // may call the _write() callback in the same tick, so that we don't
-	  // end up in an overlapped onwrite situation.
-	  this.bufferProcessing = false;
-
-	  // the callback that's passed to _write(chunk,cb)
-	  this.onwrite = function(er) {
-	    onwrite(stream, er);
-	  };
-
-	  // the callback that the user supplies to write(chunk,encoding,cb)
-	  this.writecb = null;
-
-	  // the amount that is being written when _write is called.
-	  this.writelen = 0;
-
-	  this.buffer = [];
-
-	  // number of pending user-supplied write callbacks
-	  // this must be 0 before 'finish' can be emitted
-	  this.pendingcb = 0;
-
-	  // emit prefinish if the only thing we're waiting for is _write cbs
-	  // This is relevant for synchronous Transform streams
-	  this.prefinished = false;
-
-	  // True if the error was already emitted and should not be thrown again
-	  this.errorEmitted = false;
-	}
-
-	function Writable(options) {
-	  var Duplex = __webpack_require__(110);
-
-	  // Writable ctor is applied to Duplexes, though they're not
-	  // instanceof Writable, they're instanceof Readable.
-	  if (!(this instanceof Writable) && !(this instanceof Duplex))
-	    return new Writable(options);
-
-	  this._writableState = new WritableState(options, this);
-
-	  // legacy.
-	  this.writable = true;
-
-	  Stream.call(this);
-	}
-
-	// Otherwise people can pipe Writable streams, which is just wrong.
-	Writable.prototype.pipe = function() {
-	  this.emit('error', new Error('Cannot pipe. Not readable.'));
-	};
-
-
-	function writeAfterEnd(stream, state, cb) {
-	  var er = new Error('write after end');
-	  // TODO: defer error events consistently everywhere, not just the cb
-	  stream.emit('error', er);
-	  process.nextTick(function() {
-	    cb(er);
-	  });
-	}
-
-	// If we get something that is not a buffer, string, null, or undefined,
-	// and we're not in objectMode, then that's an error.
-	// Otherwise stream chunks are all considered to be of length=1, and the
-	// watermarks determine how many objects to keep in the buffer, rather than
-	// how many bytes or characters.
-	function validChunk(stream, state, chunk, cb) {
-	  var valid = true;
-	  if (!util.isBuffer(chunk) &&
-	      !util.isString(chunk) &&
-	      !util.isNullOrUndefined(chunk) &&
-	      !state.objectMode) {
-	    var er = new TypeError('Invalid non-string/buffer chunk');
-	    stream.emit('error', er);
-	    process.nextTick(function() {
-	      cb(er);
-	    });
-	    valid = false;
-	  }
-	  return valid;
-	}
-
-	Writable.prototype.write = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-	  var ret = false;
-
-	  if (util.isFunction(encoding)) {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (util.isBuffer(chunk))
-	    encoding = 'buffer';
-	  else if (!encoding)
-	    encoding = state.defaultEncoding;
-
-	  if (!util.isFunction(cb))
-	    cb = function() {};
-
-	  if (state.ended)
-	    writeAfterEnd(this, state, cb);
-	  else if (validChunk(this, state, chunk, cb)) {
-	    state.pendingcb++;
-	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
-	  }
-
-	  return ret;
-	};
-
-	Writable.prototype.cork = function() {
-	  var state = this._writableState;
-
-	  state.corked++;
-	};
-
-	Writable.prototype.uncork = function() {
-	  var state = this._writableState;
-
-	  if (state.corked) {
-	    state.corked--;
-
-	    if (!state.writing &&
-	        !state.corked &&
-	        !state.finished &&
-	        !state.bufferProcessing &&
-	        state.buffer.length)
-	      clearBuffer(this, state);
-	  }
-	};
-
-	function decodeChunk(state, chunk, encoding) {
-	  if (!state.objectMode &&
-	      state.decodeStrings !== false &&
-	      util.isString(chunk)) {
-	    chunk = new Buffer(chunk, encoding);
-	  }
-	  return chunk;
-	}
-
-	// if we're already writing something, then just put this
-	// in the queue, and wait our turn.  Otherwise, call _write
-	// If we return false, then we need a drain event, so set that flag.
-	function writeOrBuffer(stream, state, chunk, encoding, cb) {
-	  chunk = decodeChunk(state, chunk, encoding);
-	  if (util.isBuffer(chunk))
-	    encoding = 'buffer';
-	  var len = state.objectMode ? 1 : chunk.length;
-
-	  state.length += len;
-
-	  var ret = state.length < state.highWaterMark;
-	  // we must ensure that previous needDrain will not be reset to false.
-	  if (!ret)
-	    state.needDrain = true;
-
-	  if (state.writing || state.corked)
-	    state.buffer.push(new WriteReq(chunk, encoding, cb));
-	  else
-	    doWrite(stream, state, false, len, chunk, encoding, cb);
-
-	  return ret;
-	}
-
-	function doWrite(stream, state, writev, len, chunk, encoding, cb) {
-	  state.writelen = len;
-	  state.writecb = cb;
-	  state.writing = true;
-	  state.sync = true;
-	  if (writev)
-	    stream._writev(chunk, state.onwrite);
-	  else
-	    stream._write(chunk, encoding, state.onwrite);
-	  state.sync = false;
-	}
-
-	function onwriteError(stream, state, sync, er, cb) {
-	  if (sync)
-	    process.nextTick(function() {
-	      state.pendingcb--;
-	      cb(er);
-	    });
-	  else {
-	    state.pendingcb--;
-	    cb(er);
-	  }
-
-	  stream._writableState.errorEmitted = true;
-	  stream.emit('error', er);
-	}
-
-	function onwriteStateUpdate(state) {
-	  state.writing = false;
-	  state.writecb = null;
-	  state.length -= state.writelen;
-	  state.writelen = 0;
-	}
-
-	function onwrite(stream, er) {
-	  var state = stream._writableState;
-	  var sync = state.sync;
-	  var cb = state.writecb;
-
-	  onwriteStateUpdate(state);
-
-	  if (er)
-	    onwriteError(stream, state, sync, er, cb);
-	  else {
-	    // Check if we're actually ready to finish, but don't emit yet
-	    var finished = needFinish(stream, state);
-
-	    if (!finished &&
-	        !state.corked &&
-	        !state.bufferProcessing &&
-	        state.buffer.length) {
-	      clearBuffer(stream, state);
-	    }
-
-	    if (sync) {
-	      process.nextTick(function() {
-	        afterWrite(stream, state, finished, cb);
-	      });
-	    } else {
-	      afterWrite(stream, state, finished, cb);
-	    }
-	  }
-	}
-
-	function afterWrite(stream, state, finished, cb) {
-	  if (!finished)
-	    onwriteDrain(stream, state);
-	  state.pendingcb--;
-	  cb();
-	  finishMaybe(stream, state);
-	}
-
-	// Must force callback to be called on nextTick, so that we don't
-	// emit 'drain' before the write() consumer gets the 'false' return
-	// value, and has a chance to attach a 'drain' listener.
-	function onwriteDrain(stream, state) {
-	  if (state.length === 0 && state.needDrain) {
-	    state.needDrain = false;
-	    stream.emit('drain');
-	  }
-	}
-
-
-	// if there's something in the buffer waiting, then process it
-	function clearBuffer(stream, state) {
-	  state.bufferProcessing = true;
-
-	  if (stream._writev && state.buffer.length > 1) {
-	    // Fast case, write everything using _writev()
-	    var cbs = [];
-	    for (var c = 0; c < state.buffer.length; c++)
-	      cbs.push(state.buffer[c].callback);
-
-	    // count the one we are adding, as well.
-	    // TODO(isaacs) clean this up
-	    state.pendingcb++;
-	    doWrite(stream, state, true, state.length, state.buffer, '', function(err) {
-	      for (var i = 0; i < cbs.length; i++) {
-	        state.pendingcb--;
-	        cbs[i](err);
-	      }
-	    });
-
-	    // Clear buffer
-	    state.buffer = [];
-	  } else {
-	    // Slow case, write chunks one-by-one
-	    for (var c = 0; c < state.buffer.length; c++) {
-	      var entry = state.buffer[c];
-	      var chunk = entry.chunk;
-	      var encoding = entry.encoding;
-	      var cb = entry.callback;
-	      var len = state.objectMode ? 1 : chunk.length;
-
-	      doWrite(stream, state, false, len, chunk, encoding, cb);
-
-	      // if we didn't call the onwrite immediately, then
-	      // it means that we need to wait until it does.
-	      // also, that means that the chunk and cb are currently
-	      // being processed, so move the buffer counter past them.
-	      if (state.writing) {
-	        c++;
-	        break;
-	      }
-	    }
-
-	    if (c < state.buffer.length)
-	      state.buffer = state.buffer.slice(c);
-	    else
-	      state.buffer.length = 0;
-	  }
-
-	  state.bufferProcessing = false;
-	}
-
-	Writable.prototype._write = function(chunk, encoding, cb) {
-	  cb(new Error('not implemented'));
-
-	};
-
-	Writable.prototype._writev = null;
-
-	Writable.prototype.end = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-
-	  if (util.isFunction(chunk)) {
-	    cb = chunk;
-	    chunk = null;
-	    encoding = null;
-	  } else if (util.isFunction(encoding)) {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (!util.isNullOrUndefined(chunk))
-	    this.write(chunk, encoding);
-
-	  // .end() fully uncorks
-	  if (state.corked) {
-	    state.corked = 1;
-	    this.uncork();
-	  }
-
-	  // ignore unnecessary end() calls.
-	  if (!state.ending && !state.finished)
-	    endWritable(this, state, cb);
-	};
-
-
-	function needFinish(stream, state) {
-	  return (state.ending &&
-	          state.length === 0 &&
-	          !state.finished &&
-	          !state.writing);
-	}
-
-	function prefinish(stream, state) {
-	  if (!state.prefinished) {
-	    state.prefinished = true;
-	    stream.emit('prefinish');
-	  }
-	}
-
-	function finishMaybe(stream, state) {
-	  var need = needFinish(stream, state);
-	  if (need) {
-	    if (state.pendingcb === 0) {
-	      prefinish(stream, state);
-	      state.finished = true;
-	      stream.emit('finish');
-	    } else
-	      prefinish(stream, state);
-	  }
-	  return need;
-	}
-
-	function endWritable(stream, state, cb) {
-	  state.ending = true;
-	  finishMaybe(stream, state);
-	  if (cb) {
-	    if (state.finished)
-	      process.nextTick(cb);
-	    else
-	      stream.once('finish', cb);
-	  }
-	  state.ended = true;
-	}
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)))
-
-/***/ },
-/* 109 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -42311,7 +42651,7 @@ var ripple =
 	module.exports = Readable;
 
 	/*<replacement>*/
-	var isArray = __webpack_require__(114);
+	var isArray = __webpack_require__(113);
 	/*</replacement>*/
 
 
@@ -42321,7 +42661,7 @@ var ripple =
 
 	Readable.ReadableState = ReadableState;
 
-	var EE = __webpack_require__(40).EventEmitter;
+	var EE = __webpack_require__(39).EventEmitter;
 
 	/*<replacement>*/
 	if (!EE.listenerCount) EE.listenerCount = function(emitter, type) {
@@ -42329,10 +42669,10 @@ var ripple =
 	};
 	/*</replacement>*/
 
-	var Stream = __webpack_require__(101);
+	var Stream = __webpack_require__(100);
 
 	/*<replacement>*/
-	var util = __webpack_require__(117);
+	var util = __webpack_require__(115);
 	util.inherits = __webpack_require__(116);
 	/*</replacement>*/
 
@@ -42340,7 +42680,7 @@ var ripple =
 
 
 	/*<replacement>*/
-	var debug = __webpack_require__(113);
+	var debug = __webpack_require__(112);
 	if (debug && debug.debuglog) {
 	  debug = debug.debuglog('stream');
 	} else {
@@ -42352,7 +42692,7 @@ var ripple =
 	util.inherits(Readable, Stream);
 
 	function ReadableState(options, stream) {
-	  var Duplex = __webpack_require__(110);
+	  var Duplex = __webpack_require__(109);
 
 	  options = options || {};
 
@@ -42413,14 +42753,14 @@ var ripple =
 	  this.encoding = null;
 	  if (options.encoding) {
 	    if (!StringDecoder)
-	      StringDecoder = __webpack_require__(115).StringDecoder;
+	      StringDecoder = __webpack_require__(114).StringDecoder;
 	    this.decoder = new StringDecoder(options.encoding);
 	    this.encoding = options.encoding;
 	  }
 	}
 
 	function Readable(options) {
-	  var Duplex = __webpack_require__(110);
+	  var Duplex = __webpack_require__(109);
 
 	  if (!(this instanceof Readable))
 	    return new Readable(options);
@@ -42523,7 +42863,7 @@ var ripple =
 	// backwards compatibility.
 	Readable.prototype.setEncoding = function(enc) {
 	  if (!StringDecoder)
-	    StringDecoder = __webpack_require__(115).StringDecoder;
+	    StringDecoder = __webpack_require__(114).StringDecoder;
 	  this._readableState.decoder = new StringDecoder(enc);
 	  this._readableState.encoding = enc;
 	  return this;
@@ -43239,10 +43579,494 @@ var ripple =
 	  return -1;
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61)))
 
 /***/ },
-/* 110 */
+/* 108 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// A bit simpler than readable streams.
+	// Implement an async ._write(chunk, cb), and it'll handle all
+	// the drain event emission and buffering.
+
+	module.exports = Writable;
+
+	/*<replacement>*/
+	var Buffer = __webpack_require__(42).Buffer;
+	/*</replacement>*/
+
+	Writable.WritableState = WritableState;
+
+
+	/*<replacement>*/
+	var util = __webpack_require__(115);
+	util.inherits = __webpack_require__(116);
+	/*</replacement>*/
+
+	var Stream = __webpack_require__(100);
+
+	util.inherits(Writable, Stream);
+
+	function WriteReq(chunk, encoding, cb) {
+	  this.chunk = chunk;
+	  this.encoding = encoding;
+	  this.callback = cb;
+	}
+
+	function WritableState(options, stream) {
+	  var Duplex = __webpack_require__(109);
+
+	  options = options || {};
+
+	  // the point at which write() starts returning false
+	  // Note: 0 is a valid value, means that we always return false if
+	  // the entire buffer is not flushed immediately on write()
+	  var hwm = options.highWaterMark;
+	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
+	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
+
+	  // object stream flag to indicate whether or not this stream
+	  // contains buffers or objects.
+	  this.objectMode = !!options.objectMode;
+
+	  if (stream instanceof Duplex)
+	    this.objectMode = this.objectMode || !!options.writableObjectMode;
+
+	  // cast to ints.
+	  this.highWaterMark = ~~this.highWaterMark;
+
+	  this.needDrain = false;
+	  // at the start of calling end()
+	  this.ending = false;
+	  // when end() has been called, and returned
+	  this.ended = false;
+	  // when 'finish' is emitted
+	  this.finished = false;
+
+	  // should we decode strings into buffers before passing to _write?
+	  // this is here so that some node-core streams can optimize string
+	  // handling at a lower level.
+	  var noDecode = options.decodeStrings === false;
+	  this.decodeStrings = !noDecode;
+
+	  // Crypto is kind of old and crusty.  Historically, its default string
+	  // encoding is 'binary' so we have to make this configurable.
+	  // Everything else in the universe uses 'utf8', though.
+	  this.defaultEncoding = options.defaultEncoding || 'utf8';
+
+	  // not an actual buffer we keep track of, but a measurement
+	  // of how much we're waiting to get pushed to some underlying
+	  // socket or file.
+	  this.length = 0;
+
+	  // a flag to see when we're in the middle of a write.
+	  this.writing = false;
+
+	  // when true all writes will be buffered until .uncork() call
+	  this.corked = 0;
+
+	  // a flag to be able to tell if the onwrite cb is called immediately,
+	  // or on a later tick.  We set this to true at first, because any
+	  // actions that shouldn't happen until "later" should generally also
+	  // not happen before the first write call.
+	  this.sync = true;
+
+	  // a flag to know if we're processing previously buffered items, which
+	  // may call the _write() callback in the same tick, so that we don't
+	  // end up in an overlapped onwrite situation.
+	  this.bufferProcessing = false;
+
+	  // the callback that's passed to _write(chunk,cb)
+	  this.onwrite = function(er) {
+	    onwrite(stream, er);
+	  };
+
+	  // the callback that the user supplies to write(chunk,encoding,cb)
+	  this.writecb = null;
+
+	  // the amount that is being written when _write is called.
+	  this.writelen = 0;
+
+	  this.buffer = [];
+
+	  // number of pending user-supplied write callbacks
+	  // this must be 0 before 'finish' can be emitted
+	  this.pendingcb = 0;
+
+	  // emit prefinish if the only thing we're waiting for is _write cbs
+	  // This is relevant for synchronous Transform streams
+	  this.prefinished = false;
+
+	  // True if the error was already emitted and should not be thrown again
+	  this.errorEmitted = false;
+	}
+
+	function Writable(options) {
+	  var Duplex = __webpack_require__(109);
+
+	  // Writable ctor is applied to Duplexes, though they're not
+	  // instanceof Writable, they're instanceof Readable.
+	  if (!(this instanceof Writable) && !(this instanceof Duplex))
+	    return new Writable(options);
+
+	  this._writableState = new WritableState(options, this);
+
+	  // legacy.
+	  this.writable = true;
+
+	  Stream.call(this);
+	}
+
+	// Otherwise people can pipe Writable streams, which is just wrong.
+	Writable.prototype.pipe = function() {
+	  this.emit('error', new Error('Cannot pipe. Not readable.'));
+	};
+
+
+	function writeAfterEnd(stream, state, cb) {
+	  var er = new Error('write after end');
+	  // TODO: defer error events consistently everywhere, not just the cb
+	  stream.emit('error', er);
+	  process.nextTick(function() {
+	    cb(er);
+	  });
+	}
+
+	// If we get something that is not a buffer, string, null, or undefined,
+	// and we're not in objectMode, then that's an error.
+	// Otherwise stream chunks are all considered to be of length=1, and the
+	// watermarks determine how many objects to keep in the buffer, rather than
+	// how many bytes or characters.
+	function validChunk(stream, state, chunk, cb) {
+	  var valid = true;
+	  if (!util.isBuffer(chunk) &&
+	      !util.isString(chunk) &&
+	      !util.isNullOrUndefined(chunk) &&
+	      !state.objectMode) {
+	    var er = new TypeError('Invalid non-string/buffer chunk');
+	    stream.emit('error', er);
+	    process.nextTick(function() {
+	      cb(er);
+	    });
+	    valid = false;
+	  }
+	  return valid;
+	}
+
+	Writable.prototype.write = function(chunk, encoding, cb) {
+	  var state = this._writableState;
+	  var ret = false;
+
+	  if (util.isFunction(encoding)) {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (util.isBuffer(chunk))
+	    encoding = 'buffer';
+	  else if (!encoding)
+	    encoding = state.defaultEncoding;
+
+	  if (!util.isFunction(cb))
+	    cb = function() {};
+
+	  if (state.ended)
+	    writeAfterEnd(this, state, cb);
+	  else if (validChunk(this, state, chunk, cb)) {
+	    state.pendingcb++;
+	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
+	  }
+
+	  return ret;
+	};
+
+	Writable.prototype.cork = function() {
+	  var state = this._writableState;
+
+	  state.corked++;
+	};
+
+	Writable.prototype.uncork = function() {
+	  var state = this._writableState;
+
+	  if (state.corked) {
+	    state.corked--;
+
+	    if (!state.writing &&
+	        !state.corked &&
+	        !state.finished &&
+	        !state.bufferProcessing &&
+	        state.buffer.length)
+	      clearBuffer(this, state);
+	  }
+	};
+
+	function decodeChunk(state, chunk, encoding) {
+	  if (!state.objectMode &&
+	      state.decodeStrings !== false &&
+	      util.isString(chunk)) {
+	    chunk = new Buffer(chunk, encoding);
+	  }
+	  return chunk;
+	}
+
+	// if we're already writing something, then just put this
+	// in the queue, and wait our turn.  Otherwise, call _write
+	// If we return false, then we need a drain event, so set that flag.
+	function writeOrBuffer(stream, state, chunk, encoding, cb) {
+	  chunk = decodeChunk(state, chunk, encoding);
+	  if (util.isBuffer(chunk))
+	    encoding = 'buffer';
+	  var len = state.objectMode ? 1 : chunk.length;
+
+	  state.length += len;
+
+	  var ret = state.length < state.highWaterMark;
+	  // we must ensure that previous needDrain will not be reset to false.
+	  if (!ret)
+	    state.needDrain = true;
+
+	  if (state.writing || state.corked)
+	    state.buffer.push(new WriteReq(chunk, encoding, cb));
+	  else
+	    doWrite(stream, state, false, len, chunk, encoding, cb);
+
+	  return ret;
+	}
+
+	function doWrite(stream, state, writev, len, chunk, encoding, cb) {
+	  state.writelen = len;
+	  state.writecb = cb;
+	  state.writing = true;
+	  state.sync = true;
+	  if (writev)
+	    stream._writev(chunk, state.onwrite);
+	  else
+	    stream._write(chunk, encoding, state.onwrite);
+	  state.sync = false;
+	}
+
+	function onwriteError(stream, state, sync, er, cb) {
+	  if (sync)
+	    process.nextTick(function() {
+	      state.pendingcb--;
+	      cb(er);
+	    });
+	  else {
+	    state.pendingcb--;
+	    cb(er);
+	  }
+
+	  stream._writableState.errorEmitted = true;
+	  stream.emit('error', er);
+	}
+
+	function onwriteStateUpdate(state) {
+	  state.writing = false;
+	  state.writecb = null;
+	  state.length -= state.writelen;
+	  state.writelen = 0;
+	}
+
+	function onwrite(stream, er) {
+	  var state = stream._writableState;
+	  var sync = state.sync;
+	  var cb = state.writecb;
+
+	  onwriteStateUpdate(state);
+
+	  if (er)
+	    onwriteError(stream, state, sync, er, cb);
+	  else {
+	    // Check if we're actually ready to finish, but don't emit yet
+	    var finished = needFinish(stream, state);
+
+	    if (!finished &&
+	        !state.corked &&
+	        !state.bufferProcessing &&
+	        state.buffer.length) {
+	      clearBuffer(stream, state);
+	    }
+
+	    if (sync) {
+	      process.nextTick(function() {
+	        afterWrite(stream, state, finished, cb);
+	      });
+	    } else {
+	      afterWrite(stream, state, finished, cb);
+	    }
+	  }
+	}
+
+	function afterWrite(stream, state, finished, cb) {
+	  if (!finished)
+	    onwriteDrain(stream, state);
+	  state.pendingcb--;
+	  cb();
+	  finishMaybe(stream, state);
+	}
+
+	// Must force callback to be called on nextTick, so that we don't
+	// emit 'drain' before the write() consumer gets the 'false' return
+	// value, and has a chance to attach a 'drain' listener.
+	function onwriteDrain(stream, state) {
+	  if (state.length === 0 && state.needDrain) {
+	    state.needDrain = false;
+	    stream.emit('drain');
+	  }
+	}
+
+
+	// if there's something in the buffer waiting, then process it
+	function clearBuffer(stream, state) {
+	  state.bufferProcessing = true;
+
+	  if (stream._writev && state.buffer.length > 1) {
+	    // Fast case, write everything using _writev()
+	    var cbs = [];
+	    for (var c = 0; c < state.buffer.length; c++)
+	      cbs.push(state.buffer[c].callback);
+
+	    // count the one we are adding, as well.
+	    // TODO(isaacs) clean this up
+	    state.pendingcb++;
+	    doWrite(stream, state, true, state.length, state.buffer, '', function(err) {
+	      for (var i = 0; i < cbs.length; i++) {
+	        state.pendingcb--;
+	        cbs[i](err);
+	      }
+	    });
+
+	    // Clear buffer
+	    state.buffer = [];
+	  } else {
+	    // Slow case, write chunks one-by-one
+	    for (var c = 0; c < state.buffer.length; c++) {
+	      var entry = state.buffer[c];
+	      var chunk = entry.chunk;
+	      var encoding = entry.encoding;
+	      var cb = entry.callback;
+	      var len = state.objectMode ? 1 : chunk.length;
+
+	      doWrite(stream, state, false, len, chunk, encoding, cb);
+
+	      // if we didn't call the onwrite immediately, then
+	      // it means that we need to wait until it does.
+	      // also, that means that the chunk and cb are currently
+	      // being processed, so move the buffer counter past them.
+	      if (state.writing) {
+	        c++;
+	        break;
+	      }
+	    }
+
+	    if (c < state.buffer.length)
+	      state.buffer = state.buffer.slice(c);
+	    else
+	      state.buffer.length = 0;
+	  }
+
+	  state.bufferProcessing = false;
+	}
+
+	Writable.prototype._write = function(chunk, encoding, cb) {
+	  cb(new Error('not implemented'));
+
+	};
+
+	Writable.prototype._writev = null;
+
+	Writable.prototype.end = function(chunk, encoding, cb) {
+	  var state = this._writableState;
+
+	  if (util.isFunction(chunk)) {
+	    cb = chunk;
+	    chunk = null;
+	    encoding = null;
+	  } else if (util.isFunction(encoding)) {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (!util.isNullOrUndefined(chunk))
+	    this.write(chunk, encoding);
+
+	  // .end() fully uncorks
+	  if (state.corked) {
+	    state.corked = 1;
+	    this.uncork();
+	  }
+
+	  // ignore unnecessary end() calls.
+	  if (!state.ending && !state.finished)
+	    endWritable(this, state, cb);
+	};
+
+
+	function needFinish(stream, state) {
+	  return (state.ending &&
+	          state.length === 0 &&
+	          !state.finished &&
+	          !state.writing);
+	}
+
+	function prefinish(stream, state) {
+	  if (!state.prefinished) {
+	    state.prefinished = true;
+	    stream.emit('prefinish');
+	  }
+	}
+
+	function finishMaybe(stream, state) {
+	  var need = needFinish(stream, state);
+	  if (need) {
+	    if (state.pendingcb === 0) {
+	      prefinish(stream, state);
+	      state.finished = true;
+	      stream.emit('finish');
+	    } else
+	      prefinish(stream, state);
+	  }
+	  return need;
+	}
+
+	function endWritable(stream, state, cb) {
+	  state.ending = true;
+	  finishMaybe(stream, state);
+	  if (cb) {
+	    if (state.finished)
+	      process.nextTick(cb);
+	    else
+	      stream.once('finish', cb);
+	  }
+	  state.ended = true;
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61)))
+
+/***/ },
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -43283,11 +44107,11 @@ var ripple =
 
 
 	/*<replacement>*/
-	var util = __webpack_require__(117);
+	var util = __webpack_require__(115);
 	util.inherits = __webpack_require__(116);
 	/*</replacement>*/
 
-	var Readable = __webpack_require__(109);
+	var Readable = __webpack_require__(107);
 	var Writable = __webpack_require__(108);
 
 	util.inherits(Duplex, Readable);
@@ -43335,10 +44159,10 @@ var ripple =
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61)))
 
 /***/ },
-/* 111 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -43407,10 +44231,10 @@ var ripple =
 
 	module.exports = Transform;
 
-	var Duplex = __webpack_require__(110);
+	var Duplex = __webpack_require__(109);
 
 	/*<replacement>*/
-	var util = __webpack_require__(117);
+	var util = __webpack_require__(115);
 	util.inherits = __webpack_require__(116);
 	/*</replacement>*/
 
@@ -43553,7 +44377,7 @@ var ripple =
 
 
 /***/ },
-/* 112 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -43583,10 +44407,10 @@ var ripple =
 
 	module.exports = PassThrough;
 
-	var Transform = __webpack_require__(111);
+	var Transform = __webpack_require__(110);
 
 	/*<replacement>*/
-	var util = __webpack_require__(117);
+	var util = __webpack_require__(115);
 	util.inherits = __webpack_require__(116);
 	/*</replacement>*/
 
@@ -43605,13 +44429,13 @@ var ripple =
 
 
 /***/ },
-/* 113 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* (ignored) */
 
 /***/ },
-/* 114 */
+/* 113 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -43620,7 +44444,7 @@ var ripple =
 
 
 /***/ },
-/* 115 */
+/* 114 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -43847,36 +44671,7 @@ var ripple =
 
 
 /***/ },
-/* 116 */
-/***/ function(module, exports, __webpack_require__) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 117 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Copyright Joyent, Inc. and other Node contributors.
@@ -43987,6 +44782,35 @@ var ripple =
 	  return Object.prototype.toString.call(o);
 	}
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+
+/***/ },
+/* 116 */
+/***/ function(module, exports, __webpack_require__) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
 
 /***/ }
 /******/ ])
