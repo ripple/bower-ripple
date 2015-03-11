@@ -335,7 +335,8 @@ var ripple =
 	    RequireDestTag: 0x00020000, // require a DestinationTag for payments
 	    RequireAuth: 0x00040000, // require a authorization to hold IOUs
 	    DisallowXRP: 0x00080000, // disallow sending XRP
-	    DisableMaster: 0x00100000  // force regular key
+	    DisableMaster: 0x00100000,  // force regular key
+	    DefaultRipple: 0x00800000
 	  },
 	  // Offer
 	  offer: {
@@ -4804,7 +4805,8 @@ var ripple =
 	    asfDisableMaster:  4,
 	    asfAccountTxnID:   5,
 	    asfNoFreeze:       6,
-	    asfGlobalFreeze:   7
+	    asfGlobalFreeze:   7,
+	    asfDefaultRipple:  8
 	  }
 	};
 
@@ -20035,9 +20037,9 @@ var ripple =
 	 * @license  MIT
 	 */
 
-	var base64 = __webpack_require__(74)
-	var ieee754 = __webpack_require__(64)
-	var isArray = __webpack_require__(65)
+	var base64 = __webpack_require__(73)
+	var ieee754 = __webpack_require__(63)
+	var isArray = __webpack_require__(64)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = Buffer
@@ -37548,7 +37550,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(63)
+	    g.crypto || g.msCrypto || __webpack_require__(65)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -37580,7 +37582,7 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(75)
 
-	var md5 = toConstructor(__webpack_require__(73))
+	var md5 = toConstructor(__webpack_require__(74))
 	var rmd160 = toConstructor(__webpack_require__(77))
 
 	function toConstructor (fn) {
@@ -38540,12 +38542,6 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* (ignored) */
-
-/***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
 	  var e, m,
 	      eLen = nBytes * 8 - mLen - 1,
@@ -38633,7 +38629,7 @@ var ripple =
 
 
 /***/ },
-/* 65 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -38670,6 +38666,12 @@ var ripple =
 	  return !! val && '[object Array]' == str.call(val);
 	};
 
+
+/***/ },
+/* 65 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* (ignored) */
 
 /***/ },
 /* 66 */
@@ -40037,6 +40039,132 @@ var ripple =
 /* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+	;(function (exports) {
+		'use strict';
+
+	  var Arr = (typeof Uint8Array !== 'undefined')
+	    ? Uint8Array
+	    : Array
+
+		var PLUS   = '+'.charCodeAt(0)
+		var SLASH  = '/'.charCodeAt(0)
+		var NUMBER = '0'.charCodeAt(0)
+		var LOWER  = 'a'.charCodeAt(0)
+		var UPPER  = 'A'.charCodeAt(0)
+
+		function decode (elt) {
+			var code = elt.charCodeAt(0)
+			if (code === PLUS)
+				return 62 // '+'
+			if (code === SLASH)
+				return 63 // '/'
+			if (code < NUMBER)
+				return -1 //no match
+			if (code < NUMBER + 10)
+				return code - NUMBER + 26 + 26
+			if (code < UPPER + 26)
+				return code - UPPER
+			if (code < LOWER + 26)
+				return code - LOWER + 26
+		}
+
+		function b64ToByteArray (b64) {
+			var i, j, l, tmp, placeHolders, arr
+
+			if (b64.length % 4 > 0) {
+				throw new Error('Invalid string. Length must be a multiple of 4')
+			}
+
+			// the number of equal signs (place holders)
+			// if there are two placeholders, than the two characters before it
+			// represent one byte
+			// if there is only one, then the three characters before it represent 2 bytes
+			// this is just a cheap hack to not do indexOf twice
+			var len = b64.length
+			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+			// base64 is 4/3 + up to two characters of the original data
+			arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+			// if there are placeholders, only get up to the last complete 4 chars
+			l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+			var L = 0
+
+			function push (v) {
+				arr[L++] = v
+			}
+
+			for (i = 0, j = 0; i < l; i += 4, j += 3) {
+				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+				push((tmp & 0xFF0000) >> 16)
+				push((tmp & 0xFF00) >> 8)
+				push(tmp & 0xFF)
+			}
+
+			if (placeHolders === 2) {
+				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+				push(tmp & 0xFF)
+			} else if (placeHolders === 1) {
+				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+				push((tmp >> 8) & 0xFF)
+				push(tmp & 0xFF)
+			}
+
+			return arr
+		}
+
+		function uint8ToBase64 (uint8) {
+			var i,
+				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+				output = "",
+				temp, length
+
+			function encode (num) {
+				return lookup.charAt(num)
+			}
+
+			function tripletToBase64 (num) {
+				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+			}
+
+			// go through the array every three bytes, we'll deal with trailing stuff later
+			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+				output += tripletToBase64(temp)
+			}
+
+			// pad the end with zeros, but make sure to not forget the extra bytes
+			switch (extraBytes) {
+				case 1:
+					temp = uint8[uint8.length - 1]
+					output += encode(temp >> 2)
+					output += encode((temp << 4) & 0x3F)
+					output += '=='
+					break
+				case 2:
+					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+					output += encode(temp >> 10)
+					output += encode((temp >> 4) & 0x3F)
+					output += encode((temp << 2) & 0x3F)
+					output += '='
+					break
+			}
+
+			return output
+		}
+
+		exports.toByteArray = b64ToByteArray
+		exports.fromByteArray = uint8ToBase64
+	}(false ? (this.base64js = {}) : exports))
+
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -40192,132 +40320,6 @@ var ripple =
 	module.exports = function md5(buf) {
 	  return helpers.hash(buf, core_md5, 16);
 	};
-
-
-/***/ },
-/* 74 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-	;(function (exports) {
-		'use strict';
-
-	  var Arr = (typeof Uint8Array !== 'undefined')
-	    ? Uint8Array
-	    : Array
-
-		var PLUS   = '+'.charCodeAt(0)
-		var SLASH  = '/'.charCodeAt(0)
-		var NUMBER = '0'.charCodeAt(0)
-		var LOWER  = 'a'.charCodeAt(0)
-		var UPPER  = 'A'.charCodeAt(0)
-
-		function decode (elt) {
-			var code = elt.charCodeAt(0)
-			if (code === PLUS)
-				return 62 // '+'
-			if (code === SLASH)
-				return 63 // '/'
-			if (code < NUMBER)
-				return -1 //no match
-			if (code < NUMBER + 10)
-				return code - NUMBER + 26 + 26
-			if (code < UPPER + 26)
-				return code - UPPER
-			if (code < LOWER + 26)
-				return code - LOWER + 26
-		}
-
-		function b64ToByteArray (b64) {
-			var i, j, l, tmp, placeHolders, arr
-
-			if (b64.length % 4 > 0) {
-				throw new Error('Invalid string. Length must be a multiple of 4')
-			}
-
-			// the number of equal signs (place holders)
-			// if there are two placeholders, than the two characters before it
-			// represent one byte
-			// if there is only one, then the three characters before it represent 2 bytes
-			// this is just a cheap hack to not do indexOf twice
-			var len = b64.length
-			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-			// base64 is 4/3 + up to two characters of the original data
-			arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-			// if there are placeholders, only get up to the last complete 4 chars
-			l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-			var L = 0
-
-			function push (v) {
-				arr[L++] = v
-			}
-
-			for (i = 0, j = 0; i < l; i += 4, j += 3) {
-				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-				push((tmp & 0xFF0000) >> 16)
-				push((tmp & 0xFF00) >> 8)
-				push(tmp & 0xFF)
-			}
-
-			if (placeHolders === 2) {
-				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-				push(tmp & 0xFF)
-			} else if (placeHolders === 1) {
-				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-				push((tmp >> 8) & 0xFF)
-				push(tmp & 0xFF)
-			}
-
-			return arr
-		}
-
-		function uint8ToBase64 (uint8) {
-			var i,
-				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-				output = "",
-				temp, length
-
-			function encode (num) {
-				return lookup.charAt(num)
-			}
-
-			function tripletToBase64 (num) {
-				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-			}
-
-			// go through the array every three bytes, we'll deal with trailing stuff later
-			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-				output += tripletToBase64(temp)
-			}
-
-			// pad the end with zeros, but make sure to not forget the extra bytes
-			switch (extraBytes) {
-				case 1:
-					temp = uint8[uint8.length - 1]
-					output += encode(temp >> 2)
-					output += encode((temp << 4) & 0x3F)
-					output += '=='
-					break
-				case 2:
-					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-					output += encode(temp >> 10)
-					output += encode((temp >> 4) & 0x3F)
-					output += encode((temp << 2) & 0x3F)
-					output += '='
-					break
-			}
-
-			return output
-		}
-
-		exports.toByteArray = b64ToByteArray
-		exports.fromByteArray = uint8ToBase64
-	}(false ? (this.base64js = {}) : exports))
 
 
 /***/ },
