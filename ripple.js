@@ -130,9 +130,9 @@ var ripple =
 	// has not yet been implemented. However, this class has been designed for it
 	// to be a very simple drop option.
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util = __webpack_require__(39);
-	var assert = __webpack_require__(41);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var LRU = __webpack_require__(47);
 	var async = __webpack_require__(48);
 	var lodash = __webpack_require__(45);
@@ -2684,8 +2684,8 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util         = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util         = __webpack_require__(41);
 	var async        = __webpack_require__(48);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
@@ -3257,7 +3257,7 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var extend = __webpack_require__(46);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
@@ -3451,9 +3451,7 @@ var ripple =
 	Amount.prototype.ratio_human = function(denominator, opts) {
 	  opts = extend({ }, opts);
 
-	  /*eslint-disable consistent-this */
-	  var numerator = this;
-	  /*eslint-enable consistent-this */
+	  var numerator = this.clone();
 
 	  denominator = Amount.from_json(denominator);
 
@@ -4280,9 +4278,9 @@ var ripple =
 
 	// var network = require('./network.js');
 	var async              = __webpack_require__(48);
-	var util               = __webpack_require__(39);
+	var util               = __webpack_require__(41);
 	var extend             = __webpack_require__(46);
-	var EventEmitter       = __webpack_require__(40).EventEmitter;
+	var EventEmitter       = __webpack_require__(39).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(9).UInt160;
 	var TransactionManager = __webpack_require__(30).TransactionManager;
@@ -4669,9 +4667,9 @@ var ripple =
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util             = __webpack_require__(39);
-	var assert           = __webpack_require__(41);
-	var EventEmitter     = __webpack_require__(40).EventEmitter;
+	var util             = __webpack_require__(41);
+	var assert           = __webpack_require__(40);
+	var EventEmitter     = __webpack_require__(39).EventEmitter;
 	var utils            = __webpack_require__(17);
 	var sjcl             = __webpack_require__(17).sjcl;
 	var Amount           = __webpack_require__(3).Amount;
@@ -7052,7 +7050,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var _         = __webpack_require__(45);
-	var assert    = __webpack_require__(41);
+	var assert    = __webpack_require__(40);
 	var extend    = __webpack_require__(46);
 	var binformat = __webpack_require__(16);
 	var stypes    = __webpack_require__(24);
@@ -7394,7 +7392,7 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(39);
+	var util   = __webpack_require__(41);
 	var extend = __webpack_require__(46);
 
 	function RippleError(code, message) {
@@ -8270,10 +8268,10 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(41);
 	var url          = __webpack_require__(44);
 	var LRU          = __webpack_require__(47);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
+	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var RangeSet     = __webpack_require__(22).RangeSet;
 	var log          = __webpack_require__(29).internal.sub('server');
@@ -9549,7 +9547,7 @@ var ripple =
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assert = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var lodash = __webpack_require__(45);
 
 	function RangeSet() {
@@ -9670,7 +9668,7 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var extend = __webpack_require__(46);
 	var GlobalBigNumber = __webpack_require__(49);
 	var Amount = __webpack_require__(3).Amount;
@@ -10573,11 +10571,11 @@ var ripple =
 	'use strict';
 
 	var _ = __webpack_require__(45);
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(41);
 	var extend = __webpack_require__(46);
-	var assert = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var async = __webpack_require__(48);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
+	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount = __webpack_require__(3).Amount;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
@@ -11745,8 +11743,8 @@ var ripple =
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(40).EventEmitter;
-	var util         = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util         = __webpack_require__(41);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(46);
 
@@ -12046,10 +12044,10 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(39);
-	var assert = __webpack_require__(41);
+	var util = __webpack_require__(41);
+	var assert = __webpack_require__(40);
 	var async = __webpack_require__(48);
-	var EventEmitter = __webpack_require__(40).EventEmitter;
+	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Transaction = __webpack_require__(5).Transaction;
 	var RippleError = __webpack_require__(14).RippleError;
 	var PendingQueue = __webpack_require__(21).TransactionQueue;
@@ -18518,7 +18516,7 @@ var ripple =
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(41);
 	var sjcl = __webpack_require__(17).sjcl;
 	var stypes = __webpack_require__(24);
 	var hashprefixes = __webpack_require__(28);
@@ -18763,6 +18761,678 @@ var ripple =
 
 /***/ },
 /* 39 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	function EventEmitter() {
+	  this._events = this._events || {};
+	  this._maxListeners = this._maxListeners || undefined;
+	}
+	module.exports = EventEmitter;
+
+	// Backwards-compat with node 0.10.x
+	EventEmitter.EventEmitter = EventEmitter;
+
+	EventEmitter.prototype._events = undefined;
+	EventEmitter.prototype._maxListeners = undefined;
+
+	// By default EventEmitters will print a warning if more than 10 listeners are
+	// added to it. This is a useful default which helps finding memory leaks.
+	EventEmitter.defaultMaxListeners = 10;
+
+	// Obviously not all Emitters should be limited to 10. This function allows
+	// that to be increased. Set to zero for unlimited.
+	EventEmitter.prototype.setMaxListeners = function(n) {
+	  if (!isNumber(n) || n < 0 || isNaN(n))
+	    throw TypeError('n must be a positive number');
+	  this._maxListeners = n;
+	  return this;
+	};
+
+	EventEmitter.prototype.emit = function(type) {
+	  var er, handler, len, args, i, listeners;
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // If there is no 'error' event listener then throw.
+	  if (type === 'error') {
+	    if (!this._events.error ||
+	        (isObject(this._events.error) && !this._events.error.length)) {
+	      er = arguments[1];
+	      if (er instanceof Error) {
+	        throw er; // Unhandled 'error' event
+	      }
+	      throw TypeError('Uncaught, unspecified "error" event.');
+	    }
+	  }
+
+	  handler = this._events[type];
+
+	  if (isUndefined(handler))
+	    return false;
+
+	  if (isFunction(handler)) {
+	    switch (arguments.length) {
+	      // fast cases
+	      case 1:
+	        handler.call(this);
+	        break;
+	      case 2:
+	        handler.call(this, arguments[1]);
+	        break;
+	      case 3:
+	        handler.call(this, arguments[1], arguments[2]);
+	        break;
+	      // slower
+	      default:
+	        len = arguments.length;
+	        args = new Array(len - 1);
+	        for (i = 1; i < len; i++)
+	          args[i - 1] = arguments[i];
+	        handler.apply(this, args);
+	    }
+	  } else if (isObject(handler)) {
+	    len = arguments.length;
+	    args = new Array(len - 1);
+	    for (i = 1; i < len; i++)
+	      args[i - 1] = arguments[i];
+
+	    listeners = handler.slice();
+	    len = listeners.length;
+	    for (i = 0; i < len; i++)
+	      listeners[i].apply(this, args);
+	  }
+
+	  return true;
+	};
+
+	EventEmitter.prototype.addListener = function(type, listener) {
+	  var m;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events)
+	    this._events = {};
+
+	  // To avoid recursion in the case that type === "newListener"! Before
+	  // adding it to the listeners, first emit "newListener".
+	  if (this._events.newListener)
+	    this.emit('newListener', type,
+	              isFunction(listener.listener) ?
+	              listener.listener : listener);
+
+	  if (!this._events[type])
+	    // Optimize the case of one listener. Don't need the extra array object.
+	    this._events[type] = listener;
+	  else if (isObject(this._events[type]))
+	    // If we've already got an array, just append.
+	    this._events[type].push(listener);
+	  else
+	    // Adding the second element, need to change to array.
+	    this._events[type] = [this._events[type], listener];
+
+	  // Check for listener leak
+	  if (isObject(this._events[type]) && !this._events[type].warned) {
+	    var m;
+	    if (!isUndefined(this._maxListeners)) {
+	      m = this._maxListeners;
+	    } else {
+	      m = EventEmitter.defaultMaxListeners;
+	    }
+
+	    if (m && m > 0 && this._events[type].length > m) {
+	      this._events[type].warned = true;
+	      console.error('(node) warning: possible EventEmitter memory ' +
+	                    'leak detected. %d listeners added. ' +
+	                    'Use emitter.setMaxListeners() to increase limit.',
+	                    this._events[type].length);
+	      if (typeof console.trace === 'function') {
+	        // not supported in IE 10
+	        console.trace();
+	      }
+	    }
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+	EventEmitter.prototype.once = function(type, listener) {
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  var fired = false;
+
+	  function g() {
+	    this.removeListener(type, g);
+
+	    if (!fired) {
+	      fired = true;
+	      listener.apply(this, arguments);
+	    }
+	  }
+
+	  g.listener = listener;
+	  this.on(type, g);
+
+	  return this;
+	};
+
+	// emits a 'removeListener' event iff the listener was removed
+	EventEmitter.prototype.removeListener = function(type, listener) {
+	  var list, position, length, i;
+
+	  if (!isFunction(listener))
+	    throw TypeError('listener must be a function');
+
+	  if (!this._events || !this._events[type])
+	    return this;
+
+	  list = this._events[type];
+	  length = list.length;
+	  position = -1;
+
+	  if (list === listener ||
+	      (isFunction(list.listener) && list.listener === listener)) {
+	    delete this._events[type];
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+
+	  } else if (isObject(list)) {
+	    for (i = length; i-- > 0;) {
+	      if (list[i] === listener ||
+	          (list[i].listener && list[i].listener === listener)) {
+	        position = i;
+	        break;
+	      }
+	    }
+
+	    if (position < 0)
+	      return this;
+
+	    if (list.length === 1) {
+	      list.length = 0;
+	      delete this._events[type];
+	    } else {
+	      list.splice(position, 1);
+	    }
+
+	    if (this._events.removeListener)
+	      this.emit('removeListener', type, listener);
+	  }
+
+	  return this;
+	};
+
+	EventEmitter.prototype.removeAllListeners = function(type) {
+	  var key, listeners;
+
+	  if (!this._events)
+	    return this;
+
+	  // not listening for removeListener, no need to emit
+	  if (!this._events.removeListener) {
+	    if (arguments.length === 0)
+	      this._events = {};
+	    else if (this._events[type])
+	      delete this._events[type];
+	    return this;
+	  }
+
+	  // emit removeListener for all listeners on all events
+	  if (arguments.length === 0) {
+	    for (key in this._events) {
+	      if (key === 'removeListener') continue;
+	      this.removeAllListeners(key);
+	    }
+	    this.removeAllListeners('removeListener');
+	    this._events = {};
+	    return this;
+	  }
+
+	  listeners = this._events[type];
+
+	  if (isFunction(listeners)) {
+	    this.removeListener(type, listeners);
+	  } else {
+	    // LIFO order
+	    while (listeners.length)
+	      this.removeListener(type, listeners[listeners.length - 1]);
+	  }
+	  delete this._events[type];
+
+	  return this;
+	};
+
+	EventEmitter.prototype.listeners = function(type) {
+	  var ret;
+	  if (!this._events || !this._events[type])
+	    ret = [];
+	  else if (isFunction(this._events[type]))
+	    ret = [this._events[type]];
+	  else
+	    ret = this._events[type].slice();
+	  return ret;
+	};
+
+	EventEmitter.listenerCount = function(emitter, type) {
+	  var ret;
+	  if (!emitter._events || !emitter._events[type])
+	    ret = 0;
+	  else if (isFunction(emitter._events[type]))
+	    ret = 1;
+	  else
+	    ret = emitter._events[type].length;
+	  return ret;
+	};
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
+	//
+	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
+	//
+	// Originally from narwhal.js (http://narwhaljs.org)
+	// Copyright (c) 2009 Thomas Robinson <280north.com>
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy
+	// of this software and associated documentation files (the 'Software'), to
+	// deal in the Software without restriction, including without limitation the
+	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+	// sell copies of the Software, and to permit persons to whom the Software is
+	// furnished to do so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in
+	// all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// when used in node, this will actually load the util module we depend on
+	// versus loading the builtin util module as happens otherwise
+	// this is a bug in node module loading as far as I am concerned
+	var util = __webpack_require__(41);
+
+	var pSlice = Array.prototype.slice;
+	var hasOwn = Object.prototype.hasOwnProperty;
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  if (options.message) {
+	    this.message = options.message;
+	    this.generatedMessage = false;
+	  } else {
+	    this.message = getMessage(this);
+	    this.generatedMessage = true;
+	  }
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	  else {
+	    // non v8 browsers so we can have a stacktrace
+	    var err = new Error();
+	    if (err.stack) {
+	      var out = err.stack;
+
+	      // try to strip useless frames
+	      var fn_name = stackStartFunction.name;
+	      var idx = out.indexOf('\n' + fn_name);
+	      if (idx >= 0) {
+	        // once we have located the function frame
+	        // we need to strip out everything before it (and its line)
+	        var next_line = out.indexOf('\n', idx + 1);
+	        out = out.substring(next_line + 1);
+	      }
+
+	      this.stack = out;
+	    }
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (util.isUndefined(value)) {
+	    return '' + value;
+	  }
+	  if (util.isNumber(value) && !isFinite(value)) {
+	    return value.toString();
+	  }
+	  if (util.isFunction(value) || util.isRegExp(value)) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (util.isString(s)) {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	function getMessage(self) {
+	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
+	         self.operator + ' ' +
+	         truncate(JSON.stringify(self.expected, replacer), 128);
+	}
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (util.isDate(actual) && util.isDate(expected)) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  // if one is a primitive, the other must be same
+	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
+	    return a === b;
+	  }
+	  var aIsArgs = isArguments(a),
+	      bIsArgs = isArguments(b);
+	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
+	    return false;
+	  if (aIsArgs) {
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  var ka = objectKeys(a),
+	      kb = objectKeys(b),
+	      key, i;
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (util.isString(expected)) {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) {
+	    if (hasOwn.call(obj, key)) keys.push(key);
+	  }
+	  return keys;
+	};
+
+
+/***/ },
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -19355,678 +20025,6 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(61)))
 
 /***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	function EventEmitter() {
-	  this._events = this._events || {};
-	  this._maxListeners = this._maxListeners || undefined;
-	}
-	module.exports = EventEmitter;
-
-	// Backwards-compat with node 0.10.x
-	EventEmitter.EventEmitter = EventEmitter;
-
-	EventEmitter.prototype._events = undefined;
-	EventEmitter.prototype._maxListeners = undefined;
-
-	// By default EventEmitters will print a warning if more than 10 listeners are
-	// added to it. This is a useful default which helps finding memory leaks.
-	EventEmitter.defaultMaxListeners = 10;
-
-	// Obviously not all Emitters should be limited to 10. This function allows
-	// that to be increased. Set to zero for unlimited.
-	EventEmitter.prototype.setMaxListeners = function(n) {
-	  if (!isNumber(n) || n < 0 || isNaN(n))
-	    throw TypeError('n must be a positive number');
-	  this._maxListeners = n;
-	  return this;
-	};
-
-	EventEmitter.prototype.emit = function(type) {
-	  var er, handler, len, args, i, listeners;
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // If there is no 'error' event listener then throw.
-	  if (type === 'error') {
-	    if (!this._events.error ||
-	        (isObject(this._events.error) && !this._events.error.length)) {
-	      er = arguments[1];
-	      if (er instanceof Error) {
-	        throw er; // Unhandled 'error' event
-	      }
-	      throw TypeError('Uncaught, unspecified "error" event.');
-	    }
-	  }
-
-	  handler = this._events[type];
-
-	  if (isUndefined(handler))
-	    return false;
-
-	  if (isFunction(handler)) {
-	    switch (arguments.length) {
-	      // fast cases
-	      case 1:
-	        handler.call(this);
-	        break;
-	      case 2:
-	        handler.call(this, arguments[1]);
-	        break;
-	      case 3:
-	        handler.call(this, arguments[1], arguments[2]);
-	        break;
-	      // slower
-	      default:
-	        len = arguments.length;
-	        args = new Array(len - 1);
-	        for (i = 1; i < len; i++)
-	          args[i - 1] = arguments[i];
-	        handler.apply(this, args);
-	    }
-	  } else if (isObject(handler)) {
-	    len = arguments.length;
-	    args = new Array(len - 1);
-	    for (i = 1; i < len; i++)
-	      args[i - 1] = arguments[i];
-
-	    listeners = handler.slice();
-	    len = listeners.length;
-	    for (i = 0; i < len; i++)
-	      listeners[i].apply(this, args);
-	  }
-
-	  return true;
-	};
-
-	EventEmitter.prototype.addListener = function(type, listener) {
-	  var m;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events)
-	    this._events = {};
-
-	  // To avoid recursion in the case that type === "newListener"! Before
-	  // adding it to the listeners, first emit "newListener".
-	  if (this._events.newListener)
-	    this.emit('newListener', type,
-	              isFunction(listener.listener) ?
-	              listener.listener : listener);
-
-	  if (!this._events[type])
-	    // Optimize the case of one listener. Don't need the extra array object.
-	    this._events[type] = listener;
-	  else if (isObject(this._events[type]))
-	    // If we've already got an array, just append.
-	    this._events[type].push(listener);
-	  else
-	    // Adding the second element, need to change to array.
-	    this._events[type] = [this._events[type], listener];
-
-	  // Check for listener leak
-	  if (isObject(this._events[type]) && !this._events[type].warned) {
-	    var m;
-	    if (!isUndefined(this._maxListeners)) {
-	      m = this._maxListeners;
-	    } else {
-	      m = EventEmitter.defaultMaxListeners;
-	    }
-
-	    if (m && m > 0 && this._events[type].length > m) {
-	      this._events[type].warned = true;
-	      console.error('(node) warning: possible EventEmitter memory ' +
-	                    'leak detected. %d listeners added. ' +
-	                    'Use emitter.setMaxListeners() to increase limit.',
-	                    this._events[type].length);
-	      if (typeof console.trace === 'function') {
-	        // not supported in IE 10
-	        console.trace();
-	      }
-	    }
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-	EventEmitter.prototype.once = function(type, listener) {
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  var fired = false;
-
-	  function g() {
-	    this.removeListener(type, g);
-
-	    if (!fired) {
-	      fired = true;
-	      listener.apply(this, arguments);
-	    }
-	  }
-
-	  g.listener = listener;
-	  this.on(type, g);
-
-	  return this;
-	};
-
-	// emits a 'removeListener' event iff the listener was removed
-	EventEmitter.prototype.removeListener = function(type, listener) {
-	  var list, position, length, i;
-
-	  if (!isFunction(listener))
-	    throw TypeError('listener must be a function');
-
-	  if (!this._events || !this._events[type])
-	    return this;
-
-	  list = this._events[type];
-	  length = list.length;
-	  position = -1;
-
-	  if (list === listener ||
-	      (isFunction(list.listener) && list.listener === listener)) {
-	    delete this._events[type];
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-
-	  } else if (isObject(list)) {
-	    for (i = length; i-- > 0;) {
-	      if (list[i] === listener ||
-	          (list[i].listener && list[i].listener === listener)) {
-	        position = i;
-	        break;
-	      }
-	    }
-
-	    if (position < 0)
-	      return this;
-
-	    if (list.length === 1) {
-	      list.length = 0;
-	      delete this._events[type];
-	    } else {
-	      list.splice(position, 1);
-	    }
-
-	    if (this._events.removeListener)
-	      this.emit('removeListener', type, listener);
-	  }
-
-	  return this;
-	};
-
-	EventEmitter.prototype.removeAllListeners = function(type) {
-	  var key, listeners;
-
-	  if (!this._events)
-	    return this;
-
-	  // not listening for removeListener, no need to emit
-	  if (!this._events.removeListener) {
-	    if (arguments.length === 0)
-	      this._events = {};
-	    else if (this._events[type])
-	      delete this._events[type];
-	    return this;
-	  }
-
-	  // emit removeListener for all listeners on all events
-	  if (arguments.length === 0) {
-	    for (key in this._events) {
-	      if (key === 'removeListener') continue;
-	      this.removeAllListeners(key);
-	    }
-	    this.removeAllListeners('removeListener');
-	    this._events = {};
-	    return this;
-	  }
-
-	  listeners = this._events[type];
-
-	  if (isFunction(listeners)) {
-	    this.removeListener(type, listeners);
-	  } else {
-	    // LIFO order
-	    while (listeners.length)
-	      this.removeListener(type, listeners[listeners.length - 1]);
-	  }
-	  delete this._events[type];
-
-	  return this;
-	};
-
-	EventEmitter.prototype.listeners = function(type) {
-	  var ret;
-	  if (!this._events || !this._events[type])
-	    ret = [];
-	  else if (isFunction(this._events[type]))
-	    ret = [this._events[type]];
-	  else
-	    ret = this._events[type].slice();
-	  return ret;
-	};
-
-	EventEmitter.listenerCount = function(emitter, type) {
-	  var ret;
-	  if (!emitter._events || !emitter._events[type])
-	    ret = 0;
-	  else if (isFunction(emitter._events[type]))
-	    ret = 1;
-	  else
-	    ret = emitter._events[type].length;
-	  return ret;
-	};
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-
-
-/***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-	//
-	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
-	//
-	// Originally from narwhal.js (http://narwhaljs.org)
-	// Copyright (c) 2009 Thomas Robinson <280north.com>
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a copy
-	// of this software and associated documentation files (the 'Software'), to
-	// deal in the Software without restriction, including without limitation the
-	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-	// sell copies of the Software, and to permit persons to whom the Software is
-	// furnished to do so, subject to the following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included in
-	// all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// when used in node, this will actually load the util module we depend on
-	// versus loading the builtin util module as happens otherwise
-	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(39);
-
-	var pSlice = Array.prototype.slice;
-	var hasOwn = Object.prototype.hasOwnProperty;
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  if (options.message) {
-	    this.message = options.message;
-	    this.generatedMessage = false;
-	  } else {
-	    this.message = getMessage(this);
-	    this.generatedMessage = true;
-	  }
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	  else {
-	    // non v8 browsers so we can have a stacktrace
-	    var err = new Error();
-	    if (err.stack) {
-	      var out = err.stack;
-
-	      // try to strip useless frames
-	      var fn_name = stackStartFunction.name;
-	      var idx = out.indexOf('\n' + fn_name);
-	      if (idx >= 0) {
-	        // once we have located the function frame
-	        // we need to strip out everything before it (and its line)
-	        var next_line = out.indexOf('\n', idx + 1);
-	        out = out.substring(next_line + 1);
-	      }
-
-	      this.stack = out;
-	    }
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (util.isUndefined(value)) {
-	    return '' + value;
-	  }
-	  if (util.isNumber(value) && !isFinite(value)) {
-	    return value.toString();
-	  }
-	  if (util.isFunction(value) || util.isRegExp(value)) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (util.isString(s)) {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	function getMessage(self) {
-	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
-	         self.operator + ' ' +
-	         truncate(JSON.stringify(self.expected, replacer), 128);
-	}
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (util.isDate(actual) && util.isDate(expected)) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  // if one is a primitive, the other must be same
-	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
-	    return a === b;
-	  }
-	  var aIsArgs = isArguments(a),
-	      bIsArgs = isArguments(b);
-	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
-	    return false;
-	  if (aIsArgs) {
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  var ka = objectKeys(a),
-	      kb = objectKeys(b),
-	      key, i;
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (util.isString(expected)) {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) {
-	    if (hasOwn.call(obj, key)) keys.push(key);
-	  }
-	  return keys;
-	};
-
-
-/***/ },
 /* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -20037,9 +20035,9 @@ var ripple =
 	 * @license  MIT
 	 */
 
-	var base64 = __webpack_require__(73)
-	var ieee754 = __webpack_require__(63)
-	var isArray = __webpack_require__(64)
+	var base64 = __webpack_require__(74)
+	var ieee754 = __webpack_require__(64)
+	var isArray = __webpack_require__(65)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -38008,7 +38006,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(65)
+	    g.crypto || g.msCrypto || __webpack_require__(63)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -38040,7 +38038,7 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(75)
 
-	var md5 = toConstructor(__webpack_require__(74))
+	var md5 = toConstructor(__webpack_require__(73))
 	var rmd160 = toConstructor(__webpack_require__(79))
 
 	function toConstructor (fn) {
@@ -38972,6 +38970,12 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* (ignored) */
+
+/***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
 	  var e, m,
 	      eLen = nBytes * 8 - mLen - 1,
@@ -39059,7 +39063,7 @@ var ripple =
 
 
 /***/ },
-/* 64 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -39096,12 +39100,6 @@ var ripple =
 	  return !! val && '[object Array]' == str.call(val);
 	};
 
-
-/***/ },
-/* 65 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* (ignored) */
 
 /***/ },
 /* 66 */
@@ -40480,136 +40478,6 @@ var ripple =
 /* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-	;(function (exports) {
-		'use strict';
-
-	  var Arr = (typeof Uint8Array !== 'undefined')
-	    ? Uint8Array
-	    : Array
-
-		var PLUS   = '+'.charCodeAt(0)
-		var SLASH  = '/'.charCodeAt(0)
-		var NUMBER = '0'.charCodeAt(0)
-		var LOWER  = 'a'.charCodeAt(0)
-		var UPPER  = 'A'.charCodeAt(0)
-		var PLUS_URL_SAFE = '-'.charCodeAt(0)
-		var SLASH_URL_SAFE = '_'.charCodeAt(0)
-
-		function decode (elt) {
-			var code = elt.charCodeAt(0)
-			if (code === PLUS ||
-			    code === PLUS_URL_SAFE)
-				return 62 // '+'
-			if (code === SLASH ||
-			    code === SLASH_URL_SAFE)
-				return 63 // '/'
-			if (code < NUMBER)
-				return -1 //no match
-			if (code < NUMBER + 10)
-				return code - NUMBER + 26 + 26
-			if (code < UPPER + 26)
-				return code - UPPER
-			if (code < LOWER + 26)
-				return code - LOWER + 26
-		}
-
-		function b64ToByteArray (b64) {
-			var i, j, l, tmp, placeHolders, arr
-
-			if (b64.length % 4 > 0) {
-				throw new Error('Invalid string. Length must be a multiple of 4')
-			}
-
-			// the number of equal signs (place holders)
-			// if there are two placeholders, than the two characters before it
-			// represent one byte
-			// if there is only one, then the three characters before it represent 2 bytes
-			// this is just a cheap hack to not do indexOf twice
-			var len = b64.length
-			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-			// base64 is 4/3 + up to two characters of the original data
-			arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-			// if there are placeholders, only get up to the last complete 4 chars
-			l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-			var L = 0
-
-			function push (v) {
-				arr[L++] = v
-			}
-
-			for (i = 0, j = 0; i < l; i += 4, j += 3) {
-				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-				push((tmp & 0xFF0000) >> 16)
-				push((tmp & 0xFF00) >> 8)
-				push(tmp & 0xFF)
-			}
-
-			if (placeHolders === 2) {
-				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-				push(tmp & 0xFF)
-			} else if (placeHolders === 1) {
-				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-				push((tmp >> 8) & 0xFF)
-				push(tmp & 0xFF)
-			}
-
-			return arr
-		}
-
-		function uint8ToBase64 (uint8) {
-			var i,
-				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-				output = "",
-				temp, length
-
-			function encode (num) {
-				return lookup.charAt(num)
-			}
-
-			function tripletToBase64 (num) {
-				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-			}
-
-			// go through the array every three bytes, we'll deal with trailing stuff later
-			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-				output += tripletToBase64(temp)
-			}
-
-			// pad the end with zeros, but make sure to not forget the extra bytes
-			switch (extraBytes) {
-				case 1:
-					temp = uint8[uint8.length - 1]
-					output += encode(temp >> 2)
-					output += encode((temp << 4) & 0x3F)
-					output += '=='
-					break
-				case 2:
-					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-					output += encode(temp >> 10)
-					output += encode((temp >> 4) & 0x3F)
-					output += encode((temp << 2) & 0x3F)
-					output += '='
-					break
-			}
-
-			return output
-		}
-
-		exports.toByteArray = b64ToByteArray
-		exports.fromByteArray = uint8ToBase64
-	}(false ? (this.base64js = {}) : exports))
-
-
-/***/ },
-/* 74 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/*
 	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
 	 * Digest Algorithm, as defined in RFC 1321.
@@ -40765,6 +40633,136 @@ var ripple =
 	module.exports = function md5(buf) {
 	  return helpers.hash(buf, core_md5, 16);
 	};
+
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+	;(function (exports) {
+		'use strict';
+
+	  var Arr = (typeof Uint8Array !== 'undefined')
+	    ? Uint8Array
+	    : Array
+
+		var PLUS   = '+'.charCodeAt(0)
+		var SLASH  = '/'.charCodeAt(0)
+		var NUMBER = '0'.charCodeAt(0)
+		var LOWER  = 'a'.charCodeAt(0)
+		var UPPER  = 'A'.charCodeAt(0)
+		var PLUS_URL_SAFE = '-'.charCodeAt(0)
+		var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+		function decode (elt) {
+			var code = elt.charCodeAt(0)
+			if (code === PLUS ||
+			    code === PLUS_URL_SAFE)
+				return 62 // '+'
+			if (code === SLASH ||
+			    code === SLASH_URL_SAFE)
+				return 63 // '/'
+			if (code < NUMBER)
+				return -1 //no match
+			if (code < NUMBER + 10)
+				return code - NUMBER + 26 + 26
+			if (code < UPPER + 26)
+				return code - UPPER
+			if (code < LOWER + 26)
+				return code - LOWER + 26
+		}
+
+		function b64ToByteArray (b64) {
+			var i, j, l, tmp, placeHolders, arr
+
+			if (b64.length % 4 > 0) {
+				throw new Error('Invalid string. Length must be a multiple of 4')
+			}
+
+			// the number of equal signs (place holders)
+			// if there are two placeholders, than the two characters before it
+			// represent one byte
+			// if there is only one, then the three characters before it represent 2 bytes
+			// this is just a cheap hack to not do indexOf twice
+			var len = b64.length
+			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+			// base64 is 4/3 + up to two characters of the original data
+			arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+			// if there are placeholders, only get up to the last complete 4 chars
+			l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+			var L = 0
+
+			function push (v) {
+				arr[L++] = v
+			}
+
+			for (i = 0, j = 0; i < l; i += 4, j += 3) {
+				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+				push((tmp & 0xFF0000) >> 16)
+				push((tmp & 0xFF00) >> 8)
+				push(tmp & 0xFF)
+			}
+
+			if (placeHolders === 2) {
+				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+				push(tmp & 0xFF)
+			} else if (placeHolders === 1) {
+				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+				push((tmp >> 8) & 0xFF)
+				push(tmp & 0xFF)
+			}
+
+			return arr
+		}
+
+		function uint8ToBase64 (uint8) {
+			var i,
+				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+				output = "",
+				temp, length
+
+			function encode (num) {
+				return lookup.charAt(num)
+			}
+
+			function tripletToBase64 (num) {
+				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+			}
+
+			// go through the array every three bytes, we'll deal with trailing stuff later
+			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+				output += tripletToBase64(temp)
+			}
+
+			// pad the end with zeros, but make sure to not forget the extra bytes
+			switch (extraBytes) {
+				case 1:
+					temp = uint8[uint8.length - 1]
+					output += encode(temp >> 2)
+					output += encode((temp << 4) & 0x3F)
+					output += '=='
+					break
+				case 2:
+					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+					output += encode(temp >> 10)
+					output += encode((temp >> 4) & 0x3F)
+					output += encode((temp << 2) & 0x3F)
+					output += '='
+					break
+			}
+
+			return output
+		}
+
+		exports.toByteArray = b64ToByteArray
+		exports.fromByteArray = uint8ToBase64
+	}(false ? (this.base64js = {}) : exports))
 
 
 /***/ },
@@ -41580,7 +41578,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(41).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41724,7 +41722,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(41).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41868,7 +41866,7 @@ var ripple =
 /* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(41).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
