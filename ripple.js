@@ -131,11 +131,11 @@ var ripple =
 	// to be a very simple drop option.
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util = __webpack_require__(41);
-	var assert = __webpack_require__(40);
-	var LRU = __webpack_require__(49);
-	var async = __webpack_require__(47);
-	var lodash = __webpack_require__(46);
+	var util = __webpack_require__(40);
+	var assert = __webpack_require__(41);
+	var LRU = __webpack_require__(47);
+	var async = __webpack_require__(48);
+	var lodash = __webpack_require__(45);
 	var Server = __webpack_require__(18).Server;
 	var Request = __webpack_require__(2).Request;
 	var Amount = __webpack_require__(3).Amount;
@@ -145,15 +145,15 @@ var ripple =
 	var Transaction = __webpack_require__(5).Transaction;
 	var Account = __webpack_require__(4).Account;
 	var Meta = __webpack_require__(12).Meta;
-	var OrderBook = __webpack_require__(27).OrderBook;
-	var PathFind = __webpack_require__(28).PathFind;
+	var OrderBook = __webpack_require__(26).OrderBook;
+	var PathFind = __webpack_require__(27).PathFind;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var RippleError = __webpack_require__(14).RippleError;
 	var utils = __webpack_require__(17);
 	var sjcl = __webpack_require__(17).sjcl;
-	var hashprefixes = __webpack_require__(29);
+	var hashprefixes = __webpack_require__(28);
 	var config = __webpack_require__(25);
-	var log = __webpack_require__(30).internal.sub('remote');
+	var log = __webpack_require__(29).internal.sub('remote');
 
 	/**
 	 * Interface to manage connections to rippled servers
@@ -2687,8 +2687,8 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(41);
-	var async        = __webpack_require__(47);
+	var util         = __webpack_require__(40);
+	var async        = __webpack_require__(48);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(14).RippleError;
@@ -3259,13 +3259,13 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert = __webpack_require__(40);
-	var extend = __webpack_require__(45);
+	var assert = __webpack_require__(41);
+	var extend = __webpack_require__(46);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Seed = __webpack_require__(11).Seed;
 	var Currency = __webpack_require__(6).Currency;
-	var GlobalBigNumber = __webpack_require__(48);
+	var GlobalBigNumber = __webpack_require__(49);
 
 	var BigNumber = GlobalBigNumber.another({
 	  ROUNDING_MODE: GlobalBigNumber.ROUND_HALF_UP,
@@ -4279,13 +4279,13 @@ var ripple =
 	//
 
 	// var network = require('./network.js');
-	var async              = __webpack_require__(47);
-	var util               = __webpack_require__(41);
-	var extend             = __webpack_require__(45);
+	var async              = __webpack_require__(48);
+	var util               = __webpack_require__(40);
+	var extend             = __webpack_require__(46);
 	var EventEmitter       = __webpack_require__(39).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(9).UInt160;
-	var TransactionManager = __webpack_require__(26).TransactionManager;
+	var TransactionManager = __webpack_require__(30).TransactionManager;
 	var sjcl               = __webpack_require__(17).sjcl;
 	var Base               = __webpack_require__(7).Base;
 
@@ -4669,8 +4669,8 @@ var ripple =
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util             = __webpack_require__(41);
-	var assert           = __webpack_require__(40);
+	var util             = __webpack_require__(40);
+	var assert           = __webpack_require__(41);
 	var EventEmitter     = __webpack_require__(39).EventEmitter;
 	var utils            = __webpack_require__(17);
 	var sjcl             = __webpack_require__(17).sjcl;
@@ -4680,9 +4680,9 @@ var ripple =
 	var Seed             = __webpack_require__(11).Seed;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var RippleError      = __webpack_require__(14).RippleError;
-	var hashprefixes     = __webpack_require__(29);
+	var hashprefixes     = __webpack_require__(28);
 	var config           = __webpack_require__(25);
-	var log              = __webpack_require__(30).internal.sub('transaction');
+	var log              = __webpack_require__(29).internal.sub('transaction');
 
 	/**
 	 * @constructor Transaction
@@ -5897,7 +5897,7 @@ var ripple =
 
 	'use strict';
 
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var utils = __webpack_require__(17);
 	var Float = __webpack_require__(31).Float;
@@ -6304,10 +6304,10 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var _ = __webpack_require__(46);
+	var _ = __webpack_require__(45);
 	var sjcl = __webpack_require__(17).sjcl;
 	var utils = __webpack_require__(17);
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 	var convertBase = __webpack_require__(23);
 
 	var Base = {};
@@ -6464,7 +6464,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils  = __webpack_require__(17);
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 	var UInt   = __webpack_require__(32).UInt;
 
 	//
@@ -6493,7 +6493,7 @@ var ripple =
 
 	var utils   = __webpack_require__(17);
 	var config  = __webpack_require__(25);
-	var extend  = __webpack_require__(45);
+	var extend  = __webpack_require__(46);
 
 	var UInt = __webpack_require__(32).UInt;
 	var Base = __webpack_require__(7).Base;
@@ -6600,7 +6600,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var utils  = __webpack_require__(17);
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 	var UInt   = __webpack_require__(32).UInt;
 
 	//
@@ -6631,7 +6631,7 @@ var ripple =
 	// Seed support
 	//
 
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 	var utils  = __webpack_require__(17);
 	var sjcl   = utils.sjcl;
 
@@ -6785,7 +6785,7 @@ var ripple =
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var extend  = __webpack_require__(45);
+	var extend  = __webpack_require__(46);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Amount  = __webpack_require__(3).Amount;
@@ -7051,9 +7051,9 @@ var ripple =
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var _         = __webpack_require__(46);
-	var assert    = __webpack_require__(40);
-	var extend    = __webpack_require__(45);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var _         = __webpack_require__(45);
+	var assert    = __webpack_require__(41);
+	var extend    = __webpack_require__(46);
 	var binformat = __webpack_require__(16);
 	var stypes    = __webpack_require__(24);
 	var Crypt     = __webpack_require__(34).Crypt;
@@ -7394,8 +7394,8 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(41);
-	var extend = __webpack_require__(45);
+	var util   = __webpack_require__(40);
+	var extend = __webpack_require__(46);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -7433,7 +7433,7 @@ var ripple =
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async              = __webpack_require__(47);
+	var async              = __webpack_require__(48);
 	var crypto             = __webpack_require__(43);
 	var sjcl               = __webpack_require__(17).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
@@ -8270,13 +8270,13 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(41);
+	var util         = __webpack_require__(40);
 	var url          = __webpack_require__(44);
-	var LRU          = __webpack_require__(49);
+	var LRU          = __webpack_require__(47);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var RangeSet     = __webpack_require__(22).RangeSet;
-	var log          = __webpack_require__(30).internal.sub('server');
+	var log          = __webpack_require__(29).internal.sub('server');
 
 	/**
 	 *  @constructor Server
@@ -9381,8 +9381,8 @@ var ripple =
 
 	'use strict';
 
-	var lodash = __webpack_require__(46);
-	var LRU = __webpack_require__(49);
+	var lodash = __webpack_require__(45);
+	var LRU = __webpack_require__(47);
 	var Transaction = __webpack_require__(5).Transaction;
 
 	/**
@@ -9549,8 +9549,8 @@ var ripple =
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assert = __webpack_require__(40);
-	var lodash = __webpack_require__(46);
+	var assert = __webpack_require__(41);
+	var lodash = __webpack_require__(45);
 
 	function RangeSet() {
 	  this._ranges = [ ];
@@ -9670,9 +9670,9 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert = __webpack_require__(40);
-	var extend = __webpack_require__(45);
-	var GlobalBigNumber = __webpack_require__(48);
+	var assert = __webpack_require__(41);
+	var extend = __webpack_require__(46);
+	var GlobalBigNumber = __webpack_require__(49);
 	var Amount = __webpack_require__(3).Amount;
 	var Currency = __webpack_require__(6).Currency;
 	var binformat = __webpack_require__(16);
@@ -10546,7 +10546,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = __webpack_require__(45);
+	var extend = __webpack_require__(46);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -10558,744 +10558,6 @@ var ripple =
 
 /***/ },
 /* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var util = __webpack_require__(41);
-	var assert = __webpack_require__(40);
-	var async = __webpack_require__(47);
-	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var Transaction = __webpack_require__(5).Transaction;
-	var RippleError = __webpack_require__(14).RippleError;
-	var PendingQueue = __webpack_require__(21).TransactionQueue;
-	var log = __webpack_require__(30).internal.sub('transactionmanager');
-
-	/**
-	 * @constructor TransactionManager
-	 * @param {Account} account
-	 */
-
-	function TransactionManager(account) {
-	  EventEmitter.call(this);
-
-	  var self = this;
-
-	  this._account = account;
-	  this._accountID = account._account_id;
-	  this._remote = account._remote;
-	  this._nextSequence = undefined;
-	  this._maxFee = this._remote.max_fee;
-	  this._maxAttempts = this._remote.max_attempts;
-	  this._submissionTimeout = this._remote.submission_timeout;
-	  this._lastLedgerOffset = this._remote.last_ledger_offset;
-	  this._pending = new PendingQueue();
-
-	  this._account.on('transaction-outbound', function(res) {
-	    self._transactionReceived(res);
-	  });
-
-	  this._remote.on('load_changed', function(load) {
-	    self._adjustFees(load);
-	  });
-
-	  function updatePendingStatus(ledger) {
-	    self._updatePendingStatus(ledger);
-	  }
-
-	  this._remote.on('ledger_closed', updatePendingStatus);
-
-	  function handleReconnect() {
-	    self._handleReconnect(function() {
-	      // Handle reconnect, account_tx procedure first, before
-	      // hooking back into ledger_closed
-	      self._remote.on('ledger_closed', updatePendingStatus);
-	    });
-	  }
-
-	  this._remote.on('disconnect', function() {
-	    self._remote.removeListener('ledger_closed', updatePendingStatus);
-	    self._remote.once('connect', handleReconnect);
-	  });
-
-	  // Query server for next account transaction sequence
-	  this._loadSequence();
-	}
-
-	util.inherits(TransactionManager, EventEmitter);
-
-	TransactionManager._isNoOp = function(transaction) {
-	  return (typeof transaction === 'object')
-	      && (typeof transaction.tx_json === 'object')
-	      && (transaction.tx_json.TransactionType === 'AccountSet')
-	      && (transaction.tx_json.Flags === 0);
-	};
-
-	TransactionManager._isRemoteError = function(error) {
-	  return (typeof error === 'object')
-	      && (error.error === 'remoteError')
-	      && (typeof error.remote === 'object');
-	};
-
-	TransactionManager._isNotFound = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
-	};
-
-	TransactionManager._isTooBusy = function(error) {
-	  return TransactionManager._isRemoteError(error)
-	      && (error.remote.error === 'tooBusy');
-	};
-
-	/**
-	 * Normalize transactions received from account transaction stream and
-	 * account_tx
-	 *
-	 * @param {Transaction}
-	 * @return {Transaction} normalized
-	 * @api private
-	 */
-
-	TransactionManager.normalizeTransaction = function(tx) {
-	  var transaction = { };
-	  var keys = Object.keys(tx);
-
-	  for (var i = 0; i < keys.length; i++) {
-	    var k = keys[i];
-	    switch (k) {
-	      case 'transaction':
-	        // Account transaction stream
-	        transaction.tx_json = tx[k];
-	        break;
-	      case 'tx':
-	        // account_tx response
-	        transaction.engine_result = tx.meta.TransactionResult;
-	        transaction.result = transaction.engine_result;
-	        transaction.tx_json = tx[k];
-	        transaction.hash = tx[k].hash;
-	        transaction.ledger_index = tx[k].ledger_index;
-	        transaction.type = 'transaction';
-	        transaction.validated = tx.validated;
-	        break;
-	      case 'meta':
-	      case 'metadata':
-	        transaction.metadata = tx[k];
-	        break;
-	      case 'mmeta':
-	        // Don't copy mmeta
-	        break;
-	      default:
-	        transaction[k] = tx[k];
-	    }
-	  }
-
-	  return transaction;
-	};
-
-	/**
-	 * Handle received transaction from two possible sources
-	 *
-	 * + Account transaction stream (normal operation)
-	 * + account_tx (after reconnect)
-	 *
-	 * @param {Object} transaction
-	 * @api private
-	 */
-
-	TransactionManager.prototype._transactionReceived = function(tx) {
-	  var transaction = TransactionManager.normalizeTransaction(tx);
-
-	  if (!transaction.validated) {
-	    // Transaction has not been validated
-	    return;
-	  }
-
-	  if (transaction.tx_json.Account !== this._accountID) {
-	    // Received transaction's account does not match
-	    return;
-	  }
-
-	  if (this._remote.trace) {
-	    log.info('transaction received:', transaction.tx_json);
-	  }
-
-	  this._pending.addReceivedSequence(transaction.tx_json.Sequence);
-
-	  var hash = transaction.tx_json.hash;
-	  var submission = this._pending.getSubmission(hash);
-
-	  if (!(submission instanceof Transaction)) {
-	    // The received transaction does not correlate to one submitted
-	    this._pending.addReceivedId(hash, transaction);
-	    return;
-	  }
-
-	  // ND: A `success` handler will `finalize` this later
-	  switch (transaction.engine_result) {
-	    case 'tesSUCCESS':
-	      submission.emit('success', transaction);
-	      break;
-	    default:
-	      submission.emit('error', transaction);
-	  }
-	};
-
-	/**
-	 * Adjust pending transactions' fees in real-time. This does not resubmit
-	 * pending transactions; they will be resubmitted periodically with an updated
-	 * fee (and as a consequence, a new transaction ID) if not already validated
-	 *
-	 * ND: note, that `Fee` is a component of a transactionID
-	 *
-	 * @api private
-	 */
-
-	TransactionManager.prototype._adjustFees = function() {
-	  var self = this;
-
-	  if (!this._remote.local_fee) {
-	    return;
-	  }
-
-	  function maxFeeExceeded(transaction) {
-	    // Don't err until attempting to resubmit
-	    transaction.once('presubmit', function() {
-	      transaction.emit('error', 'tejMaxFeeExceeded');
-	    });
-	  }
-
-	  this._pending.forEach(function(transaction) {
-	    if (transaction._setFixedFee) {
-	      return;
-	    }
-
-	    var oldFee = transaction.tx_json.Fee;
-	    var newFee = transaction._computeFee();
-
-	    if (Number(newFee) > self._maxFee) {
-	      // Max transaction fee exceeded, abort submission
-	      maxFeeExceeded(transaction);
-	      return;
-	    }
-
-	    transaction.tx_json.Fee = newFee;
-	    transaction.emit('fee_adjusted', oldFee, newFee);
-
-	    if (self._remote.trace) {
-	      log.info('fee adjusted:', transaction.tx_json, oldFee, newFee);
-	    }
-	  });
-	};
-
-	/**
-	 * Get pending transactions
-	 *
-	 * @return {Array} pending transactions
-	 */
-
-	TransactionManager.prototype.getPending = function() {
-	  return this._pending;
-	};
-
-	/**
-	 * Legacy code. Update transaction status after excessive ledgers pass. One of
-	 * either "missing" or "lost"
-	 *
-	 * @param {Object} ledger data
-	 * @api private
-	 */
-
-	TransactionManager.prototype._updatePendingStatus = function(ledger) {
-	  assert.strictEqual(typeof ledger, 'object');
-	  assert.strictEqual(typeof ledger.ledger_index, 'number');
-
-	  this._pending.forEach(function(transaction) {
-	    if (transaction.finalized) {
-	      return;
-	    }
-
-	    switch (ledger.ledger_index - transaction.submitIndex) {
-	      case 4:
-	        transaction.emit('missing', ledger);
-	        break;
-	      case 8:
-	        transaction.emit('lost', ledger);
-	        break;
-	    }
-
-	    if (ledger.ledger_index > transaction.tx_json.LastLedgerSequence) {
-	      // Transaction must fail
-	      transaction.emit('error', new RippleError(
-	        'tejMaxLedger', 'Transaction LastLedgerSequence exceeded'));
-	    }
-	  });
-	};
-
-	// Fill an account transaction sequence
-	TransactionManager.prototype._fillSequence = function(tx, callback) {
-	  var self = this;
-
-	  function submitFill(sequence, fCallback) {
-	    var fillTransaction = self._remote.createTransaction('AccountSet', {
-	      account: self._accountID
-	    });
-	    fillTransaction.tx_json.Sequence = sequence;
-
-	    // Secrets may be set on a per-transaction basis
-	    if (tx._secret) {
-	      fillTransaction.secret(tx._secret);
-	    }
-
-	    fillTransaction.once('submitted', fCallback);
-	    fillTransaction.submit();
-	  }
-
-	  function sequenceLoaded(err, sequence) {
-	    if (typeof sequence !== 'number') {
-	      log.info('fill sequence: failed to fetch account transaction sequence');
-	      return callback();
-	    }
-
-	    var sequenceDiff = tx.tx_json.Sequence - sequence;
-	    var submitted = 0;
-
-	    async.whilst(
-	      function() {
-	        return submitted < sequenceDiff;
-	      },
-	      function(asyncCallback) {
-	        submitFill(sequence, function(res) {
-	          ++submitted;
-	          if (res.engine_result === 'tesSUCCESS') {
-	            self.emit('sequence_filled', err);
-	          }
-	          asyncCallback();
-	        });
-	      },
-	      function() {
-	        if (callback) {
-	          callback();
-	        }
-	      }
-	    );
-	  }
-
-	  this._loadSequence(sequenceLoaded);
-	};
-
-	/**
-	 * Load account transaction sequence
-	 *
-	 * @param [Function] callback
-	 * @api private
-	 */
-
-	TransactionManager.prototype._loadSequence = function(callback) {
-	  var self = this;
-	  callback = (typeof callback === 'function') ? callback : function() {};
-
-	  function sequenceLoaded(err, sequence) {
-	    if (err || typeof sequence !== 'number') {
-	      if (self._remote.trace) {
-	        log.info('error requesting account transaction sequence', err);
-	        return;
-	      }
-	    }
-
-	    self._nextSequence = sequence;
-	    self.emit('sequence_loaded', sequence);
-	    callback(err, sequence);
-	  }
-
-	  this._account.getNextSequence(sequenceLoaded);
-	};
-
-	/**
-	 * On reconnect, load account_tx in case a pending transaction succeeded while
-	 * disconnected
-	 *
-	 * @param [Function] callback
-	 * @api private
-	 */
-
-	TransactionManager.prototype._handleReconnect = function(callback) {
-	  var self = this;
-	  callback = (typeof callback === 'function') ? callback : function() {};
-
-	  if (!this._pending.length()) {
-	    callback();
-	    return;
-	  }
-
-	  function handleTransactions(err, transactions) {
-	    if (err || typeof transactions !== 'object') {
-	      if (self._remote.trace) {
-	        log.info('error requesting account_tx', err);
-	      }
-	      callback();
-	      return;
-	    }
-
-	    if (Array.isArray(transactions.transactions)) {
-	      // Treat each transaction in account transaction history as received
-	      transactions.transactions.forEach(self._transactionReceived, self);
-	    }
-
-	    callback();
-
-	    self._loadSequence(function() {
-	      // Resubmit pending transactions after sequence is loaded
-	      self._resubmit();
-	    });
-	  }
-
-	  var options = {
-	    account: this._accountID,
-	    ledger_index_min: this._pending.getMinLedger(),
-	    ledger_index_max: -1,
-	    binary: true,
-	    parseBinary: true,
-	    limit: 20
-	  };
-
-	  this._remote.requestAccountTx(options, handleTransactions);
-	};
-
-	/**
-	 * Wait for specified number of ledgers to pass
-	 *
-	 * @param {Number} ledgers
-	 * @param {Function} callback
-	 * @api private
-	 */
-
-	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
-	  assert.strictEqual(typeof ledgers, 'number');
-	  assert.strictEqual(typeof callback, 'function');
-
-	  if (ledgers < 1) {
-	    return callback();
-	  }
-
-	  var self = this;
-	  var closes = 0;
-
-	  function ledgerClosed() {
-	    if (++closes === ledgers) {
-	      self._remote.removeListener('ledger_closed', ledgerClosed);
-	      callback();
-	    }
-	  }
-
-	  this._remote.on('ledger_closed', ledgerClosed);
-	};
-
-	/**
-	 * Resubmit pending transactions. If a transaction is specified, it will be
-	 * resubmitted. Otherwise, all pending transactions will be resubmitted
-	 *
-	 * @param [Number] ledgers to wait before resubmitting
-	 * @param [Transaction] pending transactions to resubmit
-	 * @api private
-	 */
-
-	TransactionManager.prototype._resubmit = function(ledgers, pending) {
-	  var self = this;
-
-	  if (ledgers && typeof ledgers !== 'number') {
-	    pending = ledgers;
-	    ledgers = 0;
-	  }
-
-	  ledgers = ledgers || 0;
-	  pending = pending instanceof Transaction
-	  ? [pending]
-	  : this.getPending().getQueue();
-
-	  function resubmitTransaction(transaction, next) {
-	    if (!transaction || transaction.finalized) {
-	      // Transaction has been finalized, nothing to do
-	      return;
-	    }
-
-	    // Find ID within cache of received (validated) transaction IDs
-	    var received = transaction.findId(self._pending._idCache);
-
-	    if (received) {
-	      switch (received.engine_result) {
-	        case 'tesSUCCESS':
-	          transaction.emit('success', received);
-	          break;
-	        default:
-	          transaction.emit('error', received);
-	      }
-	    }
-
-	    while (self._pending.hasSequence(transaction.tx_json.Sequence)) {
-	      // Sequence number has been consumed by another transaction
-	      transaction.tx_json.Sequence += 1;
-
-	      if (self._remote.trace) {
-	        log.info('incrementing sequence:', transaction.tx_json);
-	      }
-	    }
-
-	    if (self._remote.trace) {
-	      log.info('resubmit:', transaction.tx_json);
-	    }
-
-	    transaction.once('submitted', function(m) {
-	      transaction.emit('resubmitted', m);
-	      next();
-	    });
-
-	    self._request(transaction);
-	  }
-
-	  this._waitLedgers(ledgers, function() {
-	    async.eachSeries(pending, resubmitTransaction);
-	  });
-	};
-
-	/**
-	 * Prepare submit request
-	 *
-	 * @param {Transaction} transaction to submit
-	 * @return {Request} submit request
-	 * @api private
-	 */
-
-	TransactionManager.prototype._prepareRequest = function(tx) {
-	  var submitRequest = this._remote.requestSubmit();
-
-	  if (this._remote.local_signing) {
-	    tx.sign();
-
-	    var serialized = tx.serialize();
-	    submitRequest.tx_blob(serialized.to_hex());
-
-	    var hash = tx.hash(null, null, serialized);
-	    tx.addId(hash);
-	  } else {
-	    // ND: `build_path` is completely ignored when doing local signing as
-	    // `Paths` is a component of the signed blob, the `tx_blob` is signed,
-	    // sealed and delivered, and the txn unmodified.
-	    // TODO: perhaps an exception should be raised if build_path is attempted
-	    // while local signing
-	    submitRequest.build_path(tx._build_path);
-	    submitRequest.secret(tx._secret);
-	    submitRequest.tx_json(tx.tx_json);
-	  }
-
-	  return submitRequest;
-	};
-
-	/**
-	 * Send `submit` request, handle response
-	 *
-	 * @param {Transaction} transaction to submit
-	 * @api private
-	 */
-
-	TransactionManager.prototype._request = function(tx) {
-	  var self = this;
-	  var remote = this._remote;
-
-	  if (tx.finalized) {
-	    return;
-	  }
-
-	  if (tx.attempts > this._maxAttempts) {
-	    tx.emit('error', new RippleError('tejAttemptsExceeded'));
-	    return;
-	  }
-
-	  if (tx.attempts > 0 && !remote.local_signing) {
-	    var errMessage = 'Automatic resubmission requires local signing';
-	    tx.emit('error', new RippleError('tejLocalSigningRequired', errMessage));
-	    return;
-	  }
-
-	  if (remote.trace) {
-	    log.info('submit transaction:', tx.tx_json);
-	  }
-
-	  function transactionFailed(message) {
-	    if (message.engine_result === 'tefPAST_SEQ') {
-	      // Transaction may succeed after Sequence is updated
-	      self._resubmit(1, tx);
-	    }
-	  }
-
-	  function transactionRetry() {
-	    // XXX This may no longer be necessary. Instead, update sequence numbers
-	    // after a transaction fails definitively
-	    self._fillSequence(tx, function() {
-	      self._resubmit(1, tx);
-	    });
-	  }
-
-	  function transactionFailedLocal(message) {
-	    if (message.engine_result === 'telINSUF_FEE_P') {
-	      // Transaction may succeed after Fee is updated
-	      self._resubmit(1, tx);
-	    }
-	  }
-
-	  function submissionError(error) {
-	    // Either a tem-class error or generic server error such as tooBusy. This
-	    // should be a definitive failure
-	    if (TransactionManager._isTooBusy(error)) {
-	      self._resubmit(1, tx);
-	    } else {
-	      self._nextSequence--;
-	      tx.emit('error', error);
-	    }
-	  }
-
-	  function submitted(message) {
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    // ND: If for some unknown reason our hash wasn't computed correctly this
-	    // is an extra measure.
-	    if (message.tx_json && message.tx_json.hash) {
-	      tx.addId(message.tx_json.hash);
-	    }
-
-	    message.result = message.engine_result || '';
-
-	    tx.result = message;
-	    tx.responses += 1;
-
-	    if (remote.trace) {
-	      log.info('submit response:', message);
-	    }
-
-	    tx.emit('submitted', message);
-
-	    switch (message.result.slice(0, 3)) {
-	      case 'tes':
-	        tx.emit('proposed', message);
-	        break;
-	      case 'tec':
-	        break;
-	      case 'ter':
-	        transactionRetry(message);
-	        break;
-	      case 'tef':
-	        transactionFailed(message);
-	        break;
-	      case 'tel':
-	        transactionFailedLocal(message);
-	        break;
-	      default:
-	        // tem
-	        submissionError(message);
-	    }
-	  }
-
-	  function requestTimeout() {
-	    // ND: What if the response is just slow and we get a response that
-	    // `submitted` above will cause to have concurrent resubmit logic streams?
-	    // It's simpler to just mute handlers and look out for finalized
-	    // `transaction` messages.
-	    if (tx.finalized) {
-	      return;
-	    }
-
-	    tx.emit('timeout');
-
-	    if (remote.isConnected()) {
-	      if (remote.trace) {
-	        log.info('timeout:', tx.tx_json);
-	      }
-	      self._resubmit(1, tx);
-	    }
-	  }
-
-	  tx.submitIndex = this._remote._ledger_current_index;
-
-	  if (tx.attempts === 0) {
-	    tx.initialSubmitIndex = tx.submitIndex;
-	  }
-
-	  if (!tx._setLastLedger) {
-	    // Honor LastLedgerSequence set with tx.lastLedger()
-	    tx.tx_json.LastLedgerSequence = tx.initialSubmitIndex
-	    + this._lastLedgerOffset;
-	  }
-
-	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
-
-	  if (remote.local_signing) {
-	    tx.sign();
-	  }
-
-	  var submitRequest = this._prepareRequest(tx);
-	  submitRequest.once('error', submitted);
-	  submitRequest.once('success', submitted);
-
-	  tx.emit('presubmit');
-
-	  submitRequest.broadcast().request();
-	  tx.attempts++;
-
-	  tx.emit('postsubmit');
-
-	  submitRequest.timeout(self._submissionTimeout, requestTimeout);
-	};
-
-	/**
-	 * Entry point for TransactionManager submission
-	 *
-	 * @param {Transaction} tx
-	 */
-
-	TransactionManager.prototype.submit = function(tx) {
-	  var self = this;
-
-	  if (typeof this._nextSequence !== 'number') {
-	    // If sequence number is not yet known, defer until it is.
-	    this.once('sequence_loaded', function() {
-	      self.submit(tx);
-	    });
-	    return;
-	  }
-
-	  if (tx.finalized) {
-	    // Finalized transactions must stop all activity
-	    return;
-	  }
-
-	  if (typeof tx.tx_json.Sequence !== 'number') {
-	    // Honor manually-set sequences
-	    tx.tx_json.Sequence = this._nextSequence++;
-	  }
-
-	  tx.once('cleanup', function() {
-	    self.getPending().remove(tx);
-	  });
-
-	  if (!tx.complete()) {
-	    this._nextSequence--;
-	    return;
-	  }
-
-	  // ND: this is the ONLY place we put the tx into the queue. The
-	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
-	  // will cause subsequent look ups (eg. inside 'transaction-outbound'
-	  // validated transaction clearing) to fail.
-	  this._pending.push(tx);
-	  this._request(tx);
-	};
-
-	exports.TransactionManager = TransactionManager;
-
-
-/***/ },
-/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Routines for working with an orderbook.
@@ -11310,16 +10572,16 @@ var ripple =
 
 	'use strict';
 
-	var _ = __webpack_require__(46);
-	var util = __webpack_require__(41);
-	var extend = __webpack_require__(45);
-	var assert = __webpack_require__(40);
-	var async = __webpack_require__(47);
+	var _ = __webpack_require__(45);
+	var util = __webpack_require__(40);
+	var extend = __webpack_require__(46);
+	var assert = __webpack_require__(41);
+	var async = __webpack_require__(48);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount = __webpack_require__(3).Amount;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
-	var log = __webpack_require__(30).internal.sub('orderbook');
+	var log = __webpack_require__(29).internal.sub('orderbook');
 
 	function assertValidNumber(number, message) {
 	  assert(!_.isNull(number) && !isNaN(number), message);
@@ -12480,13 +11742,13 @@ var ripple =
 
 
 /***/ },
-/* 28 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(41);
+	var util         = __webpack_require__(40);
 	var Amount       = __webpack_require__(3).Amount;
-	var extend       = __webpack_require__(45);
+	var extend       = __webpack_require__(46);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -12571,7 +11833,7 @@ var ripple =
 
 
 /***/ },
-/* 29 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -12602,7 +11864,7 @@ var ripple =
 
 
 /***/ },
-/* 30 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -12776,6 +12038,744 @@ var ripple =
 	 * Expose the class as well.
 	 */
 	module.exports.Log = Log;
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var util = __webpack_require__(40);
+	var assert = __webpack_require__(41);
+	var async = __webpack_require__(48);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var Transaction = __webpack_require__(5).Transaction;
+	var RippleError = __webpack_require__(14).RippleError;
+	var PendingQueue = __webpack_require__(21).TransactionQueue;
+	var log = __webpack_require__(29).internal.sub('transactionmanager');
+
+	/**
+	 * @constructor TransactionManager
+	 * @param {Account} account
+	 */
+
+	function TransactionManager(account) {
+	  EventEmitter.call(this);
+
+	  var self = this;
+
+	  this._account = account;
+	  this._accountID = account._account_id;
+	  this._remote = account._remote;
+	  this._nextSequence = undefined;
+	  this._maxFee = this._remote.max_fee;
+	  this._maxAttempts = this._remote.max_attempts;
+	  this._submissionTimeout = this._remote.submission_timeout;
+	  this._lastLedgerOffset = this._remote.last_ledger_offset;
+	  this._pending = new PendingQueue();
+
+	  this._account.on('transaction-outbound', function(res) {
+	    self._transactionReceived(res);
+	  });
+
+	  this._remote.on('load_changed', function(load) {
+	    self._adjustFees(load);
+	  });
+
+	  function updatePendingStatus(ledger) {
+	    self._updatePendingStatus(ledger);
+	  }
+
+	  this._remote.on('ledger_closed', updatePendingStatus);
+
+	  function handleReconnect() {
+	    self._handleReconnect(function() {
+	      // Handle reconnect, account_tx procedure first, before
+	      // hooking back into ledger_closed
+	      self._remote.on('ledger_closed', updatePendingStatus);
+	    });
+	  }
+
+	  this._remote.on('disconnect', function() {
+	    self._remote.removeListener('ledger_closed', updatePendingStatus);
+	    self._remote.once('connect', handleReconnect);
+	  });
+
+	  // Query server for next account transaction sequence
+	  this._loadSequence();
+	}
+
+	util.inherits(TransactionManager, EventEmitter);
+
+	TransactionManager._isNoOp = function(transaction) {
+	  return (typeof transaction === 'object')
+	      && (typeof transaction.tx_json === 'object')
+	      && (transaction.tx_json.TransactionType === 'AccountSet')
+	      && (transaction.tx_json.Flags === 0);
+	};
+
+	TransactionManager._isRemoteError = function(error) {
+	  return (typeof error === 'object')
+	      && (error.error === 'remoteError')
+	      && (typeof error.remote === 'object');
+	};
+
+	TransactionManager._isNotFound = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && /^(txnNotFound|transactionNotFound)$/.test(error.remote.error);
+	};
+
+	TransactionManager._isTooBusy = function(error) {
+	  return TransactionManager._isRemoteError(error)
+	      && (error.remote.error === 'tooBusy');
+	};
+
+	/**
+	 * Normalize transactions received from account transaction stream and
+	 * account_tx
+	 *
+	 * @param {Transaction}
+	 * @return {Transaction} normalized
+	 * @api private
+	 */
+
+	TransactionManager.normalizeTransaction = function(tx) {
+	  var transaction = { };
+	  var keys = Object.keys(tx);
+
+	  for (var i = 0; i < keys.length; i++) {
+	    var k = keys[i];
+	    switch (k) {
+	      case 'transaction':
+	        // Account transaction stream
+	        transaction.tx_json = tx[k];
+	        break;
+	      case 'tx':
+	        // account_tx response
+	        transaction.engine_result = tx.meta.TransactionResult;
+	        transaction.result = transaction.engine_result;
+	        transaction.tx_json = tx[k];
+	        transaction.hash = tx[k].hash;
+	        transaction.ledger_index = tx[k].ledger_index;
+	        transaction.type = 'transaction';
+	        transaction.validated = tx.validated;
+	        break;
+	      case 'meta':
+	      case 'metadata':
+	        transaction.metadata = tx[k];
+	        break;
+	      case 'mmeta':
+	        // Don't copy mmeta
+	        break;
+	      default:
+	        transaction[k] = tx[k];
+	    }
+	  }
+
+	  return transaction;
+	};
+
+	/**
+	 * Handle received transaction from two possible sources
+	 *
+	 * + Account transaction stream (normal operation)
+	 * + account_tx (after reconnect)
+	 *
+	 * @param {Object} transaction
+	 * @api private
+	 */
+
+	TransactionManager.prototype._transactionReceived = function(tx) {
+	  var transaction = TransactionManager.normalizeTransaction(tx);
+
+	  if (!transaction.validated) {
+	    // Transaction has not been validated
+	    return;
+	  }
+
+	  if (transaction.tx_json.Account !== this._accountID) {
+	    // Received transaction's account does not match
+	    return;
+	  }
+
+	  if (this._remote.trace) {
+	    log.info('transaction received:', transaction.tx_json);
+	  }
+
+	  this._pending.addReceivedSequence(transaction.tx_json.Sequence);
+
+	  var hash = transaction.tx_json.hash;
+	  var submission = this._pending.getSubmission(hash);
+
+	  if (!(submission instanceof Transaction)) {
+	    // The received transaction does not correlate to one submitted
+	    this._pending.addReceivedId(hash, transaction);
+	    return;
+	  }
+
+	  // ND: A `success` handler will `finalize` this later
+	  switch (transaction.engine_result) {
+	    case 'tesSUCCESS':
+	      submission.emit('success', transaction);
+	      break;
+	    default:
+	      submission.emit('error', transaction);
+	  }
+	};
+
+	/**
+	 * Adjust pending transactions' fees in real-time. This does not resubmit
+	 * pending transactions; they will be resubmitted periodically with an updated
+	 * fee (and as a consequence, a new transaction ID) if not already validated
+	 *
+	 * ND: note, that `Fee` is a component of a transactionID
+	 *
+	 * @api private
+	 */
+
+	TransactionManager.prototype._adjustFees = function() {
+	  var self = this;
+
+	  if (!this._remote.local_fee) {
+	    return;
+	  }
+
+	  function maxFeeExceeded(transaction) {
+	    // Don't err until attempting to resubmit
+	    transaction.once('presubmit', function() {
+	      transaction.emit('error', 'tejMaxFeeExceeded');
+	    });
+	  }
+
+	  this._pending.forEach(function(transaction) {
+	    if (transaction._setFixedFee) {
+	      return;
+	    }
+
+	    var oldFee = transaction.tx_json.Fee;
+	    var newFee = transaction._computeFee();
+
+	    if (Number(newFee) > self._maxFee) {
+	      // Max transaction fee exceeded, abort submission
+	      maxFeeExceeded(transaction);
+	      return;
+	    }
+
+	    transaction.tx_json.Fee = newFee;
+	    transaction.emit('fee_adjusted', oldFee, newFee);
+
+	    if (self._remote.trace) {
+	      log.info('fee adjusted:', transaction.tx_json, oldFee, newFee);
+	    }
+	  });
+	};
+
+	/**
+	 * Get pending transactions
+	 *
+	 * @return {Array} pending transactions
+	 */
+
+	TransactionManager.prototype.getPending = function() {
+	  return this._pending;
+	};
+
+	/**
+	 * Legacy code. Update transaction status after excessive ledgers pass. One of
+	 * either "missing" or "lost"
+	 *
+	 * @param {Object} ledger data
+	 * @api private
+	 */
+
+	TransactionManager.prototype._updatePendingStatus = function(ledger) {
+	  assert.strictEqual(typeof ledger, 'object');
+	  assert.strictEqual(typeof ledger.ledger_index, 'number');
+
+	  this._pending.forEach(function(transaction) {
+	    if (transaction.finalized) {
+	      return;
+	    }
+
+	    switch (ledger.ledger_index - transaction.submitIndex) {
+	      case 4:
+	        transaction.emit('missing', ledger);
+	        break;
+	      case 8:
+	        transaction.emit('lost', ledger);
+	        break;
+	    }
+
+	    if (ledger.ledger_index > transaction.tx_json.LastLedgerSequence) {
+	      // Transaction must fail
+	      transaction.emit('error', new RippleError(
+	        'tejMaxLedger', 'Transaction LastLedgerSequence exceeded'));
+	    }
+	  });
+	};
+
+	// Fill an account transaction sequence
+	TransactionManager.prototype._fillSequence = function(tx, callback) {
+	  var self = this;
+
+	  function submitFill(sequence, fCallback) {
+	    var fillTransaction = self._remote.createTransaction('AccountSet', {
+	      account: self._accountID
+	    });
+	    fillTransaction.tx_json.Sequence = sequence;
+
+	    // Secrets may be set on a per-transaction basis
+	    if (tx._secret) {
+	      fillTransaction.secret(tx._secret);
+	    }
+
+	    fillTransaction.once('submitted', fCallback);
+	    fillTransaction.submit();
+	  }
+
+	  function sequenceLoaded(err, sequence) {
+	    if (typeof sequence !== 'number') {
+	      log.info('fill sequence: failed to fetch account transaction sequence');
+	      return callback();
+	    }
+
+	    var sequenceDiff = tx.tx_json.Sequence - sequence;
+	    var submitted = 0;
+
+	    async.whilst(
+	      function() {
+	        return submitted < sequenceDiff;
+	      },
+	      function(asyncCallback) {
+	        submitFill(sequence, function(res) {
+	          ++submitted;
+	          if (res.engine_result === 'tesSUCCESS') {
+	            self.emit('sequence_filled', err);
+	          }
+	          asyncCallback();
+	        });
+	      },
+	      function() {
+	        if (callback) {
+	          callback();
+	        }
+	      }
+	    );
+	  }
+
+	  this._loadSequence(sequenceLoaded);
+	};
+
+	/**
+	 * Load account transaction sequence
+	 *
+	 * @param [Function] callback
+	 * @api private
+	 */
+
+	TransactionManager.prototype._loadSequence = function(callback) {
+	  var self = this;
+	  callback = (typeof callback === 'function') ? callback : function() {};
+
+	  function sequenceLoaded(err, sequence) {
+	    if (err || typeof sequence !== 'number') {
+	      if (self._remote.trace) {
+	        log.info('error requesting account transaction sequence', err);
+	        return;
+	      }
+	    }
+
+	    self._nextSequence = sequence;
+	    self.emit('sequence_loaded', sequence);
+	    callback(err, sequence);
+	  }
+
+	  this._account.getNextSequence(sequenceLoaded);
+	};
+
+	/**
+	 * On reconnect, load account_tx in case a pending transaction succeeded while
+	 * disconnected
+	 *
+	 * @param [Function] callback
+	 * @api private
+	 */
+
+	TransactionManager.prototype._handleReconnect = function(callback) {
+	  var self = this;
+	  callback = (typeof callback === 'function') ? callback : function() {};
+
+	  if (!this._pending.length()) {
+	    callback();
+	    return;
+	  }
+
+	  function handleTransactions(err, transactions) {
+	    if (err || typeof transactions !== 'object') {
+	      if (self._remote.trace) {
+	        log.info('error requesting account_tx', err);
+	      }
+	      callback();
+	      return;
+	    }
+
+	    if (Array.isArray(transactions.transactions)) {
+	      // Treat each transaction in account transaction history as received
+	      transactions.transactions.forEach(self._transactionReceived, self);
+	    }
+
+	    callback();
+
+	    self._loadSequence(function() {
+	      // Resubmit pending transactions after sequence is loaded
+	      self._resubmit();
+	    });
+	  }
+
+	  var options = {
+	    account: this._accountID,
+	    ledger_index_min: this._pending.getMinLedger(),
+	    ledger_index_max: -1,
+	    binary: true,
+	    parseBinary: true,
+	    limit: 20
+	  };
+
+	  this._remote.requestAccountTx(options, handleTransactions);
+	};
+
+	/**
+	 * Wait for specified number of ledgers to pass
+	 *
+	 * @param {Number} ledgers
+	 * @param {Function} callback
+	 * @api private
+	 */
+
+	TransactionManager.prototype._waitLedgers = function(ledgers, callback) {
+	  assert.strictEqual(typeof ledgers, 'number');
+	  assert.strictEqual(typeof callback, 'function');
+
+	  if (ledgers < 1) {
+	    return callback();
+	  }
+
+	  var self = this;
+	  var closes = 0;
+
+	  function ledgerClosed() {
+	    if (++closes === ledgers) {
+	      self._remote.removeListener('ledger_closed', ledgerClosed);
+	      callback();
+	    }
+	  }
+
+	  this._remote.on('ledger_closed', ledgerClosed);
+	};
+
+	/**
+	 * Resubmit pending transactions. If a transaction is specified, it will be
+	 * resubmitted. Otherwise, all pending transactions will be resubmitted
+	 *
+	 * @param [Number] ledgers to wait before resubmitting
+	 * @param [Transaction] pending transactions to resubmit
+	 * @api private
+	 */
+
+	TransactionManager.prototype._resubmit = function(ledgers, pending) {
+	  var self = this;
+
+	  if (ledgers && typeof ledgers !== 'number') {
+	    pending = ledgers;
+	    ledgers = 0;
+	  }
+
+	  ledgers = ledgers || 0;
+	  pending = pending instanceof Transaction
+	  ? [pending]
+	  : this.getPending().getQueue();
+
+	  function resubmitTransaction(transaction, next) {
+	    if (!transaction || transaction.finalized) {
+	      // Transaction has been finalized, nothing to do
+	      return;
+	    }
+
+	    // Find ID within cache of received (validated) transaction IDs
+	    var received = transaction.findId(self._pending._idCache);
+
+	    if (received) {
+	      switch (received.engine_result) {
+	        case 'tesSUCCESS':
+	          transaction.emit('success', received);
+	          break;
+	        default:
+	          transaction.emit('error', received);
+	      }
+	    }
+
+	    while (self._pending.hasSequence(transaction.tx_json.Sequence)) {
+	      // Sequence number has been consumed by another transaction
+	      transaction.tx_json.Sequence += 1;
+
+	      if (self._remote.trace) {
+	        log.info('incrementing sequence:', transaction.tx_json);
+	      }
+	    }
+
+	    if (self._remote.trace) {
+	      log.info('resubmit:', transaction.tx_json);
+	    }
+
+	    transaction.once('submitted', function(m) {
+	      transaction.emit('resubmitted', m);
+	      next();
+	    });
+
+	    self._request(transaction);
+	  }
+
+	  this._waitLedgers(ledgers, function() {
+	    async.eachSeries(pending, resubmitTransaction);
+	  });
+	};
+
+	/**
+	 * Prepare submit request
+	 *
+	 * @param {Transaction} transaction to submit
+	 * @return {Request} submit request
+	 * @api private
+	 */
+
+	TransactionManager.prototype._prepareRequest = function(tx) {
+	  var submitRequest = this._remote.requestSubmit();
+
+	  if (this._remote.local_signing) {
+	    tx.sign();
+
+	    var serialized = tx.serialize();
+	    submitRequest.tx_blob(serialized.to_hex());
+
+	    var hash = tx.hash(null, null, serialized);
+	    tx.addId(hash);
+	  } else {
+	    // ND: `build_path` is completely ignored when doing local signing as
+	    // `Paths` is a component of the signed blob, the `tx_blob` is signed,
+	    // sealed and delivered, and the txn unmodified.
+	    // TODO: perhaps an exception should be raised if build_path is attempted
+	    // while local signing
+	    submitRequest.build_path(tx._build_path);
+	    submitRequest.secret(tx._secret);
+	    submitRequest.tx_json(tx.tx_json);
+	  }
+
+	  return submitRequest;
+	};
+
+	/**
+	 * Send `submit` request, handle response
+	 *
+	 * @param {Transaction} transaction to submit
+	 * @api private
+	 */
+
+	TransactionManager.prototype._request = function(tx) {
+	  var self = this;
+	  var remote = this._remote;
+
+	  if (tx.finalized) {
+	    return;
+	  }
+
+	  if (tx.attempts > this._maxAttempts) {
+	    tx.emit('error', new RippleError('tejAttemptsExceeded'));
+	    return;
+	  }
+
+	  if (tx.attempts > 0 && !remote.local_signing) {
+	    var errMessage = 'Automatic resubmission requires local signing';
+	    tx.emit('error', new RippleError('tejLocalSigningRequired', errMessage));
+	    return;
+	  }
+
+	  if (remote.trace) {
+	    log.info('submit transaction:', tx.tx_json);
+	  }
+
+	  function transactionFailed(message) {
+	    if (message.engine_result === 'tefPAST_SEQ') {
+	      // Transaction may succeed after Sequence is updated
+	      self._resubmit(1, tx);
+	    }
+	  }
+
+	  function transactionRetry() {
+	    // XXX This may no longer be necessary. Instead, update sequence numbers
+	    // after a transaction fails definitively
+	    self._fillSequence(tx, function() {
+	      self._resubmit(1, tx);
+	    });
+	  }
+
+	  function transactionFailedLocal(message) {
+	    if (message.engine_result === 'telINSUF_FEE_P') {
+	      // Transaction may succeed after Fee is updated
+	      self._resubmit(1, tx);
+	    }
+	  }
+
+	  function submissionError(error) {
+	    // Either a tem-class error or generic server error such as tooBusy. This
+	    // should be a definitive failure
+	    if (TransactionManager._isTooBusy(error)) {
+	      self._resubmit(1, tx);
+	    } else {
+	      self._nextSequence--;
+	      tx.emit('error', error);
+	    }
+	  }
+
+	  function submitted(message) {
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    // ND: If for some unknown reason our hash wasn't computed correctly this
+	    // is an extra measure.
+	    if (message.tx_json && message.tx_json.hash) {
+	      tx.addId(message.tx_json.hash);
+	    }
+
+	    message.result = message.engine_result || '';
+
+	    tx.result = message;
+	    tx.responses += 1;
+
+	    if (remote.trace) {
+	      log.info('submit response:', message);
+	    }
+
+	    tx.emit('submitted', message);
+
+	    switch (message.result.slice(0, 3)) {
+	      case 'tes':
+	        tx.emit('proposed', message);
+	        break;
+	      case 'tec':
+	        break;
+	      case 'ter':
+	        transactionRetry(message);
+	        break;
+	      case 'tef':
+	        transactionFailed(message);
+	        break;
+	      case 'tel':
+	        transactionFailedLocal(message);
+	        break;
+	      default:
+	        // tem
+	        submissionError(message);
+	    }
+	  }
+
+	  function requestTimeout() {
+	    // ND: What if the response is just slow and we get a response that
+	    // `submitted` above will cause to have concurrent resubmit logic streams?
+	    // It's simpler to just mute handlers and look out for finalized
+	    // `transaction` messages.
+	    if (tx.finalized) {
+	      return;
+	    }
+
+	    tx.emit('timeout');
+
+	    if (remote.isConnected()) {
+	      if (remote.trace) {
+	        log.info('timeout:', tx.tx_json);
+	      }
+	      self._resubmit(1, tx);
+	    }
+	  }
+
+	  tx.submitIndex = this._remote._ledger_current_index;
+
+	  if (tx.attempts === 0) {
+	    tx.initialSubmitIndex = tx.submitIndex;
+	  }
+
+	  if (!tx._setLastLedger) {
+	    // Honor LastLedgerSequence set with tx.lastLedger()
+	    tx.tx_json.LastLedgerSequence = tx.initialSubmitIndex
+	    + this._lastLedgerOffset;
+	  }
+
+	  tx.lastLedgerSequence = tx.tx_json.LastLedgerSequence;
+
+	  if (remote.local_signing) {
+	    tx.sign();
+	  }
+
+	  var submitRequest = this._prepareRequest(tx);
+	  submitRequest.once('error', submitted);
+	  submitRequest.once('success', submitted);
+
+	  tx.emit('presubmit');
+
+	  submitRequest.broadcast().request();
+	  tx.attempts++;
+
+	  tx.emit('postsubmit');
+
+	  submitRequest.timeout(self._submissionTimeout, requestTimeout);
+	};
+
+	/**
+	 * Entry point for TransactionManager submission
+	 *
+	 * @param {Transaction} tx
+	 */
+
+	TransactionManager.prototype.submit = function(tx) {
+	  var self = this;
+
+	  if (typeof this._nextSequence !== 'number') {
+	    // If sequence number is not yet known, defer until it is.
+	    this.once('sequence_loaded', function() {
+	      self.submit(tx);
+	    });
+	    return;
+	  }
+
+	  if (tx.finalized) {
+	    // Finalized transactions must stop all activity
+	    return;
+	  }
+
+	  if (typeof tx.tx_json.Sequence !== 'number') {
+	    // Honor manually-set sequences
+	    tx.tx_json.Sequence = this._nextSequence++;
+	  }
+
+	  tx.once('cleanup', function() {
+	    self.getPending().remove(tx);
+	  });
+
+	  if (!tx.complete()) {
+	    this._nextSequence--;
+	    return;
+	  }
+
+	  // ND: this is the ONLY place we put the tx into the queue. The
+	  // TransactionQueue queue is merely a list, so any mutations to tx._hash
+	  // will cause subsequent look ups (eg. inside 'transaction-outbound'
+	  // validated transaction clearing) to fail.
+	  this._pending.push(tx);
+	  this._request(tx);
+	};
+
+	exports.TransactionManager = TransactionManager;
 
 
 /***/ },
@@ -13292,7 +13292,7 @@ var ripple =
 	var UInt256     = __webpack_require__(10).UInt256;
 	var request     = __webpack_require__(68);
 	var querystring = __webpack_require__(51);
-	var extend      = __webpack_require__(45);
+	var extend      = __webpack_require__(46);
 	var parser      = __webpack_require__(44);
 	var Crypt       = { };
 
@@ -18518,10 +18518,10 @@ var ripple =
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(41);
+	var util = __webpack_require__(40);
 	var sjcl = __webpack_require__(17).sjcl;
 	var stypes = __webpack_require__(24);
-	var hashprefixes = __webpack_require__(29);
+	var hashprefixes = __webpack_require__(28);
 
 	var UInt256 = __webpack_require__(10).UInt256;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
@@ -19070,371 +19070,6 @@ var ripple =
 
 /***/ },
 /* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-	//
-	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
-	//
-	// Originally from narwhal.js (http://narwhaljs.org)
-	// Copyright (c) 2009 Thomas Robinson <280north.com>
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a copy
-	// of this software and associated documentation files (the 'Software'), to
-	// deal in the Software without restriction, including without limitation the
-	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-	// sell copies of the Software, and to permit persons to whom the Software is
-	// furnished to do so, subject to the following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included in
-	// all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// when used in node, this will actually load the util module we depend on
-	// versus loading the builtin util module as happens otherwise
-	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(41);
-
-	var pSlice = Array.prototype.slice;
-	var hasOwn = Object.prototype.hasOwnProperty;
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  if (options.message) {
-	    this.message = options.message;
-	    this.generatedMessage = false;
-	  } else {
-	    this.message = getMessage(this);
-	    this.generatedMessage = true;
-	  }
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	  else {
-	    // non v8 browsers so we can have a stacktrace
-	    var err = new Error();
-	    if (err.stack) {
-	      var out = err.stack;
-
-	      // try to strip useless frames
-	      var fn_name = stackStartFunction.name;
-	      var idx = out.indexOf('\n' + fn_name);
-	      if (idx >= 0) {
-	        // once we have located the function frame
-	        // we need to strip out everything before it (and its line)
-	        var next_line = out.indexOf('\n', idx + 1);
-	        out = out.substring(next_line + 1);
-	      }
-
-	      this.stack = out;
-	    }
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (util.isUndefined(value)) {
-	    return '' + value;
-	  }
-	  if (util.isNumber(value) && !isFinite(value)) {
-	    return value.toString();
-	  }
-	  if (util.isFunction(value) || util.isRegExp(value)) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (util.isString(s)) {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	function getMessage(self) {
-	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
-	         self.operator + ' ' +
-	         truncate(JSON.stringify(self.expected, replacer), 128);
-	}
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (util.isDate(actual) && util.isDate(expected)) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  // if one is a primitive, the other must be same
-	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
-	    return a === b;
-	  }
-	  var aIsArgs = isArguments(a),
-	      bIsArgs = isArguments(b);
-	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
-	    return false;
-	  if (aIsArgs) {
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  var ka = objectKeys(a),
-	      kb = objectKeys(b),
-	      key, i;
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (util.isString(expected)) {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) {
-	    if (hasOwn.call(obj, key)) keys.push(key);
-	  }
-	  return keys;
-	};
-
-
-/***/ },
-/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -20025,6 +19660,371 @@ var ripple =
 	}
 	
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(61)))
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
+	//
+	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
+	//
+	// Originally from narwhal.js (http://narwhaljs.org)
+	// Copyright (c) 2009 Thomas Robinson <280north.com>
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy
+	// of this software and associated documentation files (the 'Software'), to
+	// deal in the Software without restriction, including without limitation the
+	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+	// sell copies of the Software, and to permit persons to whom the Software is
+	// furnished to do so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in
+	// all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// when used in node, this will actually load the util module we depend on
+	// versus loading the builtin util module as happens otherwise
+	// this is a bug in node module loading as far as I am concerned
+	var util = __webpack_require__(40);
+
+	var pSlice = Array.prototype.slice;
+	var hasOwn = Object.prototype.hasOwnProperty;
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  if (options.message) {
+	    this.message = options.message;
+	    this.generatedMessage = false;
+	  } else {
+	    this.message = getMessage(this);
+	    this.generatedMessage = true;
+	  }
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	  else {
+	    // non v8 browsers so we can have a stacktrace
+	    var err = new Error();
+	    if (err.stack) {
+	      var out = err.stack;
+
+	      // try to strip useless frames
+	      var fn_name = stackStartFunction.name;
+	      var idx = out.indexOf('\n' + fn_name);
+	      if (idx >= 0) {
+	        // once we have located the function frame
+	        // we need to strip out everything before it (and its line)
+	        var next_line = out.indexOf('\n', idx + 1);
+	        out = out.substring(next_line + 1);
+	      }
+
+	      this.stack = out;
+	    }
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (util.isUndefined(value)) {
+	    return '' + value;
+	  }
+	  if (util.isNumber(value) && !isFinite(value)) {
+	    return value.toString();
+	  }
+	  if (util.isFunction(value) || util.isRegExp(value)) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (util.isString(s)) {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	function getMessage(self) {
+	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
+	         self.operator + ' ' +
+	         truncate(JSON.stringify(self.expected, replacer), 128);
+	}
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (util.isDate(actual) && util.isDate(expected)) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  // if one is a primitive, the other must be same
+	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
+	    return a === b;
+	  }
+	  var aIsArgs = isArguments(a),
+	      bIsArgs = isArguments(b);
+	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
+	    return false;
+	  if (aIsArgs) {
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  var ka = objectKeys(a),
+	      kb = objectKeys(b),
+	      key, i;
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (util.isString(expected)) {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) {
+	    if (hasOwn.call(obj, key)) keys.push(key);
+	  }
+	  return keys;
+	};
+
 
 /***/ },
 /* 42 */
@@ -22142,90 +22142,6 @@ var ripple =
 
 /***/ },
 /* 45 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var hasOwn = Object.prototype.hasOwnProperty;
-	var toString = Object.prototype.toString;
-
-	function isPlainObject(obj) {
-		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
-			return false;
-
-		var has_own_constructor = hasOwn.call(obj, 'constructor');
-		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-		// Not own constructor property must be Object
-		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
-			return false;
-
-		// Own properties are enumerated firstly, so to speed up,
-		// if last one is own, then all properties are own.
-		var key;
-		for ( key in obj ) {}
-
-		return key === undefined || hasOwn.call( obj, key );
-	};
-
-	module.exports = function extend() {
-		var options, name, src, copy, copyIsArray, clone,
-		    target = arguments[0] || {},
-		    i = 1,
-		    length = arguments.length,
-		    deep = false;
-
-		// Handle a deep copy situation
-		if ( typeof target === "boolean" ) {
-			deep = target;
-			target = arguments[1] || {};
-			// skip the boolean and the target
-			i = 2;
-		}
-
-		// Handle case when target is a string or something (possible in deep copy)
-		if ( typeof target !== "object" && typeof target !== "function") {
-			target = {};
-		}
-
-		for ( ; i < length; i++ ) {
-			// Only deal with non-null/undefined values
-			if ( (options = arguments[ i ]) != null ) {
-				// Extend the base object
-				for ( name in options ) {
-					src = target[ name ];
-					copy = options[ name ];
-
-					// Prevent never-ending loop
-					if ( target === copy ) {
-						continue;
-					}
-
-					// Recurse if we're merging plain objects or arrays
-					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-						if ( copyIsArray ) {
-							copyIsArray = false;
-							clone = src && Array.isArray(src) ? src : [];
-
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[ name ] = extend( deep, clone, copy );
-
-					// Don't bring in undefined values
-					} else if ( copy !== undefined ) {
-						target[ name ] = copy;
-					}
-				}
-			}
-		}
-
-		// Return the modified object
-		return target;
-	};
-
-
-/***/ },
-/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -33831,7 +33747,349 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var hasOwn = Object.prototype.hasOwnProperty;
+	var toString = Object.prototype.toString;
+
+	function isPlainObject(obj) {
+		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
+			return false;
+
+		var has_own_constructor = hasOwn.call(obj, 'constructor');
+		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+		// Not own constructor property must be Object
+		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
+			return false;
+
+		// Own properties are enumerated firstly, so to speed up,
+		// if last one is own, then all properties are own.
+		var key;
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	};
+
+	module.exports = function extend() {
+		var options, name, src, copy, copyIsArray, clone,
+		    target = arguments[0] || {},
+		    i = 1,
+		    length = arguments.length,
+		    deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
+		}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && typeof target !== "function") {
+			target = {};
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && Array.isArray(src) ? src : [];
+
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
+
+
+/***/ },
 /* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	;(function () { // closure for web browsers
+
+	if (typeof module === 'object' && module.exports) {
+	  module.exports = LRUCache
+	} else {
+	  // just set the global for non-node platforms.
+	  this.LRUCache = LRUCache
+	}
+
+	function hOP (obj, key) {
+	  return Object.prototype.hasOwnProperty.call(obj, key)
+	}
+
+	function naiveLength () { return 1 }
+
+	function LRUCache (options) {
+	  if (!(this instanceof LRUCache))
+	    return new LRUCache(options)
+
+	  if (typeof options === 'number')
+	    options = { max: options }
+
+	  if (!options)
+	    options = {}
+
+	  this._max = options.max
+	  // Kind of weird to have a default max of Infinity, but oh well.
+	  if (!this._max || !(typeof this._max === "number") || this._max <= 0 )
+	    this._max = Infinity
+
+	  this._lengthCalculator = options.length || naiveLength
+	  if (typeof this._lengthCalculator !== "function")
+	    this._lengthCalculator = naiveLength
+
+	  this._allowStale = options.stale || false
+	  this._maxAge = options.maxAge || null
+	  this._dispose = options.dispose
+	  this.reset()
+	}
+
+	// resize the cache when the max changes.
+	Object.defineProperty(LRUCache.prototype, "max",
+	  { set : function (mL) {
+	      if (!mL || !(typeof mL === "number") || mL <= 0 ) mL = Infinity
+	      this._max = mL
+	      if (this._length > this._max) trim(this)
+	    }
+	  , get : function () { return this._max }
+	  , enumerable : true
+	  })
+
+	// resize the cache when the lengthCalculator changes.
+	Object.defineProperty(LRUCache.prototype, "lengthCalculator",
+	  { set : function (lC) {
+	      if (typeof lC !== "function") {
+	        this._lengthCalculator = naiveLength
+	        this._length = this._itemCount
+	        for (var key in this._cache) {
+	          this._cache[key].length = 1
+	        }
+	      } else {
+	        this._lengthCalculator = lC
+	        this._length = 0
+	        for (var key in this._cache) {
+	          this._cache[key].length = this._lengthCalculator(this._cache[key].value)
+	          this._length += this._cache[key].length
+	        }
+	      }
+
+	      if (this._length > this._max) trim(this)
+	    }
+	  , get : function () { return this._lengthCalculator }
+	  , enumerable : true
+	  })
+
+	Object.defineProperty(LRUCache.prototype, "length",
+	  { get : function () { return this._length }
+	  , enumerable : true
+	  })
+
+
+	Object.defineProperty(LRUCache.prototype, "itemCount",
+	  { get : function () { return this._itemCount }
+	  , enumerable : true
+	  })
+
+	LRUCache.prototype.forEach = function (fn, thisp) {
+	  thisp = thisp || this
+	  var i = 0;
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    i++
+	    var hit = this._lruList[k]
+	    if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
+	      del(this, hit)
+	      if (!this._allowStale) hit = undefined
+	    }
+	    if (hit) {
+	      fn.call(thisp, hit.value, hit.key, this)
+	    }
+	  }
+	}
+
+	LRUCache.prototype.keys = function () {
+	  var keys = new Array(this._itemCount)
+	  var i = 0
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    var hit = this._lruList[k]
+	    keys[i++] = hit.key
+	  }
+	  return keys
+	}
+
+	LRUCache.prototype.values = function () {
+	  var values = new Array(this._itemCount)
+	  var i = 0
+	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
+	    var hit = this._lruList[k]
+	    values[i++] = hit.value
+	  }
+	  return values
+	}
+
+	LRUCache.prototype.reset = function () {
+	  if (this._dispose && this._cache) {
+	    for (var k in this._cache) {
+	      this._dispose(k, this._cache[k].value)
+	    }
+	  }
+
+	  this._cache = Object.create(null) // hash of items by key
+	  this._lruList = Object.create(null) // list of items in order of use recency
+	  this._mru = 0 // most recently used
+	  this._lru = 0 // least recently used
+	  this._length = 0 // number of items in the list
+	  this._itemCount = 0
+	}
+
+	// Provided for debugging/dev purposes only. No promises whatsoever that
+	// this API stays stable.
+	LRUCache.prototype.dump = function () {
+	  return this._cache
+	}
+
+	LRUCache.prototype.dumpLru = function () {
+	  return this._lruList
+	}
+
+	LRUCache.prototype.set = function (key, value) {
+	  if (hOP(this._cache, key)) {
+	    // dispose of the old one before overwriting
+	    if (this._dispose) this._dispose(key, this._cache[key].value)
+	    if (this._maxAge) this._cache[key].now = Date.now()
+	    this._cache[key].value = value
+	    this.get(key)
+	    return true
+	  }
+
+	  var len = this._lengthCalculator(value)
+	  var age = this._maxAge ? Date.now() : 0
+	  var hit = new Entry(key, value, this._mru++, len, age)
+
+	  // oversized objects fall out of cache automatically.
+	  if (hit.length > this._max) {
+	    if (this._dispose) this._dispose(key, value)
+	    return false
+	  }
+
+	  this._length += hit.length
+	  this._lruList[hit.lu] = this._cache[key] = hit
+	  this._itemCount ++
+
+	  if (this._length > this._max) trim(this)
+	  return true
+	}
+
+	LRUCache.prototype.has = function (key) {
+	  if (!hOP(this._cache, key)) return false
+	  var hit = this._cache[key]
+	  if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
+	    return false
+	  }
+	  return true
+	}
+
+	LRUCache.prototype.get = function (key) {
+	  return get(this, key, true)
+	}
+
+	LRUCache.prototype.peek = function (key) {
+	  return get(this, key, false)
+	}
+
+	LRUCache.prototype.pop = function () {
+	  var hit = this._lruList[this._lru]
+	  del(this, hit)
+	  return hit || null
+	}
+
+	LRUCache.prototype.del = function (key) {
+	  del(this, this._cache[key])
+	}
+
+	function get (self, key, doUse) {
+	  var hit = self._cache[key]
+	  if (hit) {
+	    if (self._maxAge && (Date.now() - hit.now > self._maxAge)) {
+	      del(self, hit)
+	      if (!self._allowStale) hit = undefined
+	    } else {
+	      if (doUse) use(self, hit)
+	    }
+	    if (hit) hit = hit.value
+	  }
+	  return hit
+	}
+
+	function use (self, hit) {
+	  shiftLU(self, hit)
+	  hit.lu = self._mru ++
+	  self._lruList[hit.lu] = hit
+	}
+
+	function trim (self) {
+	  while (self._lru < self._mru && self._length > self._max)
+	    del(self, self._lruList[self._lru])
+	}
+
+	function shiftLU (self, hit) {
+	  delete self._lruList[ hit.lu ]
+	  while (self._lru < self._mru && !self._lruList[self._lru]) self._lru ++
+	}
+
+	function del (self, hit) {
+	  if (hit) {
+	    if (self._dispose) self._dispose(hit.key, hit.value)
+	    self._length -= hit.length
+	    self._itemCount --
+	    delete self._cache[ hit.key ]
+	    shiftLU(self, hit)
+	  }
+	}
+
+	// classy, since V8 prefers predictable objects.
+	function Entry (key, value, lu, length, now) {
+	  this.key = key
+	  this.value = value
+	  this.lu = lu
+	  this.length = length
+	  this.now = now
+	}
+
+	})()
+
+
+/***/ },
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, setImmediate) {/*!
@@ -34961,7 +35219,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61), __webpack_require__(69).setImmediate))
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.0.3 https://github.com/MikeMcl/bignumber.js/LICENCE */
@@ -37633,264 +37891,6 @@ var ripple =
 	        global.BigNumber = BigNumber;
 	    }
 	})(this);
-
-
-/***/ },
-/* 49 */
-/***/ function(module, exports, __webpack_require__) {
-
-	;(function () { // closure for web browsers
-
-	if (typeof module === 'object' && module.exports) {
-	  module.exports = LRUCache
-	} else {
-	  // just set the global for non-node platforms.
-	  this.LRUCache = LRUCache
-	}
-
-	function hOP (obj, key) {
-	  return Object.prototype.hasOwnProperty.call(obj, key)
-	}
-
-	function naiveLength () { return 1 }
-
-	function LRUCache (options) {
-	  if (!(this instanceof LRUCache))
-	    return new LRUCache(options)
-
-	  if (typeof options === 'number')
-	    options = { max: options }
-
-	  if (!options)
-	    options = {}
-
-	  this._max = options.max
-	  // Kind of weird to have a default max of Infinity, but oh well.
-	  if (!this._max || !(typeof this._max === "number") || this._max <= 0 )
-	    this._max = Infinity
-
-	  this._lengthCalculator = options.length || naiveLength
-	  if (typeof this._lengthCalculator !== "function")
-	    this._lengthCalculator = naiveLength
-
-	  this._allowStale = options.stale || false
-	  this._maxAge = options.maxAge || null
-	  this._dispose = options.dispose
-	  this.reset()
-	}
-
-	// resize the cache when the max changes.
-	Object.defineProperty(LRUCache.prototype, "max",
-	  { set : function (mL) {
-	      if (!mL || !(typeof mL === "number") || mL <= 0 ) mL = Infinity
-	      this._max = mL
-	      if (this._length > this._max) trim(this)
-	    }
-	  , get : function () { return this._max }
-	  , enumerable : true
-	  })
-
-	// resize the cache when the lengthCalculator changes.
-	Object.defineProperty(LRUCache.prototype, "lengthCalculator",
-	  { set : function (lC) {
-	      if (typeof lC !== "function") {
-	        this._lengthCalculator = naiveLength
-	        this._length = this._itemCount
-	        for (var key in this._cache) {
-	          this._cache[key].length = 1
-	        }
-	      } else {
-	        this._lengthCalculator = lC
-	        this._length = 0
-	        for (var key in this._cache) {
-	          this._cache[key].length = this._lengthCalculator(this._cache[key].value)
-	          this._length += this._cache[key].length
-	        }
-	      }
-
-	      if (this._length > this._max) trim(this)
-	    }
-	  , get : function () { return this._lengthCalculator }
-	  , enumerable : true
-	  })
-
-	Object.defineProperty(LRUCache.prototype, "length",
-	  { get : function () { return this._length }
-	  , enumerable : true
-	  })
-
-
-	Object.defineProperty(LRUCache.prototype, "itemCount",
-	  { get : function () { return this._itemCount }
-	  , enumerable : true
-	  })
-
-	LRUCache.prototype.forEach = function (fn, thisp) {
-	  thisp = thisp || this
-	  var i = 0;
-	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
-	    i++
-	    var hit = this._lruList[k]
-	    if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
-	      del(this, hit)
-	      if (!this._allowStale) hit = undefined
-	    }
-	    if (hit) {
-	      fn.call(thisp, hit.value, hit.key, this)
-	    }
-	  }
-	}
-
-	LRUCache.prototype.keys = function () {
-	  var keys = new Array(this._itemCount)
-	  var i = 0
-	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
-	    var hit = this._lruList[k]
-	    keys[i++] = hit.key
-	  }
-	  return keys
-	}
-
-	LRUCache.prototype.values = function () {
-	  var values = new Array(this._itemCount)
-	  var i = 0
-	  for (var k = this._mru - 1; k >= 0 && i < this._itemCount; k--) if (this._lruList[k]) {
-	    var hit = this._lruList[k]
-	    values[i++] = hit.value
-	  }
-	  return values
-	}
-
-	LRUCache.prototype.reset = function () {
-	  if (this._dispose && this._cache) {
-	    for (var k in this._cache) {
-	      this._dispose(k, this._cache[k].value)
-	    }
-	  }
-
-	  this._cache = Object.create(null) // hash of items by key
-	  this._lruList = Object.create(null) // list of items in order of use recency
-	  this._mru = 0 // most recently used
-	  this._lru = 0 // least recently used
-	  this._length = 0 // number of items in the list
-	  this._itemCount = 0
-	}
-
-	// Provided for debugging/dev purposes only. No promises whatsoever that
-	// this API stays stable.
-	LRUCache.prototype.dump = function () {
-	  return this._cache
-	}
-
-	LRUCache.prototype.dumpLru = function () {
-	  return this._lruList
-	}
-
-	LRUCache.prototype.set = function (key, value) {
-	  if (hOP(this._cache, key)) {
-	    // dispose of the old one before overwriting
-	    if (this._dispose) this._dispose(key, this._cache[key].value)
-	    if (this._maxAge) this._cache[key].now = Date.now()
-	    this._cache[key].value = value
-	    this.get(key)
-	    return true
-	  }
-
-	  var len = this._lengthCalculator(value)
-	  var age = this._maxAge ? Date.now() : 0
-	  var hit = new Entry(key, value, this._mru++, len, age)
-
-	  // oversized objects fall out of cache automatically.
-	  if (hit.length > this._max) {
-	    if (this._dispose) this._dispose(key, value)
-	    return false
-	  }
-
-	  this._length += hit.length
-	  this._lruList[hit.lu] = this._cache[key] = hit
-	  this._itemCount ++
-
-	  if (this._length > this._max) trim(this)
-	  return true
-	}
-
-	LRUCache.prototype.has = function (key) {
-	  if (!hOP(this._cache, key)) return false
-	  var hit = this._cache[key]
-	  if (this._maxAge && (Date.now() - hit.now > this._maxAge)) {
-	    return false
-	  }
-	  return true
-	}
-
-	LRUCache.prototype.get = function (key) {
-	  return get(this, key, true)
-	}
-
-	LRUCache.prototype.peek = function (key) {
-	  return get(this, key, false)
-	}
-
-	LRUCache.prototype.pop = function () {
-	  var hit = this._lruList[this._lru]
-	  del(this, hit)
-	  return hit || null
-	}
-
-	LRUCache.prototype.del = function (key) {
-	  del(this, this._cache[key])
-	}
-
-	function get (self, key, doUse) {
-	  var hit = self._cache[key]
-	  if (hit) {
-	    if (self._maxAge && (Date.now() - hit.now > self._maxAge)) {
-	      del(self, hit)
-	      if (!self._allowStale) hit = undefined
-	    } else {
-	      if (doUse) use(self, hit)
-	    }
-	    if (hit) hit = hit.value
-	  }
-	  return hit
-	}
-
-	function use (self, hit) {
-	  shiftLU(self, hit)
-	  hit.lu = self._mru ++
-	  self._lruList[hit.lu] = hit
-	}
-
-	function trim (self) {
-	  while (self._lru < self._mru && self._length > self._max)
-	    del(self, self._lruList[self._lru])
-	}
-
-	function shiftLU (self, hit) {
-	  delete self._lruList[ hit.lu ]
-	  while (self._lru < self._mru && !self._lruList[self._lru]) self._lru ++
-	}
-
-	function del (self, hit) {
-	  if (hit) {
-	    if (self._dispose) self._dispose(hit.key, hit.value)
-	    self._length -= hit.length
-	    self._itemCount --
-	    delete self._cache[ hit.key ]
-	    shiftLU(self, hit)
-	  }
-	}
-
-	// classy, since V8 prefers predictable objects.
-	function Entry (key, value, lu, length, now) {
-	  this.key = key
-	  this.value = value
-	  this.lu = lu
-	  this.length = length
-	  this.now = now
-	}
-
-	})()
 
 
 /***/ },
@@ -41580,7 +41580,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(41).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41724,7 +41724,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(41).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41868,7 +41868,7 @@ var ripple =
 /* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(41).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
