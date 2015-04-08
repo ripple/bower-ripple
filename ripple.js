@@ -115,7 +115,7 @@ var ripple =
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	 'use strict';
+	'use strict';
 
 	// Interface to manage connections to rippled servers
 	//
@@ -131,11 +131,11 @@ var ripple =
 	// to be a very simple drop option.
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util = __webpack_require__(40);
-	var assert = __webpack_require__(41);
+	var util = __webpack_require__(44);
+	var assert = __webpack_require__(40);
 	var LRU = __webpack_require__(47);
 	var async = __webpack_require__(48);
-	var lodash = __webpack_require__(45);
+	var lodash = __webpack_require__(46);
 	var Server = __webpack_require__(18).Server;
 	var Request = __webpack_require__(2).Request;
 	var Amount = __webpack_require__(3).Amount;
@@ -634,8 +634,13 @@ var ripple =
 	Remote.prototype._handleMessage = function(message, server) {
 	  try {
 	    message = JSON.parse(message);
+
+	  /*eslint-disable no-empty*/
 	  } catch (e) {
+	    // TODO: why are we suppressing this?
+	    console.error(e);
 	  }
+	  /*eslint-enable no-empty*/
 
 	  if (!Remote.isValidMessage(message)) {
 	    // Unexpected response from remote.
@@ -664,6 +669,15 @@ var ripple =
 	      break;
 	  }
 	};
+
+
+	Remote.prototype.getLedgerSequence = function() {
+	  if (!this._ledger_current_index) {
+	    throw new Error('Ledger sequence has not yet been initialized');
+	  }
+	  return this._ledger_current_index;
+	};
+
 
 	/**
 	 * Handle server ledger_closed event
@@ -2687,7 +2701,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(40);
+	var util         = __webpack_require__(44);
 	var async        = __webpack_require__(48);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
@@ -3259,8 +3273,8 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert = __webpack_require__(41);
-	var extend = __webpack_require__(46);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(45);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Seed = __webpack_require__(11).Seed;
@@ -4280,8 +4294,8 @@ var ripple =
 
 	// var network = require('./network.js');
 	var async              = __webpack_require__(48);
-	var util               = __webpack_require__(40);
-	var extend             = __webpack_require__(46);
+	var util               = __webpack_require__(44);
+	var extend             = __webpack_require__(45);
 	var EventEmitter       = __webpack_require__(39).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(9).UInt160;
@@ -4669,20 +4683,21 @@ var ripple =
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util             = __webpack_require__(40);
-	var assert           = __webpack_require__(41);
-	var EventEmitter     = __webpack_require__(39).EventEmitter;
-	var utils            = __webpack_require__(17);
-	var sjcl             = __webpack_require__(17).sjcl;
-	var Amount           = __webpack_require__(3).Amount;
-	var Currency         = __webpack_require__(3).Currency;
-	var UInt160          = __webpack_require__(3).UInt160;
-	var Seed             = __webpack_require__(11).Seed;
+	'use strict';
+
+	var util = __webpack_require__(44);
+	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var utils = __webpack_require__(17);
+	var sjcl = __webpack_require__(17).sjcl;
+	var Amount = __webpack_require__(3).Amount;
+	var Currency = __webpack_require__(3).Currency;
+	var UInt160 = __webpack_require__(3).UInt160;
+	var Seed = __webpack_require__(11).Seed;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
-	var RippleError      = __webpack_require__(14).RippleError;
-	var hashprefixes     = __webpack_require__(28);
-	var config           = __webpack_require__(25);
-	var log              = __webpack_require__(29).internal.sub('transaction');
+	var RippleError = __webpack_require__(14).RippleError;
+	var hashprefixes = __webpack_require__(28);
+	var config = __webpack_require__(25);
+	var log = __webpack_require__(29).internal.sub('transaction');
 
 	/**
 	 * @constructor Transaction
@@ -4706,14 +4721,14 @@ var ripple =
 	  var remoteExists = (typeof remote === 'object');
 
 	  this.remote = remote;
-	  this.tx_json = { Flags: 0 };
-	  this._secret = void(0);
+	  this.tx_json = {Flags: 0};
+	  this._secret = undefined;
 	  this._build_path = false;
-	  this._maxFee = remoteExists ? this.remote.max_fee : void(0);
+	  this._maxFee = remoteExists ? this.remote.max_fee : undefined;
 	  this.state = 'unsubmitted';
 	  this.finalized = false;
-	  this.previousSigningHash = void(0);
-	  this.submitIndex = void(0);
+	  this.previousSigningHash = undefined;
+	  this.submitIndex = undefined;
 	  this.canonical = remoteExists ? this.remote.canonical_signing : true;
 	  this.submittedIDs = [ ];
 	  this.attempts = 0;
@@ -4747,11 +4762,12 @@ var ripple =
 	    // Transaction was submitted successfully to the network
 	    self.setState('pending');
 	  });
-	};
+	}
 
 	util.inherits(Transaction, EventEmitter);
 
-	// XXX This needs to be determined from the network.
+	// This is currently a constant in rippled known as the "base reference"
+	// https://wiki.ripple.com/Transaction_Fee#Base_Fees
 	Transaction.fee_units = {
 	  default: 10
 	};
@@ -4759,38 +4775,38 @@ var ripple =
 	Transaction.flags = {
 	  // Universal flags can apply to any transaction type
 	  Universal: {
-	    FullyCanonicalSig:  0x80000000
+	    FullyCanonicalSig: 0x80000000
 	  },
 
 	  AccountSet: {
-	    RequireDestTag:     0x00010000,
-	    OptionalDestTag:    0x00020000,
-	    RequireAuth:        0x00040000,
-	    OptionalAuth:       0x00080000,
-	    DisallowXRP:        0x00100000,
-	    AllowXRP:           0x00200000
+	    RequireDestTag: 0x00010000,
+	    OptionalDestTag: 0x00020000,
+	    RequireAuth: 0x00040000,
+	    OptionalAuth: 0x00080000,
+	    DisallowXRP: 0x00100000,
+	    AllowXRP: 0x00200000
 	  },
 
 	  TrustSet: {
-	    SetAuth:            0x00010000,
-	    NoRipple:           0x00020000,
-	    SetNoRipple:        0x00020000,
-	    ClearNoRipple:      0x00040000,
-	    SetFreeze:          0x00100000,
-	    ClearFreeze:        0x00200000
+	    SetAuth: 0x00010000,
+	    NoRipple: 0x00020000,
+	    SetNoRipple: 0x00020000,
+	    ClearNoRipple: 0x00040000,
+	    SetFreeze: 0x00100000,
+	    ClearFreeze: 0x00200000
 	  },
 
 	  OfferCreate: {
-	    Passive:            0x00010000,
-	    ImmediateOrCancel:  0x00020000,
-	    FillOrKill:         0x00040000,
-	    Sell:               0x00080000
+	    Passive: 0x00010000,
+	    ImmediateOrCancel: 0x00020000,
+	    FillOrKill: 0x00040000,
+	    Sell: 0x00080000
 	  },
 
 	  Payment: {
-	    NoRippleDirect:     0x00010000,
-	    PartialPayment:     0x00020000,
-	    LimitQuality:       0x00040000
+	    NoRippleDirect: 0x00010000,
+	    PartialPayment: 0x00020000,
+	    LimitQuality: 0x00040000
 	  }
 	};
 
@@ -4799,14 +4815,14 @@ var ripple =
 	// SetFlag or ClearFlag field
 	Transaction.set_clear_flags = {
 	  AccountSet: {
-	    asfRequireDest:    1,
-	    asfRequireAuth:    2,
-	    asfDisallowXRP:    3,
-	    asfDisableMaster:  4,
-	    asfAccountTxnID:   5,
-	    asfNoFreeze:       6,
-	    asfGlobalFreeze:   7,
-	    asfDefaultRipple:  8
+	    asfRequireDest: 1,
+	    asfRequireAuth: 2,
+	    asfDisallowXRP: 3,
+	    asfDisableMaster: 4,
+	    asfAccountTxnID: 5,
+	    asfNoFreeze: 6,
+	    asfGlobalFreeze: 7,
+	    asfDefaultRipple: 8
 	  }
 	};
 
@@ -4818,12 +4834,12 @@ var ripple =
 	Transaction.formats = __webpack_require__(16).tx;
 
 	Transaction.prototype.consts = {
-	  telLOCAL_ERROR:  -399,
-	  temMALFORMED:    -299,
-	  tefFAILURE:      -199,
-	  terRETRY:        -99,
-	  tesSUCCESS:      0,
-	  tecCLAIMED:      100
+	  telLOCAL_ERROR: -399,
+	  temMALFORMED: -299,
+	  tefFAILURE: -199,
+	  terRETRY: -99,
+	  tesSUCCESS: 0,
+	  tecCLAIMED: 100
 	};
 
 	Transaction.prototype.isTelLocal = function(ter) {
@@ -4851,7 +4867,9 @@ var ripple =
 	};
 
 	Transaction.prototype.isRejected = function(ter) {
-	  return this.isTelLocal(ter) || this.isTemMalformed(ter) || this.isTefFailure(ter);
+	  return this.isTelLocal(ter) ||
+	         this.isTemMalformed(ter) ||
+	         this.isTefFailure(ter);
 	};
 
 	Transaction.from_json = function(j) {
@@ -4888,7 +4906,7 @@ var ripple =
 
 	  if (this.result) {
 	    this.result.ledger_index = message.ledger_index;
-	    this.result.ledger_hash  = message.ledger_hash;
+	    this.result.ledger_hash = message.ledger_hash;
 	  } else {
 	    this.result = message;
 	    this.result.tx_json = this.tx_json;
@@ -4934,7 +4952,7 @@ var ripple =
 
 	Transaction.prototype.getManager = function(account) {
 	  if (!this.remote) {
-	    return void(0);
+	    return undefined;
 	  }
 
 	  if (!account) {
@@ -4953,7 +4971,7 @@ var ripple =
 	Transaction.prototype.getSecret =
 	Transaction.prototype._accountSecret = function(account) {
 	  if (!this.remote) {
-	    return void(0);
+	    return undefined;
 	  }
 
 	  if (!account) {
@@ -4977,7 +4995,7 @@ var ripple =
 
 	Transaction.prototype._getFeeUnits =
 	Transaction.prototype.feeUnits = function() {
-	  return Transaction.fee_units['default'];
+	  return Transaction.fee_units.default;
 	};
 
 	/**
@@ -4988,13 +5006,13 @@ var ripple =
 
 	Transaction.prototype._computeFee = function() {
 	  if (!this.remote) {
-	    return void(0);
+	    return undefined;
 	  }
 
 	  var servers = this.remote._servers;
 	  var fees = [ ];
 
-	  for (var i=0; i<servers.length; i++) {
+	  for (var i = 0; i < servers.length; i++) {
 	    var server = servers[i];
 	    if (server._connected) {
 	      fees.push(Number(server._computeFee(this._getFeeUnits())));
@@ -5002,7 +5020,7 @@ var ripple =
 	  }
 
 	  switch (fees.length) {
-	    case 0: return;
+	    case 0: return undefined;
 	    case 1: return String(fees[0]);
 	  }
 
@@ -5011,9 +5029,8 @@ var ripple =
 	      return 1;
 	    } else if (a < b) {
 	      return -1;
-	    } else {
-	      return 0;
 	    }
+	    return 0;
 	  });
 
 	  var midInd = Math.floor(fees.length / 2);
@@ -5045,8 +5062,12 @@ var ripple =
 	    }
 	  }
 
+	  if (!this._secret) {
+	    this._secret = this.getSecret();
+	  }
+
 	  // Try to auto-fill the secret
-	  if (!this._secret && !(this._secret = this.getSecret())) {
+	  if (!this._secret) {
 	    this.emit('error', new RippleError('tejSecretUnknown', 'Missing secret'));
 	    return false;
 	  }
@@ -5054,7 +5075,7 @@ var ripple =
 	  if (typeof this.tx_json.SigningPubKey === 'undefined') {
 	    try {
 	      var seed = Seed.from_json(this._secret);
-	      var key  = seed.get_key(this.tx_json.Account);
+	      var key = seed.get_key(this.tx_json.Account);
 	      this.tx_json.SigningPubKey = key.to_hex_pub();
 	    } catch(e) {
 	      this.emit('error', new RippleError(
@@ -5067,7 +5088,8 @@ var ripple =
 	  // an assigned server
 	  if (this.remote && typeof this.tx_json.Fee === 'undefined') {
 	    if (this.remote.local_fee || !this.remote.trusted) {
-	      if (!(this.tx_json.Fee = this._computeFee())) {
+	      this.tx_json.Fee = this._computeFee();
+	      if (!this.tx_json.Fee) {
 	        this.emit('error', new RippleError('tejUnconnected'));
 	        return false;
 	      }
@@ -5130,7 +5152,7 @@ var ripple =
 	  }
 
 	  var key = seed.get_key(this.tx_json.Account);
-	  var sig = key.sign(hash, 0);
+	  var sig = key.sign(hash);
 	  var hex = sjcl.codec.hex.fromBits(sig).toUpperCase();
 
 	  this.tx_json.TxnSignature = hex;
@@ -5165,7 +5187,7 @@ var ripple =
 	Transaction.prototype.findId = function(cache) {
 	  var result;
 
-	  for (var i=0; i<this.submittedIDs.length; i++) {
+	  for (var i = 0; i < this.submittedIDs.length; i++) {
 	    var hash = this.submittedIDs[i];
 	    if ((result = cache[hash])) {
 	      break;
@@ -5300,7 +5322,7 @@ var ripple =
 	};
 
 	/*
-	 * Set the fee user will pay to the network for submitting this transaction. 
+	 * Set the fee user will pay to the network for submitting this transaction.
 	 * Specified fee must be >= 0.
 	 *
 	 * @param {Number} fee The proposed fee
@@ -5387,7 +5409,7 @@ var ripple =
 	Transaction.prototype.setPaths =
 	Transaction.prototype.paths = function(paths) {
 	  if (Array.isArray(paths)) {
-	    for (var i=0, l=paths.length; i<l; i++) {
+	    for (var i = 0, l = paths.length; i < l; i++) {
 	      this.addPath(paths[i]);
 	    }
 	  }
@@ -5449,7 +5471,7 @@ var ripple =
 	 */
 
 	Transaction.prototype.setFlags = function(flags) {
-	  if (flags === void(0)) {
+	  if (flags === undefined) {
 	    return this;
 	  }
 
@@ -5461,7 +5483,7 @@ var ripple =
 	  var transaction_flags = Transaction.flags[this.getTransactionType()] || { };
 	  var flag_set = Array.isArray(flags) ? flags : [].slice.call(arguments);
 
-	  for (var i=0, l=flag_set.length; i<l; i++) {
+	  for (var i = 0, l = flag_set.length; i < l; i++) {
 	    var flag = flag_set[i];
 
 	    if (transaction_flags.hasOwnProperty(flag)) {
@@ -5516,8 +5538,8 @@ var ripple =
 
 	  if (memoType) {
 	    if (Transaction.MEMO_TYPES[memoType]) {
-	      //XXX Maybe in the future we want a schema validator for
-	      //memo types
+	      // XXX Maybe in the future we want a schema validator for
+	      // memo types
 	      memoType = Transaction.MEMO_TYPES[memoType];
 	    }
 	    memo.MemoType = convertStringToHex(memoType);
@@ -5533,17 +5555,19 @@ var ripple =
 	        try {
 	          memoData = JSON.stringify(memoData);
 	        } catch (e) {
-	          throw new Error('MemoFormat json with invalid JSON in MemoData field');
+	          throw new Error(
+	            'MemoFormat json with invalid JSON in MemoData field');
 	        }
 	      } else {
-	        throw new Error('MemoData can only be a JSON object with a valid json MemoFormat');
+	        throw new Error(
+	          'MemoData can only be a JSON object with a valid json MemoFormat');
 	      }
 	    }
 
 	    memo.MemoData = convertStringToHex(memoData);
 	  }
 
-	  this.tx_json.Memos = (this.tx_json.Memos || []).concat({ Memo: memo });
+	  this.tx_json.Memos = (this.tx_json.Memos || []).concat({Memo: memo});
 
 	  return this;
 	};
@@ -5588,23 +5612,33 @@ var ripple =
 	    throw new Error('Source address invalid');
 	  }
 
-	  this.tx_json.TransactionType= 'AccountSet';
+	  this.tx_json.TransactionType = 'AccountSet';
 	  this.tx_json.Account = UInt160.json_rewrite(src);
 
 	  var SetClearFlags = Transaction.set_clear_flags.AccountSet;
 
 	  function prepareFlag(flag) {
 	    return (typeof flag === 'number')
-	    ?  flag
+	    ? flag
 	    : (SetClearFlags[flag] || SetClearFlags['asf' + flag]);
-	  };
-
-	  if (set_flag && (set_flag = prepareFlag(set_flag))) {
-	    this.tx_json.SetFlag = set_flag;
 	  }
 
-	  if (clear_flag && (clear_flag = prepareFlag(clear_flag))) {
-	    this.tx_json.ClearFlag = clear_flag;
+	  var prepared;
+
+	  if (set_flag) {
+	    prepared = prepareFlag(set_flag);
+
+	    if (prepared) {
+	      this.tx_json.SetFlag = prepared;
+	    }
+	  }
+
+	  if (clear_flag) {
+	    prepared = prepareFlag(clear_flag);
+
+	    if (prepared) {
+	      this.tx_json.ClearFlag = prepared;
+	    }
 	  }
 
 	  return this;
@@ -5666,7 +5700,8 @@ var ripple =
 	 * @param [Number] sequence of an existing offer to replace
 	 */
 
-	Transaction.prototype.offerCreate = function(src, taker_pays, taker_gets, expiration, cancel_sequence) {
+	Transaction.prototype.offerCreate = function(src, taker_pays, taker_gets,
+	                                             expiration, cancel_sequence) {
 	  if (typeof src === 'object') {
 	    var options = src;
 	    cancel_sequence = options.cancel_sequence || options.sequence;
@@ -5782,7 +5817,10 @@ var ripple =
 	 */
 
 	Transaction.prototype.trustSet =
-	Transaction.prototype.rippleLineSet = function(src, limit, quality_in, quality_out) {
+	Transaction.prototype.rippleLineSet = function(src,
+	                                               limit,
+	                                               quality_in,
+	                                               quality_out) {
 	  if (typeof src === 'object') {
 	    var options = src;
 	    quality_out = options.quality_out;
@@ -5798,7 +5836,7 @@ var ripple =
 	  this.tx_json.TransactionType = 'TrustSet';
 	  this.tx_json.Account = UInt160.json_rewrite(src);
 
-	  if (limit !== void(0)) {
+	  if (limit !== undefined) {
 	    this.tx_json.LimitAmount = Amount.json_rewrite(limit);
 	  }
 
@@ -5824,7 +5862,7 @@ var ripple =
 	Transaction.prototype.submit = function(callback) {
 	  var self = this;
 
-	  this.callback = (typeof callback === 'function') ? callback : function(){};
+	  this.callback = (typeof callback === 'function') ? callback : function() {};
 
 	  this._errorHandler = function transactionError(error, message) {
 	    if (!(error instanceof RippleError)) {
@@ -5839,7 +5877,7 @@ var ripple =
 
 	  if (!this.remote) {
 	    this.emit('error', new Error('No remote found'));
-	    return;
+	    return this;
 	  }
 
 	  this.getManager().submit(this);
@@ -5869,7 +5907,7 @@ var ripple =
 	    initialSubmitIndex: this.initialSubmitIndex,
 	    lastLedgerSequence: this.lastLedgerSequence,
 	    state: this.state,
-	    server: this._server ? this._server._opts.url : void(0),
+	    server: this._server ? this._server._opts.url : undefined,
 	    finalized: this.finalized
 	  };
 
@@ -5897,7 +5935,7 @@ var ripple =
 
 	'use strict';
 
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(45);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var utils = __webpack_require__(17);
 	var Float = __webpack_require__(31).Float;
@@ -6304,10 +6342,10 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var _ = __webpack_require__(45);
+	var _ = __webpack_require__(46);
 	var sjcl = __webpack_require__(17).sjcl;
 	var utils = __webpack_require__(17);
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(45);
 	var convertBase = __webpack_require__(23);
 
 	var Base = {};
@@ -6463,16 +6501,18 @@ var ripple =
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils  = __webpack_require__(17);
-	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(32).UInt;
+	'use strict';
+
+	var utils = __webpack_require__(17);
+	var extend = __webpack_require__(45);
+	var UInt = __webpack_require__(32).UInt;
 
 	//
 	// UInt128 support
 	//
 
-	var UInt128 = extend(function () {
-	  this._value  = NaN;
+	var UInt128 = extend(function() {
+	  this._value = NaN;
 	}, UInt);
 
 	UInt128.width = 16;
@@ -6480,9 +6520,10 @@ var ripple =
 	UInt128.prototype.constructor = UInt128;
 
 	var HEX_ZERO = UInt128.HEX_ZERO = '00000000000000000000000000000000';
-	var HEX_ONE  = UInt128.HEX_ONE  = '00000000000000000000000000000000';
-	var STR_ZERO = UInt128.STR_ZERO = utils.hexToString(HEX_ZERO);
-	var STR_ONE  = UInt128.STR_ONE  = utils.hexToString(HEX_ONE);
+	var HEX_ONE = UInt128.HEX_ONE = '00000000000000000000000000000000';
+
+	UInt128.STR_ZERO = utils.hexToString(HEX_ZERO);
+	UInt128.STR_ONE = utils.hexToString(HEX_ONE);
 
 	exports.UInt128 = UInt128;
 
@@ -6491,9 +6532,11 @@ var ripple =
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils   = __webpack_require__(17);
-	var config  = __webpack_require__(25);
-	var extend  = __webpack_require__(46);
+	'use strict';
+
+	var utils = __webpack_require__(17);
+	var config = __webpack_require__(25);
+	var extend = __webpack_require__(45);
 
 	var UInt = __webpack_require__(32).UInt;
 	var Base = __webpack_require__(7).Base;
@@ -6503,8 +6546,8 @@ var ripple =
 	//
 
 	var UInt160 = extend(function() {
-	  this._value  = NaN;
-	  this._version_byte = void(0);
+	  this._value = NaN;
+	  this._version_byte = undefined;
 	  this._update();
 	}, UInt);
 
@@ -6512,12 +6555,13 @@ var ripple =
 	UInt160.prototype = extend({}, UInt.prototype);
 	UInt160.prototype.constructor = UInt160;
 
-	var ACCOUNT_ZERO = UInt160.ACCOUNT_ZERO = 'rrrrrrrrrrrrrrrrrrrrrhoLvTp';
-	var ACCOUNT_ONE  = UInt160.ACCOUNT_ONE  = 'rrrrrrrrrrrrrrrrrrrrBZbvji';
-	var HEX_ZERO     = UInt160.HEX_ZERO     = '0000000000000000000000000000000000000000';
-	var HEX_ONE      = UInt160.HEX_ONE      = '0000000000000000000000000000000000000001';
-	var STR_ZERO     = UInt160.STR_ZERO     = utils.hexToString(HEX_ZERO);
-	var STR_ONE      = UInt160.STR_ONE      = utils.hexToString(HEX_ONE);
+	var HEX_ZERO = UInt160.HEX_ZERO = '0000000000000000000000000000000000000000';
+	var HEX_ONE = UInt160.HEX_ONE = '0000000000000000000000000000000000000001';
+
+	UInt160.ACCOUNT_ZERO = 'rrrrrrrrrrrrrrrrrrrrrhoLvTp';
+	UInt160.ACCOUNT_ONE = 'rrrrrrrrrrrrrrrrrrrrBZbvji';
+	UInt160.STR_ZERO = utils.hexToString(HEX_ZERO);
+	UInt160.STR_ONE = utils.hexToString(HEX_ONE);
 
 	UInt160.prototype.set_version = function(j) {
 	  this._version_byte = j;
@@ -6571,7 +6615,7 @@ var ripple =
 
 	// XXX Json form should allow 0 and 1, C++ doesn't currently allow it.
 	UInt160.prototype.to_json = function(opts) {
-	  opts  = opts || {};
+	  opts = opts || {};
 
 	  if (this.is_valid()) {
 	    // If this value has a type, return a Base58 encoded string.
@@ -6583,9 +6627,8 @@ var ripple =
 	      }
 
 	      return output;
-	    } else {
-	      return this.to_hex();
 	    }
+	    return this.to_hex();
 	  }
 	  return NaN;
 	};
@@ -6599,9 +6642,11 @@ var ripple =
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils  = __webpack_require__(17);
-	var extend = __webpack_require__(46);
-	var UInt   = __webpack_require__(32).UInt;
+	'use strict';
+
+	var utils = __webpack_require__(17);
+	var extend = __webpack_require__(45);
+	var UInt = __webpack_require__(32).UInt;
 
 	//
 	// UInt256 support
@@ -6615,10 +6660,14 @@ var ripple =
 	UInt256.prototype = extend({}, UInt.prototype);
 	UInt256.prototype.constructor = UInt256;
 
-	var HEX_ZERO = UInt256.HEX_ZERO = '00000000000000000000000000000000' + '00000000000000000000000000000000';
-	var HEX_ONE  = UInt256.HEX_ONE  = '00000000000000000000000000000000' + '00000000000000000000000000000001';
-	var STR_ZERO = UInt256.STR_ZERO = utils.hexToString(HEX_ZERO);
-	var STR_ONE  = UInt256.STR_ONE  = utils.hexToString(HEX_ONE);
+	var HEX_ZERO = UInt256.HEX_ZERO = '00000000000000000000000000000000' +
+	                                  '00000000000000000000000000000000';
+
+	var HEX_ONE = UInt256.HEX_ONE = '00000000000000000000000000000000' +
+	                                '00000000000000000000000000000001';
+
+	UInt256.STR_ZERO = utils.hexToString(HEX_ZERO);
+	UInt256.STR_ONE = utils.hexToString(HEX_ONE);
 
 	exports.UInt256 = UInt256;
 
@@ -6627,21 +6676,22 @@ var ripple =
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
 	//
 	// Seed support
 	//
 
-	var extend = __webpack_require__(46);
-	var utils  = __webpack_require__(17);
-	var sjcl   = utils.sjcl;
+	var extend = __webpack_require__(45);
+	var utils = __webpack_require__(17);
+	var sjcl = utils.sjcl;
 
-	var Base    = __webpack_require__(7).Base;
-	var UInt    = __webpack_require__(32).UInt;
-	var UInt256 = __webpack_require__(10).UInt256;
+	var Base = __webpack_require__(7).Base;
+	var UInt = __webpack_require__(32).UInt;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var KeyPair = __webpack_require__(33).KeyPair;
 
-	var Seed = extend(function () {
+	var Seed = extend(function() {
 	  this._curve = sjcl.ecc.curves.k256;
 	  this._value = NaN;
 	}, UInt);
@@ -6652,7 +6702,7 @@ var ripple =
 
 	// value = NaN on error.
 	// One day this will support rfc1751 too.
-	Seed.prototype.parse_json = function (j) {
+	Seed.prototype.parse_json = function(j) {
 	  if (typeof j === 'string') {
 	    if (!j.length) {
 	      this._value = NaN;
@@ -6672,7 +6722,7 @@ var ripple =
 	  return this;
 	};
 
-	Seed.prototype.parse_passphrase = function (j) {
+	Seed.prototype.parse_passphrase = function(j) {
 	  if (typeof j !== 'string') {
 	    throw new Error('Passphrase must be a string');
 	  }
@@ -6685,7 +6735,7 @@ var ripple =
 	  return this;
 	};
 
-	Seed.prototype.to_json = function () {
+	Seed.prototype.to_json = function() {
 	  if (!(this.is_valid())) {
 	    return NaN;
 	  }
@@ -6697,20 +6747,18 @@ var ripple =
 
 	function append_int(a, i) {
 	  return [].concat(a, i >> 24, (i >> 16) & 0xff, (i >> 8) & 0xff, i & 0xff);
-	};
+	}
 
 	function firstHalfOfSHA512(bytes) {
 	  return sjcl.bitArray.bitSlice(
 	    sjcl.hash.sha512.hash(sjcl.codec.bytes.toBits(bytes)),
 	    0, 256
 	  );
-	};
+	}
 
-	function SHA256_RIPEMD160(bits) {
-	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
-	};
-
-	/**
+	// Removed a `*` so this JSDoc-ish syntax is ignored.
+	// This will soon all change anyway.
+	/*
 	* @param account
 	*        {undefined}                 take first, default, KeyPair
 	*
@@ -6721,10 +6769,11 @@ var ripple =
 	*                                    that is desired.
 	*
 	* @param maxLoops (optional)
-	*        {Number}                    specifies the amount of attempts taken to generate
-	*                                    a matching KeyPair
+	*        {Number}                    specifies the amount of attempts taken
+	*                                    to generate a matching KeyPair
+	*
 	*/
-	Seed.prototype.get_key = function (account, maxLoops) {
+	Seed.prototype.get_key = function(account, maxLoops) {
 	  var account_number = 0, address;
 	  var max_loops = maxLoops || 1;
 
@@ -6734,7 +6783,7 @@ var ripple =
 	  if (account) {
 	    if (typeof account === 'number') {
 	      account_number = account;
-	      max_loops = account_number+1;
+	      max_loops = account_number + 1;
 	    } else {
 	      address = UInt160.from_json(account);
 	    }
@@ -6745,7 +6794,8 @@ var ripple =
 	  var i = 0;
 
 	  do {
-	    private_gen = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(this.to_bytes(), i)));
+	    private_gen = sjcl.bn.fromBits(
+	            firstHalfOfSHA512(append_int(this.to_bytes(), i)));
 	    i++;
 	  } while (!curve.r.greaterEquals(private_gen));
 
@@ -6759,7 +6809,13 @@ var ripple =
 	    i = 0;
 
 	    do {
-	      sec = sjcl.bn.fromBits(firstHalfOfSHA512(append_int(append_int(public_gen.toBytesCompressed(), account_number), i)));
+	      sec = sjcl.bn.fromBits(
+	              firstHalfOfSHA512(
+	                  append_int(
+	                    append_int(public_gen.toBytesCompressed(), account_number)
+	                    ,
+	                    i
+	                  )));
 	      i++;
 	    } while (!curve.r.greaterEquals(sec));
 
@@ -6770,12 +6826,13 @@ var ripple =
 	    if (max_loops-- <= 0) {
 	      // We are almost certainly looking for an account that would take same
 	      // value of $too_long {forever, ...}
-	      throw new Error('Too many loops looking for KeyPair yielding '+
-	                      address.to_json() +' from ' + this.to_json());
+	      throw new Error('Too many loops looking for KeyPair yielding ' +
+	                      address.to_json() + ' from ' + this.to_json());
 	    }
 
 	  } while (address && !key_pair.get_address().equals(address));
-	    return key_pair;
+
+	  return key_pair;
 	};
 
 	exports.Seed = Seed;
@@ -6785,7 +6842,7 @@ var ripple =
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var extend  = __webpack_require__(46);
+	var extend  = __webpack_require__(45);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Amount  = __webpack_require__(3).Amount;
@@ -7051,13 +7108,15 @@ var ripple =
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var _         = __webpack_require__(45);
-	var assert    = __webpack_require__(41);
-	var extend    = __webpack_require__(46);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+
+	var _ = __webpack_require__(46);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(45);
 	var binformat = __webpack_require__(16);
-	var stypes    = __webpack_require__(24);
-	var Crypt     = __webpack_require__(34).Crypt;
-	var utils     = __webpack_require__(17);
+	var stypes = __webpack_require__(24);
+	var Crypt = __webpack_require__(34).Crypt;
+	var utils = __webpack_require__(17);
 
 	var sjcl = utils.sjcl;
 
@@ -7082,12 +7141,14 @@ var ripple =
 	function normalize_sjcl_bn_hex(string) {
 	  var hex = string.slice(2);    // remove '0x' prefix
 	  // now strip leading zeros
-	  var i = _.findIndex(hex, function(c) { return c !== '0'; });
+	  var i = _.findIndex(hex, function(c) {
+	    return c !== '0';
+	  });
 	  return i >= 0 ? hex.slice(i) : '0';
 	}
 
 	function SerializedObject(buf) {
-	  if (Array.isArray(buf) || (Buffer && Buffer.isBuffer(buf)) ) {
+	  if (Array.isArray(buf) || (Buffer && Buffer.isBuffer(buf))) {
 	    this.buffer = buf;
 	  } else if (typeof buf === 'string') {
 	    this.buffer = sjcl.codec.bytes.fromBits(sjcl.codec.hex.toBits(buf));
@@ -7102,7 +7163,7 @@ var ripple =
 	SerializedObject.from_json = function(obj) {
 	  // Create a copy of the object so we don't modify it
 	  obj = extend(true, {}, obj);
-	  var so  = new SerializedObject();
+	  var so = new SerializedObject();
 	  var typedef;
 
 	  if (typeof obj.TransactionType === 'number') {
@@ -7160,7 +7221,7 @@ var ripple =
 	    var field = spec[0];
 	    var requirement = spec[1];
 
-	    if (binformat.REQUIRED === requirement && obj[field] === void(0)) {
+	    if (binformat.REQUIRED === requirement && obj[field] === undefined) {
 	      missing_fields.push(field);
 	    }
 	  }
@@ -7168,9 +7229,9 @@ var ripple =
 	  if (missing_fields.length > 0) {
 	    var object_name;
 
-	    if (obj.TransactionType !== void(0)) {
+	    if (obj.TransactionType !== undefined) {
 	      object_name = SerializedObject.lookup_type_tx(obj.TransactionType);
-	    } else if (obj.LedgerEntryType != null){
+	    } else if (obj.LedgerEntryType !== undefined) {
 	      object_name = SerializedObject.lookup_type_le(obj.LedgerEntryType);
 	    } else {
 	      object_name = 'TransactionMetaData';
@@ -7186,7 +7247,17 @@ var ripple =
 	    bytes = bytes.buffer;
 	  }
 
-	  this.buffer = this.buffer.concat(bytes);
+	  // Make sure both buffer and bytes are Array. Either could potentially be a
+	  // Buffer.
+	  if (Array.isArray(this.buffer) && Array.isArray(bytes)) {
+	    // Array::concat is horribly slow where buffer length is 100 kbytes + One
+	    // transaction with 1100 affected nodes took around 23 seconds to convert
+	    // from json to bytes.
+	    Array.prototype.push.apply(this.buffer, bytes);
+	  } else {
+	    this.buffer = this.buffer.concat(bytes);
+	  }
+
 	  this.pointer += bytes.length;
 	};
 
@@ -7269,14 +7340,17 @@ var ripple =
 	      if (typeof structure.to_json === 'function') {
 	        output = structure.to_json();
 	      } else if (structure instanceof sjcl.bn) {
-	        output = ('0000000000000000' + normalize_sjcl_bn_hex(structure.toString()).toUpperCase()).slice(-16);
+	        output = ('0000000000000000' +
+	                   normalize_sjcl_bn_hex(structure.toString())
+	                  .toUpperCase()
+	                  ).slice(-16);
 	      } else {
-	        //new Array or Object
+	        // new Array or Object
 	        output = new structure.constructor();
 
 	        var keys = Object.keys(structure);
 
-	        for (var i=0, l=keys.length; i<l; i++) {
+	        for (var i = 0, l = keys.length; i < l; i++) {
 	          var key = keys[i];
 	          output[key] = SerializedObject.jsonify_structure(structure[key], key);
 	        }
@@ -7309,7 +7383,7 @@ var ripple =
 	  var sign_buffer = new SerializedObject();
 
 	  // Add hashing prefix
-	  if ('undefined' !== typeof prefix) {
+	  if (typeof prefix !== 'undefined') {
 	    stypes.Int32.serialize(sign_buffer, prefix);
 	  }
 
@@ -7325,17 +7399,11 @@ var ripple =
 	SerializedObject.prototype.signing_hash = SerializedObject.prototype.hash;
 
 	SerializedObject.prototype.serialize_field = function(spec, obj) {
-	  var name     = spec[0];
+	  var name = spec[0];
 	  var presence = spec[1];
-	  var field_id = spec[2];
-	  var Type     = stypes[spec[3]];
 
 	  if (typeof obj[name] !== 'undefined') {
-	    // ST: Old serialization code
-	    //this.append(SerializedObject.get_field_header(Type.id, field_id));
 	    try {
-	      // ST: Old serialization code
-	      //Type.serialize(this, obj[name]);
 	      stypes.serialize(this, name, obj[name]);
 	    } catch (e) {
 	      // Add field name to message and rethrow
@@ -7348,7 +7416,7 @@ var ripple =
 	};
 
 	SerializedObject.get_field_header = function(type_id, field_id) {
-	  var buffer = [ 0 ];
+	  var buffer = [0];
 
 	  if (type_id > 0xF) {
 	    buffer.push(type_id & 0xFF);
@@ -7381,21 +7449,21 @@ var ripple =
 	  return TRANSACTION_TYPES[id];
 	};
 
-	SerializedObject.lookup_type_le = function (id) {
+	SerializedObject.lookup_type_le = function(id) {
 	  assert(typeof id === 'number');
 	  return LEDGER_ENTRY_TYPES[id];
 	};
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(40);
-	var extend = __webpack_require__(46);
+	var util   = __webpack_require__(44);
+	var extend = __webpack_require__(45);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -7434,7 +7502,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var async              = __webpack_require__(48);
-	var crypto             = __webpack_require__(43);
+	var crypto             = __webpack_require__(42);
 	var sjcl               = __webpack_require__(17).sjcl;
 	var Remote             = __webpack_require__(1).Remote;
 	var Seed               = __webpack_require__(11).Seed;
@@ -8086,7 +8154,8 @@ var ripple =
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
-	
+	'use strict';
+
 	function getMantissaDecimalString(bignum) {
 	  var mantissa = bignum.toPrecision(16)
 	    .replace(/\./, '')      // remove decimal point
@@ -8098,37 +8167,22 @@ var ripple =
 	  return mantissa;
 	}
 
-	function filterErr(code, done) {
-	  return function(e) {
-	    done(e.code !== code ? e : void(0));
-	  };
-	};
-
-	function throwErr(done) {
-	  return function(e) {
-	    if (e) {
-	      throw e;
-	    }
-	    done();
-	  };
-	};
-
 	function trace(comment, func) {
 	  return function() {
 	    console.log('%s: %s', trace, arguments.toString);
 	    func(arguments);
 	  };
-	};
+	}
 
 	function arraySet(count, value) {
 	  var a = new Array(count);
 
-	  for (var i=0; i<count; i++) {
+	  for (var i = 0; i < count; i++) {
 	    a[i] = value;
 	  }
 
 	  return a;
-	};
+	}
 
 	function hexToString(h) {
 	  var a = [];
@@ -8139,35 +8193,35 @@ var ripple =
 	    i = 1;
 	  }
 
-	  for (; i<h.length; i+=2) {
-	    a.push(String.fromCharCode(parseInt(h.substring(i, i+2), 16)));
+	  for (; i < h.length; i += 2) {
+	    a.push(String.fromCharCode(parseInt(h.substring(i, i + 2), 16)));
 	  }
 
 	  return a.join('');
-	};
+	}
 
 	function stringToHex(s) {
 	  var result = '';
-	  for (var i=0; i<s.length; i++) {
+	  for (var i = 0; i < s.length; i++) {
 	    var b = s.charCodeAt(i);
 	    result += b < 16 ? '0' + b.toString(16) : b.toString(16);
 	  }
 	  return result;
-	};
+	}
 
 	function stringToArray(s) {
 	  var a = new Array(s.length);
 
-	  for (var i=0; i<a.length; i+=1) {
+	  for (var i = 0; i < a.length; i += 1) {
 	    a[i] = s.charCodeAt(i);
 	  }
 
 	  return a;
-	};
+	}
 
 	function hexToArray(h) {
 	  return stringToArray(hexToString(h));
-	};
+	}
 
 	function arrayToHex(a) {
 	  return a.map(function(byteValue) {
@@ -8178,7 +8232,7 @@ var ripple =
 
 	function chunkString(str, n, leftAlign) {
 	  var ret = [];
-	  var i=0, len=str.length;
+	  var i = 0, len = str.length;
 
 	  if (leftAlign) {
 	    i = str.length % n;
@@ -8187,26 +8241,27 @@ var ripple =
 	    }
 	  }
 
-	  for(; i<len; i+=n) {
+	  for (; i < len; i += n) {
 	    ret.push(str.slice(i, n + i));
 	  }
 
 	  return ret;
-	};
+	}
 
 	function assert(assertion, msg) {
 	  if (!assertion) {
 	    throw new Error('Assertion failed' + (msg ? ': ' + msg : '.'));
 	  }
-	};
+	}
 
 	/**
-	 * Return unique values in array.
+	 * @param {Array} arr (values)
+	 * @return {Array} unique values (for string representation of value) in `arr`
 	 */
 	function arrayUnique(arr) {
 	  var u = {}, a = [];
 
-	  for (var i=0, l=arr.length; i<l; i++){
+	  for (var i = 0, l = arr.length; i < l; i++) {
 	    var k = arr[i];
 	    if (u[k]) {
 	      continue;
@@ -8216,46 +8271,45 @@ var ripple =
 	  }
 
 	  return a;
-	};
+	}
 
 	/**
-	 * Convert a ripple epoch to a JavaScript timestamp.
+	 * @param {Number} rpepoch (seconds since 1/1/2000 GMT)
+	 * @return {Number} ms since unix epoch
 	 *
-	 * JavaScript timestamps are unix epoch in milliseconds.
 	 */
 	function toTimestamp(rpepoch) {
 	  return (rpepoch + 0x386D4380) * 1000;
-	};
+	}
 
 	/**
-	 * Convert a JavaScript timestamp or Date to a Ripple epoch.
-	 *
-	 * JavaScript timestamps are unix epoch in milliseconds.
+	 * @param {Number|Date} timestamp (ms since unix epoch)
+	 * @return {Number} seconds since ripple epoch ( 1/1/2000 GMT)
 	 */
-	function fromTimestamp(rpepoch) {
-	  if (rpepoch instanceof Date) {
-	    rpepoch = rpepoch.getTime();
+	function fromTimestamp(timestamp) {
+	  if (timestamp instanceof Date) {
+	    timestamp = timestamp.getTime();
 	  }
 
-	  return Math.round(rpepoch / 1000) - 0x386D4380;
-	};
+	  return Math.round(timestamp / 1000) - 0x386D4380;
+	}
 
 	exports.time = {
 	  fromRipple: toTimestamp,
 	  toRipple: fromTimestamp
 	};
 
-	exports.trace         = trace;
-	exports.arraySet      = arraySet;
-	exports.hexToString   = hexToString;
-	exports.hexToArray    = hexToArray;
+	exports.trace = trace;
+	exports.arraySet = arraySet;
+	exports.hexToString = hexToString;
+	exports.hexToArray = hexToArray;
 	exports.stringToArray = stringToArray;
-	exports.stringToHex   = stringToHex;
-	exports.arrayToHex    = arrayToHex;
-	exports.chunkString   = chunkString;
-	exports.assert        = assert;
-	exports.arrayUnique   = arrayUnique;
-	exports.toTimestamp   = toTimestamp;
+	exports.stringToHex = stringToHex;
+	exports.arrayToHex = arrayToHex;
+	exports.chunkString = chunkString;
+	exports.assert = assert;
+	exports.arrayUnique = arrayUnique;
+	exports.toTimestamp = toTimestamp;
 	exports.fromTimestamp = fromTimestamp;
 	exports.getMantissaDecimalString = getMantissaDecimalString;
 
@@ -8270,8 +8324,8 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(40);
-	var url          = __webpack_require__(44);
+	var util         = __webpack_require__(44);
+	var url          = __webpack_require__(43);
 	var LRU          = __webpack_require__(47);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
@@ -9381,7 +9435,7 @@ var ripple =
 
 	'use strict';
 
-	var lodash = __webpack_require__(45);
+	var lodash = __webpack_require__(46);
 	var LRU = __webpack_require__(47);
 	var Transaction = __webpack_require__(5).Transaction;
 
@@ -9549,8 +9603,8 @@ var ripple =
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assert = __webpack_require__(41);
-	var lodash = __webpack_require__(45);
+	var assert = __webpack_require__(40);
+	var lodash = __webpack_require__(46);
 
 	function RangeSet() {
 	  this._ranges = [ ];
@@ -9670,8 +9724,8 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert = __webpack_require__(41);
-	var extend = __webpack_require__(46);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(45);
 	var GlobalBigNumber = __webpack_require__(49);
 	var Amount = __webpack_require__(3).Amount;
 	var Currency = __webpack_require__(6).Currency;
@@ -10546,7 +10600,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(45);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -10572,10 +10626,10 @@ var ripple =
 
 	'use strict';
 
-	var _ = __webpack_require__(45);
-	var util = __webpack_require__(40);
-	var extend = __webpack_require__(46);
-	var assert = __webpack_require__(41);
+	var _ = __webpack_require__(46);
+	var util = __webpack_require__(44);
+	var extend = __webpack_require__(45);
+	var assert = __webpack_require__(40);
 	var async = __webpack_require__(48);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Amount = __webpack_require__(3).Amount;
@@ -11746,9 +11800,9 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(40);
+	var util         = __webpack_require__(44);
 	var Amount       = __webpack_require__(3).Amount;
-	var extend       = __webpack_require__(46);
+	var extend       = __webpack_require__(45);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -12048,8 +12102,8 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(40);
-	var assert = __webpack_require__(41);
+	var util = __webpack_require__(44);
+	var assert = __webpack_require__(40);
 	var async = __webpack_require__(48);
 	var EventEmitter = __webpack_require__(39).EventEmitter;
 	var Transaction = __webpack_require__(5).Transaction;
@@ -12896,9 +12950,13 @@ var ripple =
 /* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var utils   = __webpack_require__(17);
-	var sjcl    = utils.sjcl;
-	var config  = __webpack_require__(25);
+	'use strict';
+
+	/*eslint new-cap: 1*/
+
+	var utils = __webpack_require__(17);
+	var sjcl = utils.sjcl;
+	var config = __webpack_require__(25);
 
 	//
 	// Abstract UInt class
@@ -12906,11 +12964,11 @@ var ripple =
 	// Base class for UInt classes
 	//
 
-	var UInt = function() {
+	function UInt() {
 	  // Internal form: NaN or sjcl.bn
-	  this._value  = NaN;
+	  this._value = NaN;
 	  this._update();
-	};
+	}
 
 	UInt.json_rewrite = function(j, opts) {
 	  return this.from_json(j).to_json(opts);
@@ -12920,63 +12978,56 @@ var ripple =
 	UInt.from_generic = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_generic(j);
 	  }
+	  return (new this()).parse_generic(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_hex = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_hex(j);
 	  }
+	  return (new this()).parse_hex(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_json = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_json(j);
 	  }
+	  return (new this()).parse_json(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_bits = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_bits(j);
 	  }
+	  return (new this()).parse_bits(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_bytes = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_bytes(j);
 	  }
+	  return (new this()).parse_bytes(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_bn = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_bn(j);
 	  }
+	  return (new this()).parse_bn(j);
 	};
 
 	// Return a new UInt from j.
 	UInt.from_number = function(j) {
 	  if (j instanceof this) {
 	    return j.clone();
-	  } else {
-	    return (new this()).parse_number(j);
 	  }
+	  return (new this()).parse_number(j);
 	};
 
 	UInt.is_valid = function(j) {
@@ -12991,7 +13042,7 @@ var ripple =
 	UInt.prototype.copyTo = function(d) {
 	  d._value = this._value;
 
-	  if (this._version_byte !== void(0)) {
+	  if (this._version_byte !== undefined) {
 	    d._version_byte = this._version_byte;
 	  }
 
@@ -13023,6 +13074,8 @@ var ripple =
 	 *
 	 * The reason for keeping this mechanism in this class is so every subclass can
 	 * call it whenever it modifies the internal state.
+	 *
+	 * @return {void}
 	 */
 	UInt.prototype._update = function() {
 	  // Nothing to do by default. Subclasses will override this.
@@ -13035,33 +13088,34 @@ var ripple =
 	    j = config.accounts[j].account;
 	  }
 
+
 	  switch (j) {
 	    case undefined:
-	      case '0':
-	      case this.constructor.STR_ZERO:
-	      case this.constructor.ACCOUNT_ZERO:
-	      case this.constructor.HEX_ZERO:
-	      this._value  = new sjcl.bn(0);
+	    case '0':
+	    case this.constructor.STR_ZERO:
+	    case this.constructor.ACCOUNT_ZERO:
+	    case this.constructor.HEX_ZERO:
+	      this._value = new sjcl.bn(0);
 	      break;
 
 	    case '1':
-	      case this.constructor.STR_ONE:
-	      case this.constructor.ACCOUNT_ONE:
-	      case this.constructor.HEX_ONE:
-	      this._value  = new sjcl.bn(1);
+	    case this.constructor.STR_ONE:
+	    case this.constructor.ACCOUNT_ONE:
+	    case this.constructor.HEX_ONE:
+	      this._value = new sjcl.bn(1);
 	      break;
 
 	    default:
 	        if (typeof j !== 'string') {
-	          this._value  = NaN;
+	          this._value = NaN;
 	        } else if (this.constructor.width === j.length) {
 	          var hex = utils.arrayToHex(utils.stringToArray(j));
-	          this._value  = new sjcl.bn(hex, 16);
+	          this._value = new sjcl.bn(hex, 16);
 	        } else if ((this.constructor.width * 2) === j.length) {
 	          // XXX Check char set!
-	          this._value  = new sjcl.bn(j, 16);
+	          this._value = new sjcl.bn(j, 16);
 	        } else {
-	          this._value  = NaN;
+	          this._value = NaN;
 	        }
 	  }
 
@@ -13102,7 +13156,7 @@ var ripple =
 	    this._value = NaN;
 	  } else {
 	    var bits = sjcl.codec.bytes.toBits(j);
-	    this._value  = sjcl.bn.fromBits(bits);
+	    this._value = sjcl.bn.fromBits(bits);
 	  }
 
 	  this._update();
@@ -13114,9 +13168,8 @@ var ripple =
 	UInt.prototype.parse_json = UInt.prototype.parse_hex;
 
 	UInt.prototype.parse_bn = function(j) {
-	  if ((j instanceof sjcl.bn) && j.bitLength() <= this.constructor.width * 8) {
-	    // var bytes = sjcl.codec.bytes.fromBits(j.toBits());
-	    // this._value  = new sjcl.bn(utils.arrayToHex(bytes), 16);
+	  if ((j instanceof sjcl.bn) &&
+	      j.bitLength() <= this.constructor.width * 8) {
 	    this._value = new sjcl.bn(j);
 	  } else {
 	    this._value = NaN;
@@ -13183,17 +13236,21 @@ var ripple =
 /* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var sjcl    = __webpack_require__(17).sjcl;
+	'use strict';
+
+	/*eslint new-cap: 1*/
+
+	var sjcl = __webpack_require__(17).sjcl;
 
 	var UInt160 = __webpack_require__(9).UInt160;
 	var UInt256 = __webpack_require__(10).UInt256;
-	var Base    = __webpack_require__(7).Base;
+	var Base = __webpack_require__(7).Base;
 
 	function KeyPair() {
-	  this._curve  = sjcl.ecc.curves.k256;
+	  this._curve = sjcl.ecc.curves.k256;
 	  this._secret = null;
 	  this._pubkey = null;
-	};
+	}
 
 	KeyPair.from_bn_secret = function(j) {
 	  return (j instanceof this) ? j.clone() : (new this()).parse_bn_secret(j);
@@ -13205,15 +13262,16 @@ var ripple =
 	};
 
 	/**
-	 * Returns public key as sjcl public key.
-	 *
 	 * @private
+	 *
+	 * @return {sjcl.ecc.ecdsa.publicKey} public key
 	 */
 	KeyPair.prototype._pub = function() {
 	  var curve = this._curve;
 
 	  if (!this._pubkey && this._secret) {
 	    var exponent = this._secret._exponent;
+
 	    this._pubkey = new sjcl.ecc.ecdsa.publicKey(curve, curve.G.mult(exponent));
 	  }
 
@@ -13221,9 +13279,9 @@ var ripple =
 	};
 
 	/**
-	 * Returns public key in compressed format as bit array.
-	 *
 	 * @private
+	 *
+	 * @return {sjcl.bitArray} public key bits in compressed form
 	 */
 	KeyPair.prototype._pub_bits = function() {
 	  var pub = this._pub();
@@ -13241,9 +13299,7 @@ var ripple =
 	};
 
 	/**
-	 * Returns public key as hex.
-	 *
-	 * Key will be returned as a compressed pubkey - 33 bytes converted to hex.
+	 * @return {String} public key bytes in compressed form, hex encoded.
 	 */
 	KeyPair.prototype.to_hex_pub = function() {
 	  var bits = this._pub_bits();
@@ -13255,7 +13311,7 @@ var ripple =
 	  return sjcl.codec.hex.fromBits(bits).toUpperCase();
 	};
 
-	function SHA256_RIPEMD160(bits) {
+	function sha256_ripemd160(bits) {
 	  return sjcl.hash.ripemd160.hash(sjcl.hash.sha256.hash(bits));
 	}
 
@@ -13266,7 +13322,7 @@ var ripple =
 	    return null;
 	  }
 
-	  var hash = SHA256_RIPEMD160(bits);
+	  var hash = sha256_ripemd160(bits);
 
 	  var address = UInt160.from_bits(hash);
 	  address.set_version(Base.VER_ACCOUNT_ID);
@@ -13274,8 +13330,9 @@ var ripple =
 	};
 
 	KeyPair.prototype.sign = function(hash) {
+	  var PARANOIA_256_BITS = 6; // sjcl constant for ensuring 256 bits of entropy
 	  hash = UInt256.from_json(hash);
-	  var sig = this._secret.sign(hash.to_bits(), 0);
+	  var sig = this._secret.sign(hash.to_bits(), PARANOIA_256_BITS);
 	  sig = this._secret.canonicalizeSignature(sig);
 	  return this._secret.encodeDER(sig);
 	};
@@ -13292,10 +13349,10 @@ var ripple =
 	var Seed        = __webpack_require__(11).Seed;
 	var UInt160     = __webpack_require__(9).UInt160;
 	var UInt256     = __webpack_require__(10).UInt256;
-	var request     = __webpack_require__(68);
+	var request     = __webpack_require__(67);
 	var querystring = __webpack_require__(51);
-	var extend      = __webpack_require__(46);
-	var parser      = __webpack_require__(44);
+	var extend      = __webpack_require__(45);
+	var parser      = __webpack_require__(43);
 	var Crypt       = { };
 
 	var cryptConfig = {
@@ -15812,7 +15869,7 @@ var ripple =
 	  // function for getting nodejs crypto module. catches and ignores errors.
 	  function getCryptoModule() {
 	    try {
-	      return __webpack_require__(43);
+	      return __webpack_require__(42);
 	    }
 	    catch (e) {
 	      return null;
@@ -18520,33 +18577,22 @@ var ripple =
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util = __webpack_require__(40);
-	var sjcl = __webpack_require__(17).sjcl;
-	var stypes = __webpack_require__(24);
+	'use strict';
+
+	var util = __webpack_require__(44);
 	var hashprefixes = __webpack_require__(28);
 
 	var UInt256 = __webpack_require__(10).UInt256;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 
-	function SHAMap() {
-	  this.root = new SHAMapTreeNodeInner(0);
-	};
-
-	SHAMap.prototype.add_item = function(tag, node, type) {
-	  var node = new SHAMapTreeNodeLeaf(tag, node, type);
-	  this.root.add_item(tag, node);
-	};
-
-	SHAMap.prototype.hash = function() {
-	  return this.root.hash();
-	};
-
 	/**
 	 * Abstract class representing a node in a SHAMap tree.
 	 *
 	 * Can be either SHAMapTreeNodeInner or SHAMapTreeNodeLeaf.
+	 *
+	 * @class
 	 */
-	function SHAMapTreeNode() { };
+	function SHAMapTreeNode() { }
 
 	SHAMapTreeNode.TYPE_INNER = 1;
 	SHAMapTreeNode.TYPE_TRANSACTION_NM = 2;
@@ -18554,11 +18600,17 @@ var ripple =
 	SHAMapTreeNode.TYPE_ACCOUNT_STATE = 4;
 
 	/**
-	* @param tag {String} 64 hexadecimal characters
+	* @param {String} tag (64 hexadecimal characters)
+	* @param {SHAMapTreeNode} node
+	* @return {void}
+	* @virtual
 	*/
+	/*eslint-disable no-unused-vars*/
 	SHAMapTreeNode.prototype.add_item = function(tag, node) {
-	  throw new Error('Called unimplemented virtual method SHAMapTreeNode#add_item.');
+	  throw new Error(
+	    'Called unimplemented virtual method SHAMapTreeNode#add_item.');
 	};
+	/*eslint-enable no-unused-vars*/
 
 	SHAMapTreeNode.prototype.hash = function() {
 	  throw new Error('Called unimplemented virtual method SHAMapTreeNode#hash.');
@@ -18566,6 +18618,8 @@ var ripple =
 
 	/**
 	 * Inner (non-leaf) node in a SHAMap tree.
+	 * @param {Number} depth (i.e. how many parent inner nodes)
+	 * @class
 	 */
 	function SHAMapTreeNodeInner(depth) {
 	  SHAMapTreeNode.call(this);
@@ -18573,7 +18627,7 @@ var ripple =
 	  this.leaves = {};
 
 	  this.type = SHAMapTreeNode.INNER;
-	  this.depth = depth == null ? 0 : depth;
+	  this.depth = depth === undefined ? 0 : depth;
 
 	  this.empty = true;
 	}
@@ -18581,9 +18635,11 @@ var ripple =
 	util.inherits(SHAMapTreeNodeInner, SHAMapTreeNode);
 
 	/**
-	 * @param tag {String} (equates to a ledger entries `index`)
+	 * @param {String} tag (equates to a ledger entry `index`)
+	 * @param {SHAMapTreeNode} node (to add)
+	 * @return {void}
 	 */
-	SHAMapTreeNodeInner.prototype.add_item = function (tag, node) {
+	SHAMapTreeNodeInner.prototype.add_item = function(tag, node) {
 	  var depth = this.depth;
 	  var existing_node = this.get_node(tag[depth]);
 
@@ -18594,7 +18650,8 @@ var ripple =
 	      existing_node.add_item(tag, node);
 	    } else if (existing_node.tag === tag) {
 	      // Collision
-	      throw new Error('Tried to add a node to a SHAMap that was already in there.');
+	      throw new Error(
+	          'Tried to add a node to a SHAMap that was already in there.');
 	    } else {
 	      // Turn it into an inner node
 	      var new_inner_node = new SHAMapTreeNodeInner(depth + 1);
@@ -18614,6 +18671,9 @@ var ripple =
 
 	/**
 	 * Overwrite the node that is currently in a given slot.
+	 * @param {String} slot (a character 0-F)
+	 * @param {SHAMapTreeNode} node (to place)
+	 * @return {void}
 	 */
 	SHAMapTreeNodeInner.prototype.set_node = function(slot, node) {
 	  this.leaves[slot] = node;
@@ -18630,9 +18690,8 @@ var ripple =
 	  }
 
 	  var hash_buffer = new SerializedObject();
-	  var buffer = [ ];
 
-	  for (var i=0; i<16; i++) {
+	  for (var i = 0; i < 16; i++) {
 	    var leafHash = UInt256.from_hex(UInt256.HEX_ZERO);
 	    var slot = i.toString(16).toUpperCase();
 
@@ -18650,6 +18709,10 @@ var ripple =
 
 	/**
 	 * Leaf node in a SHAMap tree.
+	 * @param {String} tag (equates to a ledger entry `index`)
+	 * @param {SerializedObject} node (bytes of account state, transaction etc)
+	 * @param {Number} type (one of TYPE_ACCOUNT_STATE, TYPE_TRANSACTION_MD etc)
+	 * @class
 	 */
 	function SHAMapTreeNodeLeaf(tag, node, type) {
 	  SHAMapTreeNode.call(this);
@@ -18662,11 +18725,11 @@ var ripple =
 	  this.tag_bytes = UInt256.from_hex(this.tag).to_bytes();
 	  this.type = type;
 	  this.node = node;
-	};
+	}
 
 	util.inherits(SHAMapTreeNodeLeaf, SHAMapTreeNode);
 
-	SHAMapTreeNodeLeaf.prototype.hash = function () {
+	SHAMapTreeNodeLeaf.prototype.hash = function() {
 	  var buffer = new SerializedObject();
 	  switch (this.type) {
 	    case SHAMapTreeNode.TYPE_ACCOUNT_STATE:
@@ -18682,6 +18745,19 @@ var ripple =
 	    default:
 	      throw new Error('Tried to hash a SHAMap node of unknown type.');
 	  }
+	};
+
+	function SHAMap() {
+	  this.root = new SHAMapTreeNodeInner(0);
+	}
+
+	SHAMap.prototype.add_item = function(tag, node, type) {
+	  node = new SHAMapTreeNodeLeaf(tag, node, type);
+	  this.root.add_item(tag, node);
+	};
+
+	SHAMap.prototype.hash = function() {
+	  return this.root.hash();
 	};
 
 	exports.SHAMap = SHAMap;
@@ -19074,599 +19150,6 @@ var ripple =
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	var formatRegExp = /%[sdj%]/g;
-	exports.format = function(f) {
-	  if (!isString(f)) {
-	    var objects = [];
-	    for (var i = 0; i < arguments.length; i++) {
-	      objects.push(inspect(arguments[i]));
-	    }
-	    return objects.join(' ');
-	  }
-
-	  var i = 1;
-	  var args = arguments;
-	  var len = args.length;
-	  var str = String(f).replace(formatRegExp, function(x) {
-	    if (x === '%%') return '%';
-	    if (i >= len) return x;
-	    switch (x) {
-	      case '%s': return String(args[i++]);
-	      case '%d': return Number(args[i++]);
-	      case '%j':
-	        try {
-	          return JSON.stringify(args[i++]);
-	        } catch (_) {
-	          return '[Circular]';
-	        }
-	      default:
-	        return x;
-	    }
-	  });
-	  for (var x = args[i]; i < len; x = args[++i]) {
-	    if (isNull(x) || !isObject(x)) {
-	      str += ' ' + x;
-	    } else {
-	      str += ' ' + inspect(x);
-	    }
-	  }
-	  return str;
-	};
-
-
-	// Mark that a method should not be used.
-	// Returns a modified function which warns once by default.
-	// If --no-deprecation is set, then it is a no-op.
-	exports.deprecate = function(fn, msg) {
-	  // Allow for deprecating things in the process of starting up.
-	  if (isUndefined(global.process)) {
-	    return function() {
-	      return exports.deprecate(fn, msg).apply(this, arguments);
-	    };
-	  }
-
-	  if (process.noDeprecation === true) {
-	    return fn;
-	  }
-
-	  var warned = false;
-	  function deprecated() {
-	    if (!warned) {
-	      if (process.throwDeprecation) {
-	        throw new Error(msg);
-	      } else if (process.traceDeprecation) {
-	        console.trace(msg);
-	      } else {
-	        console.error(msg);
-	      }
-	      warned = true;
-	    }
-	    return fn.apply(this, arguments);
-	  }
-
-	  return deprecated;
-	};
-
-
-	var debugs = {};
-	var debugEnviron;
-	exports.debuglog = function(set) {
-	  if (isUndefined(debugEnviron))
-	    debugEnviron = process.env.NODE_DEBUG || '';
-	  set = set.toUpperCase();
-	  if (!debugs[set]) {
-	    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-	      var pid = process.pid;
-	      debugs[set] = function() {
-	        var msg = exports.format.apply(exports, arguments);
-	        console.error('%s %d: %s', set, pid, msg);
-	      };
-	    } else {
-	      debugs[set] = function() {};
-	    }
-	  }
-	  return debugs[set];
-	};
-
-
-	/**
-	 * Echos the value of a value. Trys to print the value out
-	 * in the best way possible given the different types.
-	 *
-	 * @param {Object} obj The object to print out.
-	 * @param {Object} opts Optional options object that alters the output.
-	 */
-	/* legacy: obj, showHidden, depth, colors*/
-	function inspect(obj, opts) {
-	  // default options
-	  var ctx = {
-	    seen: [],
-	    stylize: stylizeNoColor
-	  };
-	  // legacy...
-	  if (arguments.length >= 3) ctx.depth = arguments[2];
-	  if (arguments.length >= 4) ctx.colors = arguments[3];
-	  if (isBoolean(opts)) {
-	    // legacy...
-	    ctx.showHidden = opts;
-	  } else if (opts) {
-	    // got an "options" object
-	    exports._extend(ctx, opts);
-	  }
-	  // set default options
-	  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
-	  if (isUndefined(ctx.depth)) ctx.depth = 2;
-	  if (isUndefined(ctx.colors)) ctx.colors = false;
-	  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
-	  if (ctx.colors) ctx.stylize = stylizeWithColor;
-	  return formatValue(ctx, obj, ctx.depth);
-	}
-	exports.inspect = inspect;
-
-
-	// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-	inspect.colors = {
-	  'bold' : [1, 22],
-	  'italic' : [3, 23],
-	  'underline' : [4, 24],
-	  'inverse' : [7, 27],
-	  'white' : [37, 39],
-	  'grey' : [90, 39],
-	  'black' : [30, 39],
-	  'blue' : [34, 39],
-	  'cyan' : [36, 39],
-	  'green' : [32, 39],
-	  'magenta' : [35, 39],
-	  'red' : [31, 39],
-	  'yellow' : [33, 39]
-	};
-
-	// Don't use 'blue' not visible on cmd.exe
-	inspect.styles = {
-	  'special': 'cyan',
-	  'number': 'yellow',
-	  'boolean': 'yellow',
-	  'undefined': 'grey',
-	  'null': 'bold',
-	  'string': 'green',
-	  'date': 'magenta',
-	  // "name": intentionally not styling
-	  'regexp': 'red'
-	};
-
-
-	function stylizeWithColor(str, styleType) {
-	  var style = inspect.styles[styleType];
-
-	  if (style) {
-	    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
-	           '\u001b[' + inspect.colors[style][1] + 'm';
-	  } else {
-	    return str;
-	  }
-	}
-
-
-	function stylizeNoColor(str, styleType) {
-	  return str;
-	}
-
-
-	function arrayToHash(array) {
-	  var hash = {};
-
-	  array.forEach(function(val, idx) {
-	    hash[val] = true;
-	  });
-
-	  return hash;
-	}
-
-
-	function formatValue(ctx, value, recurseTimes) {
-	  // Provide a hook for user-specified inspect functions.
-	  // Check that value is an object with an inspect function on it
-	  if (ctx.customInspect &&
-	      value &&
-	      isFunction(value.inspect) &&
-	      // Filter out the util module, it's inspect function is special
-	      value.inspect !== exports.inspect &&
-	      // Also filter out any prototype objects using the circular check.
-	      !(value.constructor && value.constructor.prototype === value)) {
-	    var ret = value.inspect(recurseTimes, ctx);
-	    if (!isString(ret)) {
-	      ret = formatValue(ctx, ret, recurseTimes);
-	    }
-	    return ret;
-	  }
-
-	  // Primitive types cannot have properties
-	  var primitive = formatPrimitive(ctx, value);
-	  if (primitive) {
-	    return primitive;
-	  }
-
-	  // Look up the keys of the object.
-	  var keys = Object.keys(value);
-	  var visibleKeys = arrayToHash(keys);
-
-	  if (ctx.showHidden) {
-	    keys = Object.getOwnPropertyNames(value);
-	  }
-
-	  // IE doesn't make error fields non-enumerable
-	  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-	  if (isError(value)
-	      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-	    return formatError(value);
-	  }
-
-	  // Some type of object without properties can be shortcutted.
-	  if (keys.length === 0) {
-	    if (isFunction(value)) {
-	      var name = value.name ? ': ' + value.name : '';
-	      return ctx.stylize('[Function' + name + ']', 'special');
-	    }
-	    if (isRegExp(value)) {
-	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-	    }
-	    if (isDate(value)) {
-	      return ctx.stylize(Date.prototype.toString.call(value), 'date');
-	    }
-	    if (isError(value)) {
-	      return formatError(value);
-	    }
-	  }
-
-	  var base = '', array = false, braces = ['{', '}'];
-
-	  // Make Array say that they are Array
-	  if (isArray(value)) {
-	    array = true;
-	    braces = ['[', ']'];
-	  }
-
-	  // Make functions say that they are functions
-	  if (isFunction(value)) {
-	    var n = value.name ? ': ' + value.name : '';
-	    base = ' [Function' + n + ']';
-	  }
-
-	  // Make RegExps say that they are RegExps
-	  if (isRegExp(value)) {
-	    base = ' ' + RegExp.prototype.toString.call(value);
-	  }
-
-	  // Make dates with properties first say the date
-	  if (isDate(value)) {
-	    base = ' ' + Date.prototype.toUTCString.call(value);
-	  }
-
-	  // Make error with message first say the error
-	  if (isError(value)) {
-	    base = ' ' + formatError(value);
-	  }
-
-	  if (keys.length === 0 && (!array || value.length == 0)) {
-	    return braces[0] + base + braces[1];
-	  }
-
-	  if (recurseTimes < 0) {
-	    if (isRegExp(value)) {
-	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-	    } else {
-	      return ctx.stylize('[Object]', 'special');
-	    }
-	  }
-
-	  ctx.seen.push(value);
-
-	  var output;
-	  if (array) {
-	    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
-	  } else {
-	    output = keys.map(function(key) {
-	      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
-	    });
-	  }
-
-	  ctx.seen.pop();
-
-	  return reduceToSingleString(output, base, braces);
-	}
-
-
-	function formatPrimitive(ctx, value) {
-	  if (isUndefined(value))
-	    return ctx.stylize('undefined', 'undefined');
-	  if (isString(value)) {
-	    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-	                                             .replace(/'/g, "\\'")
-	                                             .replace(/\\"/g, '"') + '\'';
-	    return ctx.stylize(simple, 'string');
-	  }
-	  if (isNumber(value))
-	    return ctx.stylize('' + value, 'number');
-	  if (isBoolean(value))
-	    return ctx.stylize('' + value, 'boolean');
-	  // For some reason typeof null is "object", so special case here.
-	  if (isNull(value))
-	    return ctx.stylize('null', 'null');
-	}
-
-
-	function formatError(value) {
-	  return '[' + Error.prototype.toString.call(value) + ']';
-	}
-
-
-	function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
-	  var output = [];
-	  for (var i = 0, l = value.length; i < l; ++i) {
-	    if (hasOwnProperty(value, String(i))) {
-	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-	          String(i), true));
-	    } else {
-	      output.push('');
-	    }
-	  }
-	  keys.forEach(function(key) {
-	    if (!key.match(/^\d+$/)) {
-	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-	          key, true));
-	    }
-	  });
-	  return output;
-	}
-
-
-	function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-	  var name, str, desc;
-	  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
-	  if (desc.get) {
-	    if (desc.set) {
-	      str = ctx.stylize('[Getter/Setter]', 'special');
-	    } else {
-	      str = ctx.stylize('[Getter]', 'special');
-	    }
-	  } else {
-	    if (desc.set) {
-	      str = ctx.stylize('[Setter]', 'special');
-	    }
-	  }
-	  if (!hasOwnProperty(visibleKeys, key)) {
-	    name = '[' + key + ']';
-	  }
-	  if (!str) {
-	    if (ctx.seen.indexOf(desc.value) < 0) {
-	      if (isNull(recurseTimes)) {
-	        str = formatValue(ctx, desc.value, null);
-	      } else {
-	        str = formatValue(ctx, desc.value, recurseTimes - 1);
-	      }
-	      if (str.indexOf('\n') > -1) {
-	        if (array) {
-	          str = str.split('\n').map(function(line) {
-	            return '  ' + line;
-	          }).join('\n').substr(2);
-	        } else {
-	          str = '\n' + str.split('\n').map(function(line) {
-	            return '   ' + line;
-	          }).join('\n');
-	        }
-	      }
-	    } else {
-	      str = ctx.stylize('[Circular]', 'special');
-	    }
-	  }
-	  if (isUndefined(name)) {
-	    if (array && key.match(/^\d+$/)) {
-	      return str;
-	    }
-	    name = JSON.stringify('' + key);
-	    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-	      name = name.substr(1, name.length - 2);
-	      name = ctx.stylize(name, 'name');
-	    } else {
-	      name = name.replace(/'/g, "\\'")
-	                 .replace(/\\"/g, '"')
-	                 .replace(/(^"|"$)/g, "'");
-	      name = ctx.stylize(name, 'string');
-	    }
-	  }
-
-	  return name + ': ' + str;
-	}
-
-
-	function reduceToSingleString(output, base, braces) {
-	  var numLinesEst = 0;
-	  var length = output.reduce(function(prev, cur) {
-	    numLinesEst++;
-	    if (cur.indexOf('\n') >= 0) numLinesEst++;
-	    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
-	  }, 0);
-
-	  if (length > 60) {
-	    return braces[0] +
-	           (base === '' ? '' : base + '\n ') +
-	           ' ' +
-	           output.join(',\n  ') +
-	           ' ' +
-	           braces[1];
-	  }
-
-	  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-	}
-
-
-	// NOTE: These type checking functions intentionally don't use `instanceof`
-	// because it is fragile and can be easily faked with `Object.create()`.
-	function isArray(ar) {
-	  return Array.isArray(ar);
-	}
-	exports.isArray = isArray;
-
-	function isBoolean(arg) {
-	  return typeof arg === 'boolean';
-	}
-	exports.isBoolean = isBoolean;
-
-	function isNull(arg) {
-	  return arg === null;
-	}
-	exports.isNull = isNull;
-
-	function isNullOrUndefined(arg) {
-	  return arg == null;
-	}
-	exports.isNullOrUndefined = isNullOrUndefined;
-
-	function isNumber(arg) {
-	  return typeof arg === 'number';
-	}
-	exports.isNumber = isNumber;
-
-	function isString(arg) {
-	  return typeof arg === 'string';
-	}
-	exports.isString = isString;
-
-	function isSymbol(arg) {
-	  return typeof arg === 'symbol';
-	}
-	exports.isSymbol = isSymbol;
-
-	function isUndefined(arg) {
-	  return arg === void 0;
-	}
-	exports.isUndefined = isUndefined;
-
-	function isRegExp(re) {
-	  return isObject(re) && objectToString(re) === '[object RegExp]';
-	}
-	exports.isRegExp = isRegExp;
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-	exports.isObject = isObject;
-
-	function isDate(d) {
-	  return isObject(d) && objectToString(d) === '[object Date]';
-	}
-	exports.isDate = isDate;
-
-	function isError(e) {
-	  return isObject(e) &&
-	      (objectToString(e) === '[object Error]' || e instanceof Error);
-	}
-	exports.isError = isError;
-
-	function isFunction(arg) {
-	  return typeof arg === 'function';
-	}
-	exports.isFunction = isFunction;
-
-	function isPrimitive(arg) {
-	  return arg === null ||
-	         typeof arg === 'boolean' ||
-	         typeof arg === 'number' ||
-	         typeof arg === 'string' ||
-	         typeof arg === 'symbol' ||  // ES6 symbol
-	         typeof arg === 'undefined';
-	}
-	exports.isPrimitive = isPrimitive;
-
-	exports.isBuffer = __webpack_require__(56);
-
-	function objectToString(o) {
-	  return Object.prototype.toString.call(o);
-	}
-
-
-	function pad(n) {
-	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-	}
-
-
-	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-	              'Oct', 'Nov', 'Dec'];
-
-	// 26 Feb 16:19:34
-	function timestamp() {
-	  var d = new Date();
-	  var time = [pad(d.getHours()),
-	              pad(d.getMinutes()),
-	              pad(d.getSeconds())].join(':');
-	  return [d.getDate(), months[d.getMonth()], time].join(' ');
-	}
-
-
-	// log is just a thin wrapper to console.log that prepends a timestamp
-	exports.log = function() {
-	  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
-	};
-
-
-	/**
-	 * Inherit the prototype methods from one constructor into another.
-	 *
-	 * The Function.prototype.inherits from lang.js rewritten as a standalone
-	 * function (not on Function.prototype). NOTE: If this file is to be loaded
-	 * during bootstrapping this function needs to be rewritten using some native
-	 * functions as prototype setup using normal JavaScript does not work as
-	 * expected during bootstrapping (see mirror.js in r114903).
-	 *
-	 * @param {function} ctor Constructor function which needs to inherit the
-	 *     prototype.
-	 * @param {function} superCtor Constructor function to inherit prototype from.
-	 */
-	exports.inherits = __webpack_require__(70);
-
-	exports._extend = function(origin, add) {
-	  // Don't do anything if add isn't an object
-	  if (!add || !isObject(add)) return origin;
-
-	  var keys = Object.keys(add);
-	  var i = keys.length;
-	  while (i--) {
-	    origin[keys[i]] = add[keys[i]];
-	  }
-	  return origin;
-	};
-
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(61)))
-
-/***/ },
-/* 41 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
 	//
 	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
@@ -19694,7 +19177,7 @@ var ripple =
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(40);
+	var util = __webpack_require__(44);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -20029,7 +19512,7 @@ var ripple =
 
 
 /***/ },
-/* 42 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -20039,9 +19522,9 @@ var ripple =
 	 * @license  MIT
 	 */
 
-	var base64 = __webpack_require__(71)
-	var ieee754 = __webpack_require__(63)
-	var isArray = __webpack_require__(65)
+	var base64 = __webpack_require__(73)
+	var ieee754 = __webpack_require__(65)
+	var isArray = __webpack_require__(64)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -21367,10 +20850,10 @@ var ripple =
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 43 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(52)
@@ -21427,10 +20910,10 @@ var ripple =
 	  }
 	})
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 44 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -21454,7 +20937,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(62);
+	var punycode = __webpack_require__(61);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -22143,7 +21626,684 @@ var ripple =
 
 
 /***/ },
+/* 44 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	var formatRegExp = /%[sdj%]/g;
+	exports.format = function(f) {
+	  if (!isString(f)) {
+	    var objects = [];
+	    for (var i = 0; i < arguments.length; i++) {
+	      objects.push(inspect(arguments[i]));
+	    }
+	    return objects.join(' ');
+	  }
+
+	  var i = 1;
+	  var args = arguments;
+	  var len = args.length;
+	  var str = String(f).replace(formatRegExp, function(x) {
+	    if (x === '%%') return '%';
+	    if (i >= len) return x;
+	    switch (x) {
+	      case '%s': return String(args[i++]);
+	      case '%d': return Number(args[i++]);
+	      case '%j':
+	        try {
+	          return JSON.stringify(args[i++]);
+	        } catch (_) {
+	          return '[Circular]';
+	        }
+	      default:
+	        return x;
+	    }
+	  });
+	  for (var x = args[i]; i < len; x = args[++i]) {
+	    if (isNull(x) || !isObject(x)) {
+	      str += ' ' + x;
+	    } else {
+	      str += ' ' + inspect(x);
+	    }
+	  }
+	  return str;
+	};
+
+
+	// Mark that a method should not be used.
+	// Returns a modified function which warns once by default.
+	// If --no-deprecation is set, then it is a no-op.
+	exports.deprecate = function(fn, msg) {
+	  // Allow for deprecating things in the process of starting up.
+	  if (isUndefined(global.process)) {
+	    return function() {
+	      return exports.deprecate(fn, msg).apply(this, arguments);
+	    };
+	  }
+
+	  if (process.noDeprecation === true) {
+	    return fn;
+	  }
+
+	  var warned = false;
+	  function deprecated() {
+	    if (!warned) {
+	      if (process.throwDeprecation) {
+	        throw new Error(msg);
+	      } else if (process.traceDeprecation) {
+	        console.trace(msg);
+	      } else {
+	        console.error(msg);
+	      }
+	      warned = true;
+	    }
+	    return fn.apply(this, arguments);
+	  }
+
+	  return deprecated;
+	};
+
+
+	var debugs = {};
+	var debugEnviron;
+	exports.debuglog = function(set) {
+	  if (isUndefined(debugEnviron))
+	    debugEnviron = process.env.NODE_DEBUG || '';
+	  set = set.toUpperCase();
+	  if (!debugs[set]) {
+	    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+	      var pid = process.pid;
+	      debugs[set] = function() {
+	        var msg = exports.format.apply(exports, arguments);
+	        console.error('%s %d: %s', set, pid, msg);
+	      };
+	    } else {
+	      debugs[set] = function() {};
+	    }
+	  }
+	  return debugs[set];
+	};
+
+
+	/**
+	 * Echos the value of a value. Trys to print the value out
+	 * in the best way possible given the different types.
+	 *
+	 * @param {Object} obj The object to print out.
+	 * @param {Object} opts Optional options object that alters the output.
+	 */
+	/* legacy: obj, showHidden, depth, colors*/
+	function inspect(obj, opts) {
+	  // default options
+	  var ctx = {
+	    seen: [],
+	    stylize: stylizeNoColor
+	  };
+	  // legacy...
+	  if (arguments.length >= 3) ctx.depth = arguments[2];
+	  if (arguments.length >= 4) ctx.colors = arguments[3];
+	  if (isBoolean(opts)) {
+	    // legacy...
+	    ctx.showHidden = opts;
+	  } else if (opts) {
+	    // got an "options" object
+	    exports._extend(ctx, opts);
+	  }
+	  // set default options
+	  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+	  if (isUndefined(ctx.depth)) ctx.depth = 2;
+	  if (isUndefined(ctx.colors)) ctx.colors = false;
+	  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+	  if (ctx.colors) ctx.stylize = stylizeWithColor;
+	  return formatValue(ctx, obj, ctx.depth);
+	}
+	exports.inspect = inspect;
+
+
+	// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+	inspect.colors = {
+	  'bold' : [1, 22],
+	  'italic' : [3, 23],
+	  'underline' : [4, 24],
+	  'inverse' : [7, 27],
+	  'white' : [37, 39],
+	  'grey' : [90, 39],
+	  'black' : [30, 39],
+	  'blue' : [34, 39],
+	  'cyan' : [36, 39],
+	  'green' : [32, 39],
+	  'magenta' : [35, 39],
+	  'red' : [31, 39],
+	  'yellow' : [33, 39]
+	};
+
+	// Don't use 'blue' not visible on cmd.exe
+	inspect.styles = {
+	  'special': 'cyan',
+	  'number': 'yellow',
+	  'boolean': 'yellow',
+	  'undefined': 'grey',
+	  'null': 'bold',
+	  'string': 'green',
+	  'date': 'magenta',
+	  // "name": intentionally not styling
+	  'regexp': 'red'
+	};
+
+
+	function stylizeWithColor(str, styleType) {
+	  var style = inspect.styles[styleType];
+
+	  if (style) {
+	    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+	           '\u001b[' + inspect.colors[style][1] + 'm';
+	  } else {
+	    return str;
+	  }
+	}
+
+
+	function stylizeNoColor(str, styleType) {
+	  return str;
+	}
+
+
+	function arrayToHash(array) {
+	  var hash = {};
+
+	  array.forEach(function(val, idx) {
+	    hash[val] = true;
+	  });
+
+	  return hash;
+	}
+
+
+	function formatValue(ctx, value, recurseTimes) {
+	  // Provide a hook for user-specified inspect functions.
+	  // Check that value is an object with an inspect function on it
+	  if (ctx.customInspect &&
+	      value &&
+	      isFunction(value.inspect) &&
+	      // Filter out the util module, it's inspect function is special
+	      value.inspect !== exports.inspect &&
+	      // Also filter out any prototype objects using the circular check.
+	      !(value.constructor && value.constructor.prototype === value)) {
+	    var ret = value.inspect(recurseTimes, ctx);
+	    if (!isString(ret)) {
+	      ret = formatValue(ctx, ret, recurseTimes);
+	    }
+	    return ret;
+	  }
+
+	  // Primitive types cannot have properties
+	  var primitive = formatPrimitive(ctx, value);
+	  if (primitive) {
+	    return primitive;
+	  }
+
+	  // Look up the keys of the object.
+	  var keys = Object.keys(value);
+	  var visibleKeys = arrayToHash(keys);
+
+	  if (ctx.showHidden) {
+	    keys = Object.getOwnPropertyNames(value);
+	  }
+
+	  // IE doesn't make error fields non-enumerable
+	  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
+	  if (isError(value)
+	      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+	    return formatError(value);
+	  }
+
+	  // Some type of object without properties can be shortcutted.
+	  if (keys.length === 0) {
+	    if (isFunction(value)) {
+	      var name = value.name ? ': ' + value.name : '';
+	      return ctx.stylize('[Function' + name + ']', 'special');
+	    }
+	    if (isRegExp(value)) {
+	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+	    }
+	    if (isDate(value)) {
+	      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+	    }
+	    if (isError(value)) {
+	      return formatError(value);
+	    }
+	  }
+
+	  var base = '', array = false, braces = ['{', '}'];
+
+	  // Make Array say that they are Array
+	  if (isArray(value)) {
+	    array = true;
+	    braces = ['[', ']'];
+	  }
+
+	  // Make functions say that they are functions
+	  if (isFunction(value)) {
+	    var n = value.name ? ': ' + value.name : '';
+	    base = ' [Function' + n + ']';
+	  }
+
+	  // Make RegExps say that they are RegExps
+	  if (isRegExp(value)) {
+	    base = ' ' + RegExp.prototype.toString.call(value);
+	  }
+
+	  // Make dates with properties first say the date
+	  if (isDate(value)) {
+	    base = ' ' + Date.prototype.toUTCString.call(value);
+	  }
+
+	  // Make error with message first say the error
+	  if (isError(value)) {
+	    base = ' ' + formatError(value);
+	  }
+
+	  if (keys.length === 0 && (!array || value.length == 0)) {
+	    return braces[0] + base + braces[1];
+	  }
+
+	  if (recurseTimes < 0) {
+	    if (isRegExp(value)) {
+	      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+	    } else {
+	      return ctx.stylize('[Object]', 'special');
+	    }
+	  }
+
+	  ctx.seen.push(value);
+
+	  var output;
+	  if (array) {
+	    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+	  } else {
+	    output = keys.map(function(key) {
+	      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+	    });
+	  }
+
+	  ctx.seen.pop();
+
+	  return reduceToSingleString(output, base, braces);
+	}
+
+
+	function formatPrimitive(ctx, value) {
+	  if (isUndefined(value))
+	    return ctx.stylize('undefined', 'undefined');
+	  if (isString(value)) {
+	    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+	                                             .replace(/'/g, "\\'")
+	                                             .replace(/\\"/g, '"') + '\'';
+	    return ctx.stylize(simple, 'string');
+	  }
+	  if (isNumber(value))
+	    return ctx.stylize('' + value, 'number');
+	  if (isBoolean(value))
+	    return ctx.stylize('' + value, 'boolean');
+	  // For some reason typeof null is "object", so special case here.
+	  if (isNull(value))
+	    return ctx.stylize('null', 'null');
+	}
+
+
+	function formatError(value) {
+	  return '[' + Error.prototype.toString.call(value) + ']';
+	}
+
+
+	function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+	  var output = [];
+	  for (var i = 0, l = value.length; i < l; ++i) {
+	    if (hasOwnProperty(value, String(i))) {
+	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+	          String(i), true));
+	    } else {
+	      output.push('');
+	    }
+	  }
+	  keys.forEach(function(key) {
+	    if (!key.match(/^\d+$/)) {
+	      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+	          key, true));
+	    }
+	  });
+	  return output;
+	}
+
+
+	function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+	  var name, str, desc;
+	  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+	  if (desc.get) {
+	    if (desc.set) {
+	      str = ctx.stylize('[Getter/Setter]', 'special');
+	    } else {
+	      str = ctx.stylize('[Getter]', 'special');
+	    }
+	  } else {
+	    if (desc.set) {
+	      str = ctx.stylize('[Setter]', 'special');
+	    }
+	  }
+	  if (!hasOwnProperty(visibleKeys, key)) {
+	    name = '[' + key + ']';
+	  }
+	  if (!str) {
+	    if (ctx.seen.indexOf(desc.value) < 0) {
+	      if (isNull(recurseTimes)) {
+	        str = formatValue(ctx, desc.value, null);
+	      } else {
+	        str = formatValue(ctx, desc.value, recurseTimes - 1);
+	      }
+	      if (str.indexOf('\n') > -1) {
+	        if (array) {
+	          str = str.split('\n').map(function(line) {
+	            return '  ' + line;
+	          }).join('\n').substr(2);
+	        } else {
+	          str = '\n' + str.split('\n').map(function(line) {
+	            return '   ' + line;
+	          }).join('\n');
+	        }
+	      }
+	    } else {
+	      str = ctx.stylize('[Circular]', 'special');
+	    }
+	  }
+	  if (isUndefined(name)) {
+	    if (array && key.match(/^\d+$/)) {
+	      return str;
+	    }
+	    name = JSON.stringify('' + key);
+	    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+	      name = name.substr(1, name.length - 2);
+	      name = ctx.stylize(name, 'name');
+	    } else {
+	      name = name.replace(/'/g, "\\'")
+	                 .replace(/\\"/g, '"')
+	                 .replace(/(^"|"$)/g, "'");
+	      name = ctx.stylize(name, 'string');
+	    }
+	  }
+
+	  return name + ': ' + str;
+	}
+
+
+	function reduceToSingleString(output, base, braces) {
+	  var numLinesEst = 0;
+	  var length = output.reduce(function(prev, cur) {
+	    numLinesEst++;
+	    if (cur.indexOf('\n') >= 0) numLinesEst++;
+	    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+	  }, 0);
+
+	  if (length > 60) {
+	    return braces[0] +
+	           (base === '' ? '' : base + '\n ') +
+	           ' ' +
+	           output.join(',\n  ') +
+	           ' ' +
+	           braces[1];
+	  }
+
+	  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+	}
+
+
+	// NOTE: These type checking functions intentionally don't use `instanceof`
+	// because it is fragile and can be easily faked with `Object.create()`.
+	function isArray(ar) {
+	  return Array.isArray(ar);
+	}
+	exports.isArray = isArray;
+
+	function isBoolean(arg) {
+	  return typeof arg === 'boolean';
+	}
+	exports.isBoolean = isBoolean;
+
+	function isNull(arg) {
+	  return arg === null;
+	}
+	exports.isNull = isNull;
+
+	function isNullOrUndefined(arg) {
+	  return arg == null;
+	}
+	exports.isNullOrUndefined = isNullOrUndefined;
+
+	function isNumber(arg) {
+	  return typeof arg === 'number';
+	}
+	exports.isNumber = isNumber;
+
+	function isString(arg) {
+	  return typeof arg === 'string';
+	}
+	exports.isString = isString;
+
+	function isSymbol(arg) {
+	  return typeof arg === 'symbol';
+	}
+	exports.isSymbol = isSymbol;
+
+	function isUndefined(arg) {
+	  return arg === void 0;
+	}
+	exports.isUndefined = isUndefined;
+
+	function isRegExp(re) {
+	  return isObject(re) && objectToString(re) === '[object RegExp]';
+	}
+	exports.isRegExp = isRegExp;
+
+	function isObject(arg) {
+	  return typeof arg === 'object' && arg !== null;
+	}
+	exports.isObject = isObject;
+
+	function isDate(d) {
+	  return isObject(d) && objectToString(d) === '[object Date]';
+	}
+	exports.isDate = isDate;
+
+	function isError(e) {
+	  return isObject(e) &&
+	      (objectToString(e) === '[object Error]' || e instanceof Error);
+	}
+	exports.isError = isError;
+
+	function isFunction(arg) {
+	  return typeof arg === 'function';
+	}
+	exports.isFunction = isFunction;
+
+	function isPrimitive(arg) {
+	  return arg === null ||
+	         typeof arg === 'boolean' ||
+	         typeof arg === 'number' ||
+	         typeof arg === 'string' ||
+	         typeof arg === 'symbol' ||  // ES6 symbol
+	         typeof arg === 'undefined';
+	}
+	exports.isPrimitive = isPrimitive;
+
+	exports.isBuffer = __webpack_require__(56);
+
+	function objectToString(o) {
+	  return Object.prototype.toString.call(o);
+	}
+
+
+	function pad(n) {
+	  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+	}
+
+
+	var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+	              'Oct', 'Nov', 'Dec'];
+
+	// 26 Feb 16:19:34
+	function timestamp() {
+	  var d = new Date();
+	  var time = [pad(d.getHours()),
+	              pad(d.getMinutes()),
+	              pad(d.getSeconds())].join(':');
+	  return [d.getDate(), months[d.getMonth()], time].join(' ');
+	}
+
+
+	// log is just a thin wrapper to console.log that prepends a timestamp
+	exports.log = function() {
+	  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+	};
+
+
+	/**
+	 * Inherit the prototype methods from one constructor into another.
+	 *
+	 * The Function.prototype.inherits from lang.js rewritten as a standalone
+	 * function (not on Function.prototype). NOTE: If this file is to be loaded
+	 * during bootstrapping this function needs to be rewritten using some native
+	 * functions as prototype setup using normal JavaScript does not work as
+	 * expected during bootstrapping (see mirror.js in r114903).
+	 *
+	 * @param {function} ctor Constructor function which needs to inherit the
+	 *     prototype.
+	 * @param {function} superCtor Constructor function to inherit prototype from.
+	 */
+	exports.inherits = __webpack_require__(74);
+
+	exports._extend = function(origin, add) {
+	  // Don't do anything if add isn't an object
+	  if (!add || !isObject(add)) return origin;
+
+	  var keys = Object.keys(add);
+	  var i = keys.length;
+	  while (i--) {
+	    origin[keys[i]] = add[keys[i]];
+	  }
+	  return origin;
+	};
+
+	function hasOwnProperty(obj, prop) {
+	  return Object.prototype.hasOwnProperty.call(obj, prop);
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(62)))
+
+/***/ },
 /* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var hasOwn = Object.prototype.hasOwnProperty;
+	var toString = Object.prototype.toString;
+
+	function isPlainObject(obj) {
+		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
+			return false;
+
+		var has_own_constructor = hasOwn.call(obj, 'constructor');
+		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+		// Not own constructor property must be Object
+		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
+			return false;
+
+		// Own properties are enumerated firstly, so to speed up,
+		// if last one is own, then all properties are own.
+		var key;
+		for ( key in obj ) {}
+
+		return key === undefined || hasOwn.call( obj, key );
+	};
+
+	module.exports = function extend() {
+		var options, name, src, copy, copyIsArray, clone,
+		    target = arguments[0] || {},
+		    i = 1,
+		    length = arguments.length,
+		    deep = false;
+
+		// Handle a deep copy situation
+		if ( typeof target === "boolean" ) {
+			deep = target;
+			target = arguments[1] || {};
+			// skip the boolean and the target
+			i = 2;
+		}
+
+		// Handle case when target is a string or something (possible in deep copy)
+		if ( typeof target !== "object" && typeof target !== "function") {
+			target = {};
+		}
+
+		for ( ; i < length; i++ ) {
+			// Only deal with non-null/undefined values
+			if ( (options = arguments[ i ]) != null ) {
+				// Extend the base object
+				for ( name in options ) {
+					src = target[ name ];
+					copy = options[ name ];
+
+					// Prevent never-ending loop
+					if ( target === copy ) {
+						continue;
+					}
+
+					// Recurse if we're merging plain objects or arrays
+					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
+						if ( copyIsArray ) {
+							copyIsArray = false;
+							clone = src && Array.isArray(src) ? src : [];
+
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[ name ] = extend( deep, clone, copy );
+
+					// Don't bring in undefined values
+					} else if ( copy !== undefined ) {
+						target[ name ] = copy;
+					}
+				}
+			}
+		}
+
+		// Return the modified object
+		return target;
+	};
+
+
+/***/ },
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -33746,91 +33906,7 @@ var ripple =
 	  }
 	}.call(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
-
-/***/ },
-/* 46 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var hasOwn = Object.prototype.hasOwnProperty;
-	var toString = Object.prototype.toString;
-
-	function isPlainObject(obj) {
-		if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType || obj.setInterval)
-			return false;
-
-		var has_own_constructor = hasOwn.call(obj, 'constructor');
-		var has_is_property_of_method = hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
-		// Not own constructor property must be Object
-		if (obj.constructor && !has_own_constructor && !has_is_property_of_method)
-			return false;
-
-		// Own properties are enumerated firstly, so to speed up,
-		// if last one is own, then all properties are own.
-		var key;
-		for ( key in obj ) {}
-
-		return key === undefined || hasOwn.call( obj, key );
-	};
-
-	module.exports = function extend() {
-		var options, name, src, copy, copyIsArray, clone,
-		    target = arguments[0] || {},
-		    i = 1,
-		    length = arguments.length,
-		    deep = false;
-
-		// Handle a deep copy situation
-		if ( typeof target === "boolean" ) {
-			deep = target;
-			target = arguments[1] || {};
-			// skip the boolean and the target
-			i = 2;
-		}
-
-		// Handle case when target is a string or something (possible in deep copy)
-		if ( typeof target !== "object" && typeof target !== "function") {
-			target = {};
-		}
-
-		for ( ; i < length; i++ ) {
-			// Only deal with non-null/undefined values
-			if ( (options = arguments[ i ]) != null ) {
-				// Extend the base object
-				for ( name in options ) {
-					src = target[ name ];
-					copy = options[ name ];
-
-					// Prevent never-ending loop
-					if ( target === copy ) {
-						continue;
-					}
-
-					// Recurse if we're merging plain objects or arrays
-					if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = Array.isArray(copy)) ) ) {
-						if ( copyIsArray ) {
-							copyIsArray = false;
-							clone = src && Array.isArray(src) ? src : [];
-
-						} else {
-							clone = src && isPlainObject(src) ? src : {};
-						}
-
-						// Never move original objects, clone them
-						target[ name ] = extend( deep, clone, copy );
-
-					// Don't bring in undefined values
-					} else if ( copy !== undefined ) {
-						target[ name ] = copy;
-					}
-				}
-			}
-		}
-
-		// Return the modified object
-		return target;
-	};
-
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(68)(module), (function() { return this; }())))
 
 /***/ },
 /* 47 */
@@ -35218,7 +35294,7 @@ var ripple =
 
 	}());
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61), __webpack_require__(69).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62), __webpack_require__(69).setImmediate))
 
 /***/ },
 /* 49 */
@@ -37999,8 +38075,8 @@ var ripple =
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(72);
-	exports.encode = exports.stringify = __webpack_require__(73);
+	exports.decode = exports.parse = __webpack_require__(71);
+	exports.encode = exports.stringify = __webpack_require__(72);
 
 
 /***/ },
@@ -38010,7 +38086,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(64)
+	    g.crypto || g.msCrypto || __webpack_require__(63)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -38034,7 +38110,7 @@ var ripple =
 	  }
 	}())
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(41).Buffer))
 
 /***/ },
 /* 53 */
@@ -38042,7 +38118,7 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(75)
 
-	var md5 = toConstructor(__webpack_require__(74))
+	var md5 = toConstructor(__webpack_require__(70))
 	var rmd160 = toConstructor(__webpack_require__(79))
 
 	function toConstructor (fn) {
@@ -38071,7 +38147,7 @@ var ripple =
 	  return createHash(alg)
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 54 */
@@ -38121,7 +38197,7 @@ var ripple =
 	}
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 55 */
@@ -38290,7 +38366,7 @@ var ripple =
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.getRandomValues');
 	    } else if (typeof module === 'object' && module.exports) {
 	      // Node
-	      var entropy = __webpack_require__(43).randomBytes(128);
+	      var entropy = __webpack_require__(42).randomBytes(128);
 	      entropy = new Uint32Array(new Uint8Array(entropy).buffer);
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.randomBytes');
 	    } else {
@@ -38373,70 +38449,6 @@ var ripple =
 
 /***/ },
 /* 61 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// shim for using process in browser
-
-	var process = module.exports = {};
-	var queue = [];
-	var draining = false;
-
-	function drainQueue() {
-	    if (draining) {
-	        return;
-	    }
-	    draining = true;
-	    var currentQueue;
-	    var len = queue.length;
-	    while(len) {
-	        currentQueue = queue;
-	        queue = [];
-	        var i = -1;
-	        while (++i < len) {
-	            currentQueue[i]();
-	        }
-	        len = queue.length;
-	    }
-	    draining = false;
-	}
-	process.nextTick = function (fun) {
-	    queue.push(fun);
-	    if (!draining) {
-	        setTimeout(drainQueue, 0);
-	    }
-	};
-
-	process.title = 'browser';
-	process.browser = true;
-	process.env = {};
-	process.argv = [];
-	process.version = ''; // empty string to avoid regexp issues
-	process.versions = {};
-
-	function noop() {}
-
-	process.on = noop;
-	process.addListener = noop;
-	process.once = noop;
-	process.off = noop;
-	process.removeListener = noop;
-	process.removeAllListeners = noop;
-	process.emit = noop;
-
-	process.binding = function (name) {
-	    throw new Error('process.binding is not supported');
-	};
-
-	// TODO(shtylman)
-	process.cwd = function () { return '/' };
-	process.chdir = function (dir) {
-	    throw new Error('process.chdir is not supported');
-	};
-	process.umask = function() { return 0; };
-
-
-/***/ },
-/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -38968,10 +38980,119 @@ var ripple =
 
 	}(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(68)(module), (function() { return this; }())))
+
+/***/ },
+/* 62 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// shim for using process in browser
+
+	var process = module.exports = {};
+	var queue = [];
+	var draining = false;
+
+	function drainQueue() {
+	    if (draining) {
+	        return;
+	    }
+	    draining = true;
+	    var currentQueue;
+	    var len = queue.length;
+	    while(len) {
+	        currentQueue = queue;
+	        queue = [];
+	        var i = -1;
+	        while (++i < len) {
+	            currentQueue[i]();
+	        }
+	        len = queue.length;
+	    }
+	    draining = false;
+	}
+	process.nextTick = function (fun) {
+	    queue.push(fun);
+	    if (!draining) {
+	        setTimeout(drainQueue, 0);
+	    }
+	};
+
+	process.title = 'browser';
+	process.browser = true;
+	process.env = {};
+	process.argv = [];
+	process.version = ''; // empty string to avoid regexp issues
+	process.versions = {};
+
+	function noop() {}
+
+	process.on = noop;
+	process.addListener = noop;
+	process.once = noop;
+	process.off = noop;
+	process.removeListener = noop;
+	process.removeAllListeners = noop;
+	process.emit = noop;
+
+	process.binding = function (name) {
+	    throw new Error('process.binding is not supported');
+	};
+
+	// TODO(shtylman)
+	process.cwd = function () { return '/' };
+	process.chdir = function (dir) {
+	    throw new Error('process.chdir is not supported');
+	};
+	process.umask = function() { return 0; };
+
 
 /***/ },
 /* 63 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* (ignored) */
+
+/***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
+	 * isArray
+	 */
+
+	var isArray = Array.isArray;
+
+	/**
+	 * toString
+	 */
+
+	var str = Object.prototype.toString;
+
+	/**
+	 * Whether or not the given `val`
+	 * is an array.
+	 *
+	 * example:
+	 *
+	 *        isArray([]);
+	 *        // > true
+	 *        isArray(arguments);
+	 *        // > false
+	 *        isArray('');
+	 *        // > false
+	 *
+	 * @param {mixed} val
+	 * @return {bool}
+	 */
+
+	module.exports = isArray || function (val) {
+	  return !! val && '[object Array]' == str.call(val);
+	};
+
+
+/***/ },
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
@@ -39061,51 +39182,6 @@ var ripple =
 
 
 /***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* (ignored) */
-
-/***/ },
-/* 65 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * isArray
-	 */
-
-	var isArray = Array.isArray;
-
-	/**
-	 * toString
-	 */
-
-	var str = Object.prototype.toString;
-
-	/**
-	 * Whether or not the given `val`
-	 * is an array.
-	 *
-	 * example:
-	 *
-	 *        isArray([]);
-	 *        // > true
-	 *        isArray(arguments);
-	 *        // > false
-	 *        isArray('');
-	 *        // > false
-	 *
-	 * @param {mixed} val
-	 * @return {bool}
-	 */
-
-	module.exports = isArray || function (val) {
-	  return !! val && '[object Array]' == str.call(val);
-	};
-
-
-/***/ },
 /* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -39119,28 +39195,12 @@ var ripple =
 /* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = function(module) {
-		if(!module.webpackPolyfill) {
-			module.deprecate = function() {};
-			module.paths = [];
-			// module.parent = undefined by default
-			module.children = [];
-			module.webpackPolyfill = 1;
-		}
-		return module;
-	}
-
-
-/***/ },
-/* 68 */
-/***/ function(module, exports, __webpack_require__) {
-
 	/**
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(81);
-	var reduce = __webpack_require__(82);
+	var Emitter = __webpack_require__(82);
+	var reduce = __webpack_require__(81);
 
 	/**
 	 * Root reference for iframes.
@@ -40187,10 +40247,26 @@ var ripple =
 
 
 /***/ },
+/* 68 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(module) {
+		if(!module.webpackPolyfill) {
+			module.deprecate = function() {};
+			module.paths = [];
+			// module.parent = undefined by default
+			module.children = [];
+			module.webpackPolyfill = 1;
+		}
+		return module;
+	}
+
+
+/***/ },
 /* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(61).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(62).nextTick;
 	var apply = Function.prototype.apply;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
@@ -40270,346 +40346,6 @@ var ripple =
 
 /***/ },
 /* 70 */
-/***/ function(module, exports, __webpack_require__) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 71 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-	;(function (exports) {
-		'use strict';
-
-	  var Arr = (typeof Uint8Array !== 'undefined')
-	    ? Uint8Array
-	    : Array
-
-		var PLUS   = '+'.charCodeAt(0)
-		var SLASH  = '/'.charCodeAt(0)
-		var NUMBER = '0'.charCodeAt(0)
-		var LOWER  = 'a'.charCodeAt(0)
-		var UPPER  = 'A'.charCodeAt(0)
-		var PLUS_URL_SAFE = '-'.charCodeAt(0)
-		var SLASH_URL_SAFE = '_'.charCodeAt(0)
-
-		function decode (elt) {
-			var code = elt.charCodeAt(0)
-			if (code === PLUS ||
-			    code === PLUS_URL_SAFE)
-				return 62 // '+'
-			if (code === SLASH ||
-			    code === SLASH_URL_SAFE)
-				return 63 // '/'
-			if (code < NUMBER)
-				return -1 //no match
-			if (code < NUMBER + 10)
-				return code - NUMBER + 26 + 26
-			if (code < UPPER + 26)
-				return code - UPPER
-			if (code < LOWER + 26)
-				return code - LOWER + 26
-		}
-
-		function b64ToByteArray (b64) {
-			var i, j, l, tmp, placeHolders, arr
-
-			if (b64.length % 4 > 0) {
-				throw new Error('Invalid string. Length must be a multiple of 4')
-			}
-
-			// the number of equal signs (place holders)
-			// if there are two placeholders, than the two characters before it
-			// represent one byte
-			// if there is only one, then the three characters before it represent 2 bytes
-			// this is just a cheap hack to not do indexOf twice
-			var len = b64.length
-			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-			// base64 is 4/3 + up to two characters of the original data
-			arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-			// if there are placeholders, only get up to the last complete 4 chars
-			l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-			var L = 0
-
-			function push (v) {
-				arr[L++] = v
-			}
-
-			for (i = 0, j = 0; i < l; i += 4, j += 3) {
-				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-				push((tmp & 0xFF0000) >> 16)
-				push((tmp & 0xFF00) >> 8)
-				push(tmp & 0xFF)
-			}
-
-			if (placeHolders === 2) {
-				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-				push(tmp & 0xFF)
-			} else if (placeHolders === 1) {
-				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-				push((tmp >> 8) & 0xFF)
-				push(tmp & 0xFF)
-			}
-
-			return arr
-		}
-
-		function uint8ToBase64 (uint8) {
-			var i,
-				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-				output = "",
-				temp, length
-
-			function encode (num) {
-				return lookup.charAt(num)
-			}
-
-			function tripletToBase64 (num) {
-				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-			}
-
-			// go through the array every three bytes, we'll deal with trailing stuff later
-			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-				output += tripletToBase64(temp)
-			}
-
-			// pad the end with zeros, but make sure to not forget the extra bytes
-			switch (extraBytes) {
-				case 1:
-					temp = uint8[uint8.length - 1]
-					output += encode(temp >> 2)
-					output += encode((temp << 4) & 0x3F)
-					output += '=='
-					break
-				case 2:
-					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-					output += encode(temp >> 10)
-					output += encode((temp >> 4) & 0x3F)
-					output += encode((temp << 2) & 0x3F)
-					output += '='
-					break
-			}
-
-			return output
-		}
-
-		exports.toByteArray = b64ToByteArray
-		exports.fromByteArray = uint8ToBase64
-	}(false ? (this.base64js = {}) : exports))
-
-
-/***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	// If obj.hasOwnProperty has been overridden, then calling
-	// obj.hasOwnProperty(prop) will break.
-	// See: https://github.com/joyent/node/issues/1707
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-
-	module.exports = function(qs, sep, eq, options) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  var regexp = /\+/g;
-	  qs = qs.split(sep);
-
-	  var maxKeys = 1000;
-	  if (options && typeof options.maxKeys === 'number') {
-	    maxKeys = options.maxKeys;
-	  }
-
-	  var len = qs.length;
-	  // maxKeys <= 0 means that we should not limit keys count
-	  if (maxKeys > 0 && len > maxKeys) {
-	    len = maxKeys;
-	  }
-
-	  for (var i = 0; i < len; ++i) {
-	    var x = qs[i].replace(regexp, '%20'),
-	        idx = x.indexOf(eq),
-	        kstr, vstr, k, v;
-
-	    if (idx >= 0) {
-	      kstr = x.substr(0, idx);
-	      vstr = x.substr(idx + 1);
-	    } else {
-	      kstr = x;
-	      vstr = '';
-	    }
-
-	    k = decodeURIComponent(kstr);
-	    v = decodeURIComponent(vstr);
-
-	    if (!hasOwnProperty(obj, k)) {
-	      obj[k] = v;
-	    } else if (isArray(obj[k])) {
-	      obj[k].push(v);
-	    } else {
-	      obj[k] = [obj[k], v];
-	    }
-	  }
-
-	  return obj;
-	};
-
-	var isArray = Array.isArray || function (xs) {
-	  return Object.prototype.toString.call(xs) === '[object Array]';
-	};
-
-
-/***/ },
-/* 73 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-	module.exports = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  if (obj === null) {
-	    obj = undefined;
-	  }
-
-	  if (typeof obj === 'object') {
-	    return map(objectKeys(obj), function(k) {
-	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-	      if (isArray(obj[k])) {
-	        return map(obj[k], function(v) {
-	          return ks + encodeURIComponent(stringifyPrimitive(v));
-	        }).join(sep);
-	      } else {
-	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-	      }
-	    }).join(sep);
-
-	  }
-
-	  if (!name) return '';
-	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-	         encodeURIComponent(stringifyPrimitive(obj));
-	};
-
-	var isArray = Array.isArray || function (xs) {
-	  return Object.prototype.toString.call(xs) === '[object Array]';
-	};
-
-	function map (xs, f) {
-	  if (xs.map) return xs.map(f);
-	  var res = [];
-	  for (var i = 0; i < xs.length; i++) {
-	    res.push(f(xs[i], i));
-	  }
-	  return res;
-	}
-
-	var objectKeys = Object.keys || function (obj) {
-	  var res = [];
-	  for (var key in obj) {
-	    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
-	  }
-	  return res;
-	};
-
-
-/***/ },
-/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -40770,6 +40506,346 @@ var ripple =
 
 
 /***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	'use strict';
+
+	// If obj.hasOwnProperty has been overridden, then calling
+	// obj.hasOwnProperty(prop) will break.
+	// See: https://github.com/joyent/node/issues/1707
+	function hasOwnProperty(obj, prop) {
+	  return Object.prototype.hasOwnProperty.call(obj, prop);
+	}
+
+	module.exports = function(qs, sep, eq, options) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  var obj = {};
+
+	  if (typeof qs !== 'string' || qs.length === 0) {
+	    return obj;
+	  }
+
+	  var regexp = /\+/g;
+	  qs = qs.split(sep);
+
+	  var maxKeys = 1000;
+	  if (options && typeof options.maxKeys === 'number') {
+	    maxKeys = options.maxKeys;
+	  }
+
+	  var len = qs.length;
+	  // maxKeys <= 0 means that we should not limit keys count
+	  if (maxKeys > 0 && len > maxKeys) {
+	    len = maxKeys;
+	  }
+
+	  for (var i = 0; i < len; ++i) {
+	    var x = qs[i].replace(regexp, '%20'),
+	        idx = x.indexOf(eq),
+	        kstr, vstr, k, v;
+
+	    if (idx >= 0) {
+	      kstr = x.substr(0, idx);
+	      vstr = x.substr(idx + 1);
+	    } else {
+	      kstr = x;
+	      vstr = '';
+	    }
+
+	    k = decodeURIComponent(kstr);
+	    v = decodeURIComponent(vstr);
+
+	    if (!hasOwnProperty(obj, k)) {
+	      obj[k] = v;
+	    } else if (isArray(obj[k])) {
+	      obj[k].push(v);
+	    } else {
+	      obj[k] = [obj[k], v];
+	    }
+	  }
+
+	  return obj;
+	};
+
+	var isArray = Array.isArray || function (xs) {
+	  return Object.prototype.toString.call(xs) === '[object Array]';
+	};
+
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	'use strict';
+
+	var stringifyPrimitive = function(v) {
+	  switch (typeof v) {
+	    case 'string':
+	      return v;
+
+	    case 'boolean':
+	      return v ? 'true' : 'false';
+
+	    case 'number':
+	      return isFinite(v) ? v : '';
+
+	    default:
+	      return '';
+	  }
+	};
+
+	module.exports = function(obj, sep, eq, name) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  if (obj === null) {
+	    obj = undefined;
+	  }
+
+	  if (typeof obj === 'object') {
+	    return map(objectKeys(obj), function(k) {
+	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+	      if (isArray(obj[k])) {
+	        return map(obj[k], function(v) {
+	          return ks + encodeURIComponent(stringifyPrimitive(v));
+	        }).join(sep);
+	      } else {
+	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+	      }
+	    }).join(sep);
+
+	  }
+
+	  if (!name) return '';
+	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+	         encodeURIComponent(stringifyPrimitive(obj));
+	};
+
+	var isArray = Array.isArray || function (xs) {
+	  return Object.prototype.toString.call(xs) === '[object Array]';
+	};
+
+	function map (xs, f) {
+	  if (xs.map) return xs.map(f);
+	  var res = [];
+	  for (var i = 0; i < xs.length; i++) {
+	    res.push(f(xs[i], i));
+	  }
+	  return res;
+	}
+
+	var objectKeys = Object.keys || function (obj) {
+	  var res = [];
+	  for (var key in obj) {
+	    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
+	  }
+	  return res;
+	};
+
+
+/***/ },
+/* 73 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+	;(function (exports) {
+		'use strict';
+
+	  var Arr = (typeof Uint8Array !== 'undefined')
+	    ? Uint8Array
+	    : Array
+
+		var PLUS   = '+'.charCodeAt(0)
+		var SLASH  = '/'.charCodeAt(0)
+		var NUMBER = '0'.charCodeAt(0)
+		var LOWER  = 'a'.charCodeAt(0)
+		var UPPER  = 'A'.charCodeAt(0)
+		var PLUS_URL_SAFE = '-'.charCodeAt(0)
+		var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+		function decode (elt) {
+			var code = elt.charCodeAt(0)
+			if (code === PLUS ||
+			    code === PLUS_URL_SAFE)
+				return 62 // '+'
+			if (code === SLASH ||
+			    code === SLASH_URL_SAFE)
+				return 63 // '/'
+			if (code < NUMBER)
+				return -1 //no match
+			if (code < NUMBER + 10)
+				return code - NUMBER + 26 + 26
+			if (code < UPPER + 26)
+				return code - UPPER
+			if (code < LOWER + 26)
+				return code - LOWER + 26
+		}
+
+		function b64ToByteArray (b64) {
+			var i, j, l, tmp, placeHolders, arr
+
+			if (b64.length % 4 > 0) {
+				throw new Error('Invalid string. Length must be a multiple of 4')
+			}
+
+			// the number of equal signs (place holders)
+			// if there are two placeholders, than the two characters before it
+			// represent one byte
+			// if there is only one, then the three characters before it represent 2 bytes
+			// this is just a cheap hack to not do indexOf twice
+			var len = b64.length
+			placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+			// base64 is 4/3 + up to two characters of the original data
+			arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+			// if there are placeholders, only get up to the last complete 4 chars
+			l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+			var L = 0
+
+			function push (v) {
+				arr[L++] = v
+			}
+
+			for (i = 0, j = 0; i < l; i += 4, j += 3) {
+				tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+				push((tmp & 0xFF0000) >> 16)
+				push((tmp & 0xFF00) >> 8)
+				push(tmp & 0xFF)
+			}
+
+			if (placeHolders === 2) {
+				tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+				push(tmp & 0xFF)
+			} else if (placeHolders === 1) {
+				tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+				push((tmp >> 8) & 0xFF)
+				push(tmp & 0xFF)
+			}
+
+			return arr
+		}
+
+		function uint8ToBase64 (uint8) {
+			var i,
+				extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+				output = "",
+				temp, length
+
+			function encode (num) {
+				return lookup.charAt(num)
+			}
+
+			function tripletToBase64 (num) {
+				return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+			}
+
+			// go through the array every three bytes, we'll deal with trailing stuff later
+			for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+				temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+				output += tripletToBase64(temp)
+			}
+
+			// pad the end with zeros, but make sure to not forget the extra bytes
+			switch (extraBytes) {
+				case 1:
+					temp = uint8[uint8.length - 1]
+					output += encode(temp >> 2)
+					output += encode((temp << 4) & 0x3F)
+					output += '=='
+					break
+				case 2:
+					temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+					output += encode(temp >> 10)
+					output += encode((temp >> 4) & 0x3F)
+					output += encode((temp << 2) & 0x3F)
+					output += '='
+					break
+			}
+
+			return output
+		}
+
+		exports.toByteArray = b64ToByteArray
+		exports.fromByteArray = uint8ToBase64
+	}(false ? (this.base64js = {}) : exports))
+
+
+/***/ },
+/* 74 */
+/***/ function(module, exports, __webpack_require__) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
+
+/***/ },
 /* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -40779,7 +40855,7 @@ var ripple =
 	  return new Alg()
 	}
 
-	var Buffer = __webpack_require__(42).Buffer
+	var Buffer = __webpack_require__(41).Buffer
 	var Hash   = __webpack_require__(83)(Buffer)
 
 	exports.sha1 = __webpack_require__(84)(Buffer, Hash)
@@ -41032,7 +41108,7 @@ var ripple =
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 79 */
@@ -41244,7 +41320,7 @@ var ripple =
 
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 80 */
@@ -41285,10 +41361,39 @@ var ripple =
 
 	module.exports = { hash: hash };
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 81 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 82 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -41458,35 +41563,6 @@ var ripple =
 
 
 /***/ },
-/* 82 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
-
-/***/ },
 /* 83 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -41582,7 +41658,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(44).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41726,7 +41802,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(44).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41870,7 +41946,7 @@ var ripple =
 /* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(44).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
