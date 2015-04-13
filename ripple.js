@@ -20120,8 +20120,8 @@ var ripple =
 	 */
 
 	var base64 = __webpack_require__(73)
-	var ieee754 = __webpack_require__(64)
-	var isArray = __webpack_require__(63)
+	var ieee754 = __webpack_require__(63)
+	var isArray = __webpack_require__(64)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -21130,8 +21130,6 @@ var ripple =
 
 	// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
 	Buffer.prototype.copy = function copy (target, target_start, start, end) {
-	  var self = this // source
-
 	  if (!start) start = 0
 	  if (!end && end !== 0) end = this.length
 	  if (target_start >= target.length) target_start = target.length
@@ -21140,13 +21138,13 @@ var ripple =
 
 	  // Copy 0 bytes; we're done
 	  if (end === start) return 0
-	  if (target.length === 0 || self.length === 0) return 0
+	  if (target.length === 0 || this.length === 0) return 0
 
 	  // Fatal error conditions
 	  if (target_start < 0) {
 	    throw new RangeError('targetStart out of bounds')
 	  }
-	  if (start < 0 || start >= self.length) throw new RangeError('sourceStart out of bounds')
+	  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
 	  if (end < 0) throw new RangeError('sourceEnd out of bounds')
 
 	  // Are we oob?
@@ -21231,8 +21229,7 @@ var ripple =
 	  arr.constructor = Buffer
 	  arr._isBuffer = true
 
-	  // save reference to original Uint8Array get/set methods before overwriting
-	  arr._get = arr.get
+	  // save reference to original Uint8Array set method before overwriting
 	  arr._set = arr.set
 
 	  // deprecated, will be removed in node 0.13+
@@ -39054,45 +39051,6 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	
-	/**
-	 * isArray
-	 */
-
-	var isArray = Array.isArray;
-
-	/**
-	 * toString
-	 */
-
-	var str = Object.prototype.toString;
-
-	/**
-	 * Whether or not the given `val`
-	 * is an array.
-	 *
-	 * example:
-	 *
-	 *        isArray([]);
-	 *        // > true
-	 *        isArray(arguments);
-	 *        // > false
-	 *        isArray('');
-	 *        // > false
-	 *
-	 * @param {mixed} val
-	 * @return {bool}
-	 */
-
-	module.exports = isArray || function (val) {
-	  return !! val && '[object Array]' == str.call(val);
-	};
-
-
-/***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
 	  var e, m,
 	      eLen = nBytes * 8 - mLen - 1,
@@ -39180,6 +39138,45 @@ var ripple =
 
 
 /***/ },
+/* 64 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
+	 * isArray
+	 */
+
+	var isArray = Array.isArray;
+
+	/**
+	 * toString
+	 */
+
+	var str = Object.prototype.toString;
+
+	/**
+	 * Whether or not the given `val`
+	 * is an array.
+	 *
+	 * example:
+	 *
+	 *        isArray([]);
+	 *        // > true
+	 *        isArray(arguments);
+	 *        // > false
+	 *        isArray('');
+	 *        // > false
+	 *
+	 * @param {mixed} val
+	 * @return {bool}
+	 */
+
+	module.exports = isArray || function (val) {
+	  return !! val && '[object Array]' == str.call(val);
+	};
+
+
+/***/ },
 /* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -39219,8 +39216,8 @@ var ripple =
 	 * Module dependencies.
 	 */
 
-	var Emitter = __webpack_require__(81);
-	var reduce = __webpack_require__(82);
+	var Emitter = __webpack_require__(82);
+	var reduce = __webpack_require__(81);
 
 	/**
 	 * Root reference for iframes.
@@ -41373,6 +41370,35 @@ var ripple =
 
 	
 	/**
+	 * Reduce `arr` with `fn`.
+	 *
+	 * @param {Array} arr
+	 * @param {Function} fn
+	 * @param {Mixed} initial
+	 *
+	 * TODO: combatible error handling?
+	 */
+
+	module.exports = function(arr, fn, initial){  
+	  var idx = 0;
+	  var len = arr.length;
+	  var curr = arguments.length == 3
+	    ? initial
+	    : arr[idx++];
+
+	  while (idx < len) {
+	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+	  }
+	  
+	  return curr;
+	};
+
+/***/ },
+/* 82 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
 	 * Expose `Emitter`.
 	 */
 
@@ -41536,35 +41562,6 @@ var ripple =
 	  return !! this.listeners(event).length;
 	};
 
-
-/***/ },
-/* 82 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
 
 /***/ },
 /* 83 */
