@@ -130,12 +130,12 @@ var ripple =
 	// has not yet been implemented. However, this class has been designed for it
 	// to be a very simple drop option.
 
-	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util = __webpack_require__(40);
-	var assert = __webpack_require__(41);
-	var LRU = __webpack_require__(47);
-	var async = __webpack_require__(48);
-	var lodash = __webpack_require__(45);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util = __webpack_require__(39);
+	var assert = __webpack_require__(40);
+	var LRU = __webpack_require__(45);
+	var async = __webpack_require__(46);
+	var lodash = __webpack_require__(43);
 	var Server = __webpack_require__(18).Server;
 	var Request = __webpack_require__(2).Request;
 	var Amount = __webpack_require__(3).Amount;
@@ -150,7 +150,6 @@ var ripple =
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var RippleError = __webpack_require__(14).RippleError;
 	var utils = __webpack_require__(17);
-	var sjcl = __webpack_require__(17).sjcl;
 	var hashprefixes = __webpack_require__(28);
 	var config = __webpack_require__(25);
 	var log = __webpack_require__(29).internal.sub('remote');
@@ -1877,19 +1876,7 @@ var ripple =
 	  function serverSubscribed(message) {
 	    self._stand_alone = !!message.stand_alone;
 	    self._testnet = !!message.testnet;
-
-	    if (typeof message.random === 'string') {
-	      var rand = message.random.match(/[0-9A-F]{8}/ig);
-
-	      while (rand && rand.length) {
-	        sjcl.random.addEntropy(parseInt(rand.pop(), 16));
-	      }
-
-	      self.emit('random', utils.hexToArray(message.random));
-	    }
-
 	    self._handleLedgerClosed(message, server);
-
 	    self.emit('subscribed');
 	  }
 
@@ -2700,9 +2687,9 @@ var ripple =
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(40);
-	var async        = __webpack_require__(48);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(39);
+	var async        = __webpack_require__(46);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
 	var RippleError  = __webpack_require__(14).RippleError;
@@ -3273,13 +3260,13 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert = __webpack_require__(41);
-	var extend = __webpack_require__(46);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(44);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Seed = __webpack_require__(11).Seed;
 	var Currency = __webpack_require__(6).Currency;
-	var GlobalBigNumber = __webpack_require__(49);
+	var GlobalBigNumber = __webpack_require__(47);
 
 	var BigNumber = GlobalBigNumber.another({
 	  ROUNDING_MODE: GlobalBigNumber.ROUND_HALF_UP,
@@ -4297,10 +4284,10 @@ var ripple =
 	//
 
 	// var network = require('./network.js');
-	var async              = __webpack_require__(48);
-	var util               = __webpack_require__(40);
-	var extend             = __webpack_require__(46);
-	var EventEmitter       = __webpack_require__(39).EventEmitter;
+	var async              = __webpack_require__(46);
+	var util               = __webpack_require__(39);
+	var extend             = __webpack_require__(44);
+	var EventEmitter       = __webpack_require__(38).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
 	var UInt160            = __webpack_require__(9).UInt160;
 	var TransactionManager = __webpack_require__(30).TransactionManager;
@@ -4689,8 +4676,8 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(40);
-	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util = __webpack_require__(39);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var utils = __webpack_require__(17);
 	var sjcl = __webpack_require__(17).sjcl;
 	var Amount = __webpack_require__(3).Amount;
@@ -5939,7 +5926,7 @@ var ripple =
 
 	'use strict';
 
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var utils = __webpack_require__(17);
 	var Float = __webpack_require__(31).Float;
@@ -6346,10 +6333,10 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var _ = __webpack_require__(45);
+	var _ = __webpack_require__(43);
 	var sjcl = __webpack_require__(17).sjcl;
 	var utils = __webpack_require__(17);
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 	var convertBase = __webpack_require__(23);
 
 	var Base = {};
@@ -6508,7 +6495,7 @@ var ripple =
 	'use strict';
 
 	var utils = __webpack_require__(17);
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 	var UInt = __webpack_require__(32).UInt;
 
 	//
@@ -6540,7 +6527,7 @@ var ripple =
 
 	var utils = __webpack_require__(17);
 	var config = __webpack_require__(25);
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 
 	var UInt = __webpack_require__(32).UInt;
 	var Base = __webpack_require__(7).Base;
@@ -6649,7 +6636,7 @@ var ripple =
 	'use strict';
 
 	var utils = __webpack_require__(17);
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 	var UInt = __webpack_require__(32).UInt;
 
 	//
@@ -6686,7 +6673,7 @@ var ripple =
 	// Seed support
 	//
 
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 	var utils = __webpack_require__(17);
 	var sjcl = utils.sjcl;
 
@@ -6846,7 +6833,7 @@ var ripple =
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var extend  = __webpack_require__(46);
+	var extend  = __webpack_require__(44);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Amount  = __webpack_require__(3).Amount;
@@ -7114,13 +7101,13 @@ var ripple =
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var _ = __webpack_require__(45);
-	var assert = __webpack_require__(41);
-	var extend = __webpack_require__(46);
+	var _ = __webpack_require__(43);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(44);
 	var binformat = __webpack_require__(16);
 	var stypes = __webpack_require__(24);
-	var Crypt = __webpack_require__(34).Crypt;
 	var utils = __webpack_require__(17);
+	var UInt256 = __webpack_require__(10).UInt256;
 
 	var sjcl = utils.sjcl;
 
@@ -7394,9 +7381,9 @@ var ripple =
 	  // Copy buffer to temporary buffer
 	  sign_buffer.append(this.buffer);
 
-	  // XXX We need a proper Buffer class then Crypt could accept that
 	  var bits = sjcl.codec.bytes.toBits(sign_buffer.buffer);
-	  return Crypt.hashSha512Half(bits);
+	  var sha512hex = sjcl.codec.hex.fromBits(sjcl.hash.sha512.hash(bits));
+	  return UInt256.from_hex(sha512hex.substr(0, 64));
 	};
 
 	// DEPRECATED
@@ -7460,14 +7447,14 @@ var ripple =
 
 	exports.SerializedObject = SerializedObject;
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(40);
-	var extend = __webpack_require__(46);
+	var util   = __webpack_require__(39);
+	var extend = __webpack_require__(44);
 
 	function RippleError(code, message) {
 	  switch (typeof code) {
@@ -7505,23 +7492,25 @@ var ripple =
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var async              = __webpack_require__(48);
-	var crypto             = __webpack_require__(43);
-	var sjcl               = __webpack_require__(17).sjcl;
-	var Remote             = __webpack_require__(1).Remote;
-	var Seed               = __webpack_require__(11).Seed;
-	var KeyPair            = __webpack_require__(33).KeyPair;
-	var Account            = __webpack_require__(4).Account;
-	var UInt160            = __webpack_require__(9).UInt160;
+	/* eslint-disable valid-jsdoc */
+	'use strict';
+	var async = __webpack_require__(46);
+	var sjcl = __webpack_require__(17).sjcl;
+	var Remote = __webpack_require__(1).Remote;
+	var Seed = __webpack_require__(11).Seed;
+	var KeyPair = __webpack_require__(33).KeyPair;
+	var Account = __webpack_require__(4).Account;
+	var UInt160 = __webpack_require__(9).UInt160;
 
 	// Message class (static)
 	var Message = {};
 
-	Message.HASH_FUNCTION  = sjcl.hash.sha512.hash;
-	Message.MAGIC_BYTES    = 'Ripple Signed Message:\n';
+	Message.hashFunction = sjcl.hash.sha512.hash;
+	Message.MAGIC_BYTES = 'Ripple Signed Message:\n';
 
 	var REGEX_HEX = /^[0-9a-fA-F]+$/;
-	var REGEX_BASE64 = /^([A-Za-z0-9\+]{4})*([A-Za-z0-9\+]{2}==)|([A-Za-z0-9\+]{3}=)?$/;
+	var REGEX_BASE64 =
+	  /^([A-Za-z0-9\+]{4})*([A-Za-z0-9\+]{2}==)|([A-Za-z0-9\+]{3}=)?$/;
 
 	/**
 	 *  Produce a Base64-encoded signature on the given message with
@@ -7534,15 +7523,16 @@ var ripple =
 	 *  @static
 	 *
 	 *  @param {String} message
-	 *  @param {sjcl.ecc.ecdsa.secretKey|Any format accepted by Seed.from_json} secret_key
-	 *  @param {RippleAddress} [The first key] account Field to specify the signing account. 
-	 *    If this is omitted the first account produced by the secret generator will be used.
-	 *  @returns {Base64-encoded String} signature
+	 *  @param {sjcl.ecc.ecdsa.secretKey|Any format accepted by Seed.from_json}
+	 *         secret_key
+	 *  @param {RippleAddress} [The first key] account Field to specify the signing
+	 *      account. If this is omitted the first account produced by the secret
+	 *      generator will be used.
+	 *  @return {Base64-encoded String} signature
 	 */
 	Message.signMessage = function(message, secret_key, account) {
-
-	  return Message.signHash(Message.HASH_FUNCTION(Message.MAGIC_BYTES + message), secret_key, account);
-
+	  return Message.signHash(Message.hashFunction(Message.MAGIC_BYTES + message),
+	    secret_key, account);
 	};
 
 	/**
@@ -7555,9 +7545,11 @@ var ripple =
 	 *  @static
 	 *
 	 *  @param {bitArray|Hex-encoded String} hash
-	 *  @param {sjcl.ecc.ecdsa.secretKey|Any format accepted by Seed.from_json} secret_key
-	 *  @param {RippleAddress} [The first key] account Field to specify the signing account. 
-	 *    If this is omitted the first account produced by the secret generator will be used.
+	 *  @param {sjcl.ecc.ecdsa.secretKey|Any format accepted by Seed.from_json}
+	 *          secret_key
+	 *  @param {RippleAddress} [The first key] account Field to specify the
+	 *          signing account. If this is omitted the first account produced by
+	 *          the secret generator will be used.
 	 *  @returns {Base64-encoded String} signature
 	 */
 	Message.signHash = function(hash, secret_key, account) {
@@ -7566,7 +7558,8 @@ var ripple =
 	    hash = sjcl.codec.hex.toBits(hash);
 	  }
 
-	  if (typeof hash !== 'object' || hash.length <= 0 || typeof hash[0] !== 'number') {
+	  if (typeof hash !== 'object' || hash.length <= 0
+	      || typeof hash[0] !== 'number') {
 	    throw new Error('Hash must be a bitArray or hex-encoded string');
 	  }
 
@@ -7574,7 +7567,9 @@ var ripple =
 	    secret_key = Seed.from_json(secret_key).get_key(account)._secret;
 	  }
 
-	  var signature_bits = secret_key.signWithRecoverablePublicKey(hash);
+	  var PARANOIA_256_BITS = 6; // sjcl constant for ensuring 256 bits of entropy
+	  var signature_bits = secret_key.signWithRecoverablePublicKey(hash,
+	    PARANOIA_256_BITS);
 	  var signature_base64 = sjcl.codec.base64.fromBits(signature_bits);
 
 	  return signature_base64;
@@ -7585,7 +7580,7 @@ var ripple =
 	/**
 	 *  Verify the signature on a given message.
 	 *
-	 *  Note that this function is asynchronous. 
+	 *  Note that this function is asynchronous.
 	 *  The ripple-lib remote is used to check that the public
 	 *  key extracted from the signature corresponds to one that is currently
 	 *  active for the given account.
@@ -7605,9 +7600,10 @@ var ripple =
 	Message.verifyMessageSignature = function(data, remote, callback) {
 
 	  if (typeof data.message === 'string') {
-	    data.hash = Message.HASH_FUNCTION(Message.MAGIC_BYTES + data.message);
+	    data.hash = Message.hashFunction(Message.MAGIC_BYTES + data.message);
 	  } else {
-	    return callback(new Error('Data object must contain message field to verify signature'));
+	    return callback(new Error(
+	      'Data object must contain message field to verify signature'));
 	  }
 
 	  return Message.verifyHashSignature(data, remote, callback);
@@ -7618,7 +7614,7 @@ var ripple =
 	/**
 	 *  Verify the signature on a given hash.
 	 *
-	 *  Note that this function is asynchronous. 
+	 *  Note that this function is asynchronous.
 	 *  The ripple-lib remote is used to check that the public
 	 *  key extracted from the signature corresponds to one that is currently
 	 *  active for the given account.
@@ -7641,7 +7637,7 @@ var ripple =
 	    account,
 	    signature;
 
-	  if(typeof callback !== 'function') {
+	  if (typeof callback !== 'function') {
 	    throw new Error('Must supply callback function');
 	  }
 
@@ -7650,7 +7646,8 @@ var ripple =
 	    hash = sjcl.codec.hex.toBits(hash);
 	  }
 
-	  if (typeof hash !== 'object' || hash.length <= 0 || typeof hash[0] !== 'number') {
+	  if (typeof hash !== 'object' || hash.length <= 0
+	      || typeof hash[0] !== 'number') {
 	    return callback(new Error('Hash must be a bitArray or hex-encoded string'));
 	  }
 
@@ -7666,14 +7663,16 @@ var ripple =
 	  signature = sjcl.codec.base64.toBits(signature);
 
 	  if (!(remote instanceof Remote) || remote.state !== 'online') {
-	    return callback(new Error('Must supply connected Remote to verify signature'));
+	    return callback(new Error(
+	      'Must supply connected Remote to verify signature'));
 	  }
 
-	  function recoverPublicKey (async_callback) {
+	  function recoverPublicKey(async_callback) {
 
 	    var public_key;
 	    try {
-	      public_key = sjcl.ecc.ecdsa.publicKey.recoverFromSignature(hash, signature);
+	      public_key =
+	        sjcl.ecc.ecdsa.publicKey.recoverFromSignature(hash, signature);
 	    } catch (err) {
 	      return async_callback(err);
 	    }
@@ -7684,9 +7683,9 @@ var ripple =
 	      async_callback(new Error('Could not recover public key from signature'));
 	    }
 
-	  };
+	  }
 
-	  function checkPublicKeyIsValid (public_key, async_callback) {
+	  function checkPublicKeyIsValid(public_key, async_callback) {
 
 	    // Get hex-encoded public key
 	    var key_pair = new KeyPair();
@@ -7696,7 +7695,7 @@ var ripple =
 	    var account_class_instance = new Account(remote, account);
 	    account_class_instance.publicKeyIsActive(public_key_hex, async_callback);
 
-	  };
+	  }
 
 	  var steps = [
 	    recoverPublicKey,
@@ -8319,7 +8318,7 @@ var ripple =
 
 	// Going up three levels is needed to escape the src-cov folder used for the
 	// test coverage stuff.
-	exports.sjcl = __webpack_require__(35);
+	exports.sjcl = __webpack_require__(34);
 
 	// vim:sw=2:sts=2:ts=8:et
 
@@ -8328,10 +8327,10 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(40);
-	var url          = __webpack_require__(44);
-	var LRU          = __webpack_require__(47);
-	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util         = __webpack_require__(39);
+	var url          = __webpack_require__(42);
+	var LRU          = __webpack_require__(45);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount       = __webpack_require__(3).Amount;
 	var RangeSet     = __webpack_require__(22).RangeSet;
 	var log          = __webpack_require__(29).internal.sub('server');
@@ -8504,7 +8503,7 @@ var ripple =
 	Server.websocketConstructor = function() {
 	  // We require this late, because websocket shims may be loaded after
 	  // ripple-lib in the browser
-	  return __webpack_require__(38);
+	  return __webpack_require__(37);
 	};
 
 	/**
@@ -9252,7 +9251,7 @@ var ripple =
 
 	var sjcl = __webpack_require__(17).sjcl;
 
-	var WalletGenerator = __webpack_require__(50)({
+	var WalletGenerator = __webpack_require__(48)({
 	  sjcl: sjcl
 	});
 
@@ -9264,31 +9263,27 @@ var ripple =
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Ledger
-
+	/* eslint-disable valid-jsdoc */
+	'use strict';
 	var Transaction = __webpack_require__(5).Transaction;
-	var SHAMap = __webpack_require__(36).SHAMap;
-	var SHAMapTreeNode = __webpack_require__(36).SHAMapTreeNode;
+	var SHAMap = __webpack_require__(35).SHAMap;
+	var SHAMapTreeNode = __webpack_require__(35).SHAMapTreeNode;
 	var SerializedObject = __webpack_require__(13).SerializedObject;
 	var stypes = __webpack_require__(24);
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
-	var stypes = __webpack_require__(24);
-	var sjcl  = __webpack_require__(17).sjcl;
-	var Crypt = __webpack_require__(34).Crypt;
 
-	function Ledger()
-	{
+	function Ledger() {
 	  this.ledger_json = {};
 	}
 
-	Ledger.from_json = function (v) {
+	Ledger.from_json = function(v) {
 	  var ledger = new Ledger();
 	  ledger.parse_json(v);
 	  return ledger;
 	};
 
-	Ledger.space = __webpack_require__(37);
+	Ledger.space = __webpack_require__(36);
 
 	/**
 	 * Generate the key for an AccountRoot entry.
@@ -9297,7 +9292,7 @@ var ripple =
 	 * @return {UInt256}
 	 */
 	Ledger.calcAccountRootEntryHash =
-	Ledger.prototype.calcAccountRootEntryHash = function (account) {
+	Ledger.prototype.calcAccountRootEntryHash = function(account) {
 	  account = UInt160.from_json(account);
 
 	  var index = new SerializedObject();
@@ -9317,9 +9312,9 @@ var ripple =
 	 * @return {UInt256}
 	 */
 	Ledger.calcOfferEntryHash =
-	Ledger.prototype.calcOfferEntryHash = function (account, sequence) {
+	Ledger.prototype.calcOfferEntryHash = function(account, sequence) {
 	  account = UInt160.from_json(account);
-	  sequence = parseInt(sequence);
+	  sequence = parseInt(sequence, 10);
 
 	  var index = new SerializedObject();
 
@@ -9341,19 +9336,20 @@ var ripple =
 	 * @return {UInt256}
 	 */
 	Ledger.calcRippleStateEntryHash =
-	Ledger.prototype.calcRippleStateEntryHash = function (account1, account2, currency) {
+	Ledger.prototype.calcRippleStateEntryHash = function(
+	    account1, account2, currency) {
 	  currency = Currency.from_json(currency);
 	  account1 = UInt160.from_json(account1);
 	  account2 = UInt160.from_json(account2);
 
 	  if (!account1.is_valid()) {
-	    throw new Error("Invalid first account");
+	    throw new Error('Invalid first account');
 	  }
 	  if (!account2.is_valid()) {
-	    throw new Error("Invalid second account");
+	    throw new Error('Invalid second account');
 	  }
 	  if (!currency.is_valid()) {
-	    throw new Error("Invalid currency");
+	    throw new Error('Invalid currency');
 	  }
 
 	  // The lower ID has to come first
@@ -9373,14 +9369,14 @@ var ripple =
 	  return index.hash();
 	};
 
-	Ledger.prototype.parse_json = function (v) {
+	Ledger.prototype.parse_json = function(v) {
 	  this.ledger_json = v;
 	};
 
-	Ledger.prototype.calc_tx_hash = function () {
+	Ledger.prototype.calc_tx_hash = function() {
 	  var tx_map = new SHAMap();
 
-	  this.ledger_json.transactions.forEach(function (tx_json) {
+	  this.ledger_json.transactions.forEach(function(tx_json) {
 	    var tx = Transaction.from_json(tx_json);
 	    var meta = SerializedObject.from_json(tx_json.metaData);
 
@@ -9394,37 +9390,39 @@ var ripple =
 	};
 
 	/**
-	* @param options.sanity_test {Boolean}
+	* @param options .sanity_test {Boolean}
+	* @return hash of shamap
 	*
 	*   If `true`, will serialize each accountState item to binary and then back to
 	*   json before finally serializing for hashing. This is mostly to expose any
 	*   issues with ripple-lib's binary <--> json codecs.
 	*
 	*/
-	Ledger.prototype.calc_account_hash = function (options) {
+	Ledger.prototype.calc_account_hash = function(options) {
 	  var account_map = new SHAMap();
 	  var erred;
 
-	  this.ledger_json.accountState.forEach(function (le) {
+	  this.ledger_json.accountState.forEach(function(le) {
 	    var data = SerializedObject.from_json(le);
 
-	    if (options != null && options.sanity_test) {
+	    var json;
+	    if (options && options.sanity_test) {
 	      try {
-	        var json = data.to_json();
+	        json = data.to_json();
 	        data = SerializedObject.from_json(json);
 	      } catch (e) {
-	        console.log("account state item: ", le);
-	        console.log("to_json() ",json);
-	        console.log("exception: ", e);
+	        console.log('account state item: ', le);
+	        console.log('to_json() ', json);
+	        console.log('exception: ', e);
 	        erred = true;
 	      }
-	    };
+	    }
 
 	    account_map.add_item(le.index, data, SHAMapTreeNode.TYPE_ACCOUNT_STATE);
 	  });
 
 	  if (erred) {
-	    throw new Error("There were errors with sanity_test"); // all logged above
+	    throw new Error('There were errors with sanity_test'); // all logged above
 	  }
 
 	  return account_map.hash();
@@ -9439,8 +9437,8 @@ var ripple =
 
 	'use strict';
 
-	var lodash = __webpack_require__(45);
-	var LRU = __webpack_require__(47);
+	var lodash = __webpack_require__(43);
+	var LRU = __webpack_require__(45);
 	var Transaction = __webpack_require__(5).Transaction;
 
 	/**
@@ -9607,8 +9605,8 @@ var ripple =
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assert = __webpack_require__(41);
-	var lodash = __webpack_require__(45);
+	var assert = __webpack_require__(40);
+	var lodash = __webpack_require__(43);
 
 	function RangeSet() {
 	  this._ranges = [ ];
@@ -9728,9 +9726,9 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert = __webpack_require__(41);
-	var extend = __webpack_require__(46);
-	var GlobalBigNumber = __webpack_require__(49);
+	var assert = __webpack_require__(40);
+	var extend = __webpack_require__(44);
+	var GlobalBigNumber = __webpack_require__(47);
 	var Amount = __webpack_require__(3).Amount;
 	var Currency = __webpack_require__(6).Currency;
 	var binformat = __webpack_require__(16);
@@ -9810,7 +9808,7 @@ var ripple =
 	  return keys.sort(sort_field_compare);
 	}
 
-	SerializedType.serialize_varint = function (so, val) {
+	SerializedType.serialize_varint = function(so, val) {
 	  if (val < 0) {
 	    throw new Error('Variable integers are unsigned.');
 	  }
@@ -9828,7 +9826,7 @@ var ripple =
 	  }
 	};
 
-	SerializedType.prototype.parse_varint = function (so) {
+	SerializedType.prototype.parse_varint = function(so) {
 	  var b1 = so.read(1)[0], b2, b3;
 	  var result;
 
@@ -9900,10 +9898,10 @@ var ripple =
 	}
 
 	var STInt8 = exports.Int8 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    so.append(convertIntegerToByteArray(val, 1));
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return readAndSum(so, 1);
 	  }
 	});
@@ -9994,10 +9992,10 @@ var ripple =
 	exports.parse = exports.parse_whatever = parse;
 
 	var STInt16 = exports.Int16 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    so.append(convertIntegerToByteArray(val, 2));
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return readAndSum(so, 2);
 	  }
 	});
@@ -10005,10 +10003,10 @@ var ripple =
 	STInt16.id = 1;
 
 	var STInt32 = exports.Int32 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    so.append(convertIntegerToByteArray(val, 4));
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return readAndSum(so, 4);
 	  }
 	});
@@ -10016,7 +10014,7 @@ var ripple =
 	STInt32.id = 2;
 
 	var STInt64 = exports.Int64 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var bigNumObject;
 
 	    if (isNumber(val)) {
@@ -10040,7 +10038,7 @@ var ripple =
 	    }
 	    serializeBits(so, bigNumObject.toBits(64), true); // noLength = true
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var bytes = so.read(8);
 	    return SJCL_BN.fromBits(sjcl.codec.bytes.toBits(bytes));
 	  }
@@ -10049,14 +10047,14 @@ var ripple =
 	STInt64.id = 3;
 
 	var STHash128 = exports.Hash128 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var hash = UInt128.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash128');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return UInt128.from_bytes(so.read(16));
 	  }
 	});
@@ -10064,14 +10062,14 @@ var ripple =
 	STHash128.id = 4;
 
 	var STHash256 = exports.Hash256 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var hash = UInt256.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash256');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return UInt256.from_bytes(so.read(32));
 	  }
 	});
@@ -10079,14 +10077,14 @@ var ripple =
 	STHash256.id = 5;
 
 	var STHash160 = exports.Hash160 = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var hash = UInt160.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash160');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    return UInt160.from_bytes(so.read(20));
 	  }
 	});
@@ -10095,7 +10093,7 @@ var ripple =
 
 	// Internal
 	var STCurrency = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var currencyData = val.to_bytes();
 
 	    if (!currencyData) {
@@ -10105,7 +10103,7 @@ var ripple =
 
 	    so.append(currencyData);
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var bytes = so.read(20);
 	    var currency = Currency.from_bytes(bytes);
 	    // XXX Disabled check. Theoretically, the Currency class should support any
@@ -10119,8 +10117,51 @@ var ripple =
 	  }
 	});
 
+	/**
+	 * Quality is encoded into 64 bits:
+	 * (8 bits offset) (56 bits mantissa)
+	 *
+	 * Quality differs from Amount because it does not need the first two bits
+	 * to represent non-native and non-negative
+	 */
+	exports.Quality = new SerializedType({
+	  serialize: function(so, val) {
+	    var amount = Amount.from_json(val);
+
+	    if (!amount.is_valid()) {
+	      throw new Error('Not a valid Amount object.');
+	    }
+
+	    var hi = 0, lo = 0;
+	    var value = new BigNumber(amount.to_text());
+	    var offset = value.e - 15;
+
+	    if (!amount.is_zero()) {
+	      // First eight bits: offset/exponent
+	      hi |= ((100 + offset) & 0xff) << 24;
+
+	      // Remaining 56 bits: mantissa
+	      var mantissaDecimal = utils.getMantissaDecimalString(value.abs());
+	      var mantissaHex = (new BigNumber(mantissaDecimal)).toString(16);
+	      assert(mantissaHex.length <= 16,
+	        'Mantissa hex representation ' + mantissaHex +
+	        ' exceeds the maximum length of 16');
+	      hi |= parseInt(mantissaHex.slice(0, -8), 16) & 0xffffff;
+	      lo = parseInt(mantissaHex.slice(-8), 16);
+	    }
+
+	    var valueBytes = sjcl.codec.bytes.fromBits([hi, lo]);
+
+	    so.append(valueBytes);
+	  }
+	});
+
+	/*
+	 * Amount is encoded into 64 bits:
+	 * (1 bit non-native) (1 bit non-negative) (8 bits offset) (54 bits mantissa)
+	 */
 	var STAmount = exports.Amount = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var amount = Amount.from_json(val);
 
 	    if (!amount.is_valid()) {
@@ -10197,7 +10238,7 @@ var ripple =
 	      so.append(amount.issuer().to_bytes());
 	    }
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var value_bytes = so.read(8);
 	    var is_zero = !(value_bytes[0] & 0x7f);
 
@@ -10239,14 +10280,14 @@ var ripple =
 	STAmount.id = 6;
 
 	var STVL = exports.VariableLength = exports.VL = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    if (typeof val === 'string') {
 	      serializeHex(so, val);
 	    } else {
 	      throw new Error('Unknown datatype.');
 	    }
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var len = this.parse_varint(so);
 	    return convertByteArrayToHex(so.read(len));
 	  }
@@ -10255,14 +10296,14 @@ var ripple =
 	STVL.id = 7;
 
 	var STAccount = exports.Account = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    var account = UInt160.from_json(val);
 	    if (!account.is_valid()) {
 	      throw new Error('Invalid account!');
 	    }
 	    serializeBits(so, account.to_bits());
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var len = this.parse_varint(so);
 
 	    if (len !== 20) {
@@ -10288,7 +10329,7 @@ var ripple =
 	  typeAccount: 0x01,
 	  typeCurrency: 0x10,
 	  typeIssuer: 0x20,
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    for (var i = 0, l = val.length; i < l; i++) {
 	      // Boundary
 	      if (i) {
@@ -10329,7 +10370,7 @@ var ripple =
 
 	    STInt8.serialize(so, this.typeEnd);
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    // should return a list of lists:
 	    /*
 	       [
@@ -10414,7 +10455,7 @@ var ripple =
 	      STHash256.serialize(so, val[i]);
 	    }
 	  },
-	  parse: function (so) {
+	  parse: function(so) {
 	    var length = this.parse_varint(so);
 	    var output = [];
 	    // length is number of bytes not number of Hash256
@@ -10432,7 +10473,7 @@ var ripple =
 	  serialize: function(so, val, no_marker) {
 	    var keys = [];
 
-	    Object.keys(val).forEach(function (key) {
+	    Object.keys(val).forEach(function(key) {
 	      // Ignore lowercase field names - they're non-serializable fields by
 	      // convention.
 	      if (key[0] === key[0].toLowerCase()) {
@@ -10474,6 +10515,7 @@ var ripple =
 	          output.parsed_memo_type = parsedType;
 	        }
 	      } catch (e) {
+	        // empty
 	        // we don't know what's in the binary, apparently it's not a UTF-8
 	        // string
 	        // this is fine, we won't add the parsed_memo_type field
@@ -10484,6 +10526,7 @@ var ripple =
 	      try {
 	        output.parsed_memo_format = convertHexToString(output.MemoFormat);
 	      } catch (e) {
+	        // empty
 	        // we don't know what's in the binary, apparently it's not a UTF-8
 	        // string
 	        // this is fine, we won't add the parsed_memo_format field
@@ -10503,6 +10546,7 @@ var ripple =
 	          output.parsed_memo_data = convertHexToString(output.MemoData);
 	        }
 	      } catch(e) {
+	        // empty
 	        // we'll fail in case the content does not match what the MemoFormat
 	        // described
 	        // this is fine, we won't add the parsed_memo_data, the user has to
@@ -10517,10 +10561,10 @@ var ripple =
 	});
 
 	var STObject = exports.Object = new SerializedType({
-	  serialize: function (so, val, no_marker) {
+	  serialize: function(so, val, no_marker) {
 	    var keys = [];
 
-	    Object.keys(val).forEach(function (key) {
+	    Object.keys(val).forEach(function(key) {
 	      // Ignore lowercase field names - they're non-serializable fields by
 	      // convention.
 	      if (key[0] === key[0].toLowerCase()) {
@@ -10547,7 +10591,7 @@ var ripple =
 	    }
 	  },
 
-	  parse: function (so) {
+	  parse: function(so) {
 	    var output = {};
 	    while (so.peek(1)[0] !== 0xe1) {
 	      var keyval = parse(so);
@@ -10561,7 +10605,7 @@ var ripple =
 	STObject.id = 14;
 
 	var STArray = exports.Array = new SerializedType({
-	  serialize: function (so, val) {
+	  serialize: function(so, val) {
 	    for (var i = 0, l = val.length; i < l; i++) {
 	      var keys = Object.keys(val[i]);
 
@@ -10579,7 +10623,7 @@ var ripple =
 	    STInt8.serialize(so, 0xf1);
 	  },
 
-	  parse: function (so) {
+	  parse: function(so) {
 	    var output = [ ];
 
 	    while (so.peek(1)[0] !== 0xf1) {
@@ -10604,7 +10648,7 @@ var ripple =
 
 	// This object serves as a singleton to store config options
 
-	var extend = __webpack_require__(46);
+	var extend = __webpack_require__(44);
 
 	var config = module.exports = {
 	  load: function (newOpts) {
@@ -10630,15 +10674,17 @@ var ripple =
 
 	'use strict';
 
-	var _ = __webpack_require__(45);
-	var util = __webpack_require__(40);
-	var extend = __webpack_require__(46);
-	var assert = __webpack_require__(41);
-	var async = __webpack_require__(48);
-	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var _ = __webpack_require__(43);
+	var util = __webpack_require__(39);
+	var extend = __webpack_require__(44);
+	var assert = __webpack_require__(40);
+	var async = __webpack_require__(46);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount = __webpack_require__(3).Amount;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
+	var AutobridgeCalculator = __webpack_require__(49);
+	var OrderBookUtils = __webpack_require__(50);
 	var log = __webpack_require__(29).internal.sub('orderbook');
 
 	function assertValidNumber(number, message) {
@@ -10655,21 +10701,25 @@ var ripple =
 	 * @param {String} orderbook key
 	 */
 
-	function OrderBook(remote, getsC, getsI, paysC, paysI, key) {
+	function OrderBook(remote,
+	                   currencyGets, issuerGets, currencyPays, issuerPays,
+	                   key) {
 	  EventEmitter.call(this);
 
 	  var self = this;
 
 	  this._remote = remote;
-	  this._currencyGets = Currency.from_json(getsC);
-	  this._issuerGets = getsI;
-	  this._currencyPays = Currency.from_json(paysC);
-	  this._issuerPays = paysI;
+	  this._currencyGets = Currency.from_json(currencyGets);
+	  this._issuerGets = issuerGets;
+	  this._currencyPays = Currency.from_json(currencyPays);
+	  this._issuerPays = issuerPays;
 	  this._key = key;
 	  this._subscribed = false;
 	  this._shouldSubscribe = true;
 	  this._listeners = 0;
-	  this._offers = [ ];
+	  this._offers = [];
+	  this._offersAutobridged = [];
+	  this._mergedOffers = [];
 	  this._offerCounts = {};
 	  this._ownerFundsUnadjusted = {};
 	  this._ownerFunds = {};
@@ -10681,6 +10731,37 @@ var ripple =
 
 	  // Transfer rate of the taker gets currency issuer
 	  this._issuerTransferRate = null;
+
+	  // When orderbook is IOU/IOU, there will be IOU/XRP and XRP/IOU
+	  // books that we must keep track of to compute autobridged offers
+	  this._legOneBook = null;
+	  this._legTwoBook = null;
+
+	  this._isAutobridgeable = !this._currencyGets.is_native()
+	    && !this._currencyPays.is_native();
+
+	  function computeAutobridgedOffersWrapper() {
+	    self.computeAutobridgedOffers();
+	    self.mergeDirectAndAutobridgedBooks();
+	  }
+
+	  if (this._isAutobridgeable) {
+	    this._legOneBook = remote.createOrderBook({
+	      currency_gets: 'XRP',
+	      currency_pays: currencyPays,
+	      issuer_pays: issuerPays
+	    });
+
+	    this._legOneBook.on('model', computeAutobridgedOffersWrapper);
+
+	    this._legTwoBook = remote.createOrderBook({
+	      currency_gets: currencyGets,
+	      issuer_gets: issuerGets,
+	      currency_pays: 'XRP'
+	    });
+
+	    this._legTwoBook.on('model', computeAutobridgedOffersWrapper);
+	  }
 
 	  function listenersModified(action, event) {
 	    // Automatically subscribe and unsubscribe to orderbook
@@ -10701,7 +10782,7 @@ var ripple =
 	    }
 	  }
 
-	  function updateFundedAmountsWrapper (transaction) {
+	  function updateFundedAmountsWrapper(transaction) {
 	    self.updateFundedAmounts(transaction);
 	  }
 
@@ -10748,8 +10829,6 @@ var ripple =
 	];
 
 	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
-
-	OrderBook.IOU_SUFFIX = '/000/rrrrrrrrrrrrrrrrrrrrrhoLvTp';
 
 	/**
 	 * Normalize offers from book_offers and transaction stream
@@ -10867,7 +10946,7 @@ var ripple =
 
 	    self.setOffers(res.offers);
 	    self._synchronized = true;
-	    self.emit('model', self._offers);
+	    self.notifyDirectOffersChanged();
 
 	    callback(null, self._offers);
 	  }
@@ -10887,6 +10966,48 @@ var ripple =
 	  request.request();
 
 	  return request;
+	};
+
+	/**
+	 * Request transfer rate for this orderbook's issuer
+	 *
+	 * @param {Function} callback
+	 */
+
+	OrderBook.prototype.requestTransferRate = function(callback) {
+	  assert.strictEqual(typeof callback, 'function');
+
+	  var self = this;
+
+	  if (this._currencyGets.is_native()) {
+	    // Transfer rate is default for the native currency
+	    this._issuerTransferRate = OrderBook.DEFAULT_TRANSFER_RATE;
+
+	    return callback(null, OrderBook.DEFAULT_TRANSFER_RATE);
+	  }
+
+	  if (this._issuerTransferRate) {
+	    // Transfer rate has already been cached
+	    return callback(null, this._issuerTransferRate);
+	  }
+
+	  function handleAccountInfo(err, info) {
+	    if (err) {
+	      return callback(err);
+	    }
+
+	    // When transfer rate is not explicitly set on account, it implies the
+	    // default transfer rate
+	    self._issuerTransferRate = info.account_data.TransferRate ||
+	                               OrderBook.DEFAULT_TRANSFER_RATE;
+
+	    callback(null, self._issuerTransferRate);
+	  }
+
+	  this._remote.requestAccountInfo(
+	    {account: this._issuerGets},
+	    handleAccountInfo
+	  );
 	};
 
 	/**
@@ -10938,6 +11059,19 @@ var ripple =
 	};
 
 	/**
+	 * Handles notifying listeners that direct offers have changed. For autobridged
+	 * books, an additional merge step is also performed
+	 */
+
+	OrderBook.prototype.notifyDirectOffersChanged = function() {
+	  if (this._isAutobridgeable) {
+	    this.mergeDirectAndAutobridgedBooks();
+	  } else {
+	    this.emit('model', this._offers);
+	  }
+	};
+
+	/**
 	 * Reset cached owner's funds, offer counts, and offer sums
 	 */
 
@@ -10975,6 +11109,27 @@ var ripple =
 	};
 
 	/**
+	 * Compute adjusted balance that would be left after issuer's transfer fee is
+	 * deducted
+	 *
+	 * @param {String} balance
+	 * @return {String}
+	 */
+
+	OrderBook.prototype.applyTransferRate = function(balance) {
+	  assert(!isNaN(balance), 'Balance is invalid');
+	  assertValidNumber(this._issuerTransferRate, 'Transfer rate is invalid');
+
+	  var adjustedBalance = OrderBookUtils.normalizeAmount(balance)
+	  .divide(this._issuerTransferRate)
+	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
+	  .to_json()
+	  .value;
+
+	  return adjustedBalance;
+	};
+
+	/**
 	 * Get owner's cached, transfer rate adjusted, funds
 	 *
 	 * @param {String} account - owner's account address
@@ -10990,9 +11145,7 @@ var ripple =
 	    if (this._currencyGets.is_native()) {
 	      amount = Amount.from_json(this._ownerFunds[account]);
 	    } else {
-	      amount = Amount.from_json(
-	        this._ownerFunds[account] + OrderBook.IOU_SUFFIX
-	      );
+	      amount = OrderBookUtils.normalizeAmount(this._ownerFunds[account]);
 	    }
 	  }
 
@@ -11079,6 +11232,7 @@ var ripple =
 
 	OrderBook.prototype.addOwnerOfferTotal = function(account, amount) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
+
 	  var previousAmount = this.getOwnerOfferTotal(account);
 	  var currentAmount = previousAmount.add(Amount.from_json(amount));
 
@@ -11098,6 +11252,7 @@ var ripple =
 
 	OrderBook.prototype.subtractOwnerOfferTotal = function(account, amount) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
+
 	  var previousAmount = this.getOwnerOfferTotal(account);
 	  var newAmount = previousAmount.subtract(Amount.from_json(amount));
 	  this._ownerOffersTotal[account] = newAmount;
@@ -11123,7 +11278,7 @@ var ripple =
 	    if (this._currencyGets.is_native()) {
 	      amount = Amount.from_json('0');
 	    } else {
-	      amount = Amount.from_json('0' + OrderBook.IOU_SUFFIX);
+	      amount = OrderBookUtils.normalizeAmount('0');
 	    }
 	  }
 
@@ -11138,93 +11293,19 @@ var ripple =
 	 */
 
 	OrderBook.prototype.resetOwnerOfferTotal = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+
 	  var amount;
 
 	  if (this._currencyGets.is_native()) {
 	    amount = Amount.from_json('0');
 	  } else {
-	    amount = Amount.from_json('0' + OrderBook.IOU_SUFFIX);
+	    amount = OrderBookUtils.normalizeAmount('0');
 	  }
 
 	  this._ownerOffersTotal[account] = amount;
 
 	  return amount;
-	};
-
-	/**
-	 * Casts and returns offer's taker gets funded amount as a default IOU amount
-	 *
-	 * @param {Object} offer
-	 * @return {Amount}
-	 */
-
-	OrderBook.prototype.getOfferTakerGetsFunded = function(offer) {
-	  assertValidNumber(offer.taker_gets_funded, 'Taker gets funded is invalid');
-
-	  return Amount.from_json(offer.taker_gets_funded + OrderBook.IOU_SUFFIX);
-	};
-
-	/**
-	 * Compute adjusted balance that would be left after issuer's transfer fee is
-	 * deducted
-	 *
-	 * @param {String} balance
-	 * @return {String}
-	 */
-
-	OrderBook.prototype.applyTransferRate = function(balance) {
-	  assert(!isNaN(balance), 'Balance is invalid');
-	  assertValidNumber(this._issuerTransferRate, 'Transfer rate is invalid');
-
-	  var adjustedBalance = Amount.from_json(balance + OrderBook.IOU_SUFFIX)
-	  .divide(this._issuerTransferRate)
-	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
-	  .to_json()
-	  .value;
-
-	  return adjustedBalance;
-	};
-
-	/**
-	 * Request transfer rate for this orderbook's issuer
-	 *
-	 * @param {Function} callback
-	 */
-
-	OrderBook.prototype.requestTransferRate = function(callback) {
-	  assert.strictEqual(typeof callback, 'function');
-
-	  var self = this;
-
-	  if (this._currencyGets.is_native()) {
-	    // Transfer rate is default for the native currency
-	    this._issuerTransferRate = OrderBook.DEFAULT_TRANSFER_RATE;
-
-	    return callback(null, OrderBook.DEFAULT_TRANSFER_RATE);
-	  }
-
-	  if (this._issuerTransferRate) {
-	    // Transfer rate has already been cached
-	    return callback(null, this._issuerTransferRate);
-	  }
-
-	  function handleAccountInfo(err, info) {
-	    if (err) {
-	      return callback(err);
-	    }
-
-	    // When transfer rate is not explicitly set on account, it implies the
-	    // default transfer rate
-	    self._issuerTransferRate = info.account_data.TransferRate ||
-	                               OrderBook.DEFAULT_TRANSFER_RATE;
-
-	    callback(null, self._issuerTransferRate);
-	  }
-
-	  this._remote.requestAccountInfo(
-	    {account: this._issuerGets},
-	    handleAccountInfo
-	  );
 	};
 
 	/**
@@ -11255,8 +11336,9 @@ var ripple =
 	  } else if (previousOfferSum.compareTo(fundedAmount) < 0) {
 	    offer.taker_gets_funded = fundedAmount.subtract(previousOfferSum).to_text();
 
-	    var takerPaysFunded = this.getOfferQuality(offer).multiply(
-	      this.getOfferTakerGetsFunded(offer)
+	    var quality = OrderBookUtils.getOfferQuality(offer, this._currencyGets);
+	    var takerPaysFunded = quality.multiply(
+	      OrderBookUtils.getOfferTakerGetsFunded(offer)
 	    );
 
 	    offer.taker_pays_funded = this._currencyPays.is_native()
@@ -11347,8 +11429,8 @@ var ripple =
 	/**
 	 * Updates funded amounts/balances using modified balance nodes
 	 *
-	 * Update owner funds using modified AccountRoot and RippleState nodes.
-	 * Update funded amounts for offers in the orderbook using owner funds.
+	 * Update owner funds using modified AccountRoot and RippleState nodes
+	 * Update funded amounts for offers in the orderbook using owner funds
 	 *
 	 * @param {Object} transaction - transaction that holds meta nodes
 	 */
@@ -11373,7 +11455,7 @@ var ripple =
 	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
 	  });
 
-	  _.each(affectedNodes, function (node) {
+	  _.each(affectedNodes, function(node) {
 	    if (self.isBalanceChangeNode(node)) {
 	      var result = self.parseAccountBalanceFromNode(node);
 
@@ -11406,7 +11488,7 @@ var ripple =
 
 	  this.resetOwnerOfferTotal(account);
 
-	  _.each(this._offers, function (offer) {
+	  _.each(this._offers, function(offer) {
 	    if (offer.Account !== account) {
 	      return;
 	    }
@@ -11418,14 +11500,15 @@ var ripple =
 	    if (_.isString(offer.taker_gets_funded)) {
 	      // Offer is not new, so we should consider it for offer_changed and
 	      // offer_funds_changed events
-	      previousFundedGets = self.getOfferTakerGetsFunded(offer);
+	      previousFundedGets = OrderBookUtils.getOfferTakerGetsFunded(offer);
 	    }
 
 	    self.setOfferFundedAmount(offer);
 	    self.addOwnerOfferTotal(offer.Account, offer.TakerGets);
 
+	    var takerGetsFunded = OrderBookUtils.getOfferTakerGetsFunded(offer);
 	    var areFundsChanged = previousFundedGets
-	      && !self.getOfferTakerGetsFunded(offer).equals(previousFundedGets);
+	      && !takerGetsFunded.equals(previousFundedGets);
 
 	    if (areFundsChanged) {
 	      self.emit('offer_changed', previousOffer, offer);
@@ -11514,7 +11597,7 @@ var ripple =
 	  _.each(affectedNodes, handleNode);
 
 	  this.emit('transaction', transaction);
-	  this.emit('model', this._offers);
+	  this.notifyDirectOffersChanged();
 	  if (!takerGetsTotal.is_zero()) {
 	    this.emit('trade', takerPaysTotal, takerGetsTotal);
 	  }
@@ -11544,11 +11627,14 @@ var ripple =
 	  // We're safe to calculate quality for newly created offers
 	  offer.quality = takerPays.divide(takerGets).to_text();
 
-	  var quality = this.getOfferQuality(offer);
 	  var originalLength = this._offers.length;
 
 	  for (var i = 0; i < originalLength; i++) {
-	    var existingOfferQuality = this.getOfferQuality(this._offers[i]);
+	    var quality = OrderBookUtils.getOfferQuality(offer, this._currencyGets);
+	    var existingOfferQuality = OrderBookUtils.getOfferQuality(
+	      this._offers[i],
+	      this._currencyGets
+	    );
 
 	    if (quality.compareTo(existingOfferQuality) <= 0) {
 	      this._offers.splice(i, 0, offer);
@@ -11569,29 +11655,6 @@ var ripple =
 	};
 
 	/**
-	 * Retrieve offer quality
-	 *
-	 * @param {Object} offer
-	 */
-
-	OrderBook.prototype.getOfferQuality = function(offer) {
-	  var amount;
-
-	  if (this._currencyGets.has_interest()) {
-	    // XXX Should use Amount#from_quality
-	    amount = Amount.from_json(
-	      offer.TakerPays
-	    ).ratio_human(offer.TakerGets, {
-	      reference_date: new Date()
-	    });
-	  } else {
-	    amount = Amount.from_json(offer.quality + OrderBook.IOU_SUFFIX);
-	  }
-
-	  return amount;
-	};
-
-	/**
 	 * Convert any amount into default IOU
 	 *
 	 * NOTE: This is necessary in some places because Amount.js arithmetic
@@ -11606,7 +11669,7 @@ var ripple =
 	  ? amountObj
 	  : amountObj.value;
 
-	  return Amount.from_json(value + OrderBook.IOU_SUFFIX);
+	  return OrderBookUtils.normalizeAmount(value);
 	};
 
 	/**
@@ -11680,13 +11743,13 @@ var ripple =
 	 */
 
 	OrderBook.prototype.setOffers = function(offers) {
-	  assert(Array.isArray(offers), '');
+	  assert(Array.isArray(offers), 'Offers is not an array');
 
 	  var self = this;
 
 	  this.resetCache();
 
-	  var newOffers = _.map(offers, function (rawOffer) {
+	  var newOffers = _.map(offers, function(rawOffer) {
 	    var offer = OrderBook.offerRewrite(rawOffer);
 
 	    if (offer.hasOwnProperty('owner_funds')) {
@@ -11796,6 +11859,48 @@ var ripple =
 	  );
 	};
 
+	/**
+	 * Compute autobridged offers for an IOU:IOU orderbook by merging offers from
+	 * IOU:XRP and XRP:IOU books
+	 */
+
+	OrderBook.prototype.computeAutobridgedOffers = function() {
+	  assert(!this._currencyGets.is_native() && !this._currencyPays.is_native(),
+	    'Autobridging is only for IOU:IOU orderbooks');
+
+	  var autobridgeCalculator = new AutobridgeCalculator(
+	    this._currencyGets,
+	    this._currencyPays,
+	    this._legOneBook.getOffersSync(),
+	    this._legTwoBook.getOffersSync()
+	  );
+
+	  this._offersAutobridged = autobridgeCalculator.calculate();
+	};
+
+	/**
+	 * Merge direct and autobridged offers into a combined orderbook
+	 *
+	 * @return [Array]
+	 */
+
+	OrderBook.prototype.mergeDirectAndAutobridgedBooks = function() {
+	  var self = this;
+
+	  this._mergedOffers = this._offers
+	    .concat(this._offersAutobridged)
+	    .sort(function(a, b) {
+	      var aQuality = OrderBookUtils.getOfferQuality(a, self._currencyGets);
+	      var bQuality = OrderBookUtils.getOfferQuality(b, self._currencyGets);
+
+	      return aQuality.compareTo(bQuality);
+	    });
+
+	  this.emit('model', this._mergedOffers);
+
+	  return this._mergedOffers;
+	};
+
 	exports.OrderBook = OrderBook;
 
 
@@ -11803,10 +11908,10 @@ var ripple =
 /* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var EventEmitter = __webpack_require__(39).EventEmitter;
-	var util         = __webpack_require__(40);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
+	var util         = __webpack_require__(39);
 	var Amount       = __webpack_require__(3).Amount;
-	var extend       = __webpack_require__(46);
+	var extend       = __webpack_require__(44);
 
 	/**
 	 * Represents a persistent path finding request.
@@ -12106,10 +12211,10 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(40);
-	var assert = __webpack_require__(41);
-	var async = __webpack_require__(48);
-	var EventEmitter = __webpack_require__(39).EventEmitter;
+	var util = __webpack_require__(39);
+	var assert = __webpack_require__(40);
+	var async = __webpack_require__(46);
+	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Transaction = __webpack_require__(5).Transaction;
 	var RippleError = __webpack_require__(14).RippleError;
 	var PendingQueue = __webpack_require__(21).TransactionQueue;
@@ -13346,345 +13451,6 @@ var ripple =
 
 /***/ },
 /* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var sjcl        = __webpack_require__(17).sjcl;
-	var base        = __webpack_require__(7).Base;
-	var Seed        = __webpack_require__(11).Seed;
-	var UInt160     = __webpack_require__(9).UInt160;
-	var UInt256     = __webpack_require__(10).UInt256;
-	var request     = __webpack_require__(68);
-	var querystring = __webpack_require__(51);
-	var extend      = __webpack_require__(46);
-	var parser      = __webpack_require__(44);
-	var Crypt       = { };
-
-	var cryptConfig = {
-	  cipher : 'aes',
-	  mode   : 'ccm',
-	  ts     : 64,   // tag length
-	  ks     : 256,  // key size
-	  iter   : 1000  // iterations (key derivation)
-	};
-
-	/**
-	 * Full domain hash based on SHA512
-	 */
-
-	function fdh(data, bytelen) {
-	  var bitlen = bytelen << 3;
-
-	  if (typeof data === 'string') {
-	    data = sjcl.codec.utf8String.toBits(data);
-	  }
-
-	  // Add hashing rounds until we exceed desired length in bits
-	  var counter = 0, output = [];
-
-	  while (sjcl.bitArray.bitLength(output) < bitlen) {
-	    var hash = sjcl.hash.sha512.hash(sjcl.bitArray.concat([counter], data));
-	    output = sjcl.bitArray.concat(output, hash);
-	    counter++;
-	  }
-
-	  // Truncate to desired length
-	  output = sjcl.bitArray.clamp(output, bitlen);
-
-	  return output;
-	};
-
-	/**
-	 * This is a function to derive different hashes from the same key. 
-	 * Each hash is derived as HMAC-SHA512HALF(key, token).
-	 *
-	 * @param {string} key
-	 * @param {string} hash
-	 */
-
-	function keyHash(key, token) {
-	  var hmac = new sjcl.misc.hmac(key, sjcl.hash.sha512);
-	  return sjcl.codec.hex.fromBits(sjcl.bitArray.bitSlice(hmac.encrypt(token), 0, 256));
-	};
-
-	/**
-	 * add entropy at each call to get random words
-	 * @param {number} nWords
-	 */
-	function randomWords (nWords) {
-	  for (var i = 0; i < 8; i++) {
-	    sjcl.random.addEntropy(Math.random(), 32, "Math.random()");
-	  }  
-	  
-	  return sjcl.random.randomWords(nWords);  
-	}
-
-	/****** exposed functions ******/
-
-	/**
-	 * KEY DERIVATION FUNCTION
-	 *
-	 * This service takes care of the key derivation, i.e. converting low-entropy
-	 * secret into higher entropy secret via either computationally expensive
-	 * processes or peer-assisted key derivation (PAKDF).
-	 *
-	 * @param {object}    opts
-	 * @param {string}    purpose - Key type/purpose
-	 * @param {string}    username
-	 * @param {string}    secret - Also known as passphrase/password
-	 * @param {function}  fn
-	 */
-
-	Crypt.derive = function(opts, purpose, username, secret, fn) {
-	  var tokens;
-
-	  if (purpose === 'login') {
-	    tokens = ['id', 'crypt'];
-	  } else {
-	    tokens = ['unlock'];
-	  }
-
-	  var iExponent = new sjcl.bn(String(opts.exponent));
-	  var iModulus  = new sjcl.bn(String(opts.modulus));
-	  var iAlpha    = new sjcl.bn(String(opts.alpha));
-
-	  var publicInfo = [ 'PAKDF_1_0_0', opts.host.length, opts.host, username.length, username, purpose.length, purpose ].join(':') + ':';
-	  var publicSize = Math.ceil(Math.min((7 + iModulus.bitLength()) >>> 3, 256) / 8);
-	  var publicHash = fdh(publicInfo, publicSize);
-	  var publicHex  = sjcl.codec.hex.fromBits(publicHash);
-	  var iPublic    = new sjcl.bn(String(publicHex)).setBitM(0);
-	  var secretInfo = [ publicInfo, secret.length, secret ].join(':') + ':';
-	  var secretSize = (7 + iModulus.bitLength()) >>> 3;
-	  var secretHash = fdh(secretInfo, secretSize);
-	  var secretHex  = sjcl.codec.hex.fromBits(secretHash);
-	  var iSecret    = new sjcl.bn(String(secretHex)).mod(iModulus);
-
-	  if (iSecret.jacobi(iModulus) !== 1) {
-	    iSecret = iSecret.mul(iAlpha).mod(iModulus);
-	  }
-
-	  var iRandom;
-
-	  for (;;) {
-	    iRandom = sjcl.bn.random(iModulus, 0);
-	    if (iRandom.jacobi(iModulus) === 1) {
-	      break;
-	    }
-	  }
-
-	  var iBlind   = iRandom.powermodMontgomery(iPublic.mul(iExponent), iModulus);
-	  var iSignreq = iSecret.mulmod(iBlind, iModulus);
-	  var signreq  = sjcl.codec.hex.fromBits(iSignreq.toBits());
-
-	  request.post(opts.url)
-	    .send({ info: publicInfo, signreq: signreq })
-	    .end(function(err, resp) {
-	      if (err || !resp) {
-	        return fn(new Error('Could not query PAKDF server ' + opts.host));
-	      }
-
-	      var data = resp.body || resp.text ? JSON.parse(resp.text) : {};
-
-	      if (data.result !== 'success') {
-	        return fn(new Error('Could not query PAKDF server '+opts.host));
-	      }
-
-	      var iSignres = new sjcl.bn(String(data.signres));
-	      var iRandomInv = iRandom.inverseMod(iModulus);
-	      var iSigned    = iSignres.mulmod(iRandomInv, iModulus);
-	      var key        = iSigned.toBits();
-	      var result     = { };
-
-	      tokens.forEach(function(token) {
-	        result[token] = keyHash(key, token);
-	      });
-
-	      fn(null, result);
-	    });
-	};
-
-	/**
-	 * Imported from ripple-client
-	 */
-
-
-
-	/**
-	 * Encrypt data
-	 *
-	 * @param {string} key
-	 * @param {string} data
-	 */
-
-	Crypt.encrypt = function(key, data) {
-	  key = sjcl.codec.hex.toBits(key);
-
-	  var opts = extend(true, {}, cryptConfig);
-
-	  var encryptedObj = JSON.parse(sjcl.encrypt(key, data, opts));
-	  var version = [sjcl.bitArray.partial(8, 0)];
-	  var initVector = sjcl.codec.base64.toBits(encryptedObj.iv);
-	  var ciphertext = sjcl.codec.base64.toBits(encryptedObj.ct);
-
-	  var encryptedBits = sjcl.bitArray.concat(version, initVector);
-	  encryptedBits = sjcl.bitArray.concat(encryptedBits, ciphertext);
-
-	  return sjcl.codec.base64.fromBits(encryptedBits);
-	};
-
-	/**
-	 * Decrypt data
-	 *
-	 * @param {string} key
-	 * @param {string} data
-	 */
-
-	Crypt.decrypt = function (key, data) {
-	  
-	  key = sjcl.codec.hex.toBits(key);
-	  var encryptedBits = sjcl.codec.base64.toBits(data);
-
-	  var version = sjcl.bitArray.extract(encryptedBits, 0, 8);
-
-	  if (version !== 0) {
-	    throw new Error('Unsupported encryption version: '+version);
-	  }
-
-	  var encrypted = extend(true, {}, cryptConfig, {
-	    iv: sjcl.codec.base64.fromBits(sjcl.bitArray.bitSlice(encryptedBits, 8, 8+128)),
-	    ct: sjcl.codec.base64.fromBits(sjcl.bitArray.bitSlice(encryptedBits, 8+128))
-	  });
-
-	  return sjcl.decrypt(key, JSON.stringify(encrypted));
-	};
-
-
-	/**
-	 * Validate a ripple address
-	 *
-	 * @param {string} address
-	 */
-
-	Crypt.isValidAddress = function (address) {
-	  return UInt160.is_valid(address);
-	};
-
-	/**
-	 * Create an encryption key
-	 *
-	 * @param {integer} nWords - number of words
-	 */
-
-	Crypt.createSecret = function (nWords) {
-	  return sjcl.codec.hex.fromBits(randomWords(nWords));
-	};
-
-	/**
-	 * Create a new master key
-	 */
-
-	Crypt.createMaster = function () {
-	  return base.encode_check(33, sjcl.codec.bytes.fromBits(randomWords(4)));
-	};
-
-
-	/**
-	 * Create a ripple address from a master key
-	 *
-	 * @param {string} masterkey
-	 */
-
-	Crypt.getAddress = function (masterkey) {
-	  return Seed.from_json(masterkey).get_key().get_address().to_json();
-	};
-
-	/**
-	 * Hash data using SHA-512.
-	 *
-	 * @param {string|bitArray} data
-	 * @return {string} Hash of the data
-	 */
-
-	Crypt.hashSha512 = function (data) {
-	  // XXX Should return a UInt512
-	  return sjcl.codec.hex.fromBits(sjcl.hash.sha512.hash(data)); 
-	};
-
-	/**
-	 * Hash data using SHA-512 and return the first 256 bits.
-	 *
-	 * @param {string|bitArray} data
-	 * @return {UInt256} Hash of the data
-	 */
-	Crypt.hashSha512Half = function (data) {
-	  return UInt256.from_hex(Crypt.hashSha512(data).substr(0, 64));
-	};
-
-
-	/**
-	 * Sign a data string with a secret key
-	 *
-	 * @param {string} secret
-	 * @param {string} data
-	 */
-
-	Crypt.signString = function(secret, data) {
-	  var hmac = new sjcl.misc.hmac(sjcl.codec.hex.toBits(secret), sjcl.hash.sha512);
-	  return sjcl.codec.hex.fromBits(hmac.mac(data));
-	};
-
-	/**
-	 * Create an an accout recovery key
-	 *
-	 * @param {string} secret
-	 */
-
-	Crypt.deriveRecoveryEncryptionKeyFromSecret = function(secret) {
-	  var seed = Seed.from_json(secret).to_bits();
-	  var hmac = new sjcl.misc.hmac(seed, sjcl.hash.sha512);
-	  var key  = hmac.mac('ripple/hmac/recovery_encryption_key/v1');
-	  key      = sjcl.bitArray.bitSlice(key, 0, 256);
-	  return sjcl.codec.hex.fromBits(key);
-	};
-
-	/**
-	 * Convert base64 encoded data into base64url encoded data.
-	 *
-	 * @param {String} base64 Data
-	 */
-
-	Crypt.base64ToBase64Url = function(encodedData) {
-	  return encodedData.replace(/\+/g, '-').replace(/\//g, '_').replace(/[=]+$/, '');
-	};
-
-	/**
-	 * Convert base64url encoded data into base64 encoded data.
-	 *
-	 * @param {String} base64 Data
-	 */
-
-	Crypt.base64UrlToBase64 = function(encodedData) {
-	  encodedData = encodedData.replace(/-/g, '+').replace(/_/g, '/');
-
-	  while (encodedData.length % 4) {
-	    encodedData += '=';
-	  }
-
-	  return encodedData;
-	};
-
-	/**
-	 * base64 to UTF8
-	 */
-
-	Crypt.decodeBase64 = function (data) {
-	  return sjcl.codec.utf8String.fromBits(sjcl.codec.base64.toBits(data));
-	}
-
-	exports.Crypt = Crypt;
-
-
-/***/ },
-/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/** @fileOverview Javascript cryptography implementation.
@@ -15873,7 +15639,7 @@ var ripple =
 	  // function for getting nodejs crypto module. catches and ignores errors.
 	  function getCryptoModule() {
 	    try {
-	      return __webpack_require__(43);
+	      return __webpack_require__(51);
 	    }
 	    catch (e) {
 	      return null;
@@ -18578,12 +18344,12 @@ var ripple =
 
 
 /***/ },
-/* 36 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var util = __webpack_require__(40);
+	var util = __webpack_require__(39);
 	var hashprefixes = __webpack_require__(28);
 
 	var UInt256 = __webpack_require__(10).UInt256;
@@ -18771,7 +18537,7 @@ var ripple =
 
 
 /***/ },
-/* 37 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -18798,7 +18564,7 @@ var ripple =
 	};
 
 /***/ },
-/* 38 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// If there is no WebSocket, try MozWebSocket (support for some old browsers)
@@ -18844,7 +18610,7 @@ var ripple =
 
 
 /***/ },
-/* 39 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -19151,7 +18917,7 @@ var ripple =
 
 
 /***/ },
-/* 40 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -19679,7 +19445,7 @@ var ripple =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(56);
+	exports.isBuffer = __webpack_require__(52);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -19723,7 +19489,7 @@ var ripple =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(70);
+	exports.inherits = __webpack_require__(64);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -19741,10 +19507,10 @@ var ripple =
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(61)))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(57)))
 
 /***/ },
-/* 41 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
@@ -19774,7 +19540,7 @@ var ripple =
 	// when used in node, this will actually load the util module we depend on
 	// versus loading the builtin util module as happens otherwise
 	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(40);
+	var util = __webpack_require__(39);
 
 	var pSlice = Array.prototype.slice;
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -20109,7 +19875,7 @@ var ripple =
 
 
 /***/ },
-/* 42 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
@@ -20119,9 +19885,9 @@ var ripple =
 	 * @license  MIT
 	 */
 
-	var base64 = __webpack_require__(73)
-	var ieee754 = __webpack_require__(63)
-	var isArray = __webpack_require__(64)
+	var base64 = __webpack_require__(65)
+	var ieee754 = __webpack_require__(59)
+	var isArray = __webpack_require__(60)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -21444,70 +21210,10 @@ var ripple =
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 43 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(52)
-
-	function error () {
-	  var m = [].slice.call(arguments).join(' ')
-	  throw new Error([
-	    m,
-	    'we accept pull requests',
-	    'http://github.com/dominictarr/crypto-browserify'
-	    ].join('\n'))
-	}
-
-	exports.createHash = __webpack_require__(53)
-
-	exports.createHmac = __webpack_require__(54)
-
-	exports.randomBytes = function(size, callback) {
-	  if (callback && callback.call) {
-	    try {
-	      callback.call(this, undefined, new Buffer(rng(size)))
-	    } catch (err) { callback(err) }
-	  } else {
-	    return new Buffer(rng(size))
-	  }
-	}
-
-	function each(a, f) {
-	  for(var i in a)
-	    f(a[i], i)
-	}
-
-	exports.getHashes = function () {
-	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
-	}
-
-	var p = __webpack_require__(55)(exports)
-	exports.pbkdf2 = p.pbkdf2
-	exports.pbkdf2Sync = p.pbkdf2Sync
-
-
-	// the least I can do is make error messages for the rest of the node.js/crypto api.
-	each(['createCredentials'
-	, 'createCipher'
-	, 'createCipheriv'
-	, 'createDecipher'
-	, 'createDecipheriv'
-	, 'createSign'
-	, 'createVerify'
-	, 'createDiffieHellman'
-	], function (name) {
-	  exports[name] = function () {
-	    error('sorry,', name, 'is not implemented yet')
-	  }
-	})
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
-
-/***/ },
-/* 44 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -21531,7 +21237,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(62);
+	var punycode = __webpack_require__(58);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -21603,7 +21309,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(66);
+	    querystring = __webpack_require__(61);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -22220,15 +21926,15 @@ var ripple =
 
 
 /***/ },
-/* 45 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
 	 * @license
-	 * lodash 3.5.0 (Custom Build) <https://lodash.com/>
+	 * lodash 3.7.0 (Custom Build) <https://lodash.com/>
 	 * Build: `lodash modern -d -o ./index.js`
 	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
-	 * Based on Underscore.js 1.8.2 <http://underscorejs.org/LICENSE>
+	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
@@ -22238,7 +21944,7 @@ var ripple =
 	  var undefined;
 
 	  /** Used as the semantic version number. */
-	  var VERSION = '3.5.0';
+	  var VERSION = '3.7.0';
 
 	  /** Used to compose bitmasks for wrapper metadata. */
 	  var BIND_FLAG = 1,
@@ -22248,8 +21954,8 @@ var ripple =
 	      CURRY_RIGHT_FLAG = 16,
 	      PARTIAL_FLAG = 32,
 	      PARTIAL_RIGHT_FLAG = 64,
-	      REARG_FLAG = 128,
-	      ARY_FLAG = 256;
+	      ARY_FLAG = 128,
+	      REARG_FLAG = 256;
 
 	  /** Used as default options for `_.trunc`. */
 	  var DEFAULT_TRUNC_LENGTH = 30,
@@ -22312,41 +22018,42 @@ var ripple =
 	      reEvaluate = /<%([\s\S]+?)%>/g,
 	      reInterpolate = /<%=([\s\S]+?)%>/g;
 
+	  /** Used to match property names within property paths. */
+	  var reIsDeepProp = /\.|\[(?:[^[\]]+|(["'])(?:(?!\1)[^\n\\]|\\.)*?)\1\]/,
+	      reIsPlainProp = /^\w*$/,
+	      rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\n\\]|\\.)*?)\2)\]/g;
+
 	  /**
-	   * Used to match ES template delimiters.
-	   * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-template-literal-lexical-components)
-	   * for more details.
+	   * Used to match `RegExp` [special characters](http://www.regular-expressions.info/characters.html#special).
+	   * In addition to special characters the forward slash is escaped to allow for
+	   * easier `eval` use and `Function` compilation.
 	   */
+	  var reRegExpChars = /[.*+?^${}()|[\]\/\\]/g,
+	      reHasRegExpChars = RegExp(reRegExpChars.source);
+
+	  /** Used to match [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks). */
+	  var reComboMark = /[\u0300-\u036f\ufe20-\ufe23]/g;
+
+	  /** Used to match backslashes in property paths. */
+	  var reEscapeChar = /\\(\\)?/g;
+
+	  /** Used to match [ES template delimiters](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-template-literal-lexical-components). */
 	  var reEsTemplate = /\$\{([^\\}]*(?:\\.[^\\}]*)*)\}/g;
 
 	  /** Used to match `RegExp` flags from their coerced string values. */
 	  var reFlags = /\w*$/;
 
-	  /** Used to detect named functions. */
-	  var reFuncName = /^\s*function[ \n\r\t]+\w/;
-
 	  /** Used to detect hexadecimal string values. */
-	  var reHexPrefix = /^0[xX]/;
+	  var reHasHexPrefix = /^0[xX]/;
 
 	  /** Used to detect host constructors (Safari > 5). */
-	  var reHostCtor = /^\[object .+?Constructor\]$/;
+	  var reIsHostCtor = /^\[object .+?Constructor\]$/;
 
 	  /** Used to match latin-1 supplementary letters (excluding mathematical operators). */
 	  var reLatin1 = /[\xc0-\xd6\xd8-\xde\xdf-\xf6\xf8-\xff]/g;
 
 	  /** Used to ensure capturing order of template delimiters. */
 	  var reNoMatch = /($^)/;
-
-	  /**
-	   * Used to match `RegExp` special characters.
-	   * See this [article on `RegExp` characters](http://www.regular-expressions.info/characters.html#special)
-	   * for more details.
-	   */
-	  var reRegExpChars = /[.*+?^${}()|[\]\/\\]/g,
-	      reHasRegExpChars = RegExp(reRegExpChars.source);
-
-	  /** Used to detect functions containing a `this` reference. */
-	  var reThis = /\bthis\b/;
 
 	  /** Used to match unescaped characters in compiled string literals. */
 	  var reUnescapedString = /['\n\r\u2028\u2029\\]/g;
@@ -22378,7 +22085,7 @@ var ripple =
 	    'Object', 'RegExp', 'Set', 'String', '_', 'clearTimeout', 'document',
 	    'isFinite', 'parseInt', 'setTimeout', 'TypeError', 'Uint8Array',
 	    'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'WeakMap',
-	    'window', 'WinRTError'
+	    'window'
 	  ];
 
 	  /** Used to make template sourceURLs easier to identify. */
@@ -22485,10 +22192,13 @@ var ripple =
 	  var freeModule = objectTypes[typeof module] && module && !module.nodeType && module;
 
 	  /** Detect free variable `global` from Node.js. */
-	  var freeGlobal = freeExports && freeModule && typeof global == 'object' && global;
+	  var freeGlobal = freeExports && freeModule && typeof global == 'object' && global && global.Object && global;
+
+	  /** Detect free variable `self`. */
+	  var freeSelf = objectTypes[typeof self] && self && self.Object && self;
 
 	  /** Detect free variable `window`. */
-	  var freeWindow = objectTypes[typeof window] && window;
+	  var freeWindow = objectTypes[typeof window] && window && window.Object && window;
 
 	  /** Detect the popular CommonJS extension `module.exports`. */
 	  var moduleExports = freeModule && freeModule.exports === freeExports && freeExports;
@@ -22499,7 +22209,7 @@ var ripple =
 	   * The `this` value is used if it is the global object to avoid Greasemonkey's
 	   * restricted `window` object, otherwise the `window` object is used.
 	   */
-	  var root = freeGlobal || ((freeWindow !== (this && this.window)) && freeWindow) || this;
+	  var root = freeGlobal || ((freeWindow !== (this && this.window)) && freeWindow) || freeSelf || this;
 
 	  /*--------------------------------------------------------------------------*/
 
@@ -22517,14 +22227,36 @@ var ripple =
 	      var valIsReflexive = value === value,
 	          othIsReflexive = other === other;
 
-	      if (value > other || !valIsReflexive || (typeof value == 'undefined' && othIsReflexive)) {
+	      if (value > other || !valIsReflexive || (value === undefined && othIsReflexive)) {
 	        return 1;
 	      }
-	      if (value < other || !othIsReflexive || (typeof other == 'undefined' && valIsReflexive)) {
+	      if (value < other || !othIsReflexive || (other === undefined && valIsReflexive)) {
 	        return -1;
 	      }
 	    }
 	    return 0;
+	  }
+
+	  /**
+	   * The base implementation of `_.findIndex` and `_.findLastIndex` without
+	   * support for callback shorthands and `this` binding.
+	   *
+	   * @private
+	   * @param {Array} array The array to search.
+	   * @param {Function} predicate The function invoked per iteration.
+	   * @param {boolean} [fromRight] Specify iterating from right to left.
+	   * @returns {number} Returns the index of the matched value, else `-1`.
+	   */
+	  function baseFindIndex(array, predicate, fromRight) {
+	    var length = array.length,
+	        index = fromRight ? length : -1;
+
+	    while ((fromRight ? index-- : ++index < length)) {
+	      if (predicate(array[index], index, array)) {
+	        return index;
+	      }
+	    }
+	    return -1;
 	  }
 
 	  /**
@@ -22641,7 +22373,7 @@ var ripple =
 	   * Used by `_.sortByOrder` to compare multiple properties of each element
 	   * in a collection and stable sort them in the following order:
 	   *
-	   * If orders is unspecified, sort in ascending order for all properties.
+	   * If `orders` is unspecified, sort in ascending order for all properties.
 	   * Otherwise, for each property, sort in ascending order if its corresponding value in
 	   * orders is true, and descending order if false.
 	   *
@@ -22713,7 +22445,6 @@ var ripple =
 
 	  /**
 	   * Gets the index at which the first occurrence of `NaN` is found in `array`.
-	   * If `fromRight` is provided elements of `array` are iterated from right to left.
 	   *
 	   * @private
 	   * @param {Array} array The array to search.
@@ -22742,7 +22473,7 @@ var ripple =
 	   * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
 	   */
 	  function isObjectLike(value) {
-	    return (value && typeof value == 'object') || false;
+	    return !!value && typeof value == 'object';
 	  }
 
 	  /**
@@ -22864,19 +22595,19 @@ var ripple =
 	   * @returns {Function} Returns a new `lodash` function.
 	   * @example
 	   *
-	   * _.mixin({ 'add': function(a, b) { return a + b; } });
+	   * _.mixin({ 'foo': _.constant('foo') });
 	   *
 	   * var lodash = _.runInContext();
-	   * lodash.mixin({ 'sub': function(a, b) { return a - b; } });
+	   * lodash.mixin({ 'bar': lodash.constant('bar') });
 	   *
-	   * _.isFunction(_.add);
+	   * _.isFunction(_.foo);
 	   * // => true
-	   * _.isFunction(_.sub);
+	   * _.isFunction(_.bar);
 	   * // => false
 	   *
-	   * lodash.isFunction(lodash.add);
+	   * lodash.isFunction(lodash.foo);
 	   * // => false
-	   * lodash.isFunction(lodash.sub);
+	   * lodash.isFunction(lodash.bar);
 	   * // => true
 	   *
 	   * // using `context` to mock `Date#getTime` use in `_.now`
@@ -22919,9 +22650,6 @@ var ripple =
 	    /** Used to resolve the decompiled source of functions. */
 	    var fnToString = Function.prototype.toString;
 
-	    /** Used to the length of n-tuples for `_.unzip`. */
-	    var getLength = baseProperty('length');
-
 	    /** Used to check objects for own properties. */
 	    var hasOwnProperty = objectProto.hasOwnProperty;
 
@@ -22929,9 +22657,8 @@ var ripple =
 	    var idCounter = 0;
 
 	    /**
-	     * Used to resolve the `toStringTag` of values.
-	     * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
-	     * for more details.
+	     * Used to resolve the [`toStringTag`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring)
+	     * of values.
 	     */
 	    var objToString = objectProto.toString;
 
@@ -22939,7 +22666,7 @@ var ripple =
 	    var oldDash = context._;
 
 	    /** Used to detect if a method is native. */
-	    var reNative = RegExp('^' +
+	    var reIsNative = RegExp('^' +
 	      escapeRegExp(objToString)
 	      .replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
 	    );
@@ -22950,8 +22677,10 @@ var ripple =
 	        ceil = Math.ceil,
 	        clearTimeout = context.clearTimeout,
 	        floor = Math.floor,
+	        getOwnPropertySymbols = isNative(getOwnPropertySymbols = Object.getOwnPropertySymbols) && getOwnPropertySymbols,
 	        getPrototypeOf = isNative(getPrototypeOf = Object.getPrototypeOf) && getPrototypeOf,
 	        push = arrayProto.push,
+	        preventExtensions = isNative(Object.preventExtensions = Object.preventExtensions) && preventExtensions,
 	        propertyIsEnumerable = objectProto.propertyIsEnumerable,
 	        Set = isNative(Set = context.Set) && Set,
 	        setTimeout = context.setTimeout,
@@ -22969,6 +22698,22 @@ var ripple =
 	            result = new func(new ArrayBuffer(10), 0, 1) && func;
 	      } catch(e) {}
 	      return result;
+	    }());
+
+	    /** Used as `baseAssign`. */
+	    var nativeAssign = (function() {
+	      // Avoid `Object.assign` in Firefox 34-37 which have an early implementation
+	      // with a now defunct try/catch behavior. See https://bugzilla.mozilla.org/show_bug.cgi?id=1103344
+	      // for more details.
+	      //
+	      // Use `Object.preventExtensions` on a plain object instead of simply using
+	      // `Object('x')` because Chrome and IE fail to throw an error when attempting
+	      // to assign values to readonly indexes of strings in strict mode.
+	      var object = { '1': 0 },
+	          func = preventExtensions && isNative(func = Object.assign) && func;
+
+	      try { func(preventExtensions(object), 'xo'); } catch(e) {}
+	      return !object[1] && func;
 	    }());
 
 	    /* Native method references for those with the same name as other `lodash` methods. */
@@ -22996,14 +22741,16 @@ var ripple =
 	    var FLOAT64_BYTES_PER_ELEMENT = Float64Array ? Float64Array.BYTES_PER_ELEMENT : 0;
 
 	    /**
-	     * Used as the maximum length of an array-like value.
-	     * See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
-	     * for more details.
+	     * Used as the [maximum length](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.max_safe_integer)
+	     * of an array-like value.
 	     */
 	    var MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
 
 	    /** Used to store function metadata. */
 	    var metaMap = WeakMap && new WeakMap;
+
+	    /** Used to lookup unminified function names. */
+	    var realNames = {};
 
 	    /*------------------------------------------------------------------------*/
 
@@ -23046,8 +22793,8 @@ var ripple =
 	     * `filter`, `flatten`, `flattenDeep`, `flow`, `flowRight`, `forEach`,
 	     * `forEachRight`, `forIn`, `forInRight`, `forOwn`, `forOwnRight`, `functions`,
 	     * `groupBy`, `indexBy`, `initial`, `intersection`, `invert`, `invoke`, `keys`,
-	     * `keysIn`, `map`, `mapValues`, `matches`, `matchesProperty`, `memoize`, `merge`,
-	     * `mixin`, `negate`, `noop`, `omit`, `once`, `pairs`, `partial`, `partialRight`,
+	     * `keysIn`, `map`, `mapValues`, `matches`, `matchesProperty`, `memoize`,
+	     * `merge`, `mixin`, `negate`, `omit`, `once`, `pairs`, `partial`, `partialRight`,
 	     * `partition`, `pick`, `plant`, `pluck`, `property`, `propertyOf`, `pull`,
 	     * `pullAt`, `push`, `range`, `rearg`, `reject`, `remove`, `rest`, `reverse`,
 	     * `shuffle`, `slice`, `sort`, `sortBy`, `sortByAll`, `sortByOrder`, `splice`,
@@ -23061,15 +22808,15 @@ var ripple =
 	     * `endsWith`, `escape`, `escapeRegExp`, `every`, `find`, `findIndex`, `findKey`,
 	     * `findLast`, `findLastIndex`, `findLastKey`, `findWhere`, `first`, `has`,
 	     * `identity`, `includes`, `indexOf`, `inRange`, `isArguments`, `isArray`,
-	     * `isBoolean`, `isDate`, `isElement`, `isEmpty`, `isEqual`, `isError`,
-	     * `isFinite`,`isFunction`, `isMatch`, `isNative`, `isNaN`, `isNull`, `isNumber`,
-	     * `isObject`, `isPlainObject`, `isRegExp`, `isString`, `isUndefined`,
-	     * `isTypedArray`, `join`, `kebabCase`, `last`, `lastIndexOf`, `max`, `min`,
-	     * `noConflict`, `now`, `pad`, `padLeft`, `padRight`, `parseInt`, `pop`,
-	     * `random`, `reduce`, `reduceRight`, `repeat`, `result`, `runInContext`,
-	     * `shift`, `size`, `snakeCase`, `some`, `sortedIndex`, `sortedLastIndex`,
-	     * `startCase`, `startsWith`, `sum`, `template`, `trim`, `trimLeft`,
-	     * `trimRight`, `trunc`, `unescape`, `uniqueId`, `value`, and `words`
+	     * `isBoolean`, `isDate`, `isElement`, `isEmpty`, `isEqual`, `isError`, `isFinite`
+	     * `isFunction`, `isMatch`, `isNative`, `isNaN`, `isNull`, `isNumber`, `isObject`,
+	     * `isPlainObject`, `isRegExp`, `isString`, `isUndefined`, `isTypedArray`,
+	     * `join`, `kebabCase`, `last`, `lastIndexOf`, `max`, `min`, `noConflict`,
+	     * `noop`, `now`, `pad`, `padLeft`, `padRight`, `parseInt`, `pop`, `random`,
+	     * `reduce`, `reduceRight`, `repeat`, `result`, `runInContext`, `shift`, `size`,
+	     * `snakeCase`, `some`, `sortedIndex`, `sortedLastIndex`, `startCase`, `startsWith`,
+	     * `sum`, `template`, `trim`, `trimLeft`, `trimRight`, `trunc`, `unescape`,
+	     * `uniqueId`, `value`, and `words`
 	     *
 	     * The wrapper method `sample` will return a wrapped value when `n` is provided,
 	     * otherwise an unwrapped value is returned.
@@ -23084,8 +22831,8 @@ var ripple =
 	     * var wrapped = _([1, 2, 3]);
 	     *
 	     * // returns an unwrapped value
-	     * wrapped.reduce(function(sum, n) {
-	     *   return sum + n;
+	     * wrapped.reduce(function(total, n) {
+	     *   return total + n;
 	     * });
 	     * // => 6
 	     *
@@ -23145,6 +22892,12 @@ var ripple =
 	    var support = lodash.support = {};
 
 	    (function(x) {
+	      var Ctor = function() { this.x = x; },
+	          object = { '0': x, 'length': x },
+	          props = [];
+
+	      Ctor.prototype = { 'valueOf': x, 'y': x };
+	      for (var key in new Ctor) { props.push(key); }
 
 	      /**
 	       * Detect if functions can be decompiled by `Function#toString`
@@ -23154,7 +22907,7 @@ var ripple =
 	       * @memberOf _.support
 	       * @type boolean
 	       */
-	      support.funcDecomp = !isNative(context.WinRTError) && reThis.test(runInContext);
+	      support.funcDecomp = /\bthis\b/.test(function() { return this; });
 
 	      /**
 	       * Detect if `Function#name` is supported (all but IE).
@@ -23182,8 +22935,8 @@ var ripple =
 	       * In Firefox < 4, IE < 9, PhantomJS, and Safari < 5.1 `arguments` object
 	       * indexes are non-enumerable. Chrome < 25 and Node.js < 0.11.0 treat
 	       * `arguments` object indexes as non-enumerable and fail `hasOwnProperty`
-	       * checks for indexes that exceed their function's formal parameters with
-	       * associated values of `0`.
+	       * checks for indexes that exceed the number of function parameters and
+	       * whose associated argument values are `0`.
 	       *
 	       * @memberOf _.support
 	       * @type boolean
@@ -23193,7 +22946,7 @@ var ripple =
 	      } catch(e) {
 	        support.nonEnumArgs = true;
 	      }
-	    }(0, 0));
+	    }(1, 0));
 
 	    /**
 	     * By default, the template delimiters used by lodash are like those in
@@ -23440,7 +23193,7 @@ var ripple =
 	    }
 
 	    /**
-	     * Adds `value` to `key` of the cache.
+	     * Sets `value` to `key` of the cache.
 	     *
 	     * @private
 	     * @name set
@@ -23530,7 +23283,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.forEach` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23551,7 +23304,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.forEachRight` for arrays without support for
-	     * callback shorthands or `this` binding.
+	     * callback shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23571,7 +23324,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.every` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23593,7 +23346,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.filter` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23617,7 +23370,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.map` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23679,7 +23432,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.reduce` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23704,7 +23457,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.reduceRight` for arrays without support for
-	     * callback shorthands or `this` binding.
+	     * callback shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23727,7 +23480,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.some` for arrays without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array} array The array to iterate over.
@@ -23748,6 +23501,23 @@ var ripple =
 	    }
 
 	    /**
+	     * A specialized version of `_.sum` for arrays without support for iteratees.
+	     *
+	     * @private
+	     * @param {Array} array The array to iterate over.
+	     * @returns {number} Returns the sum.
+	     */
+	    function arraySum(array) {
+	      var length = array.length,
+	          result = 0;
+
+	      while (length--) {
+	        result += +array[length] || 0;
+	      }
+	      return result;
+	    }
+
+	    /**
 	     * Used by `_.defaults` to customize its `_.assign` use.
 	     *
 	     * @private
@@ -23756,13 +23526,13 @@ var ripple =
 	     * @returns {*} Returns the value to assign to the destination object.
 	     */
 	    function assignDefaults(objectValue, sourceValue) {
-	      return typeof objectValue == 'undefined' ? sourceValue : objectValue;
+	      return objectValue === undefined ? sourceValue : objectValue;
 	    }
 
 	    /**
 	     * Used by `_.template` to customize its `_.assign` use.
 	     *
-	     * **Note:** This method is like `assignDefaults` except that it ignores
+	     * **Note:** This function is like `assignDefaults` except that it ignores
 	     * inherited property values when checking if a property is `undefined`.
 	     *
 	     * @private
@@ -23773,26 +23543,26 @@ var ripple =
 	     * @returns {*} Returns the value to assign to the destination object.
 	     */
 	    function assignOwnDefaults(objectValue, sourceValue, key, object) {
-	      return (typeof objectValue == 'undefined' || !hasOwnProperty.call(object, key))
+	      return (objectValue === undefined || !hasOwnProperty.call(object, key))
 	        ? sourceValue
 	        : objectValue;
 	    }
 
 	    /**
-	     * The base implementation of `_.assign` without support for argument juggling,
-	     * multiple sources, and `this` binding `customizer` functions.
+	     * A specialized version of `_.assign` for customizing assigned values without
+	     * support for argument juggling, multiple sources, and `this` binding `customizer`
+	     * functions.
 	     *
 	     * @private
 	     * @param {Object} object The destination object.
 	     * @param {Object} source The source object.
-	     * @param {Function} [customizer] The function to customize assigning values.
-	     * @returns {Object} Returns the destination object.
+	     * @param {Function} customizer The function to customize assigned values.
+	     * @returns {Object} Returns `object`.
 	     */
-	    function baseAssign(object, source, customizer) {
+	    function assignWith(object, source, customizer) {
 	      var props = keys(source);
-	      if (!customizer) {
-	        return baseCopy(source, object, props);
-	      }
+	      push.apply(props, getSymbols(source));
+
 	      var index = -1,
 	          length = props.length;
 
@@ -23802,7 +23572,7 @@ var ripple =
 	            result = customizer(value, source[key], key, object, source);
 
 	        if ((result === result ? (result !== value) : (value === value)) ||
-	            (typeof value == 'undefined' && !(key in object))) {
+	            (value === undefined && !(key in object))) {
 	          object[key] = result;
 	        }
 	      }
@@ -23810,12 +23580,27 @@ var ripple =
 	    }
 
 	    /**
-	     * The base implementation of `_.at` without support for strings and individual
-	     * key arguments.
+	     * The base implementation of `_.assign` without support for argument juggling,
+	     * multiple sources, and `customizer` functions.
+	     *
+	     * @private
+	     * @param {Object} object The destination object.
+	     * @param {Object} source The source object.
+	     * @returns {Object} Returns `object`.
+	     */
+	    var baseAssign = nativeAssign || function(object, source) {
+	      return source == null
+	        ? object
+	        : baseCopy(source, getSymbols(source), baseCopy(source, keys(source), object));
+	    };
+
+	    /**
+	     * The base implementation of `_.at` without support for string collections
+	     * and individual key arguments.
 	     *
 	     * @private
 	     * @param {Array|Object} collection The collection to iterate over.
-	     * @param {number[]|string[]} [props] The property names or indexes of elements to pick.
+	     * @param {number[]|string[]} props The property names or indexes of elements to pick.
 	     * @returns {Array} Returns the new array of picked elements.
 	     */
 	    function baseAt(collection, props) {
@@ -23828,7 +23613,6 @@ var ripple =
 	      while(++index < propsLength) {
 	        var key = props[index];
 	        if (isArr) {
-	          key = parseFloat(key);
 	          result[index] = isIndex(key, length) ? collection[key] : undefined;
 	        } else {
 	          result[index] = collection[key];
@@ -23838,45 +23622,23 @@ var ripple =
 	    }
 
 	    /**
-	     * Copies the properties of `source` to `object`.
+	     * Copies properties of `source` to `object`.
 	     *
 	     * @private
 	     * @param {Object} source The object to copy properties from.
-	     * @param {Object} [object={}] The object to copy properties to.
 	     * @param {Array} props The property names to copy.
+	     * @param {Object} [object={}] The object to copy properties to.
 	     * @returns {Object} Returns `object`.
 	     */
-	    function baseCopy(source, object, props) {
-	      if (!props) {
-	        props = object;
-	        object = {};
-	      }
+	    function baseCopy(source, props, object) {
+	      object || (object = {});
+
 	      var index = -1,
 	          length = props.length;
 
 	      while (++index < length) {
 	        var key = props[index];
 	        object[key] = source[key];
-	      }
-	      return object;
-	    }
-
-	    /**
-	     * The base implementation of `_.bindAll` without support for individual
-	     * method name arguments.
-	     *
-	     * @private
-	     * @param {Object} object The object to bind and assign the bound methods to.
-	     * @param {string[]} methodNames The object method names to bind.
-	     * @returns {Object} Returns `object`.
-	     */
-	    function baseBindAll(object, methodNames) {
-	      var index = -1,
-	          length = methodNames.length;
-
-	      while (++index < length) {
-	        var key = methodNames[index];
-	        object[key] = createWrapper(object[key], BIND_FLAG, object);
 	      }
 	      return object;
 	    }
@@ -23894,9 +23656,9 @@ var ripple =
 	    function baseCallback(func, thisArg, argCount) {
 	      var type = typeof func;
 	      if (type == 'function') {
-	        return (typeof thisArg != 'undefined' && isBindable(func))
-	          ? bindCallback(func, thisArg, argCount)
-	          : func;
+	        return thisArg === undefined
+	          ? func
+	          : bindCallback(func, thisArg, argCount);
 	      }
 	      if (func == null) {
 	        return identity;
@@ -23904,9 +23666,9 @@ var ripple =
 	      if (type == 'object') {
 	        return baseMatches(func);
 	      }
-	      return typeof thisArg == 'undefined'
-	        ? baseProperty(func + '')
-	        : baseMatchesProperty(func + '', thisArg);
+	      return thisArg === undefined
+	        ? property(func)
+	        : baseMatchesProperty(func, thisArg);
 	    }
 
 	    /**
@@ -23928,7 +23690,7 @@ var ripple =
 	      if (customizer) {
 	        result = object ? customizer(value, key, object) : customizer(value);
 	      }
-	      if (typeof result != 'undefined') {
+	      if (result !== undefined) {
 	        return result;
 	      }
 	      if (!isObject(value)) {
@@ -23947,7 +23709,7 @@ var ripple =
 	        if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
 	          result = initCloneObject(isFunc ? {} : value);
 	          if (!isDeep) {
-	            return baseCopy(value, result, keys(value));
+	            return baseAssign(result, value);
 	          }
 	        } else {
 	          return cloneableTags[tag]
@@ -24003,14 +23765,14 @@ var ripple =
 	     * @private
 	     * @param {Function} func The function to delay.
 	     * @param {number} wait The number of milliseconds to delay invocation.
-	     * @param {Object} args The `arguments` object to slice and provide to `func`.
+	     * @param {Object} args The arguments provide to `func`.
 	     * @returns {number} Returns the timer id.
 	     */
-	    function baseDelay(func, wait, args, fromIndex) {
+	    function baseDelay(func, wait, args) {
 	      if (typeof func != 'function') {
 	        throw new TypeError(FUNC_ERROR_TEXT);
 	      }
-	      return setTimeout(function() { func.apply(undefined, baseSlice(args, fromIndex)); }, wait);
+	      return setTimeout(function() { func.apply(undefined, args); }, wait);
 	    }
 
 	    /**
@@ -24069,21 +23831,7 @@ var ripple =
 	     * @param {Function} iteratee The function invoked per iteration.
 	     * @returns {Array|Object|string} Returns `collection`.
 	     */
-	    function baseEach(collection, iteratee) {
-	      var length = collection ? collection.length : 0;
-	      if (!isLength(length)) {
-	        return baseForOwn(collection, iteratee);
-	      }
-	      var index = -1,
-	          iterable = toObject(collection);
-
-	      while (++index < length) {
-	        if (iteratee(iterable[index], index, iterable) === false) {
-	          break;
-	        }
-	      }
-	      return collection;
-	    }
+	    var baseEach = createBaseEach(baseForOwn);
 
 	    /**
 	     * The base implementation of `_.forEachRight` without support for callback
@@ -24094,23 +23842,11 @@ var ripple =
 	     * @param {Function} iteratee The function invoked per iteration.
 	     * @returns {Array|Object|string} Returns `collection`.
 	     */
-	    function baseEachRight(collection, iteratee) {
-	      var length = collection ? collection.length : 0;
-	      if (!isLength(length)) {
-	        return baseForOwnRight(collection, iteratee);
-	      }
-	      var iterable = toObject(collection);
-	      while (length--) {
-	        if (iteratee(iterable[length], length, iterable) === false) {
-	          break;
-	        }
-	      }
-	      return collection;
-	    }
+	    var baseEachRight = createBaseEach(baseForOwnRight, true);
 
 	    /**
 	     * The base implementation of `_.every` without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
@@ -24144,7 +23880,7 @@ var ripple =
 	      if (start < 0) {
 	        start = -start > length ? 0 : (length + start);
 	      }
-	      end = (typeof end == 'undefined' || end > length) ? length : (+end || 0);
+	      end = (end === undefined || end > length) ? length : (+end || 0);
 	      if (end < 0) {
 	        end += length;
 	      }
@@ -24159,7 +23895,7 @@ var ripple =
 
 	    /**
 	     * The base implementation of `_.filter` without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
@@ -24208,11 +23944,10 @@ var ripple =
 	     * @param {Array} array The array to flatten.
 	     * @param {boolean} isDeep Specify a deep flatten.
 	     * @param {boolean} isStrict Restrict flattening to arrays and `arguments` objects.
-	     * @param {number} fromIndex The index to start from.
 	     * @returns {Array} Returns the new flattened array.
 	     */
-	    function baseFlatten(array, isDeep, isStrict, fromIndex) {
-	      var index = fromIndex - 1,
+	    function baseFlatten(array, isDeep, isStrict) {
+	      var index = -1,
 	          length = array.length,
 	          resIndex = -1,
 	          result = [];
@@ -24223,7 +23958,7 @@ var ripple =
 	        if (isObjectLike(value) && isLength(value.length) && (isArray(value) || isArguments(value))) {
 	          if (isDeep) {
 	            // Recursively flatten arrays (susceptible to call stack limits).
-	            value = baseFlatten(value, isDeep, isStrict, 0);
+	            value = baseFlatten(value, isDeep, isStrict);
 	          }
 	          var valIndex = -1,
 	              valLength = value.length;
@@ -24242,7 +23977,7 @@ var ripple =
 	    /**
 	     * The base implementation of `baseForIn` and `baseForOwn` which iterates
 	     * over `object` properties returned by `keysFunc` invoking `iteratee` for
-	     * each property. Iterator functions may exit iteration early by explicitly
+	     * each property. Iteratee functions may exit iteration early by explicitly
 	     * returning `false`.
 	     *
 	     * @private
@@ -24251,20 +23986,7 @@ var ripple =
 	     * @param {Function} keysFunc The function to get the keys of `object`.
 	     * @returns {Object} Returns `object`.
 	     */
-	    function baseFor(object, iteratee, keysFunc) {
-	      var index = -1,
-	          iterable = toObject(object),
-	          props = keysFunc(object),
-	          length = props.length;
-
-	      while (++index < length) {
-	        var key = props[index];
-	        if (iteratee(iterable[key], key, iterable) === false) {
-	          break;
-	        }
-	      }
-	      return object;
-	    }
+	    var baseFor = createBaseFor();
 
 	    /**
 	     * This function is like `baseFor` except that it iterates over properties
@@ -24276,19 +23998,7 @@ var ripple =
 	     * @param {Function} keysFunc The function to get the keys of `object`.
 	     * @returns {Object} Returns `object`.
 	     */
-	    function baseForRight(object, iteratee, keysFunc) {
-	      var iterable = toObject(object),
-	          props = keysFunc(object),
-	          length = props.length;
-
-	      while (length--) {
-	        var key = props[length];
-	        if (iteratee(iterable[key], key, iterable) === false) {
-	          break;
-	        }
-	      }
-	      return object;
-	    }
+	    var baseForRight = createBaseFor(true);
 
 	    /**
 	     * The base implementation of `_.forIn` without support for callback
@@ -24354,26 +24064,28 @@ var ripple =
 	    }
 
 	    /**
-	     * The base implementation of `_.invoke` which requires additional arguments
-	     * to be provided as an array of arguments rather than individually.
+	     * The base implementation of `get` without support for string paths
+	     * and default values.
 	     *
 	     * @private
-	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|string} methodName The name of the method to invoke or
-	     *  the function invoked per iteration.
-	     * @param {Array} [args] The arguments to invoke the method with.
-	     * @returns {Array} Returns the array of results.
+	     * @param {Object} object The object to query.
+	     * @param {Array} path The path of the property to get.
+	     * @param {string} [pathKey] The key representation of path.
+	     * @returns {*} Returns the resolved value.
 	     */
-	    function baseInvoke(collection, methodName, args) {
+	    function baseGet(object, path, pathKey) {
+	      if (object == null) {
+	        return;
+	      }
+	      if (pathKey !== undefined && pathKey in toObject(object)) {
+	        path = [pathKey];
+	      }
 	      var index = -1,
-	          isFunc = typeof methodName == 'function',
-	          length = collection ? collection.length : 0,
-	          result = isLength(length) ? Array(length) : [];
+	          length = path.length;
 
-	      baseEach(collection, function(value) {
-	        var func = isFunc ? methodName : (value != null && value[methodName]);
-	        result[++index] = func ? func.apply(value, args) : undefined;
-	      });
+	      while (object != null && ++index < length) {
+	        var result = object = object[path[index]];
+	      }
 	      return result;
 	    }
 
@@ -24385,12 +24097,12 @@ var ripple =
 	     * @param {*} value The value to compare.
 	     * @param {*} other The other value to compare.
 	     * @param {Function} [customizer] The function to customize comparing values.
-	     * @param {boolean} [isWhere] Specify performing partial comparisons.
+	     * @param {boolean} [isLoose] Specify performing partial comparisons.
 	     * @param {Array} [stackA] Tracks traversed `value` objects.
 	     * @param {Array} [stackB] Tracks traversed `other` objects.
 	     * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
 	     */
-	    function baseIsEqual(value, other, customizer, isWhere, stackA, stackB) {
+	    function baseIsEqual(value, other, customizer, isLoose, stackA, stackB) {
 	      // Exit early for identical values.
 	      if (value === other) {
 	        // Treat `+0` vs. `-0` as not equal.
@@ -24405,7 +24117,7 @@ var ripple =
 	        // Return `false` unless both values are `NaN`.
 	        return value !== value && other !== other;
 	      }
-	      return baseIsEqualDeep(value, other, baseIsEqual, customizer, isWhere, stackA, stackB);
+	      return baseIsEqualDeep(value, other, baseIsEqual, customizer, isLoose, stackA, stackB);
 	    }
 
 	    /**
@@ -24418,12 +24130,12 @@ var ripple =
 	     * @param {Object} other The other object to compare.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
 	     * @param {Function} [customizer] The function to customize comparing objects.
-	     * @param {boolean} [isWhere] Specify performing partial comparisons.
+	     * @param {boolean} [isLoose] Specify performing partial comparisons.
 	     * @param {Array} [stackA=[]] Tracks traversed `value` objects.
 	     * @param {Array} [stackB=[]] Tracks traversed `other` objects.
 	     * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
 	     */
-	    function baseIsEqualDeep(object, other, equalFunc, customizer, isWhere, stackA, stackB) {
+	    function baseIsEqualDeep(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
 	      var objIsArr = isArray(object),
 	          othIsArr = isArray(other),
 	          objTag = arrayTag,
@@ -24452,11 +24164,13 @@ var ripple =
 	      if (isSameTag && !(objIsArr || objIsObj)) {
 	        return equalByTag(object, other, objTag);
 	      }
-	      var valWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
-	          othWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
+	      if (!isLoose) {
+	        var valWrapped = objIsObj && hasOwnProperty.call(object, '__wrapped__'),
+	            othWrapped = othIsObj && hasOwnProperty.call(other, '__wrapped__');
 
-	      if (valWrapped || othWrapped) {
-	        return equalFunc(valWrapped ? object.value() : object, othWrapped ? other.value() : other, customizer, isWhere, stackA, stackB);
+	        if (valWrapped || othWrapped) {
+	          return equalFunc(valWrapped ? object.value() : object, othWrapped ? other.value() : other, customizer, isLoose, stackA, stackB);
+	        }
 	      }
 	      if (!isSameTag) {
 	        return false;
@@ -24476,7 +24190,7 @@ var ripple =
 	      stackA.push(object);
 	      stackB.push(other);
 
-	      var result = (objIsArr ? equalArrays : equalObjects)(object, other, equalFunc, customizer, isWhere, stackA, stackB);
+	      var result = (objIsArr ? equalArrays : equalObjects)(object, other, equalFunc, customizer, isLoose, stackA, stackB);
 
 	      stackA.pop();
 	      stackB.pop();
@@ -24486,7 +24200,7 @@ var ripple =
 
 	    /**
 	     * The base implementation of `_.isMatch` without support for callback
-	     * shorthands or `this` binding.
+	     * shorthands and `this` binding.
 	     *
 	     * @private
 	     * @param {Object} object The object to inspect.
@@ -24497,32 +24211,29 @@ var ripple =
 	     * @returns {boolean} Returns `true` if `object` is a match, else `false`.
 	     */
 	    function baseIsMatch(object, props, values, strictCompareFlags, customizer) {
-	      var length = props.length;
-	      if (object == null) {
-	        return !length;
-	      }
 	      var index = -1,
+	          length = props.length,
 	          noCustomizer = !customizer;
 
 	      while (++index < length) {
 	        if ((noCustomizer && strictCompareFlags[index])
 	              ? values[index] !== object[props[index]]
-	              : !hasOwnProperty.call(object, props[index])
+	              : !(props[index] in object)
 	            ) {
 	          return false;
 	        }
 	      }
 	      index = -1;
 	      while (++index < length) {
-	        var key = props[index];
-	        if (noCustomizer && strictCompareFlags[index]) {
-	          var result = hasOwnProperty.call(object, key);
-	        } else {
-	          var objValue = object[key],
-	              srcValue = values[index];
+	        var key = props[index],
+	            objValue = object[key],
+	            srcValue = values[index];
 
+	        if (noCustomizer && strictCompareFlags[index]) {
+	          var result = objValue !== undefined || (key in object);
+	        } else {
 	          result = customizer ? customizer(objValue, srcValue, key) : undefined;
-	          if (typeof result == 'undefined') {
+	          if (result === undefined) {
 	            result = baseIsEqual(srcValue, objValue, customizer, true);
 	          }
 	        }
@@ -24535,7 +24246,7 @@ var ripple =
 
 	    /**
 	     * The base implementation of `_.map` without support for callback shorthands
-	     * or `this` binding.
+	     * and `this` binding.
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
@@ -24543,9 +24254,12 @@ var ripple =
 	     * @returns {Array} Returns the new mapped array.
 	     */
 	    function baseMap(collection, iteratee) {
-	      var result = [];
+	      var index = -1,
+	          length = getLength(collection),
+	          result = isLength(length) ? Array(length) : [];
+
 	      baseEach(collection, function(value, key, collection) {
-	        result.push(iteratee(value, key, collection));
+	        result[++index] = iteratee(value, key, collection);
 	      });
 	      return result;
 	    }
@@ -24561,13 +24275,19 @@ var ripple =
 	      var props = keys(source),
 	          length = props.length;
 
+	      if (!length) {
+	        return constant(true);
+	      }
 	      if (length == 1) {
 	        var key = props[0],
 	            value = source[key];
 
 	        if (isStrictComparable(value)) {
 	          return function(object) {
-	            return object != null && object[key] === value && hasOwnProperty.call(object, key);
+	            if (object == null) {
+	              return false;
+	            }
+	            return object[key] === value && (value !== undefined || (key in toObject(object)));
 	          };
 	        }
 	      }
@@ -24580,27 +24300,42 @@ var ripple =
 	        strictCompareFlags[length] = isStrictComparable(value);
 	      }
 	      return function(object) {
-	        return baseIsMatch(object, props, values, strictCompareFlags);
+	        return object != null && baseIsMatch(toObject(object), props, values, strictCompareFlags);
 	      };
 	    }
 
 	    /**
-	     * The base implementation of `_.matchesProperty` which does not coerce `key`
-	     * to a string.
+	     * The base implementation of `_.matchesProperty` which does not which does
+	     * not clone `value`.
 	     *
 	     * @private
-	     * @param {string} key The key of the property to get.
+	     * @param {string} path The path of the property to get.
 	     * @param {*} value The value to compare.
 	     * @returns {Function} Returns the new function.
 	     */
-	    function baseMatchesProperty(key, value) {
-	      if (isStrictComparable(value)) {
-	        return function(object) {
-	          return object != null && object[key] === value;
-	        };
-	      }
+	    function baseMatchesProperty(path, value) {
+	      var isArr = isArray(path),
+	          isCommon = isKey(path) && isStrictComparable(value),
+	          pathKey = (path + '');
+
+	      path = toPath(path);
 	      return function(object) {
-	        return object != null && baseIsEqual(value, object[key], null, true);
+	        if (object == null) {
+	          return false;
+	        }
+	        var key = pathKey;
+	        object = toObject(object);
+	        if ((isArr || !isCommon) && !(key in object)) {
+	          object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+	          if (object == null) {
+	            return false;
+	          }
+	          key = last(path);
+	          object = toObject(object);
+	        }
+	        return object[key] === value
+	          ? (value !== undefined || (key in object))
+	          : baseIsEqual(value, object[key], null, true);
 	      };
 	    }
 
@@ -24614,29 +24349,39 @@ var ripple =
 	     * @param {Function} [customizer] The function to customize merging properties.
 	     * @param {Array} [stackA=[]] Tracks traversed source objects.
 	     * @param {Array} [stackB=[]] Associates values with source counterparts.
-	     * @returns {Object} Returns the destination object.
+	     * @returns {Object} Returns `object`.
 	     */
 	    function baseMerge(object, source, customizer, stackA, stackB) {
 	      if (!isObject(object)) {
 	        return object;
 	      }
 	      var isSrcArr = isLength(source.length) && (isArray(source) || isTypedArray(source));
-	      (isSrcArr ? arrayEach : baseForOwn)(source, function(srcValue, key, source) {
+	      if (!isSrcArr) {
+	        var props = keys(source);
+	        push.apply(props, getSymbols(source));
+	      }
+	      arrayEach(props || source, function(srcValue, key) {
+	        if (props) {
+	          key = srcValue;
+	          srcValue = source[key];
+	        }
 	        if (isObjectLike(srcValue)) {
 	          stackA || (stackA = []);
 	          stackB || (stackB = []);
-	          return baseMergeDeep(object, source, key, baseMerge, customizer, stackA, stackB);
+	          baseMergeDeep(object, source, key, baseMerge, customizer, stackA, stackB);
 	        }
-	        var value = object[key],
-	            result = customizer ? customizer(value, srcValue, key, object, source) : undefined,
-	            isCommon = typeof result == 'undefined';
+	        else {
+	          var value = object[key],
+	              result = customizer ? customizer(value, srcValue, key, object, source) : undefined,
+	              isCommon = result === undefined;
 
-	        if (isCommon) {
-	          result = srcValue;
-	        }
-	        if ((isSrcArr || typeof result != 'undefined') &&
-	            (isCommon || (result === result ? (result !== value) : (value === value)))) {
-	          object[key] = result;
+	          if (isCommon) {
+	            result = srcValue;
+	          }
+	          if ((isSrcArr || result !== undefined) &&
+	              (isCommon || (result === result ? (result !== value) : (value === value)))) {
+	            object[key] = result;
+	          }
 	        }
 	      });
 	      return object;
@@ -24669,14 +24414,14 @@ var ripple =
 	      }
 	      var value = object[key],
 	          result = customizer ? customizer(value, srcValue, key, object, source) : undefined,
-	          isCommon = typeof result == 'undefined';
+	          isCommon = result === undefined;
 
 	      if (isCommon) {
 	        result = srcValue;
 	        if (isLength(srcValue.length) && (isArray(srcValue) || isTypedArray(srcValue))) {
 	          result = isArray(value)
 	            ? value
-	            : (value ? arrayCopy(value) : []);
+	            : (getLength(value) ? arrayCopy(value) : []);
 	        }
 	        else if (isPlainObject(srcValue) || isArguments(srcValue)) {
 	          result = isArguments(value)
@@ -24701,7 +24446,7 @@ var ripple =
 	    }
 
 	    /**
-	     * The base implementation of `_.property` which does not coerce `key` to a string.
+	     * The base implementation of `_.property` without support for deep paths.
 	     *
 	     * @private
 	     * @param {string} key The key of the property to get.
@@ -24714,19 +24459,31 @@ var ripple =
 	    }
 
 	    /**
+	     * A specialized version of `baseProperty` which supports deep paths.
+	     *
+	     * @private
+	     * @param {Array|string} path The path of the property to get.
+	     * @returns {Function} Returns the new function.
+	     */
+	    function basePropertyDeep(path) {
+	      var pathKey = (path + '');
+	      path = toPath(path);
+	      return function(object) {
+	        return baseGet(object, path, pathKey);
+	      };
+	    }
+
+	    /**
 	     * The base implementation of `_.pullAt` without support for individual
-	     * index arguments.
+	     * index arguments and capturing the removed elements.
 	     *
 	     * @private
 	     * @param {Array} array The array to modify.
 	     * @param {number[]} indexes The indexes of elements to remove.
-	     * @returns {Array} Returns the new array of removed elements.
+	     * @returns {Array} Returns `array`.
 	     */
 	    function basePullAt(array, indexes) {
-	      var length = indexes.length,
-	          result = baseAt(array, indexes);
-
-	      indexes.sort(baseCompareAscending);
+	      var length = indexes.length;
 	      while (length--) {
 	        var index = parseFloat(indexes[length]);
 	        if (index != previous && isIndex(index)) {
@@ -24734,7 +24491,7 @@ var ripple =
 	          splice.call(array, index, 1);
 	        }
 	      }
-	      return result;
+	      return array;
 	    }
 
 	    /**
@@ -24752,7 +24509,7 @@ var ripple =
 
 	    /**
 	     * The base implementation of `_.reduce` and `_.reduceRight` without support
-	     * for callback shorthands or `this` binding, which iterates over `collection`
+	     * for callback shorthands and `this` binding, which iterates over `collection`
 	     * using the provided `eachFunc`.
 	     *
 	     * @private
@@ -24803,7 +24560,7 @@ var ripple =
 	      if (start < 0) {
 	        start = -start > length ? 0 : (length + start);
 	      }
-	      end = (typeof end == 'undefined' || end > length) ? length : (+end || 0);
+	      end = (end === undefined || end > length) ? length : (+end || 0);
 	      if (end < 0) {
 	        end += length;
 	      }
@@ -24819,7 +24576,7 @@ var ripple =
 
 	    /**
 	     * The base implementation of `_.some` without support for callback shorthands
-	     * or `this` binding.
+	     * and `this` binding.
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
@@ -24862,28 +24619,41 @@ var ripple =
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {string[]} props The property names to sort by.
-	     * @param {boolean[]} orders The sort orders of `props`.
+	     * @param {Function[]|Object[]|string[]} iteratees The iteratees to sort by.
+	     * @param {boolean[]} orders The sort orders of `iteratees`.
 	     * @returns {Array} Returns the new sorted array.
 	     */
-	    function baseSortByOrder(collection, props, orders) {
-	      var index = -1,
-	          length = collection.length,
-	          result = isLength(length) ? Array(length) : [];
+	    function baseSortByOrder(collection, iteratees, orders) {
+	      var callback = getCallback(),
+	          index = -1;
 
-	      baseEach(collection, function(value) {
-	        var length = props.length,
-	            criteria = Array(length);
+	      iteratees = arrayMap(iteratees, function(iteratee) { return callback(iteratee); });
 
-	        while (length--) {
-	          criteria[length] = value == null ? undefined : value[props[length]];
-	        }
-	        result[++index] = { 'criteria': criteria, 'index': index, 'value': value };
+	      var result = baseMap(collection, function(value) {
+	        var criteria = arrayMap(iteratees, function(iteratee) { return iteratee(value); });
+	        return { 'criteria': criteria, 'index': ++index, 'value': value };
 	      });
 
 	      return baseSortBy(result, function(object, other) {
 	        return compareMultiple(object, other, orders);
 	      });
+	    }
+
+	    /**
+	     * The base implementation of `_.sum` without support for callback shorthands
+	     * and `this` binding.
+	     *
+	     * @private
+	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function} iteratee The function invoked per iteration.
+	     * @returns {number} Returns the sum.
+	     */
+	    function baseSum(collection, iteratee) {
+	      var result = 0;
+	      baseEach(collection, function(value, index, collection) {
+	        result += +iteratee(value, index, collection) || 0;
+	      });
+	      return result;
 	    }
 
 	    /**
@@ -24941,7 +24711,7 @@ var ripple =
 	    /**
 	     * The base implementation of `_.values` and `_.valuesIn` which creates an
 	     * array of `object` property values corresponding to the property names
-	     * returned by `keysFunc`.
+	     * of `props`.
 	     *
 	     * @private
 	     * @param {Object} object The object to query.
@@ -24960,6 +24730,27 @@ var ripple =
 	    }
 
 	    /**
+	     * The base implementation of `_.dropRightWhile`, `_.dropWhile`, `_.takeRightWhile`,
+	     * and `_.takeWhile` without support for callback shorthands and `this` binding.
+	     *
+	     * @private
+	     * @param {Array} array The array to query.
+	     * @param {Function} predicate The function invoked per iteration.
+	     * @param {boolean} [isDrop] Specify dropping elements instead of taking them.
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Array} Returns the slice of `array`.
+	     */
+	    function baseWhile(array, predicate, isDrop, fromRight) {
+	      var length = array.length,
+	          index = fromRight ? length : -1;
+
+	      while ((fromRight ? index-- : ++index < length) && predicate(array[index], index, array)) {}
+	      return isDrop
+	        ? baseSlice(array, (fromRight ? 0 : index), (fromRight ? index + 1 : length))
+	        : baseSlice(array, (fromRight ? index + 1 : 0), (fromRight ? length : index));
+	    }
+
+	    /**
 	     * The base implementation of `wrapperValue` which returns the result of
 	     * performing a sequence of actions on the unwrapped `value`, where each
 	     * successive action is supplied the return value of the previous.
@@ -24967,7 +24758,7 @@ var ripple =
 	     * @private
 	     * @param {*} value The unwrapped value.
 	     * @param {Array} actions Actions to peform to resolve the unwrapped value.
-	     * @returns {*} Returns the resolved unwrapped value.
+	     * @returns {*} Returns the resolved value.
 	     */
 	    function baseWrapperValue(value, actions) {
 	      var result = value;
@@ -24994,8 +24785,7 @@ var ripple =
 	     * @private
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
-	     * @param {boolean} [retHighest] Specify returning the highest, instead
-	     *  of the lowest, index at which a value should be inserted into `array`.
+	     * @param {boolean} [retHighest] Specify returning the highest qualified index.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     */
@@ -25028,8 +24818,7 @@ var ripple =
 	     * @param {Array} array The sorted array to inspect.
 	     * @param {*} value The value to evaluate.
 	     * @param {Function} iteratee The function invoked per iteration.
-	     * @param {boolean} [retHighest] Specify returning the highest, instead
-	     *  of the lowest, index at which a value should be inserted into `array`.
+	     * @param {boolean} [retHighest] Specify returning the highest qualified index.
 	     * @returns {number} Returns the index at which `value` should be inserted
 	     *  into `array`.
 	     */
@@ -25039,7 +24828,7 @@ var ripple =
 	      var low = 0,
 	          high = array ? array.length : 0,
 	          valIsNaN = value !== value,
-	          valIsUndef = typeof value == 'undefined';
+	          valIsUndef = value === undefined;
 
 	      while (low < high) {
 	        var mid = floor((low + high) / 2),
@@ -25049,7 +24838,7 @@ var ripple =
 	        if (valIsNaN) {
 	          var setLow = isReflexive || retHighest;
 	        } else if (valIsUndef) {
-	          setLow = isReflexive && (retHighest || typeof computed != 'undefined');
+	          setLow = isReflexive && (retHighest || computed !== undefined);
 	        } else {
 	          setLow = retHighest ? (computed <= value) : (computed < value);
 	        }
@@ -25076,7 +24865,7 @@ var ripple =
 	      if (typeof func != 'function') {
 	        return identity;
 	      }
-	      if (typeof thisArg == 'undefined') {
+	      if (thisArg === undefined) {
 	        return func;
 	      }
 	      switch (argCount) {
@@ -25195,6 +24984,9 @@ var ripple =
 	     * object composed from the results of running each element in the collection
 	     * through an iteratee.
 	     *
+	     * **Note:** This function is used to create `_.countBy`, `_.groupBy`, `_.indexBy`,
+	     * and `_.partition`.
+	     *
 	     * @private
 	     * @param {Function} setter The function to set keys and values of the accumulator object.
 	     * @param {Function} [initializer] The function to initialize the accumulator object.
@@ -25226,39 +25018,85 @@ var ripple =
 	     * Creates a function that assigns properties of source object(s) to a given
 	     * destination object.
 	     *
+	     * **Note:** This function is used to create `_.assign`, `_.defaults`, and `_.merge`.
+	     *
 	     * @private
 	     * @param {Function} assigner The function to assign values.
 	     * @returns {Function} Returns the new assigner function.
 	     */
 	    function createAssigner(assigner) {
-	      return function() {
-	        var args = arguments,
-	            length = args.length,
-	            object = args[0];
+	      return restParam(function(object, sources) {
+	        var index = -1,
+	            length = object == null ? 0 : sources.length,
+	            customizer = length > 2 && sources[length - 2],
+	            guard = length > 2 && sources[2],
+	            thisArg = length > 1 && sources[length - 1];
 
-	        if (length < 2 || object == null) {
-	          return object;
-	        }
-	        var customizer = args[length - 2],
-	            thisArg = args[length - 1],
-	            guard = args[3];
-
-	        if (length > 3 && typeof customizer == 'function') {
+	        if (typeof customizer == 'function') {
 	          customizer = bindCallback(customizer, thisArg, 5);
 	          length -= 2;
 	        } else {
-	          customizer = (length > 2 && typeof thisArg == 'function') ? thisArg : null;
+	          customizer = typeof thisArg == 'function' ? thisArg : null;
 	          length -= (customizer ? 1 : 0);
 	        }
-	        if (guard && isIterateeCall(args[1], args[2], guard)) {
-	          customizer = length == 3 ? null : customizer;
-	          length = 2;
+	        if (guard && isIterateeCall(sources[0], sources[1], guard)) {
+	          customizer = length < 3 ? null : customizer;
+	          length = 1;
 	        }
-	        var index = 0;
 	        while (++index < length) {
-	          var source = args[index];
+	          var source = sources[index];
 	          if (source) {
 	            assigner(object, source, customizer);
+	          }
+	        }
+	        return object;
+	      });
+	    }
+
+	    /**
+	     * Creates a `baseEach` or `baseEachRight` function.
+	     *
+	     * @private
+	     * @param {Function} eachFunc The function to iterate over a collection.
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Function} Returns the new base function.
+	     */
+	    function createBaseEach(eachFunc, fromRight) {
+	      return function(collection, iteratee) {
+	        var length = collection ? getLength(collection) : 0;
+	        if (!isLength(length)) {
+	          return eachFunc(collection, iteratee);
+	        }
+	        var index = fromRight ? length : -1,
+	            iterable = toObject(collection);
+
+	        while ((fromRight ? index-- : ++index < length)) {
+	          if (iteratee(iterable[index], index, iterable) === false) {
+	            break;
+	          }
+	        }
+	        return collection;
+	      };
+	    }
+
+	    /**
+	     * Creates a base function for `_.forIn` or `_.forInRight`.
+	     *
+	     * @private
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Function} Returns the new base function.
+	     */
+	    function createBaseFor(fromRight) {
+	      return function(object, iteratee, keysFunc) {
+	        var iterable = toObject(object),
+	            props = keysFunc(object),
+	            length = props.length,
+	            index = fromRight ? length : -1;
+
+	        while ((fromRight ? index-- : ++index < length)) {
+	          var key = props[index];
+	          if (iteratee(iterable[key], key, iterable) === false) {
+	            break;
 	          }
 	        }
 	        return object;
@@ -25294,41 +25132,6 @@ var ripple =
 	    var createCache = !(nativeCreate && Set) ? constant(null) : function(values) {
 	      return new SetCache(values);
 	    };
-
-	    /**
-	     * Creates a function to compose other functions into a single function.
-	     *
-	     * @private
-	     * @param {boolean} [fromRight] Specify iterating from right to left.
-	     * @returns {Function} Returns the new composer function.
-	     */
-	    function createComposer(fromRight) {
-	      return function() {
-	        var length = arguments.length,
-	            index = length,
-	            fromIndex = fromRight ? (length - 1) : 0;
-
-	        if (!length) {
-	          return function() { return arguments[0]; };
-	        }
-	        var funcs = Array(length);
-	        while (index--) {
-	          funcs[index] = arguments[index];
-	          if (typeof funcs[index] != 'function') {
-	            throw new TypeError(FUNC_ERROR_TEXT);
-	          }
-	        }
-	        return function() {
-	          var index = fromIndex,
-	              result = funcs[index].apply(this, arguments);
-
-	          while ((fromRight ? index-- : ++index < length)) {
-	            result = funcs[index].call(this, result);
-	          }
-	          return result;
-	        };
-	      };
-	    }
 
 	    /**
 	     * Creates a function that produces compound words out of the words in a
@@ -25372,7 +25175,26 @@ var ripple =
 	    }
 
 	    /**
-	     * Creates a function that gets the extremum value of a collection.
+	     * Creates a `_.curry` or `_.curryRight` function.
+	     *
+	     * @private
+	     * @param {boolean} flag The curry bit flag.
+	     * @returns {Function} Returns the new curry function.
+	     */
+	    function createCurry(flag) {
+	      function curryFunc(func, arity, guard) {
+	        if (guard && isIterateeCall(func, arity, guard)) {
+	          arity = null;
+	        }
+	        var result = createWrapper(func, flag, null, null, null, null, null, arity);
+	        result.placeholder = curryFunc.placeholder;
+	        return result;
+	      }
+	      return curryFunc;
+	    }
+
+	    /**
+	     * Creates a `_.max` or `_.min` function.
 	     *
 	     * @private
 	     * @param {Function} arrayFunc The function to get the extremum value from an array.
@@ -25401,6 +25223,204 @@ var ripple =
 	          }
 	        }
 	        return extremumBy(collection, iteratee, isMin);
+	      };
+	    }
+
+	    /**
+	     * Creates a `_.find` or `_.findLast` function.
+	     *
+	     * @private
+	     * @param {Function} eachFunc The function to iterate over a collection.
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Function} Returns the new find function.
+	     */
+	    function createFind(eachFunc, fromRight) {
+	      return function(collection, predicate, thisArg) {
+	        predicate = getCallback(predicate, thisArg, 3);
+	        if (isArray(collection)) {
+	          var index = baseFindIndex(collection, predicate, fromRight);
+	          return index > -1 ? collection[index] : undefined;
+	        }
+	        return baseFind(collection, predicate, eachFunc);
+	      }
+	    }
+
+	    /**
+	     * Creates a `_.findIndex` or `_.findLastIndex` function.
+	     *
+	     * @private
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Function} Returns the new find function.
+	     */
+	    function createFindIndex(fromRight) {
+	      return function(array, predicate, thisArg) {
+	        if (!(array && array.length)) {
+	          return -1;
+	        }
+	        predicate = getCallback(predicate, thisArg, 3);
+	        return baseFindIndex(array, predicate, fromRight);
+	      };
+	    }
+
+	    /**
+	     * Creates a `_.findKey` or `_.findLastKey` function.
+	     *
+	     * @private
+	     * @param {Function} objectFunc The function to iterate over an object.
+	     * @returns {Function} Returns the new find function.
+	     */
+	    function createFindKey(objectFunc) {
+	      return function(object, predicate, thisArg) {
+	        predicate = getCallback(predicate, thisArg, 3);
+	        return baseFind(object, predicate, objectFunc, true);
+	      };
+	    }
+
+	    /**
+	     * Creates a `_.flow` or `_.flowRight` function.
+	     *
+	     * @private
+	     * @param {boolean} [fromRight] Specify iterating from right to left.
+	     * @returns {Function} Returns the new flow function.
+	     */
+	    function createFlow(fromRight) {
+	      return function() {
+	        var length = arguments.length;
+	        if (!length) {
+	          return function() { return arguments[0]; };
+	        }
+	        var wrapper,
+	            index = fromRight ? length : -1,
+	            leftIndex = 0,
+	            funcs = Array(length);
+
+	        while ((fromRight ? index-- : ++index < length)) {
+	          var func = funcs[leftIndex++] = arguments[index];
+	          if (typeof func != 'function') {
+	            throw new TypeError(FUNC_ERROR_TEXT);
+	          }
+	          var funcName = wrapper ? '' : getFuncName(func);
+	          wrapper = funcName == 'wrapper' ? new LodashWrapper([]) : wrapper;
+	        }
+	        index = wrapper ? -1 : length;
+	        while (++index < length) {
+	          func = funcs[index];
+	          funcName = getFuncName(func);
+
+	          var data = funcName == 'wrapper' ? getData(func) : null;
+	          if (data && isLaziable(data[0])) {
+	            wrapper = wrapper[getFuncName(data[0])].apply(wrapper, data[3]);
+	          } else {
+	            wrapper = (func.length == 1 && isLaziable(func)) ? wrapper[funcName]() : wrapper.thru(func);
+	          }
+	        }
+	        return function() {
+	          var args = arguments;
+	          if (wrapper && args.length == 1 && isArray(args[0])) {
+	            return wrapper.plant(args[0]).value();
+	          }
+	          var index = 0,
+	              result = funcs[index].apply(this, args);
+
+	          while (++index < length) {
+	            result = funcs[index].call(this, result);
+	          }
+	          return result;
+	        };
+	      };
+	    }
+
+	    /**
+	     * Creates a function for `_.forEach` or `_.forEachRight`.
+	     *
+	     * @private
+	     * @param {Function} arrayFunc The function to iterate over an array.
+	     * @param {Function} eachFunc The function to iterate over a collection.
+	     * @returns {Function} Returns the new each function.
+	     */
+	    function createForEach(arrayFunc, eachFunc) {
+	      return function(collection, iteratee, thisArg) {
+	        return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
+	          ? arrayFunc(collection, iteratee)
+	          : eachFunc(collection, bindCallback(iteratee, thisArg, 3));
+	      };
+	    }
+
+	    /**
+	     * Creates a function for `_.forIn` or `_.forInRight`.
+	     *
+	     * @private
+	     * @param {Function} objectFunc The function to iterate over an object.
+	     * @returns {Function} Returns the new each function.
+	     */
+	    function createForIn(objectFunc) {
+	      return function(object, iteratee, thisArg) {
+	        if (typeof iteratee != 'function' || thisArg !== undefined) {
+	          iteratee = bindCallback(iteratee, thisArg, 3);
+	        }
+	        return objectFunc(object, iteratee, keysIn);
+	      };
+	    }
+
+	    /**
+	     * Creates a function for `_.forOwn` or `_.forOwnRight`.
+	     *
+	     * @private
+	     * @param {Function} objectFunc The function to iterate over an object.
+	     * @returns {Function} Returns the new each function.
+	     */
+	    function createForOwn(objectFunc) {
+	      return function(object, iteratee, thisArg) {
+	        if (typeof iteratee != 'function' || thisArg !== undefined) {
+	          iteratee = bindCallback(iteratee, thisArg, 3);
+	        }
+	        return objectFunc(object, iteratee);
+	      };
+	    }
+
+	    /**
+	     * Creates a function for `_.padLeft` or `_.padRight`.
+	     *
+	     * @private
+	     * @param {boolean} [fromRight] Specify padding from the right.
+	     * @returns {Function} Returns the new pad function.
+	     */
+	    function createPadDir(fromRight) {
+	      return function(string, length, chars) {
+	        string = baseToString(string);
+	        return string && ((fromRight ? string : '') + createPadding(string, length, chars) + (fromRight ? '' : string));
+	      };
+	    }
+
+	    /**
+	     * Creates a `_.partial` or `_.partialRight` function.
+	     *
+	     * @private
+	     * @param {boolean} flag The partial bit flag.
+	     * @returns {Function} Returns the new partial function.
+	     */
+	    function createPartial(flag) {
+	      var partialFunc = restParam(function(func, partials) {
+	        var holders = replaceHolders(partials, partialFunc.placeholder);
+	        return createWrapper(func, flag, null, partials, holders);
+	      });
+	      return partialFunc;
+	    }
+
+	    /**
+	     * Creates a function for `_.reduce` or `_.reduceRight`.
+	     *
+	     * @private
+	     * @param {Function} arrayFunc The function to iterate over an array.
+	     * @param {Function} eachFunc The function to iterate over a collection.
+	     * @returns {Function} Returns the new each function.
+	     */
+	    function createReduce(arrayFunc, eachFunc) {
+	      return function(collection, iteratee, accumulator, thisArg) {
+	        var initFromArray = arguments.length < 3;
+	        return (typeof iteratee == 'function' && thisArg === undefined && isArray(collection))
+	          ? arrayFunc(collection, iteratee, accumulator, initFromArray)
+	          : baseReduce(collection, getCallback(iteratee, thisArg, 4), accumulator, initFromArray, eachFunc);
 	      };
 	    }
 
@@ -25467,7 +25487,12 @@ var ripple =
 	            if (!isCurryBound) {
 	              bitmask &= ~(BIND_FLAG | BIND_KEY_FLAG);
 	            }
-	            var result = createHybridWrapper(func, bitmask, thisArg, newPartials, newsHolders, newPartialsRight, newHoldersRight, newArgPos, ary, newArity);
+	            var newData = [func, bitmask, thisArg, newPartials, newsHolders, newPartialsRight, newHoldersRight, newArgPos, ary, newArity],
+	                result = createHybridWrapper.apply(undefined, newData);
+
+	            if (isLaziable(func)) {
+	              setData(result, newData);
+	            }
 	            result.placeholder = placeholder;
 	            return result;
 	          }
@@ -25489,9 +25514,8 @@ var ripple =
 	    }
 
 	    /**
-	     * Creates the pad required for `string` based on the given padding length.
-	     * The `chars` string may be truncated if the number of padding characters
-	     * exceeds the padding length.
+	     * Creates the padding required for `string` based on the given `length`.
+	     * The `chars` string is truncated if the number of characters exceeds `length`.
 	     *
 	     * @private
 	     * @param {string} string The string to create padding for.
@@ -25499,7 +25523,7 @@ var ripple =
 	     * @param {string} [chars=' '] The string used as padding.
 	     * @returns {string} Returns the pad for `string`.
 	     */
-	    function createPad(string, length, chars) {
+	    function createPadding(string, length, chars) {
 	      var strLength = string.length;
 	      length = +length;
 
@@ -25549,6 +25573,22 @@ var ripple =
 	    }
 
 	    /**
+	     * Creates a `_.sortedIndex` or `_.sortedLastIndex` function.
+	     *
+	     * @private
+	     * @param {boolean} [retHighest] Specify returning the highest qualified index.
+	     * @returns {Function} Returns the new index function.
+	     */
+	    function createSortedIndex(retHighest) {
+	      return function(array, value, iteratee, thisArg) {
+	        var func = getCallback(iteratee);
+	        return (func === baseCallback && iteratee == null)
+	          ? binaryIndex(array, value, retHighest)
+	          : binaryIndexBy(array, value, func(iteratee, thisArg, 1), retHighest);
+	      };
+	    }
+
+	    /**
 	     * Creates a function that either curries or invokes `func` with optional
 	     * `this` binding and partially applied arguments.
 	     *
@@ -25590,10 +25630,10 @@ var ripple =
 
 	        partials = holders = null;
 	      }
-	      var data = !isBindKey && getData(func),
+	      var data = isBindKey ? null : getData(func),
 	          newData = [func, bitmask, thisArg, partials, holders, partialsRight, holdersRight, argPos, ary, arity];
 
-	      if (data && data !== true) {
+	      if (data) {
 	        mergeData(newData, data);
 	        bitmask = newData[1];
 	        arity = newData[9];
@@ -25622,18 +25662,18 @@ var ripple =
 	     * @param {Array} other The other array to compare.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
 	     * @param {Function} [customizer] The function to customize comparing arrays.
-	     * @param {boolean} [isWhere] Specify performing partial comparisons.
+	     * @param {boolean} [isLoose] Specify performing partial comparisons.
 	     * @param {Array} [stackA] Tracks traversed `value` objects.
 	     * @param {Array} [stackB] Tracks traversed `other` objects.
 	     * @returns {boolean} Returns `true` if the arrays are equivalent, else `false`.
 	     */
-	    function equalArrays(array, other, equalFunc, customizer, isWhere, stackA, stackB) {
+	    function equalArrays(array, other, equalFunc, customizer, isLoose, stackA, stackB) {
 	      var index = -1,
 	          arrLength = array.length,
 	          othLength = other.length,
 	          result = true;
 
-	      if (arrLength != othLength && !(isWhere && othLength > arrLength)) {
+	      if (arrLength != othLength && !(isLoose && othLength > arrLength)) {
 	        return false;
 	      }
 	      // Deep compare the contents, ignoring non-numeric properties.
@@ -25643,23 +25683,23 @@ var ripple =
 
 	        result = undefined;
 	        if (customizer) {
-	          result = isWhere
+	          result = isLoose
 	            ? customizer(othValue, arrValue, index)
 	            : customizer(arrValue, othValue, index);
 	        }
-	        if (typeof result == 'undefined') {
+	        if (result === undefined) {
 	          // Recursively compare arrays (susceptible to call stack limits).
-	          if (isWhere) {
+	          if (isLoose) {
 	            var othIndex = othLength;
 	            while (othIndex--) {
 	              othValue = other[othIndex];
-	              result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isWhere, stackA, stackB);
+	              result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
 	              if (result) {
 	                break;
 	              }
 	            }
 	          } else {
-	            result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isWhere, stackA, stackB);
+	            result = (arrValue && arrValue === othValue) || equalFunc(arrValue, othValue, customizer, isLoose, stackA, stackB);
 	          }
 	        }
 	      }
@@ -25715,26 +25755,26 @@ var ripple =
 	     * @param {Object} other The other object to compare.
 	     * @param {Function} equalFunc The function to determine equivalents of values.
 	     * @param {Function} [customizer] The function to customize comparing values.
-	     * @param {boolean} [isWhere] Specify performing partial comparisons.
+	     * @param {boolean} [isLoose] Specify performing partial comparisons.
 	     * @param {Array} [stackA] Tracks traversed `value` objects.
 	     * @param {Array} [stackB] Tracks traversed `other` objects.
 	     * @returns {boolean} Returns `true` if the objects are equivalent, else `false`.
 	     */
-	    function equalObjects(object, other, equalFunc, customizer, isWhere, stackA, stackB) {
+	    function equalObjects(object, other, equalFunc, customizer, isLoose, stackA, stackB) {
 	      var objProps = keys(object),
 	          objLength = objProps.length,
 	          othProps = keys(other),
 	          othLength = othProps.length;
 
-	      if (objLength != othLength && !isWhere) {
+	      if (objLength != othLength && !isLoose) {
 	        return false;
 	      }
-	      var hasCtor,
+	      var skipCtor = isLoose,
 	          index = -1;
 
 	      while (++index < objLength) {
 	        var key = objProps[index],
-	            result = hasOwnProperty.call(other, key);
+	            result = isLoose ? key in other : hasOwnProperty.call(other, key);
 
 	        if (result) {
 	          var objValue = object[key],
@@ -25742,21 +25782,21 @@ var ripple =
 
 	          result = undefined;
 	          if (customizer) {
-	            result = isWhere
+	            result = isLoose
 	              ? customizer(othValue, objValue, key)
 	              : customizer(objValue, othValue, key);
 	          }
-	          if (typeof result == 'undefined') {
+	          if (result === undefined) {
 	            // Recursively compare objects (susceptible to call stack limits).
-	            result = (objValue && objValue === othValue) || equalFunc(objValue, othValue, customizer, isWhere, stackA, stackB);
+	            result = (objValue && objValue === othValue) || equalFunc(objValue, othValue, customizer, isLoose, stackA, stackB);
 	          }
 	        }
 	        if (!result) {
 	          return false;
 	        }
-	        hasCtor || (hasCtor = key == 'constructor');
+	        skipCtor || (skipCtor = key == 'constructor');
 	      }
-	      if (!hasCtor) {
+	      if (!skipCtor) {
 	        var objCtor = object.constructor,
 	            othCtor = other.constructor;
 
@@ -25774,7 +25814,7 @@ var ripple =
 	    /**
 	     * Gets the extremum value of `collection` invoking `iteratee` for each value
 	     * in `collection` to generate the criterion by which the value is ranked.
-	     * The `iteratee` is invoked with three arguments; (value, index, collection).
+	     * The `iteratee` is invoked with three arguments: (value, index, collection).
 	     *
 	     * @private
 	     * @param {Array|Object|string} collection The collection to iterate over.
@@ -25826,6 +25866,37 @@ var ripple =
 	    };
 
 	    /**
+	     * Gets the name of `func`.
+	     *
+	     * @private
+	     * @param {Function} func The function to query.
+	     * @returns {string} Returns the function name.
+	     */
+	    var getFuncName = (function() {
+	      if (!support.funcNames) {
+	        return constant('');
+	      }
+	      if (constant.name == 'constant') {
+	        return baseProperty('name');
+	      }
+	      return function(func) {
+	        var result = func.name,
+	            array = realNames[result],
+	            length = array ? array.length : 0;
+
+	        while (length--) {
+	          var data = array[length],
+	              otherFunc = data.func;
+
+	          if (otherFunc == null || otherFunc == func) {
+	            return data.name;
+	          }
+	        }
+	        return result;
+	      };
+	    }());
+
+	    /**
 	     * Gets the appropriate "indexOf" function. If the `_.indexOf` method is
 	     * customized this function returns the custom method, otherwise it returns
 	     * the `baseIndexOf` function. If arguments are provided the chosen function
@@ -25839,6 +25910,29 @@ var ripple =
 	      result = result === indexOf ? baseIndexOf : result;
 	      return collection ? result(collection, target, fromIndex) : result;
 	    }
+
+	    /**
+	     * Gets the "length" property value of `object`.
+	     *
+	     * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
+	     * in Safari on iOS 8.1 ARM64.
+	     *
+	     * @private
+	     * @param {Object} object The object to query.
+	     * @returns {*} Returns the "length" value.
+	     */
+	    var getLength = baseProperty('length');
+
+	    /**
+	     * Creates an array of the own symbols of `object`.
+	     *
+	     * @private
+	     * @param {Object} object The object to query.
+	     * @returns {Array} Returns the array of symbols.
+	     */
+	    var getSymbols = !getOwnPropertySymbols ? constant([]) : function(object) {
+	      return getOwnPropertySymbols(toObject(object));
+	    };
 
 	    /**
 	     * Gets the view, applying any `transforms` to the `start` and `end` positions.
@@ -25908,7 +26002,6 @@ var ripple =
 	     * **Note:** This function only supports cloning values with tags of
 	     * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
 	     *
-	     *
 	     * @private
 	     * @param {Object} object The object to clone.
 	     * @param {string} tag The `toStringTag` of the object to clone.
@@ -25943,28 +26036,22 @@ var ripple =
 	    }
 
 	    /**
-	     * Checks if `func` is eligible for `this` binding.
+	     * Invokes the method at `path` on `object`.
 	     *
 	     * @private
-	     * @param {Function} func The function to check.
-	     * @returns {boolean} Returns `true` if `func` is eligible, else `false`.
+	     * @param {Object} object The object to query.
+	     * @param {Array|string} path The path of the method to invoke.
+	     * @param {Array} args The arguments to invoke the method with.
+	     * @returns {*} Returns the result of the invoked method.
 	     */
-	    function isBindable(func) {
-	      var support = lodash.support,
-	          result = !(support.funcNames ? func.name : support.funcDecomp);
-
-	      if (!result) {
-	        var source = fnToString.call(func);
-	        if (!support.funcNames) {
-	          result = !reFuncName.test(source);
-	        }
-	        if (!result) {
-	          // Check if `func` references the `this` keyword and store the result.
-	          result = reThis.test(source) || isNative(func);
-	          baseSetData(func, result);
-	        }
+	    function invokePath(object, path, args) {
+	      if (object != null && !isKey(path, object)) {
+	        path = toPath(path);
+	        object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+	        path = last(path);
 	      }
-	      return result;
+	      var func = object == null ? object : object[path];
+	      return func == null ? undefined : func.apply(object, args);
 	    }
 
 	    /**
@@ -25996,7 +26083,7 @@ var ripple =
 	      }
 	      var type = typeof index;
 	      if (type == 'number') {
-	        var length = object.length,
+	        var length = getLength(object),
 	            prereq = isLength(length) && isIndex(index, length);
 	      } else {
 	        prereq = type == 'string' && index in object;
@@ -26009,11 +26096,41 @@ var ripple =
 	    }
 
 	    /**
+	     * Checks if `value` is a property name and not a property path.
+	     *
+	     * @private
+	     * @param {*} value The value to check.
+	     * @param {Object} [object] The object to query keys on.
+	     * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+	     */
+	    function isKey(value, object) {
+	      var type = typeof value;
+	      if ((type == 'string' && reIsPlainProp.test(value)) || type == 'number') {
+	        return true;
+	      }
+	      if (isArray(value)) {
+	        return false;
+	      }
+	      var result = !reIsDeepProp.test(value);
+	      return result || (object != null && value in toObject(object));
+	    }
+
+	    /**
+	     * Checks if `func` has a lazy counterpart.
+	     *
+	     * @private
+	     * @param {Function} func The function to check.
+	     * @returns {boolean} Returns `true` if `func` has a lazy counterpart, else `false`.
+	     */
+	    function isLaziable(func) {
+	      var funcName = getFuncName(func);
+	      return !!funcName && func === lodash[funcName] && funcName in LazyWrapper.prototype;
+	    }
+
+	    /**
 	     * Checks if `value` is a valid array-like length.
 	     *
-	     * **Note:** This function is based on ES `ToLength`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength)
-	     * for more details.
+	     * **Note:** This function is based on [`ToLength`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength).
 	     *
 	     * @private
 	     * @param {*} value The value to check.
@@ -26053,22 +26170,13 @@ var ripple =
 	    function mergeData(data, source) {
 	      var bitmask = data[1],
 	          srcBitmask = source[1],
-	          newBitmask = bitmask | srcBitmask;
+	          newBitmask = bitmask | srcBitmask,
+	          isCommon = newBitmask < ARY_FLAG;
 
-	      var arityFlags = ARY_FLAG | REARG_FLAG,
-	          bindFlags = BIND_FLAG | BIND_KEY_FLAG,
-	          comboFlags = arityFlags | bindFlags | CURRY_BOUND_FLAG | CURRY_RIGHT_FLAG;
-
-	      var isAry = bitmask & ARY_FLAG && !(srcBitmask & ARY_FLAG),
-	          isRearg = bitmask & REARG_FLAG && !(srcBitmask & REARG_FLAG),
-	          argPos = (isRearg ? data : source)[7],
-	          ary = (isAry ? data : source)[8];
-
-	      var isCommon = !(bitmask >= REARG_FLAG && srcBitmask > bindFlags) &&
-	        !(bitmask > bindFlags && srcBitmask >= REARG_FLAG);
-
-	      var isCombo = (newBitmask >= arityFlags && newBitmask <= comboFlags) &&
-	        (bitmask < REARG_FLAG || ((isRearg || isAry) && argPos.length <= ary));
+	      var isCombo =
+	        (srcBitmask == ARY_FLAG && bitmask == CURRY_FLAG) ||
+	        (srcBitmask == ARY_FLAG && bitmask == REARG_FLAG && data[7].length <= source[8]) ||
+	        (srcBitmask == (ARY_FLAG | REARG_FLAG) && bitmask == CURRY_FLAG);
 
 	      // Exit early if metadata can't be merged.
 	      if (!(isCommon || isCombo)) {
@@ -26116,7 +26224,7 @@ var ripple =
 
 	    /**
 	     * A specialized version of `_.pick` that picks `object` properties specified
-	     * by the `props` array.
+	     * by `props`.
 	     *
 	     * @private
 	     * @param {Object} object The source object.
@@ -26242,7 +26350,7 @@ var ripple =
 	      baseForIn(value, function(subValue, key) {
 	        result = key;
 	      });
-	      return typeof result == 'undefined' || hasOwnProperty.call(value, result);
+	      return result === undefined || hasOwnProperty.call(value, result);
 	    }
 
 	    /**
@@ -26250,7 +26358,7 @@ var ripple =
 	     * own enumerable property names of `object`.
 	     *
 	     * @private
-	     * @param {Object} object The object to inspect.
+	     * @param {Object} object The object to query.
 	     * @returns {Array} Returns the array of property names.
 	     */
 	    function shimKeys(object) {
@@ -26285,7 +26393,7 @@ var ripple =
 	      if (value == null) {
 	        return [];
 	      }
-	      if (!isLength(value.length)) {
+	      if (!isLength(getLength(value))) {
 	        return values(value);
 	      }
 	      return isObject(value) ? value : Object(value);
@@ -26300,6 +26408,24 @@ var ripple =
 	     */
 	    function toObject(value) {
 	      return isObject(value) ? value : Object(value);
+	    }
+
+	    /**
+	     * Converts `value` to property path array if it is not one.
+	     *
+	     * @private
+	     * @param {*} value The value to process.
+	     * @returns {Array} Returns the property path array.
+	     */
+	    function toPath(value) {
+	      if (isArray(value)) {
+	        return value;
+	      }
+	      var result = [];
+	      baseToString(value).replace(rePropName, function(match, number, quote, string) {
+	        result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+	      });
+	      return result;
 	    }
 
 	    /**
@@ -26387,10 +26513,9 @@ var ripple =
 	     * Creates an array excluding all values of the provided arrays using
 	     * `SameValueZero` for equality comparisons.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -26403,19 +26528,11 @@ var ripple =
 	     * _.difference([1, 2, 3], [4, 2]);
 	     * // => [1, 3]
 	     */
-	    function difference() {
-	      var args = arguments,
-	          index = -1,
-	          length = args.length;
-
-	      while (++index < length) {
-	        var value = args[index];
-	        if (isArray(value) || isArguments(value)) {
-	          break;
-	        }
-	      }
-	      return baseDifference(value, baseFlatten(args, false, true, ++index));
-	    }
+	    var difference = restParam(function(array, values) {
+	      return (isArray(array) || isArguments(array))
+	        ? baseDifference(array, baseFlatten(values, false, true))
+	        : [];
+	    });
 
 	    /**
 	     * Creates a slice of `array` with `n` elements dropped from the beginning.
@@ -26491,7 +26608,7 @@ var ripple =
 	    /**
 	     * Creates a slice of `array` excluding elements dropped from the end.
 	     * Elements are dropped until `predicate` returns falsey. The predicate is
-	     * bound to `thisArg` and invoked with three arguments; (value, index, array).
+	     * bound to `thisArg` and invoked with three arguments: (value, index, array).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -26538,19 +26655,15 @@ var ripple =
 	     * // => ['barney', 'fred', 'pebbles']
 	     */
 	    function dropRightWhile(array, predicate, thisArg) {
-	      var length = array ? array.length : 0;
-	      if (!length) {
-	        return [];
-	      }
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (length-- && predicate(array[length], length, array)) {}
-	      return baseSlice(array, 0, length + 1);
+	      return (array && array.length)
+	        ? baseWhile(array, getCallback(predicate, thisArg, 3), true, true)
+	        : [];
 	    }
 
 	    /**
 	     * Creates a slice of `array` excluding elements dropped from the beginning.
 	     * Elements are dropped until `predicate` returns falsey. The predicate is
-	     * bound to `thisArg` and invoked with three arguments; (value, index, array).
+	     * bound to `thisArg` and invoked with three arguments: (value, index, array).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -26597,14 +26710,9 @@ var ripple =
 	     * // => ['barney', 'fred', 'pebbles']
 	     */
 	    function dropWhile(array, predicate, thisArg) {
-	      var length = array ? array.length : 0;
-	      if (!length) {
-	        return [];
-	      }
-	      var index = -1;
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (++index < length && predicate(array[index], index, array)) {}
-	      return baseSlice(array, index);
+	      return (array && array.length)
+	        ? baseWhile(array, getCallback(predicate, thisArg, 3), true)
+	        : [];
 	    }
 
 	    /**
@@ -26621,6 +26729,19 @@ var ripple =
 	     * @param {number} [start=0] The start position.
 	     * @param {number} [end=array.length] The end position.
 	     * @returns {Array} Returns `array`.
+	     * @example
+	     *
+	     * var array = [1, 2, 3];
+	     *
+	     * _.fill(array, 'a');
+	     * console.log(array);
+	     * // => ['a', 'a', 'a']
+	     *
+	     * _.fill(Array(3), 2);
+	     * // => [2, 2, 2]
+	     *
+	     * _.fill([4, 6, 8], '*', 1, 2);
+	     * // => [4, '*', 8]
 	     */
 	    function fill(array, value, start, end) {
 	      var length = array ? array.length : 0;
@@ -26636,7 +26757,7 @@ var ripple =
 
 	    /**
 	     * This method is like `_.find` except that it returns the index of the first
-	     * element `predicate` returns truthy for, instead of the element itself.
+	     * element `predicate` returns truthy for instead of the element itself.
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -26682,18 +26803,7 @@ var ripple =
 	     * _.findIndex(users, 'active');
 	     * // => 2
 	     */
-	    function findIndex(array, predicate, thisArg) {
-	      var index = -1,
-	          length = array ? array.length : 0;
-
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (++index < length) {
-	        if (predicate(array[index], index, array)) {
-	          return index;
-	        }
-	      }
-	      return -1;
-	    }
+	    var findIndex = createFindIndex();
 
 	    /**
 	     * This method is like `_.findIndex` except that it iterates over elements
@@ -26743,16 +26853,7 @@ var ripple =
 	     * _.findLastIndex(users, 'active');
 	     * // => 0
 	     */
-	    function findLastIndex(array, predicate, thisArg) {
-	      var length = array ? array.length : 0;
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (length--) {
-	        if (predicate(array[length], length, array)) {
-	          return length;
-	        }
-	      }
-	      return -1;
-	    }
+	    var findLastIndex = createFindIndex(true);
 
 	    /**
 	     * Gets the first element of `array`.
@@ -26789,18 +26890,18 @@ var ripple =
 	     * @example
 	     *
 	     * _.flatten([1, [2, 3, [4]]]);
-	     * // => [1, 2, 3, [4]];
+	     * // => [1, 2, 3, [4]]
 	     *
 	     * // using `isDeep`
 	     * _.flatten([1, [2, 3, [4]]], true);
-	     * // => [1, 2, 3, 4];
+	     * // => [1, 2, 3, 4]
 	     */
 	    function flatten(array, isDeep, guard) {
 	      var length = array ? array.length : 0;
 	      if (guard && isIterateeCall(array, isDeep, guard)) {
 	        isDeep = false;
 	      }
-	      return length ? baseFlatten(array, isDeep, false, 0) : [];
+	      return length ? baseFlatten(array, isDeep) : [];
 	    }
 
 	    /**
@@ -26814,11 +26915,11 @@ var ripple =
 	     * @example
 	     *
 	     * _.flattenDeep([1, [2, 3, [4]]]);
-	     * // => [1, 2, 3, 4];
+	     * // => [1, 2, 3, 4]
 	     */
 	    function flattenDeep(array) {
 	      var length = array ? array.length : 0;
-	      return length ? baseFlatten(array, true, false, 0) : [];
+	      return length ? baseFlatten(array, true) : [];
 	    }
 
 	    /**
@@ -26827,10 +26928,9 @@ var ripple =
 	     * it is used as the offset from the end of `array`. If `array` is sorted
 	     * providing `true` for `fromIndex` performs a faster binary search.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -26893,10 +26993,9 @@ var ripple =
 	     * Creates an array of unique values in all provided arrays using `SameValueZero`
 	     * for equality comparisons.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -26913,7 +27012,8 @@ var ripple =
 	          argsLength = arguments.length,
 	          caches = [],
 	          indexOf = getIndexOf(),
-	          isCommon = indexOf == baseIndexOf;
+	          isCommon = indexOf == baseIndexOf,
+	          result = [];
 
 	      while (++argsIndex < argsLength) {
 	        var value = arguments[argsIndex];
@@ -26923,10 +27023,12 @@ var ripple =
 	        }
 	      }
 	      argsLength = args.length;
+	      if (argsLength < 2) {
+	        return result;
+	      }
 	      var array = args[0],
 	          index = -1,
 	          length = array ? array.length : 0,
-	          result = [],
 	          seen = caches[0];
 
 	      outer:
@@ -27024,10 +27126,10 @@ var ripple =
 	     * comparisons.
 	     *
 	     * **Notes:**
-	     *  - Unlike `_.without`, this method mutates `array`.
-	     *  - `SameValueZero` comparisons are like strict equality comparisons, e.g. `===`,
-	     *    except that `NaN` matches `NaN`. See the [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     *    for more details.
+	     *  - Unlike `_.without`, this method mutates `array`
+	     *  - [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     *    comparisons are like strict equality comparisons, e.g. `===`, except
+	     *    that `NaN` matches `NaN`
 	     *
 	     * @static
 	     * @memberOf _
@@ -27090,14 +27192,19 @@ var ripple =
 	     * console.log(evens);
 	     * // => [10, 20]
 	     */
-	    function pullAt(array) {
-	      return basePullAt(array || [], baseFlatten(arguments, false, false, 1));
-	    }
+	    var pullAt = restParam(function(array, indexes) {
+	      array || (array = []);
+	      indexes = baseFlatten(indexes);
+
+	      var result = baseAt(array, indexes);
+	      basePullAt(array, indexes.sort(baseCompareAscending));
+	      return result;
+	    });
 
 	    /**
 	     * Removes all elements from `array` that `predicate` returns truthy for
 	     * and returns an array of the removed elements. The predicate is bound to
-	     * `thisArg` and invoked with three arguments; (value, index, array).
+	     * `thisArg` and invoked with three arguments: (value, index, array).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -27134,19 +27241,23 @@ var ripple =
 	     * // => [2, 4]
 	     */
 	    function remove(array, predicate, thisArg) {
+	      var result = [];
+	      if (!(array && array.length)) {
+	        return result;
+	      }
 	      var index = -1,
-	          length = array ? array.length : 0,
-	          result = [];
+	          indexes = [],
+	          length = array.length;
 
 	      predicate = getCallback(predicate, thisArg, 3);
 	      while (++index < length) {
 	        var value = array[index];
 	        if (predicate(value, index, array)) {
 	          result.push(value);
-	          splice.call(array, index--, 1);
-	          length--;
+	          indexes.push(index);
 	        }
 	      }
+	      basePullAt(array, indexes);
 	      return result;
 	    }
 
@@ -27171,7 +27282,7 @@ var ripple =
 	    /**
 	     * Creates a slice of `array` from `start` up to, but not including, `end`.
 	     *
-	     * **Note:** This function is used instead of `Array#slice` to support node
+	     * **Note:** This method is used instead of `Array#slice` to support node
 	     * lists in IE < 9 and to ensure dense arrays are returned.
 	     *
 	     * @static
@@ -27201,14 +27312,14 @@ var ripple =
 	     * to compute their sort ranking. The iteratee is bound to `thisArg` and
 	     * invoked with one argument; (value).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -27242,12 +27353,7 @@ var ripple =
 	     * _.sortedIndex([{ 'x': 30 }, { 'x': 50 }], { 'x': 40 }, 'x');
 	     * // => 1
 	     */
-	    function sortedIndex(array, value, iteratee, thisArg) {
-	      var func = getCallback(iteratee);
-	      return (func === baseCallback && iteratee == null)
-	        ? binaryIndex(array, value)
-	        : binaryIndexBy(array, value, func(iteratee, thisArg, 1));
-	    }
+	    var sortedIndex = createSortedIndex();
 
 	    /**
 	     * This method is like `_.sortedIndex` except that it returns the highest
@@ -27269,12 +27375,7 @@ var ripple =
 	     * _.sortedLastIndex([4, 4, 5, 5], 5);
 	     * // => 4
 	     */
-	    function sortedLastIndex(array, value, iteratee, thisArg) {
-	      var func = getCallback(iteratee);
-	      return (func === baseCallback && iteratee == null)
-	        ? binaryIndex(array, value, true)
-	        : binaryIndexBy(array, value, func(iteratee, thisArg, 1), true);
-	    }
+	    var sortedLastIndex = createSortedIndex(true);
 
 	    /**
 	     * Creates a slice of `array` with `n` elements taken from the beginning.
@@ -27350,7 +27451,7 @@ var ripple =
 	    /**
 	     * Creates a slice of `array` with elements taken from the end. Elements are
 	     * taken until `predicate` returns falsey. The predicate is bound to `thisArg`
-	     * and invoked with three arguments; (value, index, array).
+	     * and invoked with three arguments: (value, index, array).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -27397,19 +27498,15 @@ var ripple =
 	     * // => []
 	     */
 	    function takeRightWhile(array, predicate, thisArg) {
-	      var length = array ? array.length : 0;
-	      if (!length) {
-	        return [];
-	      }
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (length-- && predicate(array[length], length, array)) {}
-	      return baseSlice(array, length + 1);
+	      return (array && array.length)
+	        ? baseWhile(array, getCallback(predicate, thisArg, 3), false, true)
+	        : [];
 	    }
 
 	    /**
 	     * Creates a slice of `array` with elements taken from the beginning. Elements
 	     * are taken until `predicate` returns falsey. The predicate is bound to
-	     * `thisArg` and invoked with three arguments; (value, index, array).
+	     * `thisArg` and invoked with three arguments: (value, index, array).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -27456,24 +27553,18 @@ var ripple =
 	     * // => []
 	     */
 	    function takeWhile(array, predicate, thisArg) {
-	      var length = array ? array.length : 0;
-	      if (!length) {
-	        return [];
-	      }
-	      var index = -1;
-	      predicate = getCallback(predicate, thisArg, 3);
-	      while (++index < length && predicate(array[index], index, array)) {}
-	      return baseSlice(array, 0, index);
+	      return (array && array.length)
+	        ? baseWhile(array, getCallback(predicate, thisArg, 3))
+	        : [];
 	    }
 
 	    /**
 	     * Creates an array of unique values, in order, of the provided arrays using
 	     * `SameValueZero` for equality comparisons.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -27485,33 +27576,33 @@ var ripple =
 	     * _.union([1, 2], [4, 2], [2, 1]);
 	     * // => [1, 2, 4]
 	     */
-	    function union() {
-	      return baseUniq(baseFlatten(arguments, false, true, 0));
-	    }
+	    var union = restParam(function(arrays) {
+	      return baseUniq(baseFlatten(arrays, false, true));
+	    });
 
 	    /**
-	     * Creates a duplicate-value-free version of an array using `SameValueZero`
-	     * for equality comparisons. Providing `true` for `isSorted` performs a faster
-	     * search algorithm for sorted arrays. If an iteratee function is provided it
-	     * is invoked for each value in the array to generate the criterion by which
-	     * uniqueness is computed. The `iteratee` is bound to `thisArg` and invoked
-	     * with three arguments; (value, index, array).
+	     * Creates a duplicate-free version of an array, using `SameValueZero` for
+	     * equality comparisons, in which only the first occurence of each element
+	     * is kept. Providing `true` for `isSorted` performs a faster search algorithm
+	     * for sorted arrays. If an iteratee function is provided it is invoked for
+	     * each element in the array to generate the criterion by which uniqueness
+	     * is computed. The `iteratee` is bound to `thisArg` and invoked with three
+	     * arguments: (value, index, array).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -27524,8 +27615,8 @@ var ripple =
 	     * @returns {Array} Returns the new duplicate-value-free array.
 	     * @example
 	     *
-	     * _.uniq([1, 2, 1]);
-	     * // => [1, 2]
+	     * _.uniq([2, 1, 2]);
+	     * // => [2, 1]
 	     *
 	     * // using `isSorted`
 	     * _.uniq([1, 1, 2], true);
@@ -27593,10 +27684,9 @@ var ripple =
 	     * Creates an array excluding all provided values using `SameValueZero` for
 	     * equality comparisons.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -27609,14 +27699,15 @@ var ripple =
 	     * _.without([1, 2, 1, 3], 1, 2);
 	     * // => [3]
 	     */
-	    function without(array) {
-	      return baseDifference(array, baseSlice(arguments, 1));
-	    }
+	    var without = restParam(function(array, values) {
+	      return (isArray(array) || isArguments(array))
+	        ? baseDifference(array, values)
+	        : [];
+	    });
 
 	    /**
-	     * Creates an array that is the symmetric difference of the provided arrays.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/Symmetric_difference) for
-	     * more details.
+	     * Creates an array that is the [symmetric difference](https://en.wikipedia.org/wiki/Symmetric_difference)
+	     * of the provided arrays.
 	     *
 	     * @static
 	     * @memberOf _
@@ -27658,20 +27749,13 @@ var ripple =
 	     * _.zip(['fred', 'barney'], [30, 40], [true, false]);
 	     * // => [['fred', 30, true], ['barney', 40, false]]
 	     */
-	    function zip() {
-	      var length = arguments.length,
-	          array = Array(length);
-
-	      while (length--) {
-	        array[length] = arguments[length];
-	      }
-	      return unzip(array);
-	    }
+	    var zip = restParam(unzip);
 
 	    /**
-	     * Creates an object composed from arrays of property names and values. Provide
-	     * either a single two dimensional array, e.g. `[[key1, value1], [key2, value2]]`
-	     * or two arrays, one of property names and one of corresponding values.
+	     * The inverse of `_.pairs`; this method returns an object composed from arrays
+	     * of property names and values. Provide either a single two dimensional array,
+	     * e.g. `[[key1, value1], [key2, value2]]` or two arrays, one of property names
+	     * and one of corresponding values.
 	     *
 	     * @static
 	     * @memberOf _
@@ -27681,6 +27765,9 @@ var ripple =
 	     * @param {Array} [values=[]] The property values.
 	     * @returns {Object} Returns the new object.
 	     * @example
+	     *
+	     * _.zipObject([['fred', 30], ['barney', 40]]);
+	     * // => { 'fred': 30, 'barney': 40 }
 	     *
 	     * _.zipObject(['fred', 'barney'], [30, 40]);
 	     * // => { 'fred': 30, 'barney': 40 }
@@ -27778,13 +27865,14 @@ var ripple =
 	     * @returns {*} Returns the result of `interceptor`.
 	     * @example
 	     *
-	     * _([1, 2, 3])
-	     *  .last()
+	     * _('  abc  ')
+	     *  .chain()
+	     *  .trim()
 	     *  .thru(function(value) {
 	     *    return [value];
 	     *  })
 	     *  .value();
-	     * // => [3]
+	     * // => ['abc']
 	     */
 	    function thru(value, interceptor, thisArg) {
 	      return interceptor.call(thisArg, value);
@@ -27974,32 +28062,32 @@ var ripple =
 	     * _.at(['a', 'b', 'c'], [0, 2]);
 	     * // => ['a', 'c']
 	     *
-	     * _.at(['fred', 'barney', 'pebbles'], 0, 2);
-	     * // => ['fred', 'pebbles']
+	     * _.at(['barney', 'fred', 'pebbles'], 0, 2);
+	     * // => ['barney', 'pebbles']
 	     */
-	    function at(collection) {
-	      var length = collection ? collection.length : 0;
+	    var at = restParam(function(collection, props) {
+	      var length = collection ? getLength(collection) : 0;
 	      if (isLength(length)) {
 	        collection = toIterable(collection);
 	      }
-	      return baseAt(collection, baseFlatten(arguments, false, false, 1));
-	    }
+	      return baseAt(collection, baseFlatten(props));
+	    });
 
 	    /**
 	     * Creates an object composed of keys generated from the results of running
 	     * each element of `collection` through `iteratee`. The corresponding value
 	     * of each key is the number of times the key was returned by `iteratee`.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments:
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -28032,7 +28120,7 @@ var ripple =
 
 	    /**
 	     * Checks if `predicate` returns truthy for **all** elements of `collection`.
-	     * The predicate is bound to `thisArg` and invoked with three arguments;
+	     * The predicate is bound to `thisArg` and invoked with three arguments:
 	     * (value, index|key, collection).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
@@ -28080,7 +28168,10 @@ var ripple =
 	     */
 	    function every(collection, predicate, thisArg) {
 	      var func = isArray(collection) ? arrayEvery : baseEvery;
-	      if (typeof predicate != 'function' || typeof thisArg != 'undefined') {
+	      if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
+	        predicate = null;
+	      }
+	      if (typeof predicate != 'function' || thisArg !== undefined) {
 	        predicate = getCallback(predicate, thisArg, 3);
 	      }
 	      return func(collection, predicate);
@@ -28089,7 +28180,7 @@ var ripple =
 	    /**
 	     * Iterates over elements of `collection`, returning an array of all elements
 	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
-	     * invoked with three arguments; (value, index|key, collection).
+	     * invoked with three arguments: (value, index|key, collection).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -28144,7 +28235,7 @@ var ripple =
 	    /**
 	     * Iterates over elements of `collection`, returning the first element
 	     * `predicate` returns truthy for. The predicate is bound to `thisArg` and
-	     * invoked with three arguments; (value, index|key, collection).
+	     * invoked with three arguments: (value, index|key, collection).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -28191,14 +28282,7 @@ var ripple =
 	     * _.result(_.find(users, 'active'), 'user');
 	     * // => 'barney'
 	     */
-	    function find(collection, predicate, thisArg) {
-	      if (isArray(collection)) {
-	        var index = findIndex(collection, predicate, thisArg);
-	        return index > -1 ? collection[index] : undefined;
-	      }
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(collection, predicate, baseEach);
-	    }
+	    var find = createFind(baseEach);
 
 	    /**
 	     * This method is like `_.find` except that it iterates over elements of
@@ -28219,10 +28303,7 @@ var ripple =
 	     * });
 	     * // => 3
 	     */
-	    function findLast(collection, predicate, thisArg) {
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(collection, predicate, baseEachRight);
-	    }
+	    var findLast = createFind(baseEachRight, true);
 
 	    /**
 	     * Performs a deep comparison between each element in `collection` and the
@@ -28259,11 +28340,11 @@ var ripple =
 
 	    /**
 	     * Iterates over elements of `collection` invoking `iteratee` for each element.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
-	     * (value, index|key, collection). Iterator functions may exit iteration early
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments:
+	     * (value, index|key, collection). Iteratee functions may exit iteration early
 	     * by explicitly returning `false`.
 	     *
-	     * **Note:** As with other "Collections" methods, objects with a `length` property
+	     * **Note:** As with other "Collections" methods, objects with a "length" property
 	     * are iterated like arrays. To avoid this behavior `_.forIn` or `_.forOwn`
 	     * may be used for object iteration.
 	     *
@@ -28287,11 +28368,7 @@ var ripple =
 	     * });
 	     * // => logs each value-key pair and returns the object (iteration order is not guaranteed)
 	     */
-	    function forEach(collection, iteratee, thisArg) {
-	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
-	        ? arrayEach(collection, iteratee)
-	        : baseEach(collection, bindCallback(iteratee, thisArg, 3));
-	    }
+	    var forEach = createForEach(arrayEach, baseEach);
 
 	    /**
 	     * This method is like `_.forEach` except that it iterates over elements of
@@ -28309,30 +28386,26 @@ var ripple =
 	     *
 	     * _([1, 2]).forEachRight(function(n) {
 	     *   console.log(n);
-	     * }).join(',');
+	     * }).value();
 	     * // => logs each value from right to left and returns the array
 	     */
-	    function forEachRight(collection, iteratee, thisArg) {
-	      return (typeof iteratee == 'function' && typeof thisArg == 'undefined' && isArray(collection))
-	        ? arrayEachRight(collection, iteratee)
-	        : baseEachRight(collection, bindCallback(iteratee, thisArg, 3));
-	    }
+	    var forEachRight = createForEach(arrayEachRight, baseEachRight);
 
 	    /**
 	     * Creates an object composed of keys generated from the results of running
 	     * each element of `collection` through `iteratee`. The corresponding value
 	     * of each key is an array of the elements responsible for generating the key.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments:
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -28373,10 +28446,9 @@ var ripple =
 	     * comparisons. If `fromIndex` is negative, it is used as the offset from
 	     * the end of `collection`.
 	     *
-	     * **Note:** `SameValueZero` comparisons are like strict equality comparisons,
-	     * e.g. `===`, except that `NaN` matches `NaN`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
-	     * for more details.
+	     * **Note:** [`SameValueZero`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-samevaluezero)
+	     * comparisons are like strict equality comparisons, e.g. `===`, except that
+	     * `NaN` matches `NaN`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -28385,6 +28457,7 @@ var ripple =
 	     * @param {Array|Object|string} collection The collection to search.
 	     * @param {*} target The value to search for.
 	     * @param {number} [fromIndex=0] The index to search from.
+	     * @param- {Object} [guard] Enables use as a callback for functions like `_.reduce`.
 	     * @returns {boolean} Returns `true` if a matching element is found, else `false`.
 	     * @example
 	     *
@@ -28400,8 +28473,8 @@ var ripple =
 	     * _.includes('pebbles', 'eb');
 	     * // => true
 	     */
-	    function includes(collection, target, fromIndex) {
-	      var length = collection ? collection.length : 0;
+	    function includes(collection, target, fromIndex, guard) {
+	      var length = collection ? getLength(collection) : 0;
 	      if (!isLength(length)) {
 	        collection = values(collection);
 	        length = collection.length;
@@ -28409,10 +28482,10 @@ var ripple =
 	      if (!length) {
 	        return false;
 	      }
-	      if (typeof fromIndex == 'number') {
-	        fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : (fromIndex || 0);
-	      } else {
+	      if (typeof fromIndex != 'number' || (guard && isIterateeCall(target, fromIndex, guard))) {
 	        fromIndex = 0;
+	      } else {
+	        fromIndex = fromIndex < 0 ? nativeMax(length + fromIndex, 0) : (fromIndex || 0);
 	      }
 	      return (typeof collection == 'string' || !isArray(collection) && isString(collection))
 	        ? (fromIndex < length && collection.indexOf(target, fromIndex) > -1)
@@ -28423,17 +28496,17 @@ var ripple =
 	     * Creates an object composed of keys generated from the results of running
 	     * each element of `collection` through `iteratee`. The corresponding value
 	     * of each key is the last element responsible for generating the key. The
-	     * iteratee function is bound to `thisArg` and invoked with three arguments;
+	     * iteratee function is bound to `thisArg` and invoked with three arguments:
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -28470,16 +28543,16 @@ var ripple =
 	    });
 
 	    /**
-	     * Invokes the method named by `methodName` on each element in `collection`,
-	     * returning an array of the results of each invoked method. Any additional
-	     * arguments are provided to each invoked method. If `methodName` is a function
-	     * it is invoked for, and `this` bound to, each element in `collection`.
+	     * Invokes the method at `path` on each element in `collection`, returning
+	     * an array of the results of each invoked method. Any additional arguments
+	     * are provided to each invoked method. If `methodName` is a function it is
+	     * invoked for, and `this` bound to, each element in `collection`.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Function|string} methodName The name of the method to invoke or
+	     * @param {Array|Function|string} path The path of the method to invoke or
 	     *  the function invoked per iteration.
 	     * @param {...*} [args] The arguments to invoke the method with.
 	     * @returns {Array} Returns the array of results.
@@ -28491,23 +28564,33 @@ var ripple =
 	     * _.invoke([123, 456], String.prototype.split, '');
 	     * // => [['1', '2', '3'], ['4', '5', '6']]
 	     */
-	    function invoke(collection, methodName) {
-	      return baseInvoke(collection, methodName, baseSlice(arguments, 2));
-	    }
+	    var invoke = restParam(function(collection, path, args) {
+	      var index = -1,
+	          isFunc = typeof path == 'function',
+	          isProp = isKey(path),
+	          length = getLength(collection),
+	          result = isLength(length) ? Array(length) : [];
+
+	      baseEach(collection, function(value) {
+	        var func = isFunc ? path : (isProp && value != null && value[path]);
+	        result[++index] = func ? func.apply(value, args) : invokePath(value, path, args);
+	      });
+	      return result;
+	    });
 
 	    /**
 	     * Creates an array of values by running each element in `collection` through
 	     * `iteratee`. The `iteratee` is bound to `thisArg` and invoked with three
-	     * arguments; (value, index|key, collection).
+	     * arguments: (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -28516,9 +28599,9 @@ var ripple =
 	     *
 	     * The guarded methods are:
 	     * `ary`, `callback`, `chunk`, `clone`, `create`, `curry`, `curryRight`, `drop`,
-	     * `dropRight`, `fill`, `flatten`, `invert`, `max`, `min`, `parseInt`, `slice`,
-	     * `sortBy`, `take`, `takeRight`, `template`, `trim`, `trimLeft`, `trimRight`,
-	     * `trunc`, `random`, `range`, `sample`, `uniq`, and `words`
+	     * `dropRight`, `every`, `fill`, `flatten`, `invert`, `max`, `min`, `parseInt`,
+	     * `slice`, `sortBy`, `take`, `takeRight`, `template`, `trim`, `trimLeft`,
+	     * `trimRight`, `trunc`, `random`, `range`, `sample`, `some`, `uniq`, and `words`
 	     *
 	     * @static
 	     * @memberOf _
@@ -28527,7 +28610,6 @@ var ripple =
 	     * @param {Array|Object|string} collection The collection to iterate over.
 	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
 	     *  per iteration.
-	     *  create a `_.property` or `_.matches` style callback respectively.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Array} Returns the new mapped array.
 	     * @example
@@ -28561,7 +28643,7 @@ var ripple =
 	     * Creates an array of elements split into two groups, the first of which
 	     * contains elements `predicate` returns truthy for, while the second of which
 	     * contains elements `predicate` returns falsey for. The predicate is bound
-	     * to `thisArg` and invoked with three arguments; (value, index|key, collection).
+	     * to `thisArg` and invoked with three arguments: (value, index|key, collection).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -28621,13 +28703,13 @@ var ripple =
 	    }, function() { return [[], []]; });
 
 	    /**
-	     * Gets the value of `key` from all elements in `collection`.
+	     * Gets the property value of `path` from all elements in `collection`.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {string} key The key of the property to pluck.
+	     * @param {Array|string} path The path of the property to pluck.
 	     * @returns {Array} Returns the property values.
 	     * @example
 	     *
@@ -28643,8 +28725,8 @@ var ripple =
 	     * _.pluck(userIndex, 'age');
 	     * // => [36, 40] (iteration order is not guaranteed)
 	     */
-	    function pluck(collection, key) {
-	      return map(collection, baseProperty(key));
+	    function pluck(collection, path) {
+	      return map(collection, property(path));
 	    }
 
 	    /**
@@ -28652,14 +28734,14 @@ var ripple =
 	     * each element in `collection` through `iteratee`, where each successive
 	     * invocation is supplied the return value of the previous. If `accumulator`
 	     * is not provided the first element of `collection` is used as the initial
-	     * value. The `iteratee` is bound to `thisArg`and invoked with four arguments;
+	     * value. The `iteratee` is bound to `thisArg` and invoked with four arguments:
 	     * (accumulator, value, index|key, collection).
 	     *
 	     * Many lodash methods are guarded to work as interatees for methods like
 	     * `_.reduce`, `_.reduceRight`, and `_.transform`.
 	     *
 	     * The guarded methods are:
-	     * `assign`, `defaults`, `merge`, and `sortAllBy`
+	     * `assign`, `defaults`, `includes`, `merge`, `sortByAll`, and `sortByOrder`
 	     *
 	     * @static
 	     * @memberOf _
@@ -28672,8 +28754,8 @@ var ripple =
 	     * @returns {*} Returns the accumulated value.
 	     * @example
 	     *
-	     * _.reduce([1, 2], function(sum, n) {
-	     *   return sum + n;
+	     * _.reduce([1, 2], function(total, n) {
+	     *   return total + n;
 	     * });
 	     * // => 3
 	     *
@@ -28683,10 +28765,7 @@ var ripple =
 	     * }, {});
 	     * // => { 'a': 3, 'b': 6 } (iteration order is not guaranteed)
 	     */
-	    function reduce(collection, iteratee, accumulator, thisArg) {
-	      var func = isArray(collection) ? arrayReduce : baseReduce;
-	      return func(collection, getCallback(iteratee, thisArg, 4), accumulator, arguments.length < 3, baseEach);
-	    }
+	    var reduce = createReduce(arrayReduce, baseEach);
 
 	    /**
 	     * This method is like `_.reduce` except that it iterates over elements of
@@ -28710,10 +28789,7 @@ var ripple =
 	     * }, []);
 	     * // => [4, 5, 2, 3, 0, 1]
 	     */
-	    function reduceRight(collection, iteratee, accumulator, thisArg) {
-	      var func = isArray(collection) ? arrayReduceRight : baseReduce;
-	      return func(collection, getCallback(iteratee, thisArg, 4), accumulator, arguments.length < 3, baseEachRight);
-	    }
+	    var reduceRight =  createReduce(arrayReduceRight, baseEachRight);
 
 	    /**
 	     * The opposite of `_.filter`; this method returns the elements of `collection`
@@ -28800,9 +28876,8 @@ var ripple =
 	    }
 
 	    /**
-	     * Creates an array of shuffled values, using a version of the Fisher-Yates
-	     * shuffle. See [Wikipedia](https://en.wikipedia.org/wiki/Fisher-Yates_shuffle)
-	     * for more details.
+	     * Creates an array of shuffled values, using a version of the
+	     * [Fisher-Yates shuffle](https://en.wikipedia.org/wiki/Fisher-Yates_shuffle).
 	     *
 	     * @static
 	     * @memberOf _
@@ -28852,7 +28927,7 @@ var ripple =
 	     * // => 7
 	     */
 	    function size(collection) {
-	      var length = collection ? collection.length : 0;
+	      var length = collection ? getLength(collection) : 0;
 	      return isLength(length) ? length : keys(collection).length;
 	    }
 
@@ -28860,7 +28935,7 @@ var ripple =
 	     * Checks if `predicate` returns truthy for **any** element of `collection`.
 	     * The function returns as soon as it finds a passing value and does not iterate
 	     * over the entire collection. The predicate is bound to `thisArg` and invoked
-	     * with three arguments; (value, index|key, collection).
+	     * with three arguments: (value, index|key, collection).
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -28907,7 +28982,10 @@ var ripple =
 	     */
 	    function some(collection, predicate, thisArg) {
 	      var func = isArray(collection) ? arraySome : baseSome;
-	      if (typeof predicate != 'function' || typeof thisArg != 'undefined') {
+	      if (thisArg && isIterateeCall(collection, predicate, thisArg)) {
+	        predicate = null;
+	      }
+	      if (typeof predicate != 'function' || thisArg !== undefined) {
 	        predicate = getCallback(predicate, thisArg, 3);
 	      }
 	      return func(collection, predicate);
@@ -28917,17 +28995,17 @@ var ripple =
 	     * Creates an array of elements, sorted in ascending order by the results of
 	     * running each element in a collection through `iteratee`. This method performs
 	     * a stable sort, that is, it preserves the original sort order of equal elements.
-	     * The `iteratee` is bound to `thisArg` and invoked with three arguments;
+	     * The `iteratee` is bound to `thisArg` and invoked with three arguments:
 	     * (value, index|key, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -28935,9 +29013,8 @@ var ripple =
 	     * @memberOf _
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {Array|Function|Object|string} [iteratee=_.identity] The function
-	     *  invoked per iteration. If a property name or an object is provided it is
-	     *  used to create a `_.property` or `_.matches` style callback respectively.
+	     * @param {Function|Object|string} [iteratee=_.identity] The function invoked
+	     *  per iteration.
 	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {Array} Returns the new sorted array.
 	     * @example
@@ -28966,97 +29043,112 @@ var ripple =
 	      if (collection == null) {
 	        return [];
 	      }
-	      var index = -1,
-	          length = collection.length,
-	          result = isLength(length) ? Array(length) : [];
-
 	      if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
 	        iteratee = null;
 	      }
+	      var index = -1;
 	      iteratee = getCallback(iteratee, thisArg, 3);
-	      baseEach(collection, function(value, key, collection) {
-	        result[++index] = { 'criteria': iteratee(value, key, collection), 'index': index, 'value': value };
+
+	      var result = baseMap(collection, function(value, key, collection) {
+	        return { 'criteria': iteratee(value, key, collection), 'index': ++index, 'value': value };
 	      });
 	      return baseSortBy(result, compareAscending);
 	    }
 
 	    /**
-	     * This method is like `_.sortBy` except that it sorts by property names
-	     * instead of an iteratee function.
+	     * This method is like `_.sortBy` except that it can sort by multiple iteratees
+	     * or property names.
+	     *
+	     * If a property name is provided for an iteratee the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If an object is provided for an iteratee the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {...(string|string[])} props The property names to sort by,
-	     *  specified as individual property names or arrays of property names.
+	     * @param {...(Function|Function[]|Object|Object[]|string|string[])} iteratees
+	     *  The iteratees to sort by, specified as individual values or arrays of values.
 	     * @returns {Array} Returns the new sorted array.
 	     * @example
 	     *
 	     * var users = [
+	     *   { 'user': 'fred',   'age': 48 },
 	     *   { 'user': 'barney', 'age': 36 },
-	     *   { 'user': 'fred',   'age': 40 },
-	     *   { 'user': 'barney', 'age': 26 },
-	     *   { 'user': 'fred',   'age': 30 }
+	     *   { 'user': 'fred',   'age': 42 },
+	     *   { 'user': 'barney', 'age': 34 }
 	     * ];
 	     *
 	     * _.map(_.sortByAll(users, ['user', 'age']), _.values);
-	     * // => [['barney', 26], ['barney', 36], ['fred', 30], ['fred', 40]]
+	     * // => [['barney', 34], ['barney', 36], ['fred', 42], ['fred', 48]]
+	     *
+	     * _.map(_.sortByAll(users, 'user', function(chr) {
+	     *   return Math.floor(chr.age / 10);
+	     * }), _.values);
+	     * // => [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 42]]
 	     */
-	    function sortByAll(collection) {
+	    var sortByAll = restParam(function(collection, iteratees) {
 	      if (collection == null) {
 	        return [];
 	      }
-	      var args = arguments,
-	          guard = args[3];
-
-	      if (guard && isIterateeCall(args[1], args[2], guard)) {
-	        args = [collection, args[1]];
+	      var guard = iteratees[2];
+	      if (guard && isIterateeCall(iteratees[0], iteratees[1], guard)) {
+	        iteratees.length = 1;
 	      }
-	      return baseSortByOrder(collection, baseFlatten(args, false, false, 1), []);
-	    }
+	      return baseSortByOrder(collection, baseFlatten(iteratees), []);
+	    });
 
 	    /**
 	     * This method is like `_.sortByAll` except that it allows specifying the
-	     * sort orders of the property names to sort by. A truthy value in `orders`
-	     * will sort the corresponding property name in ascending order while a
-	     * falsey value will sort it in descending order.
+	     * sort orders of the iteratees to sort by. A truthy value in `orders` will
+	     * sort the corresponding property name in ascending order while a falsey
+	     * value will sort it in descending order.
+	     *
+	     * If a property name is provided for an iteratee the created `_.property`
+	     * style callback returns the property value of the given element.
+	     *
+	     * If an object is provided for an iteratee the created `_.matches` style
+	     * callback returns `true` for elements that have the properties of the given
+	     * object, else `false`.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Collection
 	     * @param {Array|Object|string} collection The collection to iterate over.
-	     * @param {string[]} props The property names to sort by.
-	     * @param {boolean[]} orders The sort orders of `props`.
+	     * @param {Function[]|Object[]|string[]} iteratees The iteratees to sort by.
+	     * @param {boolean[]} orders The sort orders of `iteratees`.
 	     * @param- {Object} [guard] Enables use as a callback for functions like `_.reduce`.
 	     * @returns {Array} Returns the new sorted array.
 	     * @example
 	     *
 	     * var users = [
-	     *   { 'user': 'barney', 'age': 26 },
-	     *   { 'user': 'fred',   'age': 40 },
-	     *   { 'user': 'barney', 'age': 36 },
-	     *   { 'user': 'fred',   'age': 30 }
+	     *   { 'user': 'fred',   'age': 48 },
+	     *   { 'user': 'barney', 'age': 34 },
+	     *   { 'user': 'fred',   'age': 42 },
+	     *   { 'user': 'barney', 'age': 36 }
 	     * ];
 	     *
 	     * // sort by `user` in ascending order and by `age` in descending order
 	     * _.map(_.sortByOrder(users, ['user', 'age'], [true, false]), _.values);
-	     * // => [['barney', 36], ['barney', 26], ['fred', 40], ['fred', 30]]
+	     * // => [['barney', 36], ['barney', 34], ['fred', 48], ['fred', 42]]
 	     */
-	    function sortByOrder(collection, props, orders, guard) {
+	    function sortByOrder(collection, iteratees, orders, guard) {
 	      if (collection == null) {
 	        return [];
 	      }
-	      if (guard && isIterateeCall(props, orders, guard)) {
+	      if (guard && isIterateeCall(iteratees, orders, guard)) {
 	        orders = null;
 	      }
-	      if (!isArray(props)) {
-	        props = props == null ? [] : [props];
+	      if (!isArray(iteratees)) {
+	        iteratees = iteratees == null ? [] : [iteratees];
 	      }
 	      if (!isArray(orders)) {
 	        orders = orders == null ? [] : [orders];
 	      }
-	      return baseSortByOrder(collection, props, orders);
+	      return baseSortByOrder(collection, iteratees, orders);
 	    }
 
 	    /**
@@ -29209,7 +29301,8 @@ var ripple =
 	      return function() {
 	        if (--n > 0) {
 	          result = func.apply(this, arguments);
-	        } else {
+	        }
+	        if (n <= 1) {
 	          func = null;
 	        }
 	        return result;
@@ -29224,7 +29317,7 @@ var ripple =
 	     * The `_.bind.placeholder` value, which defaults to `_` in monolithic builds,
 	     * may be used as a placeholder for partially applied arguments.
 	     *
-	     * **Note:** Unlike native `Function#bind` this method does not set the `length`
+	     * **Note:** Unlike native `Function#bind` this method does not set the "length"
 	     * property of bound functions.
 	     *
 	     * @static
@@ -29232,7 +29325,7 @@ var ripple =
 	     * @category Function
 	     * @param {Function} func The function to bind.
 	     * @param {*} thisArg The `this` binding of `func`.
-	     * @param {...*} [args] The arguments to be partially applied.
+	     * @param {...*} [partials] The arguments to be partially applied.
 	     * @returns {Function} Returns the new bound function.
 	     * @example
 	     *
@@ -29251,16 +29344,14 @@ var ripple =
 	     * bound('hi');
 	     * // => 'hi fred!'
 	     */
-	    function bind(func, thisArg) {
+	    var bind = restParam(function(func, thisArg, partials) {
 	      var bitmask = BIND_FLAG;
-	      if (arguments.length > 2) {
-	        var partials = baseSlice(arguments, 2),
-	            holders = replaceHolders(partials, bind.placeholder);
-
+	      if (partials.length) {
+	        var holders = replaceHolders(partials, bind.placeholder);
 	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrapper(func, bitmask, thisArg, partials, holders);
-	    }
+	    });
 
 	    /**
 	     * Binds methods of an object to the object itself, overwriting the existing
@@ -29268,7 +29359,7 @@ var ripple =
 	     * of method names. If no method names are provided all enumerable function
 	     * properties, own and inherited, of `object` are bound.
 	     *
-	     * **Note:** This method does not set the `length` property of bound functions.
+	     * **Note:** This method does not set the "length" property of bound functions.
 	     *
 	     * @static
 	     * @memberOf _
@@ -29290,13 +29381,18 @@ var ripple =
 	     * jQuery('#docs').on('click', view.onClick);
 	     * // => logs 'clicked docs' when the element is clicked
 	     */
-	    function bindAll(object) {
-	      return baseBindAll(object,
-	        arguments.length > 1
-	          ? baseFlatten(arguments, false, false, 1)
-	          : functions(object)
-	      );
-	    }
+	    var bindAll = restParam(function(object, methodNames) {
+	      methodNames = methodNames.length ? baseFlatten(methodNames) : functions(object);
+
+	      var index = -1,
+	          length = methodNames.length;
+
+	      while (++index < length) {
+	        var key = methodNames[index];
+	        object[key] = createWrapper(object[key], BIND_FLAG, object);
+	      }
+	      return object;
+	    });
 
 	    /**
 	     * Creates a function that invokes the method at `object[key]` and prepends
@@ -29304,7 +29400,7 @@ var ripple =
 	     *
 	     * This method differs from `_.bind` by allowing bound functions to reference
 	     * methods that may be redefined or don't yet exist.
-	     * See [Peter Michaux's article](http://michaux.ca/articles/lazy-function-definition-pattern)
+	     * See [Peter Michaux's article](http://peter.michaux.ca/articles/lazy-function-definition-pattern)
 	     * for more details.
 	     *
 	     * The `_.bindKey.placeholder` value, which defaults to `_` in monolithic
@@ -29315,7 +29411,7 @@ var ripple =
 	     * @category Function
 	     * @param {Object} object The object the method belongs to.
 	     * @param {string} key The key of the method.
-	     * @param {...*} [args] The arguments to be partially applied.
+	     * @param {...*} [partials] The arguments to be partially applied.
 	     * @returns {Function} Returns the new bound function.
 	     * @example
 	     *
@@ -29342,16 +29438,14 @@ var ripple =
 	     * bound('hi');
 	     * // => 'hiya fred!'
 	     */
-	    function bindKey(object, key) {
+	    var bindKey = restParam(function(object, key, partials) {
 	      var bitmask = BIND_FLAG | BIND_KEY_FLAG;
-	      if (arguments.length > 2) {
-	        var partials = baseSlice(arguments, 2),
-	            holders = replaceHolders(partials, bindKey.placeholder);
-
+	      if (partials.length) {
+	        var holders = replaceHolders(partials, bindKey.placeholder);
 	        bitmask |= PARTIAL_FLAG;
 	      }
 	      return createWrapper(key, bitmask, object, partials, holders);
-	    }
+	    });
 
 	    /**
 	     * Creates a function that accepts one or more arguments of `func` that when
@@ -29363,7 +29457,7 @@ var ripple =
 	     * The `_.curry.placeholder` value, which defaults to `_` in monolithic builds,
 	     * may be used as a placeholder for provided arguments.
 	     *
-	     * **Note:** This method does not set the `length` property of curried functions.
+	     * **Note:** This method does not set the "length" property of curried functions.
 	     *
 	     * @static
 	     * @memberOf _
@@ -29393,14 +29487,7 @@ var ripple =
 	     * curried(1)(_, 3)(2);
 	     * // => [1, 2, 3]
 	     */
-	    function curry(func, arity, guard) {
-	      if (guard && isIterateeCall(func, arity, guard)) {
-	        arity = null;
-	      }
-	      var result = createWrapper(func, CURRY_FLAG, null, null, null, null, null, arity);
-	      result.placeholder = curry.placeholder;
-	      return result;
-	    }
+	    var curry = createCurry(CURRY_FLAG);
 
 	    /**
 	     * This method is like `_.curry` except that arguments are applied to `func`
@@ -29409,7 +29496,7 @@ var ripple =
 	     * The `_.curryRight.placeholder` value, which defaults to `_` in monolithic
 	     * builds, may be used as a placeholder for provided arguments.
 	     *
-	     * **Note:** This method does not set the `length` property of curried functions.
+	     * **Note:** This method does not set the "length" property of curried functions.
 	     *
 	     * @static
 	     * @memberOf _
@@ -29439,14 +29526,7 @@ var ripple =
 	     * curried(3)(1, _)(2);
 	     * // => [1, 2, 3]
 	     */
-	    function curryRight(func, arity, guard) {
-	      if (guard && isIterateeCall(func, arity, guard)) {
-	        arity = null;
-	      }
-	      var result = createWrapper(func, CURRY_RIGHT_FLAG, null, null, null, null, null, arity);
-	      result.placeholder = curryRight.placeholder;
-	      return result;
-	    }
+	    var curryRight = createCurry(CURRY_RIGHT_FLAG);
 
 	    /**
 	     * Creates a function that delays invoking `func` until after `wait` milliseconds
@@ -29641,9 +29721,9 @@ var ripple =
 	     * }, 'deferred');
 	     * // logs 'deferred' after one or more milliseconds
 	     */
-	    function defer(func) {
-	      return baseDelay(func, 1, arguments, 1);
-	    }
+	    var defer = restParam(function(func, args) {
+	      return baseDelay(func, 1, args);
+	    });
 
 	    /**
 	     * Invokes `func` after `wait` milliseconds. Any additional arguments are
@@ -29663,9 +29743,9 @@ var ripple =
 	     * }, 1000, 'later');
 	     * // => logs 'later' after one second
 	     */
-	    function delay(func, wait) {
-	      return baseDelay(func, wait, arguments, 2);
-	    }
+	    var delay = restParam(function(func, wait, args) {
+	      return baseDelay(func, wait, args);
+	    });
 
 	    /**
 	     * Creates a function that returns the result of invoking the provided
@@ -29687,7 +29767,7 @@ var ripple =
 	     * addSquare(1, 2);
 	     * // => 9
 	     */
-	    var flow = createComposer();
+	    var flow = createFlow();
 
 	    /**
 	     * This method is like `_.flow` except that it creates a function that
@@ -29709,7 +29789,7 @@ var ripple =
 	     * addSquare(1, 2);
 	     * // => 9
 	     */
-	    var flowRight = createComposer(true);
+	    var flowRight = createFlow(true);
 
 	    /**
 	     * Creates a function that memoizes the result of `func`. If `resolver` is
@@ -29721,10 +29801,8 @@ var ripple =
 	     *
 	     * **Note:** The cache is exposed as the `cache` property on the memoized
 	     * function. Its creation may be customized by replacing the `_.memoize.Cache`
-	     * constructor with one whose instances implement the ES `Map` method interface
-	     * of `get`, `has`, and `set`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-properties-of-the-map-prototype-object)
-	     * for more details.
+	     * constructor with one whose instances implement the [`Map`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-properties-of-the-map-prototype-object)
+	     * method interface of `get`, `has`, and `set`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -29815,7 +29893,7 @@ var ripple =
 	    /**
 	     * Creates a function that is restricted to invoking `func` once. Repeat calls
 	     * to the function return the value of the first call. The `func` is invoked
-	     * with the `this` binding of the created function.
+	     * with the `this` binding and arguments of the created function.
 	     *
 	     * @static
 	     * @memberOf _
@@ -29830,7 +29908,7 @@ var ripple =
 	     * // `initialize` invokes `createApplication` once
 	     */
 	    function once(func) {
-	      return before(func, 2);
+	      return before(2, func);
 	    }
 
 	    /**
@@ -29841,14 +29919,14 @@ var ripple =
 	     * The `_.partial.placeholder` value, which defaults to `_` in monolithic
 	     * builds, may be used as a placeholder for partially applied arguments.
 	     *
-	     * **Note:** This method does not set the `length` property of partially
+	     * **Note:** This method does not set the "length" property of partially
 	     * applied functions.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Function
 	     * @param {Function} func The function to partially apply arguments to.
-	     * @param {...*} [args] The arguments to be partially applied.
+	     * @param {...*} [partials] The arguments to be partially applied.
 	     * @returns {Function} Returns the new partially applied function.
 	     * @example
 	     *
@@ -29865,12 +29943,7 @@ var ripple =
 	     * greetFred('hi');
 	     * // => 'hi fred'
 	     */
-	    function partial(func) {
-	      var partials = baseSlice(arguments, 1),
-	          holders = replaceHolders(partials, partial.placeholder);
-
-	      return createWrapper(func, PARTIAL_FLAG, null, partials, holders);
-	    }
+	    var partial = createPartial(PARTIAL_FLAG);
 
 	    /**
 	     * This method is like `_.partial` except that partially applied arguments
@@ -29879,14 +29952,14 @@ var ripple =
 	     * The `_.partialRight.placeholder` value, which defaults to `_` in monolithic
 	     * builds, may be used as a placeholder for partially applied arguments.
 	     *
-	     * **Note:** This method does not set the `length` property of partially
+	     * **Note:** This method does not set the "length" property of partially
 	     * applied functions.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Function
 	     * @param {Function} func The function to partially apply arguments to.
-	     * @param {...*} [args] The arguments to be partially applied.
+	     * @param {...*} [partials] The arguments to be partially applied.
 	     * @returns {Function} Returns the new partially applied function.
 	     * @example
 	     *
@@ -29903,12 +29976,7 @@ var ripple =
 	     * sayHelloTo('fred');
 	     * // => 'hello fred'
 	     */
-	    function partialRight(func) {
-	      var partials = baseSlice(arguments, 1),
-	          holders = replaceHolders(partials, partialRight.placeholder);
-
-	      return createWrapper(func, PARTIAL_RIGHT_FLAG, null, partials, holders);
-	    }
+	    var partialRight = createPartial(PARTIAL_RIGHT_FLAG);
 
 	    /**
 	     * Creates a function that invokes `func` with arguments arranged according
@@ -29938,29 +30006,80 @@ var ripple =
 	     * }, [1, 2, 3]);
 	     * // => [3, 6, 9]
 	     */
-	    function rearg(func) {
-	      var indexes = baseFlatten(arguments, false, false, 1);
-	      return createWrapper(func, REARG_FLAG, null, null, null, indexes);
-	    }
+	    var rearg = restParam(function(func, indexes) {
+	      return createWrapper(func, REARG_FLAG, null, null, null, baseFlatten(indexes));
+	    });
 
 	    /**
 	     * Creates a function that invokes `func` with the `this` binding of the
-	     * created function and the array of arguments provided to the created
-	     * function much like [Function#apply](http://es5.github.io/#x15.3.4.3).
+	     * created function and arguments from `start` and beyond provided as an array.
+	     *
+	     * **Note:** This method is based on the [rest parameter](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters).
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Function
+	     * @param {Function} func The function to apply a rest parameter to.
+	     * @param {number} [start=func.length-1] The start position of the rest parameter.
+	     * @returns {Function} Returns the new function.
+	     * @example
+	     *
+	     * var say = _.restParam(function(what, names) {
+	     *   return what + ' ' + _.initial(names).join(', ') +
+	     *     (_.size(names) > 1 ? ', & ' : '') + _.last(names);
+	     * });
+	     *
+	     * say('hello', 'fred', 'barney', 'pebbles');
+	     * // => 'hello fred, barney, & pebbles'
+	     */
+	    function restParam(func, start) {
+	      if (typeof func != 'function') {
+	        throw new TypeError(FUNC_ERROR_TEXT);
+	      }
+	      start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
+	      return function() {
+	        var args = arguments,
+	            index = -1,
+	            length = nativeMax(args.length - start, 0),
+	            rest = Array(length);
+
+	        while (++index < length) {
+	          rest[index] = args[start + index];
+	        }
+	        switch (start) {
+	          case 0: return func.call(this, rest);
+	          case 1: return func.call(this, args[0], rest);
+	          case 2: return func.call(this, args[0], args[1], rest);
+	        }
+	        var otherArgs = Array(start + 1);
+	        index = -1;
+	        while (++index < start) {
+	          otherArgs[index] = args[index];
+	        }
+	        otherArgs[start] = rest;
+	        return func.apply(this, otherArgs);
+	      };
+	    }
+
+	    /**
+	     * Creates a function that invokes `func` with the `this` binding of the created
+	     * function and an array of arguments much like [`Function#apply`](https://es5.github.io/#x15.3.4.3).
+	     *
+	     * **Note:** This method is based on the [spread operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator).
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Function
 	     * @param {Function} func The function to spread arguments over.
-	     * @returns {*} Returns the new function.
+	     * @returns {Function} Returns the new function.
 	     * @example
 	     *
-	     * var spread = _.spread(function(who, what) {
+	     * var say = _.spread(function(who, what) {
 	     *   return who + ' says ' + what;
 	     * });
 	     *
-	     * spread(['Fred', 'hello']);
-	     * // => 'Fred says hello'
+	     * say(['fred', 'hello']);
+	     * // => 'fred says hello'
 	     *
 	     * // with a Promise
 	     * var numbers = Promise.all([
@@ -30075,12 +30194,12 @@ var ripple =
 	     * cloning is handled by the method instead. The `customizer` is bound to
 	     * `thisArg` and invoked with two argument; (value [, index|key, object]).
 	     *
-	     * **Note:** This method is loosely based on the structured clone algorithm.
+	     * **Note:** This method is loosely based on the
+	     * [structured clone algorithm](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm).
 	     * The enumerable properties of `arguments` objects and objects created by
 	     * constructors other than `Object` are cloned to plain `Object` objects. An
 	     * empty object is returned for uncloneable values such as functions, DOM nodes,
-	     * Maps, Sets, and WeakMaps. See the [HTML5 specification](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm)
-	     * for more details.
+	     * Maps, Sets, and WeakMaps.
 	     *
 	     * @static
 	     * @memberOf _
@@ -30138,12 +30257,12 @@ var ripple =
 	     * is handled by the method instead. The `customizer` is bound to `thisArg`
 	     * and invoked with two argument; (value [, index|key, object]).
 	     *
-	     * **Note:** This method is loosely based on the structured clone algorithm.
+	     * **Note:** This method is loosely based on the
+	     * [structured clone algorithm](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm).
 	     * The enumerable properties of `arguments` objects and objects created by
 	     * constructors other than `Object` are cloned to plain `Object` objects. An
 	     * empty object is returned for uncloneable values such as functions, DOM nodes,
-	     * Maps, Sets, and WeakMaps. See the [HTML5 specification](http://www.w3.org/TR/html5/infrastructure.html#internal-structured-cloning-algorithm)
-	     * for more details.
+	     * Maps, Sets, and WeakMaps.
 	     *
 	     * @static
 	     * @memberOf _
@@ -30200,7 +30319,7 @@ var ripple =
 	     */
 	    function isArguments(value) {
 	      var length = isObjectLike(value) ? value.length : undefined;
-	      return (isLength(length) && objToString.call(value) == argsTag) || false;
+	      return isLength(length) && objToString.call(value) == argsTag;
 	    }
 
 	    /**
@@ -30220,7 +30339,7 @@ var ripple =
 	     * // => false
 	     */
 	    var isArray = nativeIsArray || function(value) {
-	      return (isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag) || false;
+	      return isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag;
 	    };
 
 	    /**
@@ -30240,7 +30359,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isBoolean(value) {
-	      return (value === true || value === false || isObjectLike(value) && objToString.call(value) == boolTag) || false;
+	      return value === true || value === false || (isObjectLike(value) && objToString.call(value) == boolTag);
 	    }
 
 	    /**
@@ -30260,7 +30379,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isDate(value) {
-	      return (isObjectLike(value) && objToString.call(value) == dateTag) || false;
+	      return isObjectLike(value) && objToString.call(value) == dateTag;
 	    }
 
 	    /**
@@ -30280,13 +30399,13 @@ var ripple =
 	     * // => false
 	     */
 	    function isElement(value) {
-	      return (value && value.nodeType === 1 && isObjectLike(value) &&
-	        (objToString.call(value).indexOf('Element') > -1)) || false;
+	      return !!value && value.nodeType === 1 && isObjectLike(value) &&
+	        (objToString.call(value).indexOf('Element') > -1);
 	    }
 	    // Fallback for environments without DOM support.
 	    if (!support.dom) {
 	      isElement = function(value) {
-	        return (value && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value)) || false;
+	        return !!value && value.nodeType === 1 && isObjectLike(value) && !isPlainObject(value);
 	      };
 	    }
 
@@ -30321,7 +30440,7 @@ var ripple =
 	      if (value == null) {
 	        return true;
 	      }
-	      var length = value.length;
+	      var length = getLength(value);
 	      if (isLength(length) && (isArray(value) || isString(value) || isArguments(value) ||
 	          (isObjectLike(value) && isFunction(value.splice)))) {
 	        return !length;
@@ -30334,7 +30453,7 @@ var ripple =
 	     * equivalent. If `customizer` is provided it is invoked to compare values.
 	     * If `customizer` returns `undefined` comparisons are handled by the method
 	     * instead. The `customizer` is bound to `thisArg` and invoked with three
-	     * arguments; (value, other [, index|key]).
+	     * arguments: (value, other [, index|key]).
 	     *
 	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
 	     * numbers, `Object` objects, regexes, and strings. Objects are compared by
@@ -30347,7 +30466,7 @@ var ripple =
 	     * @category Lang
 	     * @param {*} value The value to compare.
 	     * @param {*} other The other value to compare.
-	     * @param {Function} [customizer] The function to customize comparing values.
+	     * @param {Function} [customizer] The function to customize value comparisons.
 	     * @param {*} [thisArg] The `this` binding of `customizer`.
 	     * @returns {boolean} Returns `true` if the values are equivalent, else `false`.
 	     * @example
@@ -30378,7 +30497,7 @@ var ripple =
 	        return value === other;
 	      }
 	      var result = customizer ? customizer(value, other) : undefined;
-	      return typeof result == 'undefined' ? baseIsEqual(value, other, customizer) : !!result;
+	      return result === undefined ? baseIsEqual(value, other, customizer) : !!result;
 	    }
 
 	    /**
@@ -30399,15 +30518,13 @@ var ripple =
 	     * // => false
 	     */
 	    function isError(value) {
-	      return (isObjectLike(value) && typeof value.message == 'string' && objToString.call(value) == errorTag) || false;
+	      return isObjectLike(value) && typeof value.message == 'string' && objToString.call(value) == errorTag;
 	    }
 
 	    /**
 	     * Checks if `value` is a finite primitive number.
 	     *
-	     * **Note:** This method is based on ES `Number.isFinite`. See the
-	     * [ES spec](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.isfinite)
-	     * for more details.
+	     * **Note:** This method is based on [`Number.isFinite`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-number.isfinite).
 	     *
 	     * @static
 	     * @memberOf _
@@ -30459,10 +30576,8 @@ var ripple =
 	    };
 
 	    /**
-	     * Checks if `value` is the language type of `Object`.
+	     * Checks if `value` is the [language type](https://es5.github.io/#x8) of `Object`.
 	     * (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
-	     *
-	     * **Note:** See the [ES5 spec](https://es5.github.io/#x8) for more details.
 	     *
 	     * @static
 	     * @memberOf _
@@ -30484,7 +30599,7 @@ var ripple =
 	      // Avoid a V8 JIT bug in Chrome 19-20.
 	      // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
 	      var type = typeof value;
-	      return type == 'function' || (value && type == 'object') || false;
+	      return type == 'function' || (!!value && type == 'object');
 	    }
 
 	    /**
@@ -30492,7 +30607,7 @@ var ripple =
 	     * `object` contains equivalent property values. If `customizer` is provided
 	     * it is invoked to compare values. If `customizer` returns `undefined`
 	     * comparisons are handled by the method instead. The `customizer` is bound
-	     * to `thisArg` and invoked with three arguments; (value, other, index|key).
+	     * to `thisArg` and invoked with three arguments: (value, other, index|key).
 	     *
 	     * **Note:** This method supports comparing properties of arrays, booleans,
 	     * `Date` objects, numbers, `Object` objects, regexes, and strings. Functions
@@ -30504,7 +30619,7 @@ var ripple =
 	     * @category Lang
 	     * @param {Object} object The object to inspect.
 	     * @param {Object} source The object of property values to match.
-	     * @param {Function} [customizer] The function to customize comparing values.
+	     * @param {Function} [customizer] The function to customize value comparisons.
 	     * @param {*} [thisArg] The `this` binding of `customizer`.
 	     * @returns {boolean} Returns `true` if `object` is a match, else `false`.
 	     * @example
@@ -30530,13 +30645,20 @@ var ripple =
 	      var props = keys(source),
 	          length = props.length;
 
+	      if (!length) {
+	        return true;
+	      }
+	      if (object == null) {
+	        return false;
+	      }
 	      customizer = typeof customizer == 'function' && bindCallback(customizer, thisArg, 3);
+	      object = toObject(object);
 	      if (!customizer && length == 1) {
 	        var key = props[0],
 	            value = source[key];
 
 	        if (isStrictComparable(value)) {
-	          return object != null && value === object[key] && hasOwnProperty.call(object, key);
+	          return value === object[key] && (value !== undefined || (key in object));
 	        }
 	      }
 	      var values = Array(length),
@@ -30552,9 +30674,8 @@ var ripple =
 	    /**
 	     * Checks if `value` is `NaN`.
 	     *
-	     * **Note:** This method is not the same as native `isNaN` which returns `true`
-	     * for `undefined` and other non-numeric values. See the [ES5 spec](https://es5.github.io/#x15.1.2.4)
-	     * for more details.
+	     * **Note:** This method is not the same as [`isNaN`](https://es5.github.io/#x15.1.2.4)
+	     * which returns `true` for `undefined` and other non-numeric values.
 	     *
 	     * @static
 	     * @memberOf _
@@ -30602,9 +30723,9 @@ var ripple =
 	        return false;
 	      }
 	      if (objToString.call(value) == funcTag) {
-	        return reNative.test(fnToString.call(value));
+	        return reIsNative.test(fnToString.call(value));
 	      }
-	      return (isObjectLike(value) && reHostCtor.test(value)) || false;
+	      return isObjectLike(value) && reIsHostCtor.test(value);
 	    }
 
 	    /**
@@ -30650,7 +30771,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isNumber(value) {
-	      return typeof value == 'number' || (isObjectLike(value) && objToString.call(value) == numberTag) || false;
+	      return typeof value == 'number' || (isObjectLike(value) && objToString.call(value) == numberTag);
 	    }
 
 	    /**
@@ -30732,7 +30853,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isString(value) {
-	      return typeof value == 'string' || (isObjectLike(value) && objToString.call(value) == stringTag) || false;
+	      return typeof value == 'string' || (isObjectLike(value) && objToString.call(value) == stringTag);
 	    }
 
 	    /**
@@ -30752,7 +30873,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isTypedArray(value) {
-	      return (isObjectLike(value) && isLength(value.length) && typedArrayTags[objToString.call(value)]) || false;
+	      return isObjectLike(value) && isLength(value.length) && !!typedArrayTags[objToString.call(value)];
 	    }
 
 	    /**
@@ -30772,7 +30893,7 @@ var ripple =
 	     * // => false
 	     */
 	    function isUndefined(value) {
-	      return typeof value == 'undefined';
+	      return value === undefined;
 	    }
 
 	    /**
@@ -30791,7 +30912,7 @@ var ripple =
 	     * // => [2, 3]
 	     */
 	    function toArray(value) {
-	      var length = value ? value.length : 0;
+	      var length = value ? getLength(value) : 0;
 	      if (!isLength(length)) {
 	        return values(value);
 	      }
@@ -30834,8 +30955,12 @@ var ripple =
 	     * Assigns own enumerable properties of source object(s) to the destination
 	     * object. Subsequent sources overwrite property assignments of previous sources.
 	     * If `customizer` is provided it is invoked to produce the assigned values.
-	     * The `customizer` is bound to `thisArg` and invoked with five arguments;
+	     * The `customizer` is bound to `thisArg` and invoked with five arguments:
 	     * (objectValue, sourceValue, key, object, source).
+	     *
+	     * **Note:** This method mutates `object` and is based on
+	     * [`Object.assign`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign).
+	     *
 	     *
 	     * @static
 	     * @memberOf _
@@ -30843,7 +30968,7 @@ var ripple =
 	     * @category Object
 	     * @param {Object} object The destination object.
 	     * @param {...Object} [sources] The source objects.
-	     * @param {Function} [customizer] The function to customize assigning values.
+	     * @param {Function} [customizer] The function to customize assigned values.
 	     * @param {*} [thisArg] The `this` binding of `customizer`.
 	     * @returns {Object} Returns `object`.
 	     * @example
@@ -30853,13 +30978,17 @@ var ripple =
 	     *
 	     * // using a customizer callback
 	     * var defaults = _.partialRight(_.assign, function(value, other) {
-	     *   return typeof value == 'undefined' ? other : value;
+	     *   return _.isUndefined(value) ? other : value;
 	     * });
 	     *
 	     * defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
 	     * // => { 'user': 'barney', 'age': 36 }
 	     */
-	    var assign = createAssigner(baseAssign);
+	    var assign = createAssigner(function(object, source, customizer) {
+	      return customizer
+	        ? assignWith(object, source, customizer)
+	        : baseAssign(object, source);
+	    });
 
 	    /**
 	     * Creates an object that inherits from the given `prototype` object. If a
@@ -30900,13 +31029,15 @@ var ripple =
 	      if (guard && isIterateeCall(prototype, properties, guard)) {
 	        properties = null;
 	      }
-	      return properties ? baseCopy(properties, result, keys(properties)) : result;
+	      return properties ? baseAssign(result, properties) : result;
 	    }
 
 	    /**
 	     * Assigns own enumerable properties of source object(s) to the destination
 	     * object for all destination properties that resolve to `undefined`. Once a
 	     * property is set, additional values of the same property are ignored.
+	     *
+	     * **Note:** This method mutates `object`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -30919,18 +31050,18 @@ var ripple =
 	     * _.defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
 	     * // => { 'user': 'barney', 'age': 36 }
 	     */
-	    function defaults(object) {
+	    var defaults = restParam(function(args) {
+	      var object = args[0];
 	      if (object == null) {
 	        return object;
 	      }
-	      var args = arrayCopy(arguments);
 	      args.push(assignDefaults);
 	      return assign.apply(undefined, args);
-	    }
+	    });
 
 	    /**
-	     * This method is like `_.findIndex` except that it returns the key of the
-	     * first element `predicate` returns truthy for, instead of the element itself.
+	     * This method is like `_.find` except that it returns the key of the first
+	     * element `predicate` returns truthy for instead of the element itself.
 	     *
 	     * If a property name is provided for `predicate` the created `_.property`
 	     * style callback returns the property value of the given element.
@@ -30976,10 +31107,7 @@ var ripple =
 	     * _.findKey(users, 'active');
 	     * // => 'barney'
 	     */
-	    function findKey(object, predicate, thisArg) {
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(object, predicate, baseForOwn, true);
-	    }
+	    var findKey = createFindKey(baseForOwn);
 
 	    /**
 	     * This method is like `_.findKey` except that it iterates over elements of
@@ -31029,15 +31157,12 @@ var ripple =
 	     * _.findLastKey(users, 'active');
 	     * // => 'pebbles'
 	     */
-	    function findLastKey(object, predicate, thisArg) {
-	      predicate = getCallback(predicate, thisArg, 3);
-	      return baseFind(object, predicate, baseForOwnRight, true);
-	    }
+	    var findLastKey = createFindKey(baseForOwnRight);
 
 	    /**
 	     * Iterates over own and inherited enumerable properties of an object invoking
 	     * `iteratee` for each property. The `iteratee` is bound to `thisArg` and invoked
-	     * with three arguments; (value, key, object). Iterator functions may exit
+	     * with three arguments: (value, key, object). Iteratee functions may exit
 	     * iteration early by explicitly returning `false`.
 	     *
 	     * @static
@@ -31061,12 +31186,7 @@ var ripple =
 	     * });
 	     * // => logs 'a', 'b', and 'c' (iteration order is not guaranteed)
 	     */
-	    function forIn(object, iteratee, thisArg) {
-	      if (typeof iteratee != 'function' || typeof thisArg != 'undefined') {
-	        iteratee = bindCallback(iteratee, thisArg, 3);
-	      }
-	      return baseFor(object, iteratee, keysIn);
-	    }
+	    var forIn = createForIn(baseFor);
 
 	    /**
 	     * This method is like `_.forIn` except that it iterates over properties of
@@ -31093,15 +31213,12 @@ var ripple =
 	     * });
 	     * // => logs 'c', 'b', and 'a' assuming `_.forIn ` logs 'a', 'b', and 'c'
 	     */
-	    function forInRight(object, iteratee, thisArg) {
-	      iteratee = bindCallback(iteratee, thisArg, 3);
-	      return baseForRight(object, iteratee, keysIn);
-	    }
+	    var forInRight = createForIn(baseForRight);
 
 	    /**
 	     * Iterates over own enumerable properties of an object invoking `iteratee`
 	     * for each property. The `iteratee` is bound to `thisArg` and invoked with
-	     * three arguments; (value, key, object). Iterator functions may exit iteration
+	     * three arguments: (value, key, object). Iteratee functions may exit iteration
 	     * early by explicitly returning `false`.
 	     *
 	     * @static
@@ -31125,12 +31242,7 @@ var ripple =
 	     * });
 	     * // => logs 'a' and 'b' (iteration order is not guaranteed)
 	     */
-	    function forOwn(object, iteratee, thisArg) {
-	      if (typeof iteratee != 'function' || typeof thisArg != 'undefined') {
-	        iteratee = bindCallback(iteratee, thisArg, 3);
-	      }
-	      return baseForOwn(object, iteratee);
-	    }
+	    var forOwn = createForOwn(baseForOwn);
 
 	    /**
 	     * This method is like `_.forOwn` except that it iterates over properties of
@@ -31157,10 +31269,7 @@ var ripple =
 	     * });
 	     * // => logs 'b' and 'a' assuming `_.forOwn` logs 'a' and 'b'
 	     */
-	    function forOwnRight(object, iteratee, thisArg) {
-	      iteratee = bindCallback(iteratee, thisArg, 3);
-	      return baseForRight(object, iteratee, keys);
-	    }
+	    var forOwnRight = createForOwn(baseForOwnRight);
 
 	    /**
 	     * Creates an array of function property names from all enumerable properties,
@@ -31182,24 +31291,68 @@ var ripple =
 	    }
 
 	    /**
-	     * Checks if `key` exists as a direct property of `object` instead of an
-	     * inherited property.
+	     * Gets the property value of `path` on `object`. If the resolved value is
+	     * `undefined` the `defaultValue` is used in its place.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Object
-	     * @param {Object} object The object to inspect.
-	     * @param {string} key The key to check.
-	     * @returns {boolean} Returns `true` if `key` is a direct property, else `false`.
+	     * @param {Object} object The object to query.
+	     * @param {Array|string} path The path of the property to get.
+	     * @param {*} [defaultValue] The value returned if the resolved value is `undefined`.
+	     * @returns {*} Returns the resolved value.
 	     * @example
 	     *
-	     * var object = { 'a': 1, 'b': 2, 'c': 3 };
+	     * var object = { 'a': [{ 'b': { 'c': 3 } }] };
 	     *
-	     * _.has(object, 'b');
+	     * _.get(object, 'a[0].b.c');
+	     * // => 3
+	     *
+	     * _.get(object, ['a', '0', 'b', 'c']);
+	     * // => 3
+	     *
+	     * _.get(object, 'a.b.c', 'default');
+	     * // => 'default'
+	     */
+	    function get(object, path, defaultValue) {
+	      var result = object == null ? undefined : baseGet(object, toPath(path), path + '');
+	      return result === undefined ? defaultValue : result;
+	    }
+
+	    /**
+	     * Checks if `path` is a direct property.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Object
+	     * @param {Object} object The object to query.
+	     * @param {Array|string} path The path to check.
+	     * @returns {boolean} Returns `true` if `path` is a direct property, else `false`.
+	     * @example
+	     *
+	     * var object = { 'a': { 'b': { 'c': 3 } } };
+	     *
+	     * _.has(object, 'a');
+	     * // => true
+	     *
+	     * _.has(object, 'a.b.c');
+	     * // => true
+	     *
+	     * _.has(object, ['a', 'b', 'c']);
 	     * // => true
 	     */
-	    function has(object, key) {
-	      return object ? hasOwnProperty.call(object, key) : false;
+	    function has(object, path) {
+	      if (object == null) {
+	        return false;
+	      }
+	      var result = hasOwnProperty.call(object, path);
+	      if (!result && !isKey(path)) {
+	        path = toPath(path);
+	        object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+	        path = last(path);
+	        result = object != null && hasOwnProperty.call(object, path);
+	      }
+	      return result;
 	    }
 
 	    /**
@@ -31262,7 +31415,7 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Object
-	     * @param {Object} object The object to inspect.
+	     * @param {Object} object The object to query.
 	     * @returns {Array} Returns the array of property names.
 	     * @example
 	     *
@@ -31285,7 +31438,7 @@ var ripple =
 	            length = object.length;
 	      }
 	      if ((typeof Ctor == 'function' && Ctor.prototype === object) ||
-	          (typeof object != 'function' && (length && isLength(length)))) {
+	          (typeof object != 'function' && isLength(length))) {
 	        return shimKeys(object);
 	      }
 	      return isObject(object) ? nativeKeys(object) : [];
@@ -31299,7 +31452,7 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Object
-	     * @param {Object} object The object to inspect.
+	     * @param {Object} object The object to query.
 	     * @returns {Array} Returns the array of property names.
 	     * @example
 	     *
@@ -31345,7 +31498,7 @@ var ripple =
 	    /**
 	     * Creates an object with the same keys as `object` and values generated by
 	     * running each own enumerable property of `object` through `iteratee`. The
-	     * iteratee function is bound to `thisArg` and invoked with three arguments;
+	     * iteratee function is bound to `thisArg` and invoked with three arguments:
 	     * (value, key, object).
 	     *
 	     * If a property name is provided for `iteratee` the created `_.property`
@@ -31400,14 +31553,14 @@ var ripple =
 	     * provided it is invoked to produce the merged values of the destination and
 	     * source properties. If `customizer` returns `undefined` merging is handled
 	     * by the method instead. The `customizer` is bound to `thisArg` and invoked
-	     * with five arguments; (objectValue, sourceValue, key, object, source).
+	     * with five arguments: (objectValue, sourceValue, key, object, source).
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Object
 	     * @param {Object} object The destination object.
 	     * @param {...Object} [sources] The source objects.
-	     * @param {Function} [customizer] The function to customize merging properties.
+	     * @param {Function} [customizer] The function to customize assigned values.
 	     * @param {*} [thisArg] The `this` binding of `customizer`.
 	     * @returns {Object} Returns `object`.
 	     * @example
@@ -31449,7 +31602,7 @@ var ripple =
 	     * Property names may be specified as individual arguments or as arrays of
 	     * property names. If `predicate` is provided it is invoked for each property
 	     * of `object` omitting the properties `predicate` returns truthy for. The
-	     * predicate is bound to `thisArg` and invoked with three arguments;
+	     * predicate is bound to `thisArg` and invoked with three arguments:
 	     * (value, key, object).
 	     *
 	     * @static
@@ -31471,19 +31624,19 @@ var ripple =
 	     * _.omit(object, _.isNumber);
 	     * // => { 'user': 'fred' }
 	     */
-	    function omit(object, predicate, thisArg) {
+	    var omit = restParam(function(object, props) {
 	      if (object == null) {
 	        return {};
 	      }
-	      if (typeof predicate != 'function') {
-	        var props = arrayMap(baseFlatten(arguments, false, false, 1), String);
+	      if (typeof props[0] != 'function') {
+	        var props = arrayMap(baseFlatten(props), String);
 	        return pickByArray(object, baseDifference(keysIn(object), props));
 	      }
-	      predicate = bindCallback(predicate, thisArg, 3);
+	      var predicate = bindCallback(props[0], props[1], 3);
 	      return pickByCallback(object, function(value, key, object) {
 	        return !predicate(value, key, object);
 	      });
-	    }
+	    });
 
 	    /**
 	     * Creates a two dimensional array of the key-value pairs for `object`,
@@ -31492,7 +31645,7 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Object
-	     * @param {Object} object The object to inspect.
+	     * @param {Object} object The object to query.
 	     * @returns {Array} Returns the new array of key-value pairs.
 	     * @example
 	     *
@@ -31517,7 +31670,7 @@ var ripple =
 	     * names may be specified as individual arguments or as arrays of property
 	     * names. If `predicate` is provided it is invoked for each property of `object`
 	     * picking the properties `predicate` returns truthy for. The predicate is
-	     * bound to `thisArg` and invoked with three arguments; (value, key, object).
+	     * bound to `thisArg` and invoked with three arguments: (value, key, object).
 	     *
 	     * @static
 	     * @memberOf _
@@ -31538,51 +31691,103 @@ var ripple =
 	     * _.pick(object, _.isString);
 	     * // => { 'user': 'fred' }
 	     */
-	    function pick(object, predicate, thisArg) {
+	    var pick = restParam(function(object, props) {
 	      if (object == null) {
 	        return {};
 	      }
-	      return typeof predicate == 'function'
-	        ? pickByCallback(object, bindCallback(predicate, thisArg, 3))
-	        : pickByArray(object, baseFlatten(arguments, false, false, 1));
-	    }
+	      return typeof props[0] == 'function'
+	        ? pickByCallback(object, bindCallback(props[0], props[1], 3))
+	        : pickByArray(object, baseFlatten(props));
+	    });
 
 	    /**
-	     * Resolves the value of property `key` on `object`. If the value of `key` is
-	     * a function it is invoked with the `this` binding of `object` and its result
-	     * is returned, else the property value is returned. If the property value is
-	     * `undefined` the `defaultValue` is used in its place.
+	     * This method is like `_.get` except that if the resolved value is a function
+	     * it is invoked with the `this` binding of its parent object and its result
+	     * is returned.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Object
 	     * @param {Object} object The object to query.
-	     * @param {string} key The key of the property to resolve.
-	     * @param {*} [defaultValue] The value returned if the property value
-	     *  resolves to `undefined`.
+	     * @param {Array|string} path The path of the property to resolve.
+	     * @param {*} [defaultValue] The value returned if the resolved value is `undefined`.
 	     * @returns {*} Returns the resolved value.
 	     * @example
 	     *
-	     * var object = { 'user': 'fred', 'age': _.constant(40) };
+	     * var object = { 'a': [{ 'b': { 'c1': 3, 'c2': _.constant(4) } }] };
 	     *
-	     * _.result(object, 'user');
-	     * // => 'fred'
+	     * _.result(object, 'a[0].b.c1');
+	     * // => 3
 	     *
-	     * _.result(object, 'age');
-	     * // => 40
+	     * _.result(object, 'a[0].b.c2');
+	     * // => 4
 	     *
-	     * _.result(object, 'status', 'busy');
-	     * // => 'busy'
+	     * _.result(object, 'a.b.c', 'default');
+	     * // => 'default'
 	     *
-	     * _.result(object, 'status', _.constant('busy'));
-	     * // => 'busy'
+	     * _.result(object, 'a.b.c', _.constant('default'));
+	     * // => 'default'
 	     */
-	    function result(object, key, defaultValue) {
-	      var value = object == null ? undefined : object[key];
-	      if (typeof value == 'undefined') {
-	        value = defaultValue;
+	    function result(object, path, defaultValue) {
+	      var result = object == null ? undefined : object[path];
+	      if (result === undefined) {
+	        if (object != null && !isKey(path, object)) {
+	          path = toPath(path);
+	          object = path.length == 1 ? object : baseGet(object, baseSlice(path, 0, -1));
+	          result = object == null ? undefined : object[last(path)];
+	        }
+	        result = result === undefined ? defaultValue : result;
 	      }
-	      return isFunction(value) ? value.call(object) : value;
+	      return isFunction(result) ? result.call(object) : result;
+	    }
+
+	    /**
+	     * Sets the property value of `path` on `object`. If a portion of `path`
+	     * does not exist it is created.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Object
+	     * @param {Object} object The object to augment.
+	     * @param {Array|string} path The path of the property to set.
+	     * @param {*} value The value to set.
+	     * @returns {Object} Returns `object`.
+	     * @example
+	     *
+	     * var object = { 'a': [{ 'b': { 'c': 3 } }] };
+	     *
+	     * _.set(object, 'a[0].b.c', 4);
+	     * console.log(object.a[0].b.c);
+	     * // => 4
+	     *
+	     * _.set(object, 'x[0].y.z', 5);
+	     * console.log(object.x[0].y.z);
+	     * // => 5
+	     */
+	    function set(object, path, value) {
+	      if (object == null) {
+	        return object;
+	      }
+	      var pathKey = (path + '');
+	      path = (object[pathKey] != null || isKey(path, object)) ? [pathKey] : toPath(path);
+
+	      var index = -1,
+	          length = path.length,
+	          endIndex = length - 1,
+	          nested = object;
+
+	      while (nested != null && ++index < length) {
+	        var key = path[index];
+	        if (isObject(nested)) {
+	          if (index == endIndex) {
+	            nested[key] = value;
+	          } else if (nested[key] == null) {
+	            nested[key] = isIndex(path[index + 1]) ? [] : {};
+	          }
+	        }
+	        nested = nested[key];
+	      }
+	      return object;
 	    }
 
 	    /**
@@ -31590,7 +31795,7 @@ var ripple =
 	     * `accumulator` object which is the result of running each of its own enumerable
 	     * properties through `iteratee`, with each invocation potentially mutating
 	     * the `accumulator` object. The `iteratee` is bound to `thisArg` and invoked
-	     * with four arguments; (accumulator, value, key, object). Iterator functions
+	     * with four arguments: (accumulator, value, key, object). Iteratee functions
 	     * may exit iteration early by explicitly returning `false`.
 	     *
 	     * @static
@@ -31733,7 +31938,7 @@ var ripple =
 	      } else {
 	        end = +end || 0;
 	      }
-	      return value >= start && value < end;
+	      return value >= nativeMin(start, end) && value < nativeMax(start, end);
 	    }
 
 	    /**
@@ -31801,8 +32006,7 @@ var ripple =
 	    /*------------------------------------------------------------------------*/
 
 	    /**
-	     * Converts `string` to camel case.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/CamelCase) for more details.
+	     * Converts `string` to [camel case](https://en.wikipedia.org/wiki/CamelCase).
 	     *
 	     * @static
 	     * @memberOf _
@@ -31844,9 +32048,8 @@ var ripple =
 	    }
 
 	    /**
-	     * Deburrs `string` by converting latin-1 supplementary letters to basic latin letters.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)#Character_table)
-	     * for more details.
+	     * Deburrs `string` by converting [latin-1 supplementary letters](https://en.wikipedia.org/wiki/Latin-1_Supplement_(Unicode_block)#Character_table)
+	     * to basic latin letters and removing [combining diacritical marks](https://en.wikipedia.org/wiki/Combining_Diacritical_Marks).
 	     *
 	     * @static
 	     * @memberOf _
@@ -31860,7 +32063,7 @@ var ripple =
 	     */
 	    function deburr(string) {
 	      string = baseToString(string);
-	      return string && string.replace(reLatin1, deburrLetter);
+	      return string && string.replace(reLatin1, deburrLetter).replace(reComboMark, '');
 	    }
 
 	    /**
@@ -31889,7 +32092,7 @@ var ripple =
 	      target = (target + '');
 
 	      var length = string.length;
-	      position = typeof position == 'undefined'
+	      position = position === undefined
 	        ? length
 	        : nativeMin(position < 0 ? 0 : (+position || 0), length);
 
@@ -31911,13 +32114,13 @@ var ripple =
 	     * (under "semi-related fun fact") for more details.
 	     *
 	     * Backticks are escaped because in Internet Explorer < 9, they can break out
-	     * of attribute values or HTML comments. See [#102](https://html5sec.org/#102),
-	     * [#108](https://html5sec.org/#108), and [#133](https://html5sec.org/#133) of
-	     * the [HTML5 Security Cheatsheet](https://html5sec.org/) for more details.
-	     *
-	     * When working with HTML you should always quote attribute values to reduce
-	     * XSS vectors. See [Ryan Grove's article](http://wonko.com/post/html-escaping)
+	     * of attribute values or HTML comments. See [#59](https://html5sec.org/#59),
+	     * [#102](https://html5sec.org/#102), [#108](https://html5sec.org/#108), and
+	     * [#133](https://html5sec.org/#133) of the [HTML5 Security Cheatsheet](https://html5sec.org/)
 	     * for more details.
+	     *
+	     * When working with HTML you should always [quote attribute values](http://wonko.com/post/html-escaping)
+	     * to reduce XSS vectors.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31938,8 +32141,8 @@ var ripple =
 	    }
 
 	    /**
-	     * Escapes the `RegExp` special characters "\", "^", "$", ".", "|", "?", "*",
-	     * "+", "(", ")", "[", "]", "{" and "}" in `string`.
+	     * Escapes the `RegExp` special characters "\", "/", "^", "$", ".", "|", "?",
+	     * "*", "+", "(", ")", "[", "]", "{" and "}" in `string`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -31949,7 +32152,7 @@ var ripple =
 	     * @example
 	     *
 	     * _.escapeRegExp('[lodash](https://lodash.com/)');
-	     * // => '\[lodash\]\(https://lodash\.com/\)'
+	     * // => '\[lodash\]\(https:\/\/lodash\.com\/\)'
 	     */
 	    function escapeRegExp(string) {
 	      string = baseToString(string);
@@ -31959,9 +32162,7 @@ var ripple =
 	    }
 
 	    /**
-	     * Converts `string` to kebab case.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/Letter_case#Special_case_styles) for
-	     * more details.
+	     * Converts `string` to [kebab case](https://en.wikipedia.org/wiki/Letter_case#Special_case_styles).
 	     *
 	     * @static
 	     * @memberOf _
@@ -31984,9 +32185,8 @@ var ripple =
 	    });
 
 	    /**
-	     * Pads `string` on the left and right sides if it is shorter then the given
-	     * padding length. The `chars` string may be truncated if the number of padding
-	     * characters can't be evenly divided by the padding length.
+	     * Pads `string` on the left and right sides if it is shorter than `length`.
+	     * Padding characters are truncated if they can't be evenly divided by `length`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -32018,14 +32218,13 @@ var ripple =
 	          leftLength = floor(mid),
 	          rightLength = ceil(mid);
 
-	      chars = createPad('', rightLength, chars);
+	      chars = createPadding('', rightLength, chars);
 	      return chars.slice(0, leftLength) + string + chars;
 	    }
 
 	    /**
-	     * Pads `string` on the left side if it is shorter then the given padding
-	     * length. The `chars` string may be truncated if the number of padding
-	     * characters exceeds the padding length.
+	     * Pads `string` on the left side if it is shorter than `length`. Padding
+	     * characters are truncated if they exceed `length`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -32045,15 +32244,11 @@ var ripple =
 	     * _.padLeft('abc', 3);
 	     * // => 'abc'
 	     */
-	    function padLeft(string, length, chars) {
-	      string = baseToString(string);
-	      return string && (createPad(string, length, chars) + string);
-	    }
+	    var padLeft = createPadDir();
 
 	    /**
-	     * Pads `string` on the right side if it is shorter then the given padding
-	     * length. The `chars` string may be truncated if the number of padding
-	     * characters exceeds the padding length.
+	     * Pads `string` on the right side if it is shorter than `length`. Padding
+	     * characters are truncated if they exceed `length`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -32073,18 +32268,15 @@ var ripple =
 	     * _.padRight('abc', 3);
 	     * // => 'abc'
 	     */
-	    function padRight(string, length, chars) {
-	      string = baseToString(string);
-	      return string && (string + createPad(string, length, chars));
-	    }
+	    var padRight = createPadDir(true);
 
 	    /**
 	     * Converts `string` to an integer of the specified radix. If `radix` is
 	     * `undefined` or `0`, a `radix` of `10` is used unless `value` is a hexadecimal,
 	     * in which case a `radix` of `16` is used.
 	     *
-	     * **Note:** This method aligns with the ES5 implementation of `parseInt`.
-	     * See the [ES5 spec](https://es5.github.io/#E) for more details.
+	     * **Note:** This method aligns with the [ES5 implementation](https://es5.github.io/#E)
+	     * of `parseInt`.
 	     *
 	     * @static
 	     * @memberOf _
@@ -32119,7 +32311,7 @@ var ripple =
 	          radix = +radix;
 	        }
 	        string = trim(string);
-	        return nativeParseInt(string, radix || (reHexPrefix.test(string) ? 16 : 10));
+	        return nativeParseInt(string, radix || (reHasHexPrefix.test(string) ? 16 : 10));
 	      };
 	    }
 
@@ -32164,8 +32356,7 @@ var ripple =
 	    }
 
 	    /**
-	     * Converts `string` to snake case.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/Snake_case) for more details.
+	     * Converts `string` to [snake case](https://en.wikipedia.org/wiki/Snake_case).
 	     *
 	     * @static
 	     * @memberOf _
@@ -32188,9 +32379,7 @@ var ripple =
 	    });
 
 	    /**
-	     * Converts `string` to start case.
-	     * See [Wikipedia](https://en.wikipedia.org/wiki/Letter_case#Stylistic_or_specialised_usage)
-	     * for more details.
+	     * Converts `string` to [start case](https://en.wikipedia.org/wiki/Letter_case#Stylistic_or_specialised_usage).
 	     *
 	     * @static
 	     * @memberOf _
@@ -32249,9 +32438,9 @@ var ripple =
 	     * properties may be accessed as free variables in the template. If a setting
 	     * object is provided it takes precedence over `_.templateSettings` values.
 	     *
-	     * **Note:** In the development build `_.template` utilizes sourceURLs for easier debugging.
-	     * See the [HTML5 Rocks article on sourcemaps](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/#toc-sourceurl)
-	     * for more details.
+	     * **Note:** In the development build `_.template` utilizes
+	     * [sourceURLs](http://www.html5rocks.com/en/tutorials/developertools/sourcemaps/#toc-sourceurl)
+	     * for easier debugging.
 	     *
 	     * For more information on precompiling templates see
 	     * [lodash's custom builds documentation](https://lodash.com/custom-builds).
@@ -32347,9 +32536,9 @@ var ripple =
 	        options = otherOptions = null;
 	      }
 	      string = baseToString(string);
-	      options = baseAssign(baseAssign({}, otherOptions || options), settings, assignOwnDefaults);
+	      options = assignWith(baseAssign({}, otherOptions || options), settings, assignOwnDefaults);
 
-	      var imports = baseAssign(baseAssign({}, options.imports), settings.imports, assignOwnDefaults),
+	      var imports = assignWith(baseAssign({}, options.imports), settings.imports, assignOwnDefaults),
 	          importsKeys = keys(imports),
 	          importsValues = baseValues(imports, importsKeys);
 
@@ -32463,7 +32652,7 @@ var ripple =
 	     * // => 'abc'
 	     *
 	     * _.map(['  foo  ', '  bar  '], _.trim);
-	     * // => ['foo', 'bar]
+	     * // => ['foo', 'bar']
 	     */
 	    function trim(string, chars, guard) {
 	      var value = string;
@@ -32571,7 +32760,7 @@ var ripple =
 	     *   'length': 24,
 	     *   'separator': /,? +/
 	     * });
-	     * //=> 'hi-diddly-ho there...'
+	     * // => 'hi-diddly-ho there...'
 	     *
 	     * _.trunc('hi-diddly-ho there, neighborino', {
 	     *   'omission': ' [...]'
@@ -32690,7 +32879,7 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Utility
-	     * @param {*} func The function to attempt.
+	     * @param {Function} func The function to attempt.
 	     * @returns {*} Returns the `func` result or error object.
 	     * @example
 	     *
@@ -32703,20 +32892,13 @@ var ripple =
 	     *   elements = [];
 	     * }
 	     */
-	    function attempt() {
-	      var func = arguments[0],
-	          length = arguments.length,
-	          args = Array(length ? (length - 1) : 0);
-
-	      while (--length > 0) {
-	        args[length - 1] = arguments[length];
-	      }
+	    var attempt = restParam(function(func, args) {
 	      try {
 	        return func.apply(undefined, args);
 	      } catch(e) {
 	        return isError(e) ? e : new Error(e);
 	      }
-	    }
+	    });
 
 	    /**
 	     * Creates a function that invokes `func` with the `this` binding of `thisArg`
@@ -32760,9 +32942,7 @@ var ripple =
 	      if (guard && isIterateeCall(func, thisArg, guard)) {
 	        thisArg = null;
 	      }
-	      return isObjectLike(func)
-	        ? matches(func)
-	        : baseCallback(func, thisArg);
+	      return baseCallback(func, thisArg);
 	    }
 
 	    /**
@@ -32836,7 +33016,7 @@ var ripple =
 	    }
 
 	    /**
-	     * Creates a function which compares the property value of `key` on a given
+	     * Creates a function which compares the property value of `path` on a given
 	     * object to `value`.
 	     *
 	     * **Note:** This method supports comparing arrays, booleans, `Date` objects,
@@ -32846,33 +33026,88 @@ var ripple =
 	     * @static
 	     * @memberOf _
 	     * @category Utility
-	     * @param {string} key The key of the property to get.
+	     * @param {Array|string} path The path of the property to get.
 	     * @param {*} value The value to compare.
 	     * @returns {Function} Returns the new function.
 	     * @example
 	     *
 	     * var users = [
 	     *   { 'user': 'barney' },
-	     *   { 'user': 'fred' },
-	     *   { 'user': 'pebbles' }
+	     *   { 'user': 'fred' }
 	     * ];
 	     *
 	     * _.find(users, _.matchesProperty('user', 'fred'));
-	     * // => { 'user': 'fred', 'age': 40 }
+	     * // => { 'user': 'fred' }
 	     */
-	    function matchesProperty(key, value) {
-	      return baseMatchesProperty(key + '', baseClone(value, true));
+	    function matchesProperty(path, value) {
+	      return baseMatchesProperty(path, baseClone(value, true));
 	    }
+
+	    /**
+	     * Creates a function which invokes the method at `path` on a given object.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Utility
+	     * @param {Array|string} path The path of the method to invoke.
+	     * @returns {Function} Returns the new function.
+	     * @example
+	     *
+	     * var objects = [
+	     *   { 'a': { 'b': { 'c': _.constant(2) } } },
+	     *   { 'a': { 'b': { 'c': _.constant(1) } } }
+	     * ];
+	     *
+	     * _.map(objects, _.method('a.b.c'));
+	     * // => [2, 1]
+	     *
+	     * _.invoke(_.sortBy(objects, _.method(['a', 'b', 'c'])), 'a.b.c');
+	     * // => [1, 2]
+	     */
+	    var method = restParam(function(path, args) {
+	      return function(object) {
+	        return invokePath(object, path, args);
+	      }
+	    });
+
+	    /**
+	     * The opposite of `_.method`; this method creates a function which invokes
+	     * the method at a given path on `object`.
+	     *
+	     * @static
+	     * @memberOf _
+	     * @category Utility
+	     * @param {Object} object The object to query.
+	     * @returns {Function} Returns the new function.
+	     * @example
+	     *
+	     * var array = _.times(3, _.constant),
+	     *     object = { 'a': array, 'b': array, 'c': array };
+	     *
+	     * _.map(['a[2]', 'c[0]'], _.methodOf(object));
+	     * // => [2, 0]
+	     *
+	     * _.map([['a', '2'], ['c', '0']], _.methodOf(object));
+	     * // => [2, 0]
+	     */
+	    var methodOf = restParam(function(object, args) {
+	      return function(path) {
+	        return invokePath(object, path, args);
+	      };
+	    });
 
 	    /**
 	     * Adds all own enumerable function properties of a source object to the
 	     * destination object. If `object` is a function then methods are added to
 	     * its prototype as well.
 	     *
+	     * **Note:** Use `_.runInContext` to create a pristine `lodash` function to
+	     * avoid conflicts caused by modifying the original.
+	     *
 	     * @static
 	     * @memberOf _
 	     * @category Utility
-	     * @param {Function|Object} [object=this] object The destination object.
+	     * @param {Function|Object} [object=lodash] The destination object.
 	     * @param {Object} source The object of functions to add.
 	     * @param {Object} [options] The options object.
 	     * @param {boolean} [options.chain=true] Specify whether the functions added
@@ -32886,7 +33121,7 @@ var ripple =
 	     *   });
 	     * }
 	     *
-	     * // use `_.runInContext` to avoid potential conflicts (esp. in Node.js)
+	     * // use `_.runInContext` to avoid conflicts (esp. in Node.js)
 	     * var _ = require('lodash').runInContext();
 	     *
 	     * _.mixin({ 'vowels': vowels });
@@ -32936,12 +33171,10 @@ var ripple =
 	            return function() {
 	              var chainAll = this.__chain__;
 	              if (chain || chainAll) {
-	                var result = object(this.__wrapped__);
-	                (result.__actions__ = arrayCopy(this.__actions__)).push({
-	                  'func': func,
-	                  'args': arguments,
-	                  'thisArg': object
-	                });
+	                var result = object(this.__wrapped__),
+	                    actions = result.__actions__ = arrayCopy(this.__actions__);
+
+	                actions.push({ 'func': func, 'args': arguments, 'thisArg': object });
 	                result.__chain__ = chainAll;
 	                return result;
 	              }
@@ -32991,61 +33224,61 @@ var ripple =
 	    }
 
 	    /**
-	     * Creates a function which returns the property value of `key` on a given object.
+	     * Creates a function which returns the property value at `path` on a
+	     * given object.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Utility
-	     * @param {string} key The key of the property to get.
+	     * @param {Array|string} path The path of the property to get.
 	     * @returns {Function} Returns the new function.
 	     * @example
 	     *
-	     * var users = [
-	     *   { 'user': 'fred' },
-	     *   { 'user': 'barney' }
+	     * var objects = [
+	     *   { 'a': { 'b': { 'c': 2 } } },
+	     *   { 'a': { 'b': { 'c': 1 } } }
 	     * ];
 	     *
-	     * var getName = _.property('user');
+	     * _.map(objects, _.property('a.b.c'));
+	     * // => [2, 1]
 	     *
-	     * _.map(users, getName);
-	     * // => ['fred', barney']
-	     *
-	     * _.pluck(_.sortBy(users, getName), 'user');
-	     * // => ['barney', 'fred']
+	     * _.pluck(_.sortBy(objects, _.property(['a', 'b', 'c'])), 'a.b.c');
+	     * // => [1, 2]
 	     */
-	    function property(key) {
-	      return baseProperty(key + '');
+	    function property(path) {
+	      return isKey(path) ? baseProperty(path) : basePropertyDeep(path);
 	    }
 
 	    /**
-	     * The inverse of `_.property`; this method creates a function which returns
-	     * the property value of a given key on `object`.
+	     * The opposite of `_.property`; this method creates a function which returns
+	     * the property value at a given path on `object`.
 	     *
 	     * @static
 	     * @memberOf _
 	     * @category Utility
-	     * @param {Object} object The object to inspect.
+	     * @param {Object} object The object to query.
 	     * @returns {Function} Returns the new function.
 	     * @example
 	     *
-	     * var object = { 'a': 3, 'b': 1, 'c': 2 };
+	     * var array = [0, 1, 2],
+	     *     object = { 'a': array, 'b': array, 'c': array };
 	     *
-	     * _.map(['a', 'c'], _.propertyOf(object));
-	     * // => [3, 2]
+	     * _.map(['a[2]', 'c[0]'], _.propertyOf(object));
+	     * // => [2, 0]
 	     *
-	     * _.sortBy(['a', 'b', 'c'], _.propertyOf(object));
-	     * // => ['b', 'c', 'a']
+	     * _.map([['a', '2'], ['c', '0']], _.propertyOf(object));
+	     * // => [2, 0]
 	     */
 	    function propertyOf(object) {
-	      return function(key) {
-	        return object == null ? undefined : object[key];
+	      return function(path) {
+	        return baseGet(object, toPath(path), path + '');
 	      };
 	    }
 
 	    /**
 	     * Creates an array of numbers (positive and/or negative) progressing from
 	     * `start` up to, but not including, `end`. If `end` is not specified it is
-	     * set to `start` with `start` then set to `0`. If `start` is less than `end`
+	     * set to `start` with `start` then set to `0`. If `end` is less than `start`
 	     * a zero-length range is created unless a negative `step` is specified.
 	     *
 	     * @static
@@ -33121,7 +33354,7 @@ var ripple =
 	     * _.times(3, function(n) {
 	     *   mage.castSpell(n);
 	     * });
-	     * // => invokes `mage.castSpell(n)` three times with `n` of `0`, `1`, and `2` respectively
+	     * // => invokes `mage.castSpell(n)` three times with `n` of `0`, `1`, and `2`
 	     *
 	     * _.times(3, function(n) {
 	     *   this.cast(n);
@@ -33129,7 +33362,7 @@ var ripple =
 	     * // => also invokes `mage.castSpell(n)` three times
 	     */
 	    function times(n, iteratee, thisArg) {
-	      n = +n;
+	      n = floor(n);
 
 	      // Exit early to avoid a JSC JIT bug in Safari 8
 	      // where `Array(0)` is treated as `Array(1)`.
@@ -33188,7 +33421,7 @@ var ripple =
 	     * // => 10
 	     */
 	    function add(augend, addend) {
-	      return augend + addend;
+	      return (+augend || 0) + (+addend || 0);
 	    }
 
 	    /**
@@ -33196,16 +33429,16 @@ var ripple =
 	     * `-Infinity` is returned. If an iteratee function is provided it is invoked
 	     * for each value in `collection` to generate the criterion by which the value
 	     * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
-	     * arguments; (value, index, collection).
+	     * arguments: (value, index, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -33232,11 +33465,11 @@ var ripple =
 	     * _.max(users, function(chr) {
 	     *   return chr.age;
 	     * });
-	     * // => { 'user': 'fred', 'age': 40 };
+	     * // => { 'user': 'fred', 'age': 40 }
 	     *
 	     * // using the `_.property` callback shorthand
 	     * _.max(users, 'age');
-	     * // => { 'user': 'fred', 'age': 40 };
+	     * // => { 'user': 'fred', 'age': 40 }
 	     */
 	    var max = createExtremum(arrayMax);
 
@@ -33245,16 +33478,16 @@ var ripple =
 	     * `Infinity` is returned. If an iteratee function is provided it is invoked
 	     * for each value in `collection` to generate the criterion by which the value
 	     * is ranked. The `iteratee` is bound to `thisArg` and invoked with three
-	     * arguments; (value, index, collection).
+	     * arguments: (value, index, collection).
 	     *
-	     * If a property name is provided for `predicate` the created `_.property`
+	     * If a property name is provided for `iteratee` the created `_.property`
 	     * style callback returns the property value of the given element.
 	     *
 	     * If a value is also provided for `thisArg` the created `_.matchesProperty`
 	     * style callback returns `true` for elements that have a matching property
 	     * value, else `false`.
 	     *
-	     * If an object is provided for `predicate` the created `_.matches` style
+	     * If an object is provided for `iteratee` the created `_.matches` style
 	     * callback returns `true` for elements that have the properties of the given
 	     * object, else `false`.
 	     *
@@ -33281,11 +33514,11 @@ var ripple =
 	     * _.min(users, function(chr) {
 	     *   return chr.age;
 	     * });
-	     * // => { 'user': 'barney', 'age': 36 };
+	     * // => { 'user': 'barney', 'age': 36 }
 	     *
 	     * // using the `_.property` callback shorthand
 	     * _.min(users, 'age');
-	     * // => { 'user': 'barney', 'age': 36 };
+	     * // => { 'user': 'barney', 'age': 36 }
 	     */
 	    var min = createExtremum(arrayMin, true);
 
@@ -33296,26 +33529,45 @@ var ripple =
 	     * @memberOf _
 	     * @category Math
 	     * @param {Array|Object|string} collection The collection to iterate over.
+	     * @param {Function|Object|string} [iteratee] The function invoked per iteration.
+	     * @param {*} [thisArg] The `this` binding of `iteratee`.
 	     * @returns {number} Returns the sum.
 	     * @example
 	     *
-	     * _.sum([4, 6, 2]);
-	     * // => 12
+	     * _.sum([4, 6]);
+	     * // => 10
 	     *
-	     * _.sum({ 'a': 4, 'b': 6, 'c': 2 });
-	     * // => 12
+	     * _.sum({ 'a': 4, 'b': 6 });
+	     * // => 10
+	     *
+	     * var objects = [
+	     *   { 'n': 4 },
+	     *   { 'n': 6 }
+	     * ];
+	     *
+	     * _.sum(objects, function(object) {
+	     *   return object.n;
+	     * });
+	     * // => 10
+	     *
+	     * // using the `_.property` callback shorthand
+	     * _.sum(objects, 'n');
+	     * // => 10
 	     */
-	    function sum(collection) {
-	      if (!isArray(collection)) {
-	        collection = toIterable(collection);
+	    function sum(collection, iteratee, thisArg) {
+	      if (thisArg && isIterateeCall(collection, iteratee, thisArg)) {
+	        iteratee = null;
 	      }
-	      var length = collection.length,
-	          result = 0;
+	      var func = getCallback(),
+	          noIteratee = iteratee == null;
 
-	      while (length--) {
-	        result += +collection[length] || 0;
+	      if (!(func === baseCallback && noIteratee)) {
+	        noIteratee = false;
+	        iteratee = func(iteratee, thisArg, 3);
 	      }
-	      return result;
+	      return noIteratee
+	        ? arraySum(isArray(collection) ? collection : toIterable(collection))
+	        : baseSum(collection, iteratee);
 	    }
 
 	    /*------------------------------------------------------------------------*/
@@ -33395,6 +33647,8 @@ var ripple =
 	    lodash.matchesProperty = matchesProperty;
 	    lodash.memoize = memoize;
 	    lodash.merge = merge;
+	    lodash.method = method;
+	    lodash.methodOf = methodOf;
 	    lodash.mixin = mixin;
 	    lodash.negate = negate;
 	    lodash.omit = omit;
@@ -33414,6 +33668,8 @@ var ripple =
 	    lodash.reject = reject;
 	    lodash.remove = remove;
 	    lodash.rest = rest;
+	    lodash.restParam = restParam;
+	    lodash.set = set;
 	    lodash.shuffle = shuffle;
 	    lodash.slice = slice;
 	    lodash.sortBy = sortBy;
@@ -33482,6 +33738,7 @@ var ripple =
 	    lodash.findLastKey = findLastKey;
 	    lodash.findWhere = findWhere;
 	    lodash.first = first;
+	    lodash.get = get;
 	    lodash.has = has;
 	    lodash.identity = identity;
 	    lodash.includes = includes;
@@ -33670,7 +33927,7 @@ var ripple =
 	    // Add `LazyWrapper` methods for `_.pluck` and `_.where`.
 	    arrayEach(['pluck', 'where'], function(methodName, index) {
 	      var operationName = index ? 'filter' : 'map',
-	          createCallback = index ? baseMatches : baseProperty;
+	          createCallback = index ? baseMatches : property;
 
 	      LazyWrapper.prototype[methodName] = function(value) {
 	        return this[operationName](createCallback(value));
@@ -33692,7 +33949,7 @@ var ripple =
 	      start = start == null ? 0 : (+start || 0);
 	      var result = start < 0 ? this.takeRight(-start) : this.drop(start);
 
-	      if (typeof end != 'undefined') {
+	      if (end !== undefined) {
 	        end = (+end || 0);
 	        result = end < 0 ? result.dropRight(-end) : result.take(end - start);
 	      }
@@ -33705,8 +33962,11 @@ var ripple =
 
 	    // Add `LazyWrapper` methods to `lodash.prototype`.
 	    baseForOwn(LazyWrapper.prototype, function(func, methodName) {
-	      var lodashFunc = lodash[methodName],
-	          checkIteratee = /^(?:filter|map|reject)|While$/.test(methodName),
+	      var lodashFunc = lodash[methodName];
+	      if (!lodashFunc) {
+	        return;
+	      }
+	      var checkIteratee = /^(?:filter|map|reject)|While$/.test(methodName),
 	          retUnwrapped = /^(?:first|last)$/.test(methodName);
 
 	      lodash.prototype[methodName] = function() {
@@ -33720,7 +33980,7 @@ var ripple =
 	            useLazy = isLazy || isArray(value);
 
 	        if (useLazy && checkIteratee && typeof iteratee == 'function' && iteratee.length != 1) {
-	          // avoid lazy use if the iteratee has a `length` other than `1`
+	          // avoid lazy use if the iteratee has a "length" value other than `1`
 	          isLazy = useLazy = false;
 	        }
 	        var onlyLazy = isLazy && !isHybrid;
@@ -33764,6 +34024,19 @@ var ripple =
 	        });
 	      };
 	    });
+
+	    // Map minified function names to their real names.
+	    baseForOwn(LazyWrapper.prototype, function(func, methodName) {
+	      var lodashFunc = lodash[methodName];
+	      if (lodashFunc) {
+	        var key = lodashFunc.name,
+	            names = realNames[key] || (realNames[key] = []);
+
+	        names.push({ 'name': methodName, 'func': lodashFunc });
+	      }
+	    });
+
+	    realNames[createHybridWrapper(null, BIND_KEY_FLAG).name] = [{ 'name': 'wrapper', 'func': null }];
 
 	    // Add functions to the lazy wrapper.
 	    LazyWrapper.prototype.clone = lazyClone;
@@ -33823,10 +34096,10 @@ var ripple =
 	  }
 	}.call(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)(module), (function() { return this; }())))
 
 /***/ },
-/* 46 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var hasOwn = Object.prototype.hasOwnProperty;
@@ -33910,7 +34183,7 @@ var ripple =
 
 
 /***/ },
-/* 47 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () { // closure for web browsers
@@ -34132,6 +34405,7 @@ var ripple =
 	function use (self, hit) {
 	  shiftLU(self, hit)
 	  hit.lu = self._mru ++
+	  if (self._maxAge) hit.now = Date.now()
 	  self._lruList[hit.lu] = hit
 	}
 
@@ -34168,7 +34442,7 @@ var ripple =
 
 
 /***/ },
-/* 48 */
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, setImmediate) {/*!
@@ -35295,19 +35569,19 @@ var ripple =
 
 	}());
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61), __webpack_require__(69).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(57), __webpack_require__(63).setImmediate))
 
 /***/ },
-/* 49 */
+/* 47 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.0.3 https://github.com/MikeMcl/bignumber.js/LICENCE */
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.0.7 https://github.com/MikeMcl/bignumber.js/LICENCE */
 
 	;(function (global) {
 	    'use strict';
 
 	    /*
-	      bignumber.js v2.0.3
+	      bignumber.js v2.0.7
 	      A JavaScript library for arbitrary-precision arithmetic.
 	      https://github.com/MikeMcl/bignumber.js
 	      Copyright (c) 2015 Michael Mclaughlin <M8ch88l@gmail.com>
@@ -36139,10 +36413,12 @@ var ripple =
 	                    i = 0;
 	                    s += 2;
 
-	                    // Normalise xc and yc so highest order digit of yc is >= base/2
+	                    // Normalise xc and yc so highest order digit of yc is >= base / 2.
 
 	                    n = mathfloor( base / ( yc[0] + 1 ) );
 
+	                    // Not necessary, but to handle odd bases where yc[0] == ( base / 2 ) - 1.
+	                    // if ( n > 1 || n++ == 1 && yc[0] < base / 2 ) {
 	                    if ( n > 1 ) {
 	                        yc = multiply( yc, n, base );
 	                        xc = multiply( xc, n, base );
@@ -36160,6 +36436,8 @@ var ripple =
 	                    yz.unshift(0);
 	                    yc0 = yc[0];
 	                    if ( yc[1] >= base / 2 ) yc0++;
+	                    // Not necessary, but to prevent trial digit n > base, when using base 3.
+	                    // else if ( base == 3 && yc0 == 1 ) yc0 = 1 + 1e-15;
 
 	                    do {
 	                        n = 0;
@@ -36187,7 +36465,9 @@ var ripple =
 	                            //    6. If remainder > divisor: remainder -= divisor, n++
 
 	                            if ( n > 1 ) {
-	                                if ( n >= base ) n = base - 1;
+
+	                                // n may be > base only when base is 3.
+	                                if (n >= base) n = base - 1;
 
 	                                // product = divisor * trial digit.
 	                                prod = multiply( yc, n, base );
@@ -36195,58 +36475,66 @@ var ripple =
 	                                remL = rem.length;
 
 	                                // Compare product and remainder.
-	                                cmp = compare( prod, rem, prodL, remL );
-
-	                                // product > remainder.
-	                                if ( cmp == 1 ) {
+	                                // If product > remainder.
+	                                // Trial digit n too high.
+	                                // n is 1 too high about 5% of the time, and is not known to have
+	                                // ever been more than 1 too high.
+	                                while ( compare( prod, rem, prodL, remL ) == 1 ) {
 	                                    n--;
 
 	                                    // Subtract divisor from product.
 	                                    subtract( prod, yL < prodL ? yz : yc, prodL, base );
+	                                    prodL = prod.length;
+	                                    cmp = 1;
 	                                }
 	                            } else {
 
-	                                // cmp is -1.
-	                                // If n is 0, there is no need to compare yc and rem again
-	                                // below, so change cmp to 1 to avoid it.
-	                                // If n is 1, compare yc and rem again below.
-	                                if ( n == 0 ) cmp = n = 1;
+	                                // n is 0 or 1, cmp is -1.
+	                                // If n is 0, there is no need to compare yc and rem again below,
+	                                // so change cmp to 1 to avoid it.
+	                                // If n is 1, leave cmp as -1, so yc and rem are compared again.
+	                                if ( n == 0 ) {
+
+	                                    // divisor < remainder, so n must be at least 1.
+	                                    cmp = n = 1;
+	                                }
+
+	                                // product = divisor
 	                                prod = yc.slice();
+	                                prodL = prod.length;
 	                            }
 
-	                            prodL = prod.length;
 	                            if ( prodL < remL ) prod.unshift(0);
 
 	                            // Subtract product from remainder.
 	                            subtract( rem, prod, remL, base );
+	                            remL = rem.length;
 
-	                            // If product was < previous remainder.
+	                             // If product was < remainder.
 	                            if ( cmp == -1 ) {
-	                                remL = rem.length;
 
 	                                // Compare divisor and new remainder.
-	                                cmp = compare( yc, rem, yL, remL );
-
 	                                // If divisor < new remainder, subtract divisor from remainder.
-	                                if ( cmp < 1 ) {
+	                                // Trial digit n too low.
+	                                // n is 1 too low about 5% of the time, and very rarely 2 too low.
+	                                while ( compare( yc, rem, yL, remL ) < 1 ) {
 	                                    n++;
 
 	                                    // Subtract divisor from remainder.
 	                                    subtract( rem, yL < remL ? yz : yc, remL, base );
+	                                    remL = rem.length;
 	                                }
 	                            }
-	                            remL = rem.length;
 	                        } else if ( cmp === 0 ) {
 	                            n++;
 	                            rem = [0];
-	                        }
-	                        // if cmp === 1, n will be 0
+	                        } // else cmp === 1 and n will be 0
 
 	                        // Add the next digit, n, to the result array.
 	                        qc[i++] = n;
 
 	                        // Update the remainder.
-	                        if ( cmp && rem[0] ) {
+	                        if ( rem[0] ) {
 	                            rem[remL++] = xc[xi] || 0;
 	                        } else {
 	                            rem = [ xc[xi] ];
@@ -37973,16 +38261,16 @@ var ripple =
 
 
 /***/ },
-/* 50 */
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) {
 	  var sjcl = options.sjcl; // inject sjcl dependency
 
-	  var base58 = __webpack_require__(57)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(58)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(59)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(60)({ sjcl: options.sjcl });
+	  var base58 = __webpack_require__(53)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(54)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(55)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(56)({ sjcl: options.sjcl });
 
 	  function firstHalfOfSHA512(bytes) {
 	    return sjcl.bitArray.bitSlice(
@@ -38071,155 +38359,620 @@ var ripple =
 
 
 /***/ },
-/* 51 */
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(71);
-	exports.encode = exports.stringify = __webpack_require__(72);
+	var _ = __webpack_require__(43);
+	var assert = __webpack_require__(40);
+	var UInt160 = __webpack_require__(9).UInt160;
+	var Amount = __webpack_require__(3).Amount;
+	var Utils = __webpack_require__(50);
 
+	function assertValidNumber(number, message) {
+	  assert(!_.isNull(number) && !isNaN(number), message);
+	}
+
+	function assertValidLegOneOffer(legOneOffer, message) {
+	  assert(legOneOffer);
+	  assert.strictEqual(typeof legOneOffer, 'object', message);
+	  assert.strictEqual(typeof legOneOffer.TakerPays, 'object', message);
+	  assertValidNumber(legOneOffer.TakerGets, message);
+	}
+
+	function AutobridgeCalculator(currencyGets, currencyPays,
+	  legOneOffers, legTwoOffers) {
+	  this._currencyGets = currencyGets;
+	  this._currencyPays = currencyPays;
+	  this.legOneOffers = _.cloneDeep(legOneOffers);
+	  this.legTwoOffers = _.cloneDeep(legTwoOffers);
+
+	  this._ownerFundsLeftover = {};
+	}
+
+	/**
+	 * Calculates an ordered array of autobridged offers by quality
+	 *
+	 * @return {Array}
+	 */
+
+	AutobridgeCalculator.prototype.calculate = function() {
+	  var legOnePointer = 0;
+	  var legTwoPointer = 0;
+
+	  var offersAutobridged = [];
+
+	  this.clearOwnerFundsLeftover();
+
+	  while (this.legOneOffers[legOnePointer] && this.legTwoOffers[legTwoPointer]) {
+	    var legOneOffer = this.legOneOffers[legOnePointer];
+	    var legTwoOffer = this.legTwoOffers[legTwoPointer];
+	    var leftoverFunds = this.getLeftoverOwnerFunds(legOneOffer.Account);
+	    var autobridgedOffer;
+
+	    if (legOneOffer.Account === legTwoOffer.Account) {
+	      this.unclampLegOneOwnerFunds(legOneOffer);
+	    } else if (!legOneOffer.is_fully_funded && !leftoverFunds.is_zero()) {
+	      this.adjustLegOneFundedAmount(legOneOffer);
+	    }
+
+	    var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
+	    var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
+
+	    if (legOneTakerGetsFunded.is_zero()) {
+	      legOnePointer++;
+
+	      continue;
+	    }
+
+	    if (legTwoTakerPaysFunded.is_zero()) {
+	      legTwoPointer++;
+
+	      continue;
+	    }
+
+	    if (legOneTakerGetsFunded.compareTo(legTwoTakerPaysFunded) > 0) {
+	      autobridgedOffer = this.getAutobridgedOfferWithClampedLegOne(
+	        legOneOffer,
+	        legTwoOffer
+	      );
+
+	      legTwoPointer++;
+	    } else if (legTwoTakerPaysFunded.compareTo(legOneTakerGetsFunded) > 0) {
+	      autobridgedOffer = this.getAutobridgedOfferWithClampedLegTwo(
+	        legOneOffer,
+	        legTwoOffer
+	      );
+
+	      legOnePointer++;
+	    } else {
+	      autobridgedOffer = this.getAutobridgedOfferWithoutClamps(
+	        legOneOffer,
+	        legTwoOffer
+	      );
+
+	      legOnePointer++;
+	      legTwoPointer++;
+	    }
+
+	    offersAutobridged.push(autobridgedOffer);
+	  }
+
+	  return offersAutobridged;
+	};
+
+	/**
+	 * In this case, the output from leg one is greater than the input to leg two.
+	 * Therefore, we must effectively clamp leg one output to leg two input.
+	 *
+	 * @param {Object} legOneOffer
+	 * @param {Object} legTwoOffer
+	 *
+	 * @return {Object}
+	 */
+
+	AutobridgeCalculator.prototype.getAutobridgedOfferWithClampedLegOne =
+	function(legOneOffer, legTwoOffer) {
+	  var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
+	  var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
+	  var legOneQuality = Utils.getOfferQuality(legOneOffer, this._currencyGets);
+
+	  var autobridgedTakerGets = Utils.getOfferTakerGetsFunded(legTwoOffer);
+	  var autobridgedTakerPays = legTwoTakerPaysFunded.multiply(legOneQuality);
+
+	  if (legOneOffer.Account === legTwoOffer.Account) {
+	    var legOneTakerGets = Utils.getOfferTakerGets(legOneOffer);
+	    var updatedTakerGets = legOneTakerGets.subtract(legTwoTakerPaysFunded);
+
+	    this.setLegOneTakerGets(legOneOffer, updatedTakerGets);
+
+	    this.clampLegOneOwnerFunds(legOneOffer);
+	  } else {
+	    // Update funded amount since leg one offer was not completely consumed
+	    var updatedTakerGetsFunded = legOneTakerGetsFunded
+	      .subtract(legTwoTakerPaysFunded);
+
+	    this.setLegOneTakerGetsFunded(legOneOffer, updatedTakerGetsFunded);
+	  }
+
+	  return this.formatAutobridgedOffer(
+	    autobridgedTakerGets,
+	    autobridgedTakerPays
+	  );
+	};
+
+	/**
+	 * In this case, the input from leg two is greater than the output to leg one.
+	 * Therefore, we must effectively clamp leg two input to leg one output.
+	 *
+	 * @param {Object} legOneOffer
+	 * @param {Object} legTwoOffer
+	 *
+	 * @return {Object}
+	 */
+
+	AutobridgeCalculator.prototype.getAutobridgedOfferWithClampedLegTwo =
+	function(legOneOffer, legTwoOffer) {
+	  var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
+	  var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
+	  var legTwoQuality = Utils.getOfferQuality(legTwoOffer, this._currencyGets);
+
+	  var autobridgedTakerGets = legOneTakerGetsFunded.divide(legTwoQuality);
+	  var autobridgedTakerPays = Utils.getOfferTakerPaysFunded(legOneOffer);
+
+	  // Update funded amount since leg two offer was not completely consumed
+	  legTwoOffer.taker_gets_funded = Utils.getOfferTakerGetsFunded(legTwoOffer)
+	    .subtract(autobridgedTakerGets)
+	    .to_text();
+	  legTwoOffer.taker_pays_funded = legTwoTakerPaysFunded
+	    .subtract(legOneTakerGetsFunded)
+	    .to_text();
+
+	  return this.formatAutobridgedOffer(
+	    autobridgedTakerGets,
+	    autobridgedTakerPays
+	  );
+	};
+
+	/**
+	 * In this case, the output from leg one and the input to leg two are the same.
+	 * We do not need to clamp either.
+	 * @param {Object} legOneOffer
+	 * @param {Object} legTwoOffer
+	 *
+	 * @return {Object}
+	 */
+
+	AutobridgeCalculator.prototype.getAutobridgedOfferWithoutClamps =
+	function(legOneOffer, legTwoOffer) {
+	  var autobridgedTakerGets = Utils.getOfferTakerGetsFunded(legTwoOffer);
+	  var autobridgedTakerPays = Utils.getOfferTakerPaysFunded(legOneOffer);
+
+	  return this.formatAutobridgedOffer(
+	    autobridgedTakerGets,
+	    autobridgedTakerPays
+	  );
+	};
+
+	/**
+	 * Clear owner funds leftovers
+	 */
+
+	AutobridgeCalculator.prototype.clearOwnerFundsLeftover = function() {
+	  this._ownerFundsLeftover = {};
+	};
+
+	/**
+	 * Reset owner funds leftovers for an account to 0
+	 *
+	 * @param {String} account
+	 *
+	 * @return {Amount}
+	 */
+
+	AutobridgeCalculator.prototype.resetOwnerFundsLeftover = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+
+	  this._ownerFundsLeftover[account] = Utils.normalizeAmount('0');
+
+	  return this._ownerFundsLeftover[account];
+	};
+
+	/**
+	 * Retrieve leftover funds found after clamping leg one by account
+	 *
+	 * @param {String} account
+	 *
+	 * @return {Amount}
+	 */
+
+	AutobridgeCalculator.prototype.getLeftoverOwnerFunds = function(account) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+
+	  var amount = this._ownerFundsLeftover[account];
+
+	  if (!amount) {
+	    amount = Utils.normalizeAmount('0');
+	  }
+
+	  return amount;
+	};
+
+	/**
+	 * Add funds to account's leftover funds
+	 *
+	 * @param {String} account
+	 * @param {Amount} amount
+	 *
+	 * @return {Amount}
+	 */
+
+	AutobridgeCalculator.prototype.addLeftoverOwnerFunds =
+	function(account, amount) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(amount instanceof Amount, 'Amount is invalid');
+
+	  this._ownerFundsLeftover[account] = this.getLeftoverOwnerFunds(account)
+	    .add(amount);
+
+	  return this._ownerFundsLeftover[account];
+	};
+
+	/**
+	 * Set account's leftover funds
+	 *
+	 * @param {String} account
+	 * @param {Amount} amount
+	 */
+
+	AutobridgeCalculator.prototype.setLeftoverOwnerFunds =
+	function(account, amount) {
+	  assert(UInt160.is_valid(account), 'Account is invalid');
+	  assert(amount instanceof Amount, 'Amount is invalid');
+
+	  this._ownerFundsLeftover[account] = amount;
+	};
+
+	/**
+	 * Format an autobridged offer and compute synthetic values (e.g. quality)
+	 *
+	 * @param {Amount} takerGets
+	 * @param {Amount} takerPays
+	 *
+	 * @return {Object}
+	 */
+
+	AutobridgeCalculator.prototype.formatAutobridgedOffer =
+	function(takerGets, takerPays) {
+	  assert(takerGets instanceof Amount, 'Autobridged taker gets is invalid');
+	  assert(takerPays instanceof Amount, 'Autobridged taker pays is invalid');
+
+	  var autobridgedOffer = {};
+	  var quality = takerPays.divide(takerGets);
+
+	  autobridgedOffer.TakerGets = {
+	    value: takerGets.to_text(),
+	    currency: this._currencyGets.to_hex(),
+	    issuer: this._issuerGets
+	  };
+
+	  autobridgedOffer.TakerPays = {
+	    value: takerPays.to_text(),
+	    currency: this._currencyPays.to_hex(),
+	    issuer: this._issuerPays
+	  };
+
+	  autobridgedOffer.quality = quality.to_text();
+
+	  autobridgedOffer.taker_gets_funded = autobridgedOffer.TakerGets.value;
+	  autobridgedOffer.taker_pays_funded = autobridgedOffer.TakerPays.value;
+
+	  autobridgedOffer.autobridged = true;
+
+	  autobridgedOffer.BookDirectory = Utils.convertOfferQualityToHex(quality);
+
+	  return autobridgedOffer;
+	};
+
+	/**
+	 * Remove funds clamp on leg one offer. This is necessary when the two offers
+	 * are owned by the same account. In this case, it doesn't matter if offer one
+	 * is not fully funded. Leg one out goes to leg two in and since its the same
+	 * account, an infinite amount can flow.
+	 *
+	 * @param {Object} legOneOffer - IOU:XRP offer
+	 */
+
+	AutobridgeCalculator.prototype.unclampLegOneOwnerFunds = function(legOneOffer) {
+	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
+
+	  legOneOffer.initTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
+
+	  this.setLegOneTakerGetsFunded(
+	    legOneOffer,
+	    Utils.getOfferTakerGets(legOneOffer)
+	  );
+	};
+
+	/**
+	 * Apply clamp back on leg one offer after a round of autobridge calculation
+	 * completes. We must reapply clamps that have been removed because we cannot
+	 * guarantee that the next offer from leg two will also be from the same
+	 * account.
+	 *
+	 * When we reapply, it could happen that the amount of TakerGets left after
+	 * the autobridge calculation is less than the original funded amount. In this
+	 * case, we have extra funds we can use towards unfunded offers with worse
+	 * quality by the same owner.
+	 *
+	 * @param {Object} legOneOffer - IOU:XRP offer
+	 */
+
+	AutobridgeCalculator.prototype.clampLegOneOwnerFunds = function(legOneOffer) {
+	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
+
+	  var takerGets = Utils.getOfferTakerGets(legOneOffer);
+
+	  if (takerGets.compareTo(legOneOffer.initTakerGetsFunded) > 0) {
+	    // After clamping, TakerGets is still greater than initial funded amount
+	    this.setLegOneTakerGetsFunded(legOneOffer, legOneOffer.initTakerGetsFunded);
+	  } else {
+	    var updatedLeftover = legOneOffer.initTakerGetsFunded.subtract(takerGets);
+
+	    this.setLegOneTakerGetsFunded(legOneOffer, takerGets);
+	    this.addLeftoverOwnerFunds(legOneOffer.Account, updatedLeftover);
+	  }
+	};
+
+	/**
+	 * Increase leg one offer funded amount with extra funds found after applying
+	 * clamp.
+	 *
+	 * @param {Object} legOneOffer - IOU:XRP offer
+	 */
+
+	AutobridgeCalculator.prototype.adjustLegOneFundedAmount =
+	function(legOneOffer) {
+	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
+	  assert(!legOneOffer.is_fully_funded, 'Leg one offer cannot be fully funded');
+
+	  var fundedSum = Utils.getOfferTakerGetsFunded(legOneOffer)
+	    .add(this.getLeftoverOwnerFunds(legOneOffer.Account));
+
+	  if (fundedSum.compareTo(Utils.getOfferTakerGets(legOneOffer)) >= 0) {
+	    // There are enough extra funds to fully fund the offer
+	    var legOneTakerGets = Utils.getOfferTakerGets(legOneOffer);
+	    var updatedLeftover = fundedSum.subtract(legOneTakerGets);
+
+	    this.setLegOneTakerGetsFunded(legOneOffer, legOneTakerGets);
+	    this.setLeftoverOwnerFunds(legOneOffer.Account, updatedLeftover);
+	  } else {
+	    // There are not enough extra funds to fully fund the offer
+	    this.setLegOneTakerGetsFunded(legOneOffer, fundedSum);
+	    this.resetOwnerFundsLeftover(legOneOffer.Account);
+	  }
+	};
+
+	/**
+	 * Set taker gets funded amount for a IOU:XRP offer. Also calculates taker
+	 * pays funded using offer quality and updates is_fully_funded flag
+	 *
+	 * @param {Object} legOneOffer - IOU:XRP offer
+	 * @param {Amount} takerGetsFunded
+	 */
+
+	AutobridgeCalculator.prototype.setLegOneTakerGetsFunded =
+	function setLegOneTakerGetsFunded(legOneOffer, takerGetsFunded) {
+	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
+	  assert(takerGetsFunded instanceof Amount, 'Taker gets funded is invalid');
+
+	  legOneOffer.taker_gets_funded = takerGetsFunded.to_text();
+	  legOneOffer.taker_pays_funded = takerGetsFunded
+	    .multiply(Utils.getOfferQuality(legOneOffer, this._currencyGets))
+	    .to_text();
+
+	  if (legOneOffer.taker_gets_funded === legOneOffer.TakerGets.value) {
+	    legOneOffer.is_fully_funded = true;
+	  }
+	};
+
+	/**
+	 * Set taker gets amount for a IOU:XRP offer. Also calculates taker pays
+	 * using offer quality
+	 *
+	 * @param {Object} legOneOffer - IOU:XRP offer
+	 * @param {Amount} takerGets
+	 */
+
+	AutobridgeCalculator.prototype.setLegOneTakerGets =
+	function(legOneOffer, takerGets) {
+	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
+	  assert(takerGets instanceof Amount, 'Taker gets funded is invalid');
+
+	  var legOneQuality = Utils.getOfferQuality(legOneOffer, this._currencyGets);
+
+	  legOneOffer.TakerGets = takerGets.to_text();
+	  legOneOffer.TakerPays = takerGets.multiply(legOneQuality);
+	};
+
+	module.exports = AutobridgeCalculator;
+
+
+/***/ },
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _ = __webpack_require__(43);
+	var assert = __webpack_require__(40);
+	var SerializedObject = __webpack_require__(13).SerializedObject;
+	var Types = __webpack_require__(24);
+	var Amount = __webpack_require__(3).Amount;
+
+	var IOU_SUFFIX = '/000/rrrrrrrrrrrrrrrrrrrrrhoLvTp';
+	var OrderBookUtils = {};
+
+	function assertValidNumber(number, message) {
+	  assert(!_.isNull(number) && !isNaN(number), message);
+	}
+
+	/**
+	 * Casts and returns offer's taker gets funded amount as a default IOU amount
+	 *
+	 * @param {Object} offer
+	 * @return {Amount}
+	 */
+
+	OrderBookUtils.getOfferTakerGetsFunded = function(offer) {
+	  assertValidNumber(offer.taker_gets_funded, 'Taker gets funded is invalid');
+
+	  return Amount.from_json(offer.taker_gets_funded + IOU_SUFFIX);
+	};
+
+	/**
+	 * Casts and returns offer's taker pays funded amount as a default IOU amount
+	 *
+	 * @param {Object} offer
+	 * @return {Amount}
+	 */
+
+	OrderBookUtils.getOfferTakerPaysFunded = function(offer) {
+	  assertValidNumber(offer.taker_pays_funded, 'Taker gets funded is invalid');
+
+	  return Amount.from_json(offer.taker_pays_funded + IOU_SUFFIX);
+	};
+
+	/**
+	 * Get offer taker gets amount
+	 *
+	 * @param {Object} offer
+	 *
+	 * @return {Amount}
+	 */
+
+	OrderBookUtils.getOfferTakerGets = function(offer) {
+	  assert(typeof offer, 'object', 'Offer is invalid');
+
+	  return Amount.from_json(offer.TakerGets + IOU_SUFFIX);
+	};
+
+	/**
+	 * Retrieve offer quality
+	 *
+	 * @param {Object} offer
+	 * @param {Currency} currencyGets
+	 */
+
+	OrderBookUtils.getOfferQuality = function(offer, currencyGets) {
+	  var amount;
+
+	  if (currencyGets.has_interest()) {
+	    // XXX Should use Amount#from_quality
+	    amount = Amount.from_json(
+	      offer.TakerPays
+	    ).ratio_human(offer.TakerGets, {
+	      reference_date: new Date()
+	    });
+	  } else {
+	    amount = Amount.from_json(offer.quality + IOU_SUFFIX);
+	  }
+
+	  return amount;
+	};
+
+	/**
+	 * Formats an offer quality amount to a hex that can be parsed by
+	 * Amount.parse_quality
+	 *
+	 * @param {Amount} quality
+	 *
+	 * @return {String}
+	 */
+
+	OrderBookUtils.convertOfferQualityToHex = function(quality) {
+	  assert(quality instanceof Amount, 'Quality is not an amount');
+
+	  var so = new SerializedObject();
+	  Types.Quality.serialize(so, quality.to_text() + IOU_SUFFIX);
+
+	  return so.to_hex();
+	};
+
+	/**
+	 *
+	 */
+
+	OrderBookUtils.normalizeAmount = function(value) {
+	  return Amount.from_json(value + IOU_SUFFIX);
+	};
+
+	module.exports = OrderBookUtils;
+
+
+/***/ },
+/* 51 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(66)
+
+	function error () {
+	  var m = [].slice.call(arguments).join(' ')
+	  throw new Error([
+	    m,
+	    'we accept pull requests',
+	    'http://github.com/dominictarr/crypto-browserify'
+	    ].join('\n'))
+	}
+
+	exports.createHash = __webpack_require__(67)
+
+	exports.createHmac = __webpack_require__(68)
+
+	exports.randomBytes = function(size, callback) {
+	  if (callback && callback.call) {
+	    try {
+	      callback.call(this, undefined, new Buffer(rng(size)))
+	    } catch (err) { callback(err) }
+	  } else {
+	    return new Buffer(rng(size))
+	  }
+	}
+
+	function each(a, f) {
+	  for(var i in a)
+	    f(a[i], i)
+	}
+
+	exports.getHashes = function () {
+	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
+	}
+
+	var p = __webpack_require__(69)(exports)
+	exports.pbkdf2 = p.pbkdf2
+	exports.pbkdf2Sync = p.pbkdf2Sync
+
+
+	// the least I can do is make error messages for the rest of the node.js/crypto api.
+	each(['createCredentials'
+	, 'createCipher'
+	, 'createCipheriv'
+	, 'createDecipher'
+	, 'createDecipheriv'
+	, 'createSign'
+	, 'createVerify'
+	, 'createDiffieHellman'
+	], function (name) {
+	  exports[name] = function () {
+	    error('sorry,', name, 'is not implemented yet')
+	  }
+	})
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
 /* 52 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
-	  var g = ('undefined' === typeof window ? global : window) || {}
-	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(65)
-	  )
-	  module.exports = function(size) {
-	    // Modern Browsers
-	    if(_crypto.getRandomValues) {
-	      var bytes = new Buffer(size); //in browserify, this is an extended Uint8Array
-	      /* This will not work in older browsers.
-	       * See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
-	       */
-	    
-	      _crypto.getRandomValues(bytes);
-	      return bytes;
-	    }
-	    else if (_crypto.randomBytes) {
-	      return _crypto.randomBytes(size)
-	    }
-	    else
-	      throw new Error(
-	        'secure random number generation not supported by this browser\n'+
-	        'use chrome, FireFox or Internet Explorer 11'
-	      )
-	  }
-	}())
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(42).Buffer))
-
-/***/ },
-/* 53 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(75)
-
-	var md5 = toConstructor(__webpack_require__(74))
-	var rmd160 = toConstructor(__webpack_require__(79))
-
-	function toConstructor (fn) {
-	  return function () {
-	    var buffers = []
-	    var m= {
-	      update: function (data, enc) {
-	        if(!Buffer.isBuffer(data)) data = new Buffer(data, enc)
-	        buffers.push(data)
-	        return this
-	      },
-	      digest: function (enc) {
-	        var buf = Buffer.concat(buffers)
-	        var r = fn(buf)
-	        buffers = null
-	        return enc ? r.toString(enc) : r
-	      }
-	    }
-	    return m
-	  }
-	}
-
-	module.exports = function (alg) {
-	  if('md5' === alg) return new md5()
-	  if('rmd160' === alg) return new rmd160()
-	  return createHash(alg)
-	}
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
-
-/***/ },
-/* 54 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(53)
-
-	var zeroBuffer = new Buffer(128)
-	zeroBuffer.fill(0)
-
-	module.exports = Hmac
-
-	function Hmac (alg, key) {
-	  if(!(this instanceof Hmac)) return new Hmac(alg, key)
-	  this._opad = opad
-	  this._alg = alg
-
-	  var blocksize = (alg === 'sha512') ? 128 : 64
-
-	  key = this._key = !Buffer.isBuffer(key) ? new Buffer(key) : key
-
-	  if(key.length > blocksize) {
-	    key = createHash(alg).update(key).digest()
-	  } else if(key.length < blocksize) {
-	    key = Buffer.concat([key, zeroBuffer], blocksize)
-	  }
-
-	  var ipad = this._ipad = new Buffer(blocksize)
-	  var opad = this._opad = new Buffer(blocksize)
-
-	  for(var i = 0; i < blocksize; i++) {
-	    ipad[i] = key[i] ^ 0x36
-	    opad[i] = key[i] ^ 0x5C
-	  }
-
-	  this._hash = createHash(alg).update(ipad)
-	}
-
-	Hmac.prototype.update = function (data, enc) {
-	  this._hash.update(data, enc)
-	  return this
-	}
-
-	Hmac.prototype.digest = function (enc) {
-	  var h = this._hash.digest()
-	  return createHash(this._alg).update(this._opad).update(h).digest(enc)
-	}
-
-	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
-
-/***/ },
-/* 55 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var pbkdf2Export = __webpack_require__(78)
-
-	module.exports = function (crypto, exports) {
-	  exports = exports || {}
-
-	  var exported = pbkdf2Export(crypto)
-
-	  exports.pbkdf2 = exported.pbkdf2
-	  exports.pbkdf2Sync = exported.pbkdf2Sync
-
-	  return exports
-	}
-
-
-/***/ },
-/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function isBuffer(arg) {
@@ -38230,7 +38983,7 @@ var ripple =
 	}
 
 /***/ },
-/* 57 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -38343,13 +39096,13 @@ var ripple =
 
 
 /***/ },
-/* 58 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	module.exports = function(options) {
 	  var sjcl = options.sjcl;
-	  var base58 = __webpack_require__(57)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(53)({ sjcl: sjcl });
 
 	  function MasterKey(key) {
 	    this.value = key;
@@ -38367,16 +39120,16 @@ var ripple =
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.getRandomValues');
 	    } else if (typeof module === 'object' && module.exports) {
 	      // Node
-	      var entropy = __webpack_require__(43).randomBytes(128);
+	      var entropy = __webpack_require__(51).randomBytes(128);
 	      entropy = new Uint32Array(new Uint8Array(entropy).buffer);
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.randomBytes');
 	    } else {
-	      for (var i = 0; i < 8; i++) {
-	        sjcl.random.addEntropy(Math.random(), 32, 'Math.random()');
-	      }
+	      throw new Error('No secure source of entropy available');
 	    }
 
-	    var randomBytes = sjcl.codec.bytes.fromBits(sjcl.random.randomWords(4));
+	    var SJCL_PARANOIA_256_BITS = 6;
+	    var words = sjcl.random.randomWords(4, SJCL_PARANOIA_256_BITS);
+	    var randomBytes = sjcl.codec.bytes.fromBits(words);
 
 	    return MasterKey.fromBytes(randomBytes);
 	  };
@@ -38386,13 +39139,13 @@ var ripple =
 
 
 /***/ },
-/* 59 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	module.exports = function(options) { // inject sjcl dependency
 	  var sjcl = options.sjcl
-	  var base58 = __webpack_require__(57)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(53)({ sjcl: sjcl });
 
 
 	  function SHA256_RIPEMD160(bits) {
@@ -38416,7 +39169,7 @@ var ripple =
 
 
 /***/ },
-/* 60 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -38449,7 +39202,7 @@ var ripple =
 
 
 /***/ },
-/* 61 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// shim for using process in browser
@@ -38513,7 +39266,7 @@ var ripple =
 
 
 /***/ },
-/* 62 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -39045,10 +39798,10 @@ var ripple =
 
 	}(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)(module), (function() { return this; }())))
 
 /***/ },
-/* 63 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
@@ -39138,7 +39891,7 @@ var ripple =
 
 
 /***/ },
-/* 64 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -39177,23 +39930,17 @@ var ripple =
 
 
 /***/ },
-/* 65 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* (ignored) */
-
-/***/ },
-/* 66 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(76);
-	exports.encode = exports.stringify = __webpack_require__(77);
+	exports.decode = exports.parse = __webpack_require__(71);
+	exports.encode = exports.stringify = __webpack_require__(72);
 
 
 /***/ },
-/* 67 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -39209,1065 +39956,10 @@ var ripple =
 
 
 /***/ },
-/* 68 */
+/* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/**
-	 * Module dependencies.
-	 */
-
-	var Emitter = __webpack_require__(82);
-	var reduce = __webpack_require__(81);
-
-	/**
-	 * Root reference for iframes.
-	 */
-
-	var root = 'undefined' == typeof window
-	  ? this
-	  : window;
-
-	/**
-	 * Noop.
-	 */
-
-	function noop(){};
-
-	/**
-	 * Check if `obj` is a host object,
-	 * we don't want to serialize these :)
-	 *
-	 * TODO: future proof, move to compoent land
-	 *
-	 * @param {Object} obj
-	 * @return {Boolean}
-	 * @api private
-	 */
-
-	function isHost(obj) {
-	  var str = {}.toString.call(obj);
-
-	  switch (str) {
-	    case '[object File]':
-	    case '[object Blob]':
-	    case '[object FormData]':
-	      return true;
-	    default:
-	      return false;
-	  }
-	}
-
-	/**
-	 * Determine XHR.
-	 */
-
-	function getXHR() {
-	  if (root.XMLHttpRequest
-	    && ('file:' != root.location.protocol || !root.ActiveXObject)) {
-	    return new XMLHttpRequest;
-	  } else {
-	    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
-	    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
-	    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
-	    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
-	  }
-	  return false;
-	}
-
-	/**
-	 * Removes leading and trailing whitespace, added to support IE.
-	 *
-	 * @param {String} s
-	 * @return {String}
-	 * @api private
-	 */
-
-	var trim = ''.trim
-	  ? function(s) { return s.trim(); }
-	  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
-
-	/**
-	 * Check if `obj` is an object.
-	 *
-	 * @param {Object} obj
-	 * @return {Boolean}
-	 * @api private
-	 */
-
-	function isObject(obj) {
-	  return obj === Object(obj);
-	}
-
-	/**
-	 * Serialize the given `obj`.
-	 *
-	 * @param {Object} obj
-	 * @return {String}
-	 * @api private
-	 */
-
-	function serialize(obj) {
-	  if (!isObject(obj)) return obj;
-	  var pairs = [];
-	  for (var key in obj) {
-	    if (null != obj[key]) {
-	      pairs.push(encodeURIComponent(key)
-	        + '=' + encodeURIComponent(obj[key]));
-	    }
-	  }
-	  return pairs.join('&');
-	}
-
-	/**
-	 * Expose serialization method.
-	 */
-
-	 request.serializeObject = serialize;
-
-	 /**
-	  * Parse the given x-www-form-urlencoded `str`.
-	  *
-	  * @param {String} str
-	  * @return {Object}
-	  * @api private
-	  */
-
-	function parseString(str) {
-	  var obj = {};
-	  var pairs = str.split('&');
-	  var parts;
-	  var pair;
-
-	  for (var i = 0, len = pairs.length; i < len; ++i) {
-	    pair = pairs[i];
-	    parts = pair.split('=');
-	    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-	  }
-
-	  return obj;
-	}
-
-	/**
-	 * Expose parser.
-	 */
-
-	request.parseString = parseString;
-
-	/**
-	 * Default MIME type map.
-	 *
-	 *     superagent.types.xml = 'application/xml';
-	 *
-	 */
-
-	request.types = {
-	  html: 'text/html',
-	  json: 'application/json',
-	  xml: 'application/xml',
-	  urlencoded: 'application/x-www-form-urlencoded',
-	  'form': 'application/x-www-form-urlencoded',
-	  'form-data': 'application/x-www-form-urlencoded'
-	};
-
-	/**
-	 * Default serialization map.
-	 *
-	 *     superagent.serialize['application/xml'] = function(obj){
-	 *       return 'generated xml here';
-	 *     };
-	 *
-	 */
-
-	 request.serialize = {
-	   'application/x-www-form-urlencoded': serialize,
-	   'application/json': JSON.stringify
-	 };
-
-	 /**
-	  * Default parsers.
-	  *
-	  *     superagent.parse['application/xml'] = function(str){
-	  *       return { object parsed from str };
-	  *     };
-	  *
-	  */
-
-	request.parse = {
-	  'application/x-www-form-urlencoded': parseString,
-	  'application/json': JSON.parse
-	};
-
-	/**
-	 * Parse the given header `str` into
-	 * an object containing the mapped fields.
-	 *
-	 * @param {String} str
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function parseHeader(str) {
-	  var lines = str.split(/\r?\n/);
-	  var fields = {};
-	  var index;
-	  var line;
-	  var field;
-	  var val;
-
-	  lines.pop(); // trailing CRLF
-
-	  for (var i = 0, len = lines.length; i < len; ++i) {
-	    line = lines[i];
-	    index = line.indexOf(':');
-	    field = line.slice(0, index).toLowerCase();
-	    val = trim(line.slice(index + 1));
-	    fields[field] = val;
-	  }
-
-	  return fields;
-	}
-
-	/**
-	 * Return the mime type for the given `str`.
-	 *
-	 * @param {String} str
-	 * @return {String}
-	 * @api private
-	 */
-
-	function type(str){
-	  return str.split(/ *; */).shift();
-	};
-
-	/**
-	 * Return header field parameters.
-	 *
-	 * @param {String} str
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function params(str){
-	  return reduce(str.split(/ *; */), function(obj, str){
-	    var parts = str.split(/ *= */)
-	      , key = parts.shift()
-	      , val = parts.shift();
-
-	    if (key && val) obj[key] = val;
-	    return obj;
-	  }, {});
-	};
-
-	/**
-	 * Initialize a new `Response` with the given `xhr`.
-	 *
-	 *  - set flags (.ok, .error, etc)
-	 *  - parse header
-	 *
-	 * Examples:
-	 *
-	 *  Aliasing `superagent` as `request` is nice:
-	 *
-	 *      request = superagent;
-	 *
-	 *  We can use the promise-like API, or pass callbacks:
-	 *
-	 *      request.get('/').end(function(res){});
-	 *      request.get('/', function(res){});
-	 *
-	 *  Sending data can be chained:
-	 *
-	 *      request
-	 *        .post('/user')
-	 *        .send({ name: 'tj' })
-	 *        .end(function(res){});
-	 *
-	 *  Or passed to `.send()`:
-	 *
-	 *      request
-	 *        .post('/user')
-	 *        .send({ name: 'tj' }, function(res){});
-	 *
-	 *  Or passed to `.post()`:
-	 *
-	 *      request
-	 *        .post('/user', { name: 'tj' })
-	 *        .end(function(res){});
-	 *
-	 * Or further reduced to a single call for simple cases:
-	 *
-	 *      request
-	 *        .post('/user', { name: 'tj' }, function(res){});
-	 *
-	 * @param {XMLHTTPRequest} xhr
-	 * @param {Object} options
-	 * @api private
-	 */
-
-	function Response(req, options) {
-	  options = options || {};
-	  this.req = req;
-	  this.xhr = this.req.xhr;
-	  this.text = this.xhr.responseText;
-	  this.setStatusProperties(this.xhr.status);
-	  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
-	  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
-	  // getResponseHeader still works. so we get content-type even if getting
-	  // other headers fails.
-	  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
-	  this.setHeaderProperties(this.header);
-	  this.body = this.req.method != 'HEAD'
-	    ? this.parseBody(this.text)
-	    : null;
-	}
-
-	/**
-	 * Get case-insensitive `field` value.
-	 *
-	 * @param {String} field
-	 * @return {String}
-	 * @api public
-	 */
-
-	Response.prototype.get = function(field){
-	  return this.header[field.toLowerCase()];
-	};
-
-	/**
-	 * Set header related properties:
-	 *
-	 *   - `.type` the content type without params
-	 *
-	 * A response of "Content-Type: text/plain; charset=utf-8"
-	 * will provide you with a `.type` of "text/plain".
-	 *
-	 * @param {Object} header
-	 * @api private
-	 */
-
-	Response.prototype.setHeaderProperties = function(header){
-	  // content-type
-	  var ct = this.header['content-type'] || '';
-	  this.type = type(ct);
-
-	  // params
-	  var obj = params(ct);
-	  for (var key in obj) this[key] = obj[key];
-	};
-
-	/**
-	 * Parse the given body `str`.
-	 *
-	 * Used for auto-parsing of bodies. Parsers
-	 * are defined on the `superagent.parse` object.
-	 *
-	 * @param {String} str
-	 * @return {Mixed}
-	 * @api private
-	 */
-
-	Response.prototype.parseBody = function(str){
-	  var parse = request.parse[this.type];
-	  return parse
-	    ? parse(str)
-	    : null;
-	};
-
-	/**
-	 * Set flags such as `.ok` based on `status`.
-	 *
-	 * For example a 2xx response will give you a `.ok` of __true__
-	 * whereas 5xx will be __false__ and `.error` will be __true__. The
-	 * `.clientError` and `.serverError` are also available to be more
-	 * specific, and `.statusType` is the class of error ranging from 1..5
-	 * sometimes useful for mapping respond colors etc.
-	 *
-	 * "sugar" properties are also defined for common cases. Currently providing:
-	 *
-	 *   - .noContent
-	 *   - .badRequest
-	 *   - .unauthorized
-	 *   - .notAcceptable
-	 *   - .notFound
-	 *
-	 * @param {Number} status
-	 * @api private
-	 */
-
-	Response.prototype.setStatusProperties = function(status){
-	  var type = status / 100 | 0;
-
-	  // status / class
-	  this.status = status;
-	  this.statusType = type;
-
-	  // basics
-	  this.info = 1 == type;
-	  this.ok = 2 == type;
-	  this.clientError = 4 == type;
-	  this.serverError = 5 == type;
-	  this.error = (4 == type || 5 == type)
-	    ? this.toError()
-	    : false;
-
-	  // sugar
-	  this.accepted = 202 == status;
-	  this.noContent = 204 == status || 1223 == status;
-	  this.badRequest = 400 == status;
-	  this.unauthorized = 401 == status;
-	  this.notAcceptable = 406 == status;
-	  this.notFound = 404 == status;
-	  this.forbidden = 403 == status;
-	};
-
-	/**
-	 * Return an `Error` representative of this response.
-	 *
-	 * @return {Error}
-	 * @api public
-	 */
-
-	Response.prototype.toError = function(){
-	  var req = this.req;
-	  var method = req.method;
-	  var url = req.url;
-
-	  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
-	  var err = new Error(msg);
-	  err.status = this.status;
-	  err.method = method;
-	  err.url = url;
-
-	  return err;
-	};
-
-	/**
-	 * Expose `Response`.
-	 */
-
-	request.Response = Response;
-
-	/**
-	 * Initialize a new `Request` with the given `method` and `url`.
-	 *
-	 * @param {String} method
-	 * @param {String} url
-	 * @api public
-	 */
-
-	function Request(method, url) {
-	  var self = this;
-	  Emitter.call(this);
-	  this._query = this._query || [];
-	  this.method = method;
-	  this.url = url;
-	  this.header = {};
-	  this._header = {};
-	  this.on('end', function(){
-	    var res = new Response(self);
-	    if ('HEAD' == method) res.text = null;
-	    self.callback(null, res);
-	  });
-	}
-
-	/**
-	 * Mixin `Emitter`.
-	 */
-
-	Emitter(Request.prototype);
-
-	/**
-	 * Allow for extension
-	 */
-
-	Request.prototype.use = function(fn) {
-	  fn(this);
-	  return this;
-	}
-
-	/**
-	 * Set timeout to `ms`.
-	 *
-	 * @param {Number} ms
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.timeout = function(ms){
-	  this._timeout = ms;
-	  return this;
-	};
-
-	/**
-	 * Clear previous timeout.
-	 *
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.clearTimeout = function(){
-	  this._timeout = 0;
-	  clearTimeout(this._timer);
-	  return this;
-	};
-
-	/**
-	 * Abort the request, and clear potential timeout.
-	 *
-	 * @return {Request}
-	 * @api public
-	 */
-
-	Request.prototype.abort = function(){
-	  if (this.aborted) return;
-	  this.aborted = true;
-	  this.xhr.abort();
-	  this.clearTimeout();
-	  this.emit('abort');
-	  return this;
-	};
-
-	/**
-	 * Set header `field` to `val`, or multiple fields with one object.
-	 *
-	 * Examples:
-	 *
-	 *      req.get('/')
-	 *        .set('Accept', 'application/json')
-	 *        .set('X-API-Key', 'foobar')
-	 *        .end(callback);
-	 *
-	 *      req.get('/')
-	 *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
-	 *        .end(callback);
-	 *
-	 * @param {String|Object} field
-	 * @param {String} val
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.set = function(field, val){
-	  if (isObject(field)) {
-	    for (var key in field) {
-	      this.set(key, field[key]);
-	    }
-	    return this;
-	  }
-	  this._header[field.toLowerCase()] = val;
-	  this.header[field] = val;
-	  return this;
-	};
-
-	/**
-	 * Get case-insensitive header `field` value.
-	 *
-	 * @param {String} field
-	 * @return {String}
-	 * @api private
-	 */
-
-	Request.prototype.getHeader = function(field){
-	  return this._header[field.toLowerCase()];
-	};
-
-	/**
-	 * Set Content-Type to `type`, mapping values from `request.types`.
-	 *
-	 * Examples:
-	 *
-	 *      superagent.types.xml = 'application/xml';
-	 *
-	 *      request.post('/')
-	 *        .type('xml')
-	 *        .send(xmlstring)
-	 *        .end(callback);
-	 *
-	 *      request.post('/')
-	 *        .type('application/xml')
-	 *        .send(xmlstring)
-	 *        .end(callback);
-	 *
-	 * @param {String} type
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.type = function(type){
-	  this.set('Content-Type', request.types[type] || type);
-	  return this;
-	};
-
-	/**
-	 * Set Accept to `type`, mapping values from `request.types`.
-	 *
-	 * Examples:
-	 *
-	 *      superagent.types.json = 'application/json';
-	 *
-	 *      request.get('/agent')
-	 *        .accept('json')
-	 *        .end(callback);
-	 *
-	 *      request.get('/agent')
-	 *        .accept('application/json')
-	 *        .end(callback);
-	 *
-	 * @param {String} accept
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.accept = function(type){
-	  this.set('Accept', request.types[type] || type);
-	  return this;
-	};
-
-	/**
-	 * Set Authorization field value with `user` and `pass`.
-	 *
-	 * @param {String} user
-	 * @param {String} pass
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.auth = function(user, pass){
-	  var str = btoa(user + ':' + pass);
-	  this.set('Authorization', 'Basic ' + str);
-	  return this;
-	};
-
-	/**
-	* Add query-string `val`.
-	*
-	* Examples:
-	*
-	*   request.get('/shoes')
-	*     .query('size=10')
-	*     .query({ color: 'blue' })
-	*
-	* @param {Object|String} val
-	* @return {Request} for chaining
-	* @api public
-	*/
-
-	Request.prototype.query = function(val){
-	  if ('string' != typeof val) val = serialize(val);
-	  if (val) this._query.push(val);
-	  return this;
-	};
-
-	/**
-	 * Write the field `name` and `val` for "multipart/form-data"
-	 * request bodies.
-	 *
-	 * ``` js
-	 * request.post('/upload')
-	 *   .field('foo', 'bar')
-	 *   .end(callback);
-	 * ```
-	 *
-	 * @param {String} name
-	 * @param {String|Blob|File} val
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.field = function(name, val){
-	  if (!this._formData) this._formData = new FormData();
-	  this._formData.append(name, val);
-	  return this;
-	};
-
-	/**
-	 * Queue the given `file` as an attachment to the specified `field`,
-	 * with optional `filename`.
-	 *
-	 * ``` js
-	 * request.post('/upload')
-	 *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
-	 *   .end(callback);
-	 * ```
-	 *
-	 * @param {String} field
-	 * @param {Blob|File} file
-	 * @param {String} filename
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.attach = function(field, file, filename){
-	  if (!this._formData) this._formData = new FormData();
-	  this._formData.append(field, file, filename);
-	  return this;
-	};
-
-	/**
-	 * Send `data`, defaulting the `.type()` to "json" when
-	 * an object is given.
-	 *
-	 * Examples:
-	 *
-	 *       // querystring
-	 *       request.get('/search')
-	 *         .end(callback)
-	 *
-	 *       // multiple data "writes"
-	 *       request.get('/search')
-	 *         .send({ search: 'query' })
-	 *         .send({ range: '1..5' })
-	 *         .send({ order: 'desc' })
-	 *         .end(callback)
-	 *
-	 *       // manual json
-	 *       request.post('/user')
-	 *         .type('json')
-	 *         .send('{"name":"tj"})
-	 *         .end(callback)
-	 *
-	 *       // auto json
-	 *       request.post('/user')
-	 *         .send({ name: 'tj' })
-	 *         .end(callback)
-	 *
-	 *       // manual x-www-form-urlencoded
-	 *       request.post('/user')
-	 *         .type('form')
-	 *         .send('name=tj')
-	 *         .end(callback)
-	 *
-	 *       // auto x-www-form-urlencoded
-	 *       request.post('/user')
-	 *         .type('form')
-	 *         .send({ name: 'tj' })
-	 *         .end(callback)
-	 *
-	 *       // defaults to x-www-form-urlencoded
-	  *      request.post('/user')
-	  *        .send('name=tobi')
-	  *        .send('species=ferret')
-	  *        .end(callback)
-	 *
-	 * @param {String|Object} data
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.send = function(data){
-	  var obj = isObject(data);
-	  var type = this.getHeader('Content-Type');
-
-	  // merge
-	  if (obj && isObject(this._data)) {
-	    for (var key in data) {
-	      this._data[key] = data[key];
-	    }
-	  } else if ('string' == typeof data) {
-	    if (!type) this.type('form');
-	    type = this.getHeader('Content-Type');
-	    if ('application/x-www-form-urlencoded' == type) {
-	      this._data = this._data
-	        ? this._data + '&' + data
-	        : data;
-	    } else {
-	      this._data = (this._data || '') + data;
-	    }
-	  } else {
-	    this._data = data;
-	  }
-
-	  if (!obj) return this;
-	  if (!type) this.type('json');
-	  return this;
-	};
-
-	/**
-	 * Invoke the callback with `err` and `res`
-	 * and handle arity check.
-	 *
-	 * @param {Error} err
-	 * @param {Response} res
-	 * @api private
-	 */
-
-	Request.prototype.callback = function(err, res){
-	  var fn = this._callback;
-	  if (2 == fn.length) return fn(err, res);
-	  if (err) return this.emit('error', err);
-	  fn(res);
-	};
-
-	/**
-	 * Invoke callback with x-domain error.
-	 *
-	 * @api private
-	 */
-
-	Request.prototype.crossDomainError = function(){
-	  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
-	  err.crossDomain = true;
-	  this.callback(err);
-	};
-
-	/**
-	 * Invoke callback with timeout error.
-	 *
-	 * @api private
-	 */
-
-	Request.prototype.timeoutError = function(){
-	  var timeout = this._timeout;
-	  var err = new Error('timeout of ' + timeout + 'ms exceeded');
-	  err.timeout = timeout;
-	  this.callback(err);
-	};
-
-	/**
-	 * Enable transmission of cookies with x-domain requests.
-	 *
-	 * Note that for this to work the origin must not be
-	 * using "Access-Control-Allow-Origin" with a wildcard,
-	 * and also must set "Access-Control-Allow-Credentials"
-	 * to "true".
-	 *
-	 * @api public
-	 */
-
-	Request.prototype.withCredentials = function(){
-	  this._withCredentials = true;
-	  return this;
-	};
-
-	/**
-	 * Initiate request, invoking callback `fn(res)`
-	 * with an instanceof `Response`.
-	 *
-	 * @param {Function} fn
-	 * @return {Request} for chaining
-	 * @api public
-	 */
-
-	Request.prototype.end = function(fn){
-	  var self = this;
-	  var xhr = this.xhr = getXHR();
-	  var query = this._query.join('&');
-	  var timeout = this._timeout;
-	  var data = this._formData || this._data;
-
-	  // store callback
-	  this._callback = fn || noop;
-
-	  // state change
-	  xhr.onreadystatechange = function(){
-	    if (4 != xhr.readyState) return;
-	    if (0 == xhr.status) {
-	      if (self.aborted) return self.timeoutError();
-	      return self.crossDomainError();
-	    }
-	    self.emit('end');
-	  };
-
-	  // progress
-	  if (xhr.upload) {
-	    xhr.upload.onprogress = function(e){
-	      e.percent = e.loaded / e.total * 100;
-	      self.emit('progress', e);
-	    };
-	  }
-
-	  // timeout
-	  if (timeout && !this._timer) {
-	    this._timer = setTimeout(function(){
-	      self.abort();
-	    }, timeout);
-	  }
-
-	  // querystring
-	  if (query) {
-	    query = request.serializeObject(query);
-	    this.url += ~this.url.indexOf('?')
-	      ? '&' + query
-	      : '?' + query;
-	  }
-
-	  // initiate request
-	  xhr.open(this.method, this.url, true);
-
-	  // CORS
-	  if (this._withCredentials) xhr.withCredentials = true;
-
-	  // body
-	  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
-	    // serialize stuff
-	    var serialize = request.serialize[this.getHeader('Content-Type')];
-	    if (serialize) data = serialize(data);
-	  }
-
-	  // set header fields
-	  for (var field in this.header) {
-	    if (null == this.header[field]) continue;
-	    xhr.setRequestHeader(field, this.header[field]);
-	  }
-
-	  // send stuff
-	  this.emit('request', this);
-	  xhr.send(data);
-	  return this;
-	};
-
-	/**
-	 * Expose `Request`.
-	 */
-
-	request.Request = Request;
-
-	/**
-	 * Issue a request:
-	 *
-	 * Examples:
-	 *
-	 *    request('GET', '/users').end(callback)
-	 *    request('/users').end(callback)
-	 *    request('/users', callback)
-	 *
-	 * @param {String} method
-	 * @param {String|Function} url or callback
-	 * @return {Request}
-	 * @api public
-	 */
-
-	function request(method, url) {
-	  // callback
-	  if ('function' == typeof url) {
-	    return new Request('GET', method).end(url);
-	  }
-
-	  // url first
-	  if (1 == arguments.length) {
-	    return new Request('GET', method);
-	  }
-
-	  return new Request(method, url);
-	}
-
-	/**
-	 * GET `url` with optional callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Mixed|Function} data or fn
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.get = function(url, data, fn){
-	  var req = request('GET', url);
-	  if ('function' == typeof data) fn = data, data = null;
-	  if (data) req.query(data);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * HEAD `url` with optional callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Mixed|Function} data or fn
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.head = function(url, data, fn){
-	  var req = request('HEAD', url);
-	  if ('function' == typeof data) fn = data, data = null;
-	  if (data) req.send(data);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * DELETE `url` with optional callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.del = function(url, fn){
-	  var req = request('DELETE', url);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * PATCH `url` with optional `data` and callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Mixed} data
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.patch = function(url, data, fn){
-	  var req = request('PATCH', url);
-	  if ('function' == typeof data) fn = data, data = null;
-	  if (data) req.send(data);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * POST `url` with optional `data` and callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Mixed} data
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.post = function(url, data, fn){
-	  var req = request('POST', url);
-	  if ('function' == typeof data) fn = data, data = null;
-	  if (data) req.send(data);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * PUT `url` with optional `data` and callback `fn(res)`.
-	 *
-	 * @param {String} url
-	 * @param {Mixed|Function} data or fn
-	 * @param {Function} fn
-	 * @return {Request}
-	 * @api public
-	 */
-
-	request.put = function(url, data, fn){
-	  var req = request('PUT', url);
-	  if ('function' == typeof data) fn = data, data = null;
-	  if (data) req.send(data);
-	  if (fn) req.end(fn);
-	  return req;
-	};
-
-	/**
-	 * Expose `request`.
-	 */
-
-	module.exports = request;
-
-
-/***/ },
-/* 69 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(61).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(57).nextTick;
 	var apply = Function.prototype.apply;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
@@ -40343,10 +40035,10 @@ var ripple =
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(69).setImmediate, __webpack_require__(69).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(63).setImmediate, __webpack_require__(63).clearImmediate))
 
 /***/ },
-/* 70 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	if (typeof Object.create === 'function') {
@@ -40375,188 +40067,7 @@ var ripple =
 
 
 /***/ },
-/* 71 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	// If obj.hasOwnProperty has been overridden, then calling
-	// obj.hasOwnProperty(prop) will break.
-	// See: https://github.com/joyent/node/issues/1707
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-
-	module.exports = function(qs, sep, eq, options) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  var regexp = /\+/g;
-	  qs = qs.split(sep);
-
-	  var maxKeys = 1000;
-	  if (options && typeof options.maxKeys === 'number') {
-	    maxKeys = options.maxKeys;
-	  }
-
-	  var len = qs.length;
-	  // maxKeys <= 0 means that we should not limit keys count
-	  if (maxKeys > 0 && len > maxKeys) {
-	    len = maxKeys;
-	  }
-
-	  for (var i = 0; i < len; ++i) {
-	    var x = qs[i].replace(regexp, '%20'),
-	        idx = x.indexOf(eq),
-	        kstr, vstr, k, v;
-
-	    if (idx >= 0) {
-	      kstr = x.substr(0, idx);
-	      vstr = x.substr(idx + 1);
-	    } else {
-	      kstr = x;
-	      vstr = '';
-	    }
-
-	    k = decodeURIComponent(kstr);
-	    v = decodeURIComponent(vstr);
-
-	    if (!hasOwnProperty(obj, k)) {
-	      obj[k] = v;
-	    } else if (isArray(obj[k])) {
-	      obj[k].push(v);
-	    } else {
-	      obj[k] = [obj[k], v];
-	    }
-	  }
-
-	  return obj;
-	};
-
-	var isArray = Array.isArray || function (xs) {
-	  return Object.prototype.toString.call(xs) === '[object Array]';
-	};
-
-
-/***/ },
-/* 72 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-	module.exports = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  if (obj === null) {
-	    obj = undefined;
-	  }
-
-	  if (typeof obj === 'object') {
-	    return map(objectKeys(obj), function(k) {
-	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-	      if (isArray(obj[k])) {
-	        return map(obj[k], function(v) {
-	          return ks + encodeURIComponent(stringifyPrimitive(v));
-	        }).join(sep);
-	      } else {
-	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-	      }
-	    }).join(sep);
-
-	  }
-
-	  if (!name) return '';
-	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-	         encodeURIComponent(stringifyPrimitive(obj));
-	};
-
-	var isArray = Array.isArray || function (xs) {
-	  return Object.prototype.toString.call(xs) === '[object Array]';
-	};
-
-	function map (xs, f) {
-	  if (xs.map) return xs.map(f);
-	  var res = [];
-	  for (var i = 0; i < xs.length; i++) {
-	    res.push(f(xs[i], i));
-	  }
-	  return res;
-	}
-
-	var objectKeys = Object.keys || function (obj) {
-	  var res = [];
-	  for (var key in obj) {
-	    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
-	  }
-	  return res;
-	};
-
-
-/***/ },
-/* 73 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -40686,7 +40197,307 @@ var ripple =
 
 
 /***/ },
-/* 74 */
+/* 66 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
+	  var g = ('undefined' === typeof window ? global : window) || {}
+	  _crypto = (
+	    g.crypto || g.msCrypto || __webpack_require__(70)
+	  )
+	  module.exports = function(size) {
+	    // Modern Browsers
+	    if(_crypto.getRandomValues) {
+	      var bytes = new Buffer(size); //in browserify, this is an extended Uint8Array
+	      /* This will not work in older browsers.
+	       * See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
+	       */
+	    
+	      _crypto.getRandomValues(bytes);
+	      return bytes;
+	    }
+	    else if (_crypto.randomBytes) {
+	      return _crypto.randomBytes(size)
+	    }
+	    else
+	      throw new Error(
+	        'secure random number generation not supported by this browser\n'+
+	        'use chrome, FireFox or Internet Explorer 11'
+	      )
+	  }
+	}())
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(41).Buffer))
+
+/***/ },
+/* 67 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(74)
+
+	var md5 = toConstructor(__webpack_require__(73))
+	var rmd160 = toConstructor(__webpack_require__(76))
+
+	function toConstructor (fn) {
+	  return function () {
+	    var buffers = []
+	    var m= {
+	      update: function (data, enc) {
+	        if(!Buffer.isBuffer(data)) data = new Buffer(data, enc)
+	        buffers.push(data)
+	        return this
+	      },
+	      digest: function (enc) {
+	        var buf = Buffer.concat(buffers)
+	        var r = fn(buf)
+	        buffers = null
+	        return enc ? r.toString(enc) : r
+	      }
+	    }
+	    return m
+	  }
+	}
+
+	module.exports = function (alg) {
+	  if('md5' === alg) return new md5()
+	  if('rmd160' === alg) return new rmd160()
+	  return createHash(alg)
+	}
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+
+/***/ },
+/* 68 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(67)
+
+	var zeroBuffer = new Buffer(128)
+	zeroBuffer.fill(0)
+
+	module.exports = Hmac
+
+	function Hmac (alg, key) {
+	  if(!(this instanceof Hmac)) return new Hmac(alg, key)
+	  this._opad = opad
+	  this._alg = alg
+
+	  var blocksize = (alg === 'sha512') ? 128 : 64
+
+	  key = this._key = !Buffer.isBuffer(key) ? new Buffer(key) : key
+
+	  if(key.length > blocksize) {
+	    key = createHash(alg).update(key).digest()
+	  } else if(key.length < blocksize) {
+	    key = Buffer.concat([key, zeroBuffer], blocksize)
+	  }
+
+	  var ipad = this._ipad = new Buffer(blocksize)
+	  var opad = this._opad = new Buffer(blocksize)
+
+	  for(var i = 0; i < blocksize; i++) {
+	    ipad[i] = key[i] ^ 0x36
+	    opad[i] = key[i] ^ 0x5C
+	  }
+
+	  this._hash = createHash(alg).update(ipad)
+	}
+
+	Hmac.prototype.update = function (data, enc) {
+	  this._hash.update(data, enc)
+	  return this
+	}
+
+	Hmac.prototype.digest = function (enc) {
+	  var h = this._hash.digest()
+	  return createHash(this._alg).update(this._opad).update(h).digest(enc)
+	}
+
+	
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
+
+/***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var pbkdf2Export = __webpack_require__(75)
+
+	module.exports = function (crypto, exports) {
+	  exports = exports || {}
+
+	  var exported = pbkdf2Export(crypto)
+
+	  exports.pbkdf2 = exported.pbkdf2
+	  exports.pbkdf2Sync = exported.pbkdf2Sync
+
+	  return exports
+	}
+
+
+/***/ },
+/* 70 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* (ignored) */
+
+/***/ },
+/* 71 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	'use strict';
+
+	// If obj.hasOwnProperty has been overridden, then calling
+	// obj.hasOwnProperty(prop) will break.
+	// See: https://github.com/joyent/node/issues/1707
+	function hasOwnProperty(obj, prop) {
+	  return Object.prototype.hasOwnProperty.call(obj, prop);
+	}
+
+	module.exports = function(qs, sep, eq, options) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  var obj = {};
+
+	  if (typeof qs !== 'string' || qs.length === 0) {
+	    return obj;
+	  }
+
+	  var regexp = /\+/g;
+	  qs = qs.split(sep);
+
+	  var maxKeys = 1000;
+	  if (options && typeof options.maxKeys === 'number') {
+	    maxKeys = options.maxKeys;
+	  }
+
+	  var len = qs.length;
+	  // maxKeys <= 0 means that we should not limit keys count
+	  if (maxKeys > 0 && len > maxKeys) {
+	    len = maxKeys;
+	  }
+
+	  for (var i = 0; i < len; ++i) {
+	    var x = qs[i].replace(regexp, '%20'),
+	        idx = x.indexOf(eq),
+	        kstr, vstr, k, v;
+
+	    if (idx >= 0) {
+	      kstr = x.substr(0, idx);
+	      vstr = x.substr(idx + 1);
+	    } else {
+	      kstr = x;
+	      vstr = '';
+	    }
+
+	    k = decodeURIComponent(kstr);
+	    v = decodeURIComponent(vstr);
+
+	    if (!hasOwnProperty(obj, k)) {
+	      obj[k] = v;
+	    } else if (Array.isArray(obj[k])) {
+	      obj[k].push(v);
+	    } else {
+	      obj[k] = [obj[k], v];
+	    }
+	  }
+
+	  return obj;
+	};
+
+
+/***/ },
+/* 72 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	'use strict';
+
+	var stringifyPrimitive = function(v) {
+	  switch (typeof v) {
+	    case 'string':
+	      return v;
+
+	    case 'boolean':
+	      return v ? 'true' : 'false';
+
+	    case 'number':
+	      return isFinite(v) ? v : '';
+
+	    default:
+	      return '';
+	  }
+	};
+
+	module.exports = function(obj, sep, eq, name) {
+	  sep = sep || '&';
+	  eq = eq || '=';
+	  if (obj === null) {
+	    obj = undefined;
+	  }
+
+	  if (typeof obj === 'object') {
+	    return Object.keys(obj).map(function(k) {
+	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+	      if (Array.isArray(obj[k])) {
+	        return obj[k].map(function(v) {
+	          return ks + encodeURIComponent(stringifyPrimitive(v));
+	        }).join(sep);
+	      } else {
+	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+	      }
+	    }).join(sep);
+
+	  }
+
+	  if (!name) return '';
+	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+	         encodeURIComponent(stringifyPrimitive(obj));
+	};
+
+
+/***/ },
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -40698,7 +40509,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(80);
+	var helpers = __webpack_require__(77);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -40847,7 +40658,7 @@ var ripple =
 
 
 /***/ },
-/* 75 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -40856,172 +40667,16 @@ var ripple =
 	  return new Alg()
 	}
 
-	var Buffer = __webpack_require__(42).Buffer
-	var Hash   = __webpack_require__(83)(Buffer)
+	var Buffer = __webpack_require__(41).Buffer
+	var Hash   = __webpack_require__(78)(Buffer)
 
-	exports.sha1 = __webpack_require__(84)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(85)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(86)(Buffer, Hash)
-
-
-/***/ },
-/* 76 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	// If obj.hasOwnProperty has been overridden, then calling
-	// obj.hasOwnProperty(prop) will break.
-	// See: https://github.com/joyent/node/issues/1707
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-
-	module.exports = function(qs, sep, eq, options) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  var regexp = /\+/g;
-	  qs = qs.split(sep);
-
-	  var maxKeys = 1000;
-	  if (options && typeof options.maxKeys === 'number') {
-	    maxKeys = options.maxKeys;
-	  }
-
-	  var len = qs.length;
-	  // maxKeys <= 0 means that we should not limit keys count
-	  if (maxKeys > 0 && len > maxKeys) {
-	    len = maxKeys;
-	  }
-
-	  for (var i = 0; i < len; ++i) {
-	    var x = qs[i].replace(regexp, '%20'),
-	        idx = x.indexOf(eq),
-	        kstr, vstr, k, v;
-
-	    if (idx >= 0) {
-	      kstr = x.substr(0, idx);
-	      vstr = x.substr(idx + 1);
-	    } else {
-	      kstr = x;
-	      vstr = '';
-	    }
-
-	    k = decodeURIComponent(kstr);
-	    v = decodeURIComponent(vstr);
-
-	    if (!hasOwnProperty(obj, k)) {
-	      obj[k] = v;
-	    } else if (Array.isArray(obj[k])) {
-	      obj[k].push(v);
-	    } else {
-	      obj[k] = [obj[k], v];
-	    }
-	  }
-
-	  return obj;
-	};
+	exports.sha1 = __webpack_require__(79)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(80)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(81)(Buffer, Hash)
 
 
 /***/ },
-/* 77 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-	module.exports = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  if (obj === null) {
-	    obj = undefined;
-	  }
-
-	  if (typeof obj === 'object') {
-	    return Object.keys(obj).map(function(k) {
-	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-	      if (Array.isArray(obj[k])) {
-	        return obj[k].map(function(v) {
-	          return ks + encodeURIComponent(stringifyPrimitive(v));
-	        }).join(sep);
-	      } else {
-	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-	      }
-	    }).join(sep);
-
-	  }
-
-	  if (!name) return '';
-	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-	         encodeURIComponent(stringifyPrimitive(obj));
-	};
-
-
-/***/ },
-/* 78 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -41109,10 +40764,10 @@ var ripple =
 	  }
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 79 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -41321,10 +40976,10 @@ var ripple =
 
 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 80 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -41362,209 +41017,10 @@ var ripple =
 
 	module.exports = { hash: hash };
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(42).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 81 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Reduce `arr` with `fn`.
-	 *
-	 * @param {Array} arr
-	 * @param {Function} fn
-	 * @param {Mixed} initial
-	 *
-	 * TODO: combatible error handling?
-	 */
-
-	module.exports = function(arr, fn, initial){  
-	  var idx = 0;
-	  var len = arr.length;
-	  var curr = arguments.length == 3
-	    ? initial
-	    : arr[idx++];
-
-	  while (idx < len) {
-	    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-	  }
-	  
-	  return curr;
-	};
-
-/***/ },
-/* 82 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	/**
-	 * Expose `Emitter`.
-	 */
-
-	module.exports = Emitter;
-
-	/**
-	 * Initialize a new `Emitter`.
-	 *
-	 * @api public
-	 */
-
-	function Emitter(obj) {
-	  if (obj) return mixin(obj);
-	};
-
-	/**
-	 * Mixin the emitter properties.
-	 *
-	 * @param {Object} obj
-	 * @return {Object}
-	 * @api private
-	 */
-
-	function mixin(obj) {
-	  for (var key in Emitter.prototype) {
-	    obj[key] = Emitter.prototype[key];
-	  }
-	  return obj;
-	}
-
-	/**
-	 * Listen on the given `event` with `fn`.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.on =
-	Emitter.prototype.addEventListener = function(event, fn){
-	  this._callbacks = this._callbacks || {};
-	  (this._callbacks[event] = this._callbacks[event] || [])
-	    .push(fn);
-	  return this;
-	};
-
-	/**
-	 * Adds an `event` listener that will be invoked a single
-	 * time then automatically removed.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.once = function(event, fn){
-	  var self = this;
-	  this._callbacks = this._callbacks || {};
-
-	  function on() {
-	    self.off(event, on);
-	    fn.apply(this, arguments);
-	  }
-
-	  on.fn = fn;
-	  this.on(event, on);
-	  return this;
-	};
-
-	/**
-	 * Remove the given callback for `event` or all
-	 * registered callbacks.
-	 *
-	 * @param {String} event
-	 * @param {Function} fn
-	 * @return {Emitter}
-	 * @api public
-	 */
-
-	Emitter.prototype.off =
-	Emitter.prototype.removeListener =
-	Emitter.prototype.removeAllListeners =
-	Emitter.prototype.removeEventListener = function(event, fn){
-	  this._callbacks = this._callbacks || {};
-
-	  // all
-	  if (0 == arguments.length) {
-	    this._callbacks = {};
-	    return this;
-	  }
-
-	  // specific event
-	  var callbacks = this._callbacks[event];
-	  if (!callbacks) return this;
-
-	  // remove all handlers
-	  if (1 == arguments.length) {
-	    delete this._callbacks[event];
-	    return this;
-	  }
-
-	  // remove specific handler
-	  var cb;
-	  for (var i = 0; i < callbacks.length; i++) {
-	    cb = callbacks[i];
-	    if (cb === fn || cb.fn === fn) {
-	      callbacks.splice(i, 1);
-	      break;
-	    }
-	  }
-	  return this;
-	};
-
-	/**
-	 * Emit `event` with the given args.
-	 *
-	 * @param {String} event
-	 * @param {Mixed} ...
-	 * @return {Emitter}
-	 */
-
-	Emitter.prototype.emit = function(event){
-	  this._callbacks = this._callbacks || {};
-	  var args = [].slice.call(arguments, 1)
-	    , callbacks = this._callbacks[event];
-
-	  if (callbacks) {
-	    callbacks = callbacks.slice(0);
-	    for (var i = 0, len = callbacks.length; i < len; ++i) {
-	      callbacks[i].apply(this, args);
-	    }
-	  }
-
-	  return this;
-	};
-
-	/**
-	 * Return array of callbacks for `event`.
-	 *
-	 * @param {String} event
-	 * @return {Array}
-	 * @api public
-	 */
-
-	Emitter.prototype.listeners = function(event){
-	  this._callbacks = this._callbacks || {};
-	  return this._callbacks[event] || [];
-	};
-
-	/**
-	 * Check if this emitter has `event` handlers.
-	 *
-	 * @param {String} event
-	 * @return {Boolean}
-	 * @api public
-	 */
-
-	Emitter.prototype.hasListeners = function(event){
-	  return !! this.listeners(event).length;
-	};
-
-
-/***/ },
-/* 83 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function (Buffer) {
@@ -41647,7 +41103,7 @@ var ripple =
 
 
 /***/ },
-/* 84 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -41659,7 +41115,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(39).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41791,7 +41247,7 @@ var ripple =
 
 
 /***/ },
-/* 85 */
+/* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -41803,7 +41259,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(39).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41944,10 +41400,10 @@ var ripple =
 
 
 /***/ },
-/* 86 */
+/* 81 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(40).inherits
+	var inherits = __webpack_require__(39).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
