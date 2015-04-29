@@ -131,8 +131,8 @@ var ripple =
 	// to be a very simple drop option.
 
 	var EventEmitter = __webpack_require__(38).EventEmitter;
-	var util = __webpack_require__(39);
-	var assert = __webpack_require__(40);
+	var util = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var LRU = __webpack_require__(45);
 	var async = __webpack_require__(46);
 	var lodash = __webpack_require__(43);
@@ -2688,7 +2688,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(38).EventEmitter;
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(40);
 	var async        = __webpack_require__(46);
 	var UInt160      = __webpack_require__(9).UInt160;
 	var Currency     = __webpack_require__(6).Currency;
@@ -3260,7 +3260,7 @@ var ripple =
 	// Represent Ripple amounts and currencies.
 	// - Numbers in hex are big-endian.
 
-	var assert = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var extend = __webpack_require__(44);
 	var utils = __webpack_require__(17);
 	var UInt160 = __webpack_require__(9).UInt160;
@@ -4285,7 +4285,7 @@ var ripple =
 
 	// var network = require('./network.js');
 	var async              = __webpack_require__(46);
-	var util               = __webpack_require__(39);
+	var util               = __webpack_require__(40);
 	var extend             = __webpack_require__(44);
 	var EventEmitter       = __webpack_require__(38).EventEmitter;
 	var Amount             = __webpack_require__(3).Amount;
@@ -4676,7 +4676,7 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(40);
 	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var utils = __webpack_require__(17);
 	var sjcl = __webpack_require__(17).sjcl;
@@ -7102,7 +7102,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
 	var _ = __webpack_require__(43);
-	var assert = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var extend = __webpack_require__(44);
 	var binformat = __webpack_require__(16);
 	var stypes = __webpack_require__(24);
@@ -7453,7 +7453,7 @@ var ripple =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util   = __webpack_require__(39);
+	var util   = __webpack_require__(40);
 	var extend = __webpack_require__(44);
 
 	function RippleError(code, message) {
@@ -8327,7 +8327,7 @@ var ripple =
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(40);
 	var url          = __webpack_require__(42);
 	var LRU          = __webpack_require__(45);
 	var EventEmitter = __webpack_require__(38).EventEmitter;
@@ -9605,7 +9605,7 @@ var ripple =
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assert = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var lodash = __webpack_require__(43);
 
 	function RangeSet() {
@@ -9726,7 +9726,7 @@ var ripple =
 	 * SerializedObject.parse() or SerializedObject.serialize().
 	 */
 
-	var assert = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var extend = __webpack_require__(44);
 	var GlobalBigNumber = __webpack_require__(47);
 	var Amount = __webpack_require__(3).Amount;
@@ -9808,7 +9808,7 @@ var ripple =
 	  return keys.sort(sort_field_compare);
 	}
 
-	SerializedType.serialize_varint = function(so, val) {
+	SerializedType.serialize_varint = function (so, val) {
 	  if (val < 0) {
 	    throw new Error('Variable integers are unsigned.');
 	  }
@@ -9826,7 +9826,7 @@ var ripple =
 	  }
 	};
 
-	SerializedType.prototype.parse_varint = function(so) {
+	SerializedType.prototype.parse_varint = function (so) {
 	  var b1 = so.read(1)[0], b2, b3;
 	  var result;
 
@@ -9898,10 +9898,10 @@ var ripple =
 	}
 
 	var STInt8 = exports.Int8 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    so.append(convertIntegerToByteArray(val, 1));
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return readAndSum(so, 1);
 	  }
 	});
@@ -9992,10 +9992,10 @@ var ripple =
 	exports.parse = exports.parse_whatever = parse;
 
 	var STInt16 = exports.Int16 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    so.append(convertIntegerToByteArray(val, 2));
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return readAndSum(so, 2);
 	  }
 	});
@@ -10003,10 +10003,10 @@ var ripple =
 	STInt16.id = 1;
 
 	var STInt32 = exports.Int32 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    so.append(convertIntegerToByteArray(val, 4));
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return readAndSum(so, 4);
 	  }
 	});
@@ -10014,7 +10014,7 @@ var ripple =
 	STInt32.id = 2;
 
 	var STInt64 = exports.Int64 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var bigNumObject;
 
 	    if (isNumber(val)) {
@@ -10038,7 +10038,7 @@ var ripple =
 	    }
 	    serializeBits(so, bigNumObject.toBits(64), true); // noLength = true
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var bytes = so.read(8);
 	    return SJCL_BN.fromBits(sjcl.codec.bytes.toBits(bytes));
 	  }
@@ -10047,14 +10047,14 @@ var ripple =
 	STInt64.id = 3;
 
 	var STHash128 = exports.Hash128 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var hash = UInt128.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash128');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return UInt128.from_bytes(so.read(16));
 	  }
 	});
@@ -10062,14 +10062,14 @@ var ripple =
 	STHash128.id = 4;
 
 	var STHash256 = exports.Hash256 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var hash = UInt256.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash256');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return UInt256.from_bytes(so.read(32));
 	  }
 	});
@@ -10077,14 +10077,14 @@ var ripple =
 	STHash256.id = 5;
 
 	var STHash160 = exports.Hash160 = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var hash = UInt160.from_json(val);
 	    if (!hash.is_valid()) {
 	      throw new Error('Invalid Hash160');
 	    }
 	    serializeBits(so, hash.to_bits(), true); // noLength = true
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    return UInt160.from_bytes(so.read(20));
 	  }
 	});
@@ -10093,7 +10093,7 @@ var ripple =
 
 	// Internal
 	var STCurrency = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var currencyData = val.to_bytes();
 
 	    if (!currencyData) {
@@ -10103,7 +10103,7 @@ var ripple =
 
 	    so.append(currencyData);
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var bytes = so.read(20);
 	    var currency = Currency.from_bytes(bytes);
 	    // XXX Disabled check. Theoretically, the Currency class should support any
@@ -10117,51 +10117,8 @@ var ripple =
 	  }
 	});
 
-	/**
-	 * Quality is encoded into 64 bits:
-	 * (8 bits offset) (56 bits mantissa)
-	 *
-	 * Quality differs from Amount because it does not need the first two bits
-	 * to represent non-native and non-negative
-	 */
-	exports.Quality = new SerializedType({
-	  serialize: function(so, val) {
-	    var amount = Amount.from_json(val);
-
-	    if (!amount.is_valid()) {
-	      throw new Error('Not a valid Amount object.');
-	    }
-
-	    var hi = 0, lo = 0;
-	    var value = new BigNumber(amount.to_text());
-	    var offset = value.e - 15;
-
-	    if (!amount.is_zero()) {
-	      // First eight bits: offset/exponent
-	      hi |= ((100 + offset) & 0xff) << 24;
-
-	      // Remaining 56 bits: mantissa
-	      var mantissaDecimal = utils.getMantissaDecimalString(value.abs());
-	      var mantissaHex = (new BigNumber(mantissaDecimal)).toString(16);
-	      assert(mantissaHex.length <= 16,
-	        'Mantissa hex representation ' + mantissaHex +
-	        ' exceeds the maximum length of 16');
-	      hi |= parseInt(mantissaHex.slice(0, -8), 16) & 0xffffff;
-	      lo = parseInt(mantissaHex.slice(-8), 16);
-	    }
-
-	    var valueBytes = sjcl.codec.bytes.fromBits([hi, lo]);
-
-	    so.append(valueBytes);
-	  }
-	});
-
-	/*
-	 * Amount is encoded into 64 bits:
-	 * (1 bit non-native) (1 bit non-negative) (8 bits offset) (54 bits mantissa)
-	 */
 	var STAmount = exports.Amount = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var amount = Amount.from_json(val);
 
 	    if (!amount.is_valid()) {
@@ -10238,7 +10195,7 @@ var ripple =
 	      so.append(amount.issuer().to_bytes());
 	    }
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var value_bytes = so.read(8);
 	    var is_zero = !(value_bytes[0] & 0x7f);
 
@@ -10280,14 +10237,14 @@ var ripple =
 	STAmount.id = 6;
 
 	var STVL = exports.VariableLength = exports.VL = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    if (typeof val === 'string') {
 	      serializeHex(so, val);
 	    } else {
 	      throw new Error('Unknown datatype.');
 	    }
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var len = this.parse_varint(so);
 	    return convertByteArrayToHex(so.read(len));
 	  }
@@ -10296,14 +10253,14 @@ var ripple =
 	STVL.id = 7;
 
 	var STAccount = exports.Account = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    var account = UInt160.from_json(val);
 	    if (!account.is_valid()) {
 	      throw new Error('Invalid account!');
 	    }
 	    serializeBits(so, account.to_bits());
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var len = this.parse_varint(so);
 
 	    if (len !== 20) {
@@ -10329,7 +10286,7 @@ var ripple =
 	  typeAccount: 0x01,
 	  typeCurrency: 0x10,
 	  typeIssuer: 0x20,
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    for (var i = 0, l = val.length; i < l; i++) {
 	      // Boundary
 	      if (i) {
@@ -10370,7 +10327,7 @@ var ripple =
 
 	    STInt8.serialize(so, this.typeEnd);
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    // should return a list of lists:
 	    /*
 	       [
@@ -10455,7 +10412,7 @@ var ripple =
 	      STHash256.serialize(so, val[i]);
 	    }
 	  },
-	  parse: function(so) {
+	  parse: function (so) {
 	    var length = this.parse_varint(so);
 	    var output = [];
 	    // length is number of bytes not number of Hash256
@@ -10473,7 +10430,7 @@ var ripple =
 	  serialize: function(so, val, no_marker) {
 	    var keys = [];
 
-	    Object.keys(val).forEach(function(key) {
+	    Object.keys(val).forEach(function (key) {
 	      // Ignore lowercase field names - they're non-serializable fields by
 	      // convention.
 	      if (key[0] === key[0].toLowerCase()) {
@@ -10515,7 +10472,6 @@ var ripple =
 	          output.parsed_memo_type = parsedType;
 	        }
 	      } catch (e) {
-	        // empty
 	        // we don't know what's in the binary, apparently it's not a UTF-8
 	        // string
 	        // this is fine, we won't add the parsed_memo_type field
@@ -10526,7 +10482,6 @@ var ripple =
 	      try {
 	        output.parsed_memo_format = convertHexToString(output.MemoFormat);
 	      } catch (e) {
-	        // empty
 	        // we don't know what's in the binary, apparently it's not a UTF-8
 	        // string
 	        // this is fine, we won't add the parsed_memo_format field
@@ -10546,7 +10501,6 @@ var ripple =
 	          output.parsed_memo_data = convertHexToString(output.MemoData);
 	        }
 	      } catch(e) {
-	        // empty
 	        // we'll fail in case the content does not match what the MemoFormat
 	        // described
 	        // this is fine, we won't add the parsed_memo_data, the user has to
@@ -10561,10 +10515,10 @@ var ripple =
 	});
 
 	var STObject = exports.Object = new SerializedType({
-	  serialize: function(so, val, no_marker) {
+	  serialize: function (so, val, no_marker) {
 	    var keys = [];
 
-	    Object.keys(val).forEach(function(key) {
+	    Object.keys(val).forEach(function (key) {
 	      // Ignore lowercase field names - they're non-serializable fields by
 	      // convention.
 	      if (key[0] === key[0].toLowerCase()) {
@@ -10591,7 +10545,7 @@ var ripple =
 	    }
 	  },
 
-	  parse: function(so) {
+	  parse: function (so) {
 	    var output = {};
 	    while (so.peek(1)[0] !== 0xe1) {
 	      var keyval = parse(so);
@@ -10605,7 +10559,7 @@ var ripple =
 	STObject.id = 14;
 
 	var STArray = exports.Array = new SerializedType({
-	  serialize: function(so, val) {
+	  serialize: function (so, val) {
 	    for (var i = 0, l = val.length; i < l; i++) {
 	      var keys = Object.keys(val[i]);
 
@@ -10623,7 +10577,7 @@ var ripple =
 	    STInt8.serialize(so, 0xf1);
 	  },
 
-	  parse: function(so) {
+	  parse: function (so) {
 	    var output = [ ];
 
 	    while (so.peek(1)[0] !== 0xf1) {
@@ -10675,16 +10629,14 @@ var ripple =
 	'use strict';
 
 	var _ = __webpack_require__(43);
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(40);
 	var extend = __webpack_require__(44);
-	var assert = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var async = __webpack_require__(46);
 	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Amount = __webpack_require__(3).Amount;
 	var UInt160 = __webpack_require__(9).UInt160;
 	var Currency = __webpack_require__(6).Currency;
-	var AutobridgeCalculator = __webpack_require__(49);
-	var OrderBookUtils = __webpack_require__(50);
 	var log = __webpack_require__(29).internal.sub('orderbook');
 
 	function assertValidNumber(number, message) {
@@ -10701,25 +10653,21 @@ var ripple =
 	 * @param {String} orderbook key
 	 */
 
-	function OrderBook(remote,
-	                   currencyGets, issuerGets, currencyPays, issuerPays,
-	                   key) {
+	function OrderBook(remote, getsC, getsI, paysC, paysI, key) {
 	  EventEmitter.call(this);
 
 	  var self = this;
 
 	  this._remote = remote;
-	  this._currencyGets = Currency.from_json(currencyGets);
-	  this._issuerGets = issuerGets;
-	  this._currencyPays = Currency.from_json(currencyPays);
-	  this._issuerPays = issuerPays;
+	  this._currencyGets = Currency.from_json(getsC);
+	  this._issuerGets = getsI;
+	  this._currencyPays = Currency.from_json(paysC);
+	  this._issuerPays = paysI;
 	  this._key = key;
 	  this._subscribed = false;
 	  this._shouldSubscribe = true;
 	  this._listeners = 0;
-	  this._offers = [];
-	  this._offersAutobridged = [];
-	  this._mergedOffers = [];
+	  this._offers = [ ];
 	  this._offerCounts = {};
 	  this._ownerFundsUnadjusted = {};
 	  this._ownerFunds = {};
@@ -10731,37 +10679,6 @@ var ripple =
 
 	  // Transfer rate of the taker gets currency issuer
 	  this._issuerTransferRate = null;
-
-	  // When orderbook is IOU/IOU, there will be IOU/XRP and XRP/IOU
-	  // books that we must keep track of to compute autobridged offers
-	  this._legOneBook = null;
-	  this._legTwoBook = null;
-
-	  this._isAutobridgeable = !this._currencyGets.is_native()
-	    && !this._currencyPays.is_native();
-
-	  function computeAutobridgedOffersWrapper() {
-	    self.computeAutobridgedOffers();
-	    self.mergeDirectAndAutobridgedBooks();
-	  }
-
-	  if (this._isAutobridgeable) {
-	    this._legOneBook = remote.createOrderBook({
-	      currency_gets: 'XRP',
-	      currency_pays: currencyPays,
-	      issuer_pays: issuerPays
-	    });
-
-	    this._legOneBook.on('model', computeAutobridgedOffersWrapper);
-
-	    this._legTwoBook = remote.createOrderBook({
-	      currency_gets: currencyGets,
-	      issuer_gets: issuerGets,
-	      currency_pays: 'XRP'
-	    });
-
-	    this._legTwoBook.on('model', computeAutobridgedOffersWrapper);
-	  }
 
 	  function listenersModified(action, event) {
 	    // Automatically subscribe and unsubscribe to orderbook
@@ -10782,7 +10699,7 @@ var ripple =
 	    }
 	  }
 
-	  function updateFundedAmountsWrapper(transaction) {
+	  function updateFundedAmountsWrapper (transaction) {
 	    self.updateFundedAmounts(transaction);
 	  }
 
@@ -10829,6 +10746,8 @@ var ripple =
 	];
 
 	OrderBook.DEFAULT_TRANSFER_RATE = 1000000000;
+
+	OrderBook.IOU_SUFFIX = '/000/rrrrrrrrrrrrrrrrrrrrrhoLvTp';
 
 	/**
 	 * Normalize offers from book_offers and transaction stream
@@ -10946,7 +10865,7 @@ var ripple =
 
 	    self.setOffers(res.offers);
 	    self._synchronized = true;
-	    self.notifyDirectOffersChanged();
+	    self.emit('model', self._offers);
 
 	    callback(null, self._offers);
 	  }
@@ -10966,48 +10885,6 @@ var ripple =
 	  request.request();
 
 	  return request;
-	};
-
-	/**
-	 * Request transfer rate for this orderbook's issuer
-	 *
-	 * @param {Function} callback
-	 */
-
-	OrderBook.prototype.requestTransferRate = function(callback) {
-	  assert.strictEqual(typeof callback, 'function');
-
-	  var self = this;
-
-	  if (this._currencyGets.is_native()) {
-	    // Transfer rate is default for the native currency
-	    this._issuerTransferRate = OrderBook.DEFAULT_TRANSFER_RATE;
-
-	    return callback(null, OrderBook.DEFAULT_TRANSFER_RATE);
-	  }
-
-	  if (this._issuerTransferRate) {
-	    // Transfer rate has already been cached
-	    return callback(null, this._issuerTransferRate);
-	  }
-
-	  function handleAccountInfo(err, info) {
-	    if (err) {
-	      return callback(err);
-	    }
-
-	    // When transfer rate is not explicitly set on account, it implies the
-	    // default transfer rate
-	    self._issuerTransferRate = info.account_data.TransferRate ||
-	                               OrderBook.DEFAULT_TRANSFER_RATE;
-
-	    callback(null, self._issuerTransferRate);
-	  }
-
-	  this._remote.requestAccountInfo(
-	    {account: this._issuerGets},
-	    handleAccountInfo
-	  );
 	};
 
 	/**
@@ -11059,19 +10936,6 @@ var ripple =
 	};
 
 	/**
-	 * Handles notifying listeners that direct offers have changed. For autobridged
-	 * books, an additional merge step is also performed
-	 */
-
-	OrderBook.prototype.notifyDirectOffersChanged = function() {
-	  if (this._isAutobridgeable) {
-	    this.mergeDirectAndAutobridgedBooks();
-	  } else {
-	    this.emit('model', this._offers);
-	  }
-	};
-
-	/**
 	 * Reset cached owner's funds, offer counts, and offer sums
 	 */
 
@@ -11109,27 +10973,6 @@ var ripple =
 	};
 
 	/**
-	 * Compute adjusted balance that would be left after issuer's transfer fee is
-	 * deducted
-	 *
-	 * @param {String} balance
-	 * @return {String}
-	 */
-
-	OrderBook.prototype.applyTransferRate = function(balance) {
-	  assert(!isNaN(balance), 'Balance is invalid');
-	  assertValidNumber(this._issuerTransferRate, 'Transfer rate is invalid');
-
-	  var adjustedBalance = OrderBookUtils.normalizeAmount(balance)
-	  .divide(this._issuerTransferRate)
-	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
-	  .to_json()
-	  .value;
-
-	  return adjustedBalance;
-	};
-
-	/**
 	 * Get owner's cached, transfer rate adjusted, funds
 	 *
 	 * @param {String} account - owner's account address
@@ -11145,7 +10988,9 @@ var ripple =
 	    if (this._currencyGets.is_native()) {
 	      amount = Amount.from_json(this._ownerFunds[account]);
 	    } else {
-	      amount = OrderBookUtils.normalizeAmount(this._ownerFunds[account]);
+	      amount = Amount.from_json(
+	        this._ownerFunds[account] + OrderBook.IOU_SUFFIX
+	      );
 	    }
 	  }
 
@@ -11232,7 +11077,6 @@ var ripple =
 
 	OrderBook.prototype.addOwnerOfferTotal = function(account, amount) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-
 	  var previousAmount = this.getOwnerOfferTotal(account);
 	  var currentAmount = previousAmount.add(Amount.from_json(amount));
 
@@ -11252,7 +11096,6 @@ var ripple =
 
 	OrderBook.prototype.subtractOwnerOfferTotal = function(account, amount) {
 	  assert(UInt160.is_valid(account), 'Account is invalid');
-
 	  var previousAmount = this.getOwnerOfferTotal(account);
 	  var newAmount = previousAmount.subtract(Amount.from_json(amount));
 	  this._ownerOffersTotal[account] = newAmount;
@@ -11278,7 +11121,7 @@ var ripple =
 	    if (this._currencyGets.is_native()) {
 	      amount = Amount.from_json('0');
 	    } else {
-	      amount = OrderBookUtils.normalizeAmount('0');
+	      amount = Amount.from_json('0' + OrderBook.IOU_SUFFIX);
 	    }
 	  }
 
@@ -11293,19 +11136,93 @@ var ripple =
 	 */
 
 	OrderBook.prototype.resetOwnerOfferTotal = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-
 	  var amount;
 
 	  if (this._currencyGets.is_native()) {
 	    amount = Amount.from_json('0');
 	  } else {
-	    amount = OrderBookUtils.normalizeAmount('0');
+	    amount = Amount.from_json('0' + OrderBook.IOU_SUFFIX);
 	  }
 
 	  this._ownerOffersTotal[account] = amount;
 
 	  return amount;
+	};
+
+	/**
+	 * Casts and returns offer's taker gets funded amount as a default IOU amount
+	 *
+	 * @param {Object} offer
+	 * @return {Amount}
+	 */
+
+	OrderBook.prototype.getOfferTakerGetsFunded = function(offer) {
+	  assertValidNumber(offer.taker_gets_funded, 'Taker gets funded is invalid');
+
+	  return Amount.from_json(offer.taker_gets_funded + OrderBook.IOU_SUFFIX);
+	};
+
+	/**
+	 * Compute adjusted balance that would be left after issuer's transfer fee is
+	 * deducted
+	 *
+	 * @param {String} balance
+	 * @return {String}
+	 */
+
+	OrderBook.prototype.applyTransferRate = function(balance) {
+	  assert(!isNaN(balance), 'Balance is invalid');
+	  assertValidNumber(this._issuerTransferRate, 'Transfer rate is invalid');
+
+	  var adjustedBalance = Amount.from_json(balance + OrderBook.IOU_SUFFIX)
+	  .divide(this._issuerTransferRate)
+	  .multiply(Amount.from_json(OrderBook.DEFAULT_TRANSFER_RATE))
+	  .to_json()
+	  .value;
+
+	  return adjustedBalance;
+	};
+
+	/**
+	 * Request transfer rate for this orderbook's issuer
+	 *
+	 * @param {Function} callback
+	 */
+
+	OrderBook.prototype.requestTransferRate = function(callback) {
+	  assert.strictEqual(typeof callback, 'function');
+
+	  var self = this;
+
+	  if (this._currencyGets.is_native()) {
+	    // Transfer rate is default for the native currency
+	    this._issuerTransferRate = OrderBook.DEFAULT_TRANSFER_RATE;
+
+	    return callback(null, OrderBook.DEFAULT_TRANSFER_RATE);
+	  }
+
+	  if (this._issuerTransferRate) {
+	    // Transfer rate has already been cached
+	    return callback(null, this._issuerTransferRate);
+	  }
+
+	  function handleAccountInfo(err, info) {
+	    if (err) {
+	      return callback(err);
+	    }
+
+	    // When transfer rate is not explicitly set on account, it implies the
+	    // default transfer rate
+	    self._issuerTransferRate = info.account_data.TransferRate ||
+	                               OrderBook.DEFAULT_TRANSFER_RATE;
+
+	    callback(null, self._issuerTransferRate);
+	  }
+
+	  this._remote.requestAccountInfo(
+	    {account: this._issuerGets},
+	    handleAccountInfo
+	  );
 	};
 
 	/**
@@ -11336,9 +11253,8 @@ var ripple =
 	  } else if (previousOfferSum.compareTo(fundedAmount) < 0) {
 	    offer.taker_gets_funded = fundedAmount.subtract(previousOfferSum).to_text();
 
-	    var quality = OrderBookUtils.getOfferQuality(offer, this._currencyGets);
-	    var takerPaysFunded = quality.multiply(
-	      OrderBookUtils.getOfferTakerGetsFunded(offer)
+	    var takerPaysFunded = this.getOfferQuality(offer).multiply(
+	      this.getOfferTakerGetsFunded(offer)
 	    );
 
 	    offer.taker_pays_funded = this._currencyPays.is_native()
@@ -11429,8 +11345,8 @@ var ripple =
 	/**
 	 * Updates funded amounts/balances using modified balance nodes
 	 *
-	 * Update owner funds using modified AccountRoot and RippleState nodes
-	 * Update funded amounts for offers in the orderbook using owner funds
+	 * Update owner funds using modified AccountRoot and RippleState nodes.
+	 * Update funded amounts for offers in the orderbook using owner funds.
 	 *
 	 * @param {Object} transaction - transaction that holds meta nodes
 	 */
@@ -11455,7 +11371,7 @@ var ripple =
 	    entryType: this._currencyGets.is_native() ? 'AccountRoot' : 'RippleState'
 	  });
 
-	  _.each(affectedNodes, function(node) {
+	  _.each(affectedNodes, function (node) {
 	    if (self.isBalanceChangeNode(node)) {
 	      var result = self.parseAccountBalanceFromNode(node);
 
@@ -11488,7 +11404,7 @@ var ripple =
 
 	  this.resetOwnerOfferTotal(account);
 
-	  _.each(this._offers, function(offer) {
+	  _.each(this._offers, function (offer) {
 	    if (offer.Account !== account) {
 	      return;
 	    }
@@ -11500,15 +11416,14 @@ var ripple =
 	    if (_.isString(offer.taker_gets_funded)) {
 	      // Offer is not new, so we should consider it for offer_changed and
 	      // offer_funds_changed events
-	      previousFundedGets = OrderBookUtils.getOfferTakerGetsFunded(offer);
+	      previousFundedGets = self.getOfferTakerGetsFunded(offer);
 	    }
 
 	    self.setOfferFundedAmount(offer);
 	    self.addOwnerOfferTotal(offer.Account, offer.TakerGets);
 
-	    var takerGetsFunded = OrderBookUtils.getOfferTakerGetsFunded(offer);
 	    var areFundsChanged = previousFundedGets
-	      && !takerGetsFunded.equals(previousFundedGets);
+	      && !self.getOfferTakerGetsFunded(offer).equals(previousFundedGets);
 
 	    if (areFundsChanged) {
 	      self.emit('offer_changed', previousOffer, offer);
@@ -11597,7 +11512,7 @@ var ripple =
 	  _.each(affectedNodes, handleNode);
 
 	  this.emit('transaction', transaction);
-	  this.notifyDirectOffersChanged();
+	  this.emit('model', this._offers);
 	  if (!takerGetsTotal.is_zero()) {
 	    this.emit('trade', takerPaysTotal, takerGetsTotal);
 	  }
@@ -11627,14 +11542,11 @@ var ripple =
 	  // We're safe to calculate quality for newly created offers
 	  offer.quality = takerPays.divide(takerGets).to_text();
 
+	  var quality = this.getOfferQuality(offer);
 	  var originalLength = this._offers.length;
 
 	  for (var i = 0; i < originalLength; i++) {
-	    var quality = OrderBookUtils.getOfferQuality(offer, this._currencyGets);
-	    var existingOfferQuality = OrderBookUtils.getOfferQuality(
-	      this._offers[i],
-	      this._currencyGets
-	    );
+	    var existingOfferQuality = this.getOfferQuality(this._offers[i]);
 
 	    if (quality.compareTo(existingOfferQuality) <= 0) {
 	      this._offers.splice(i, 0, offer);
@@ -11655,6 +11567,29 @@ var ripple =
 	};
 
 	/**
+	 * Retrieve offer quality
+	 *
+	 * @param {Object} offer
+	 */
+
+	OrderBook.prototype.getOfferQuality = function(offer) {
+	  var amount;
+
+	  if (this._currencyGets.has_interest()) {
+	    // XXX Should use Amount#from_quality
+	    amount = Amount.from_json(
+	      offer.TakerPays
+	    ).ratio_human(offer.TakerGets, {
+	      reference_date: new Date()
+	    });
+	  } else {
+	    amount = Amount.from_json(offer.quality + OrderBook.IOU_SUFFIX);
+	  }
+
+	  return amount;
+	};
+
+	/**
 	 * Convert any amount into default IOU
 	 *
 	 * NOTE: This is necessary in some places because Amount.js arithmetic
@@ -11669,7 +11604,7 @@ var ripple =
 	  ? amountObj
 	  : amountObj.value;
 
-	  return OrderBookUtils.normalizeAmount(value);
+	  return Amount.from_json(value + OrderBook.IOU_SUFFIX);
 	};
 
 	/**
@@ -11743,13 +11678,13 @@ var ripple =
 	 */
 
 	OrderBook.prototype.setOffers = function(offers) {
-	  assert(Array.isArray(offers), 'Offers is not an array');
+	  assert(Array.isArray(offers), '');
 
 	  var self = this;
 
 	  this.resetCache();
 
-	  var newOffers = _.map(offers, function(rawOffer) {
+	  var newOffers = _.map(offers, function (rawOffer) {
 	    var offer = OrderBook.offerRewrite(rawOffer);
 
 	    if (offer.hasOwnProperty('owner_funds')) {
@@ -11859,48 +11794,6 @@ var ripple =
 	  );
 	};
 
-	/**
-	 * Compute autobridged offers for an IOU:IOU orderbook by merging offers from
-	 * IOU:XRP and XRP:IOU books
-	 */
-
-	OrderBook.prototype.computeAutobridgedOffers = function() {
-	  assert(!this._currencyGets.is_native() && !this._currencyPays.is_native(),
-	    'Autobridging is only for IOU:IOU orderbooks');
-
-	  var autobridgeCalculator = new AutobridgeCalculator(
-	    this._currencyGets,
-	    this._currencyPays,
-	    this._legOneBook.getOffersSync(),
-	    this._legTwoBook.getOffersSync()
-	  );
-
-	  this._offersAutobridged = autobridgeCalculator.calculate();
-	};
-
-	/**
-	 * Merge direct and autobridged offers into a combined orderbook
-	 *
-	 * @return [Array]
-	 */
-
-	OrderBook.prototype.mergeDirectAndAutobridgedBooks = function() {
-	  var self = this;
-
-	  this._mergedOffers = this._offers
-	    .concat(this._offersAutobridged)
-	    .sort(function(a, b) {
-	      var aQuality = OrderBookUtils.getOfferQuality(a, self._currencyGets);
-	      var bQuality = OrderBookUtils.getOfferQuality(b, self._currencyGets);
-
-	      return aQuality.compareTo(bQuality);
-	    });
-
-	  this.emit('model', this._mergedOffers);
-
-	  return this._mergedOffers;
-	};
-
 	exports.OrderBook = OrderBook;
 
 
@@ -11909,7 +11802,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var EventEmitter = __webpack_require__(38).EventEmitter;
-	var util         = __webpack_require__(39);
+	var util         = __webpack_require__(40);
 	var Amount       = __webpack_require__(3).Amount;
 	var extend       = __webpack_require__(44);
 
@@ -12211,8 +12104,8 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(39);
-	var assert = __webpack_require__(40);
+	var util = __webpack_require__(40);
+	var assert = __webpack_require__(39);
 	var async = __webpack_require__(46);
 	var EventEmitter = __webpack_require__(38).EventEmitter;
 	var Transaction = __webpack_require__(5).Transaction;
@@ -15639,7 +15532,7 @@ var ripple =
 	  // function for getting nodejs crypto module. catches and ignores errors.
 	  function getCryptoModule() {
 	    try {
-	      return __webpack_require__(51);
+	      return __webpack_require__(49);
 	    }
 	    catch (e) {
 	      return null;
@@ -18349,7 +18242,7 @@ var ripple =
 
 	'use strict';
 
-	var util = __webpack_require__(39);
+	var util = __webpack_require__(40);
 	var hashprefixes = __webpack_require__(28);
 
 	var UInt256 = __webpack_require__(10).UInt256;
@@ -18920,6 +18813,371 @@ var ripple =
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
+	//
+	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
+	//
+	// Originally from narwhal.js (http://narwhaljs.org)
+	// Copyright (c) 2009 Thomas Robinson <280north.com>
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy
+	// of this software and associated documentation files (the 'Software'), to
+	// deal in the Software without restriction, including without limitation the
+	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+	// sell copies of the Software, and to permit persons to whom the Software is
+	// furnished to do so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in
+	// all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// when used in node, this will actually load the util module we depend on
+	// versus loading the builtin util module as happens otherwise
+	// this is a bug in node module loading as far as I am concerned
+	var util = __webpack_require__(40);
+
+	var pSlice = Array.prototype.slice;
+	var hasOwn = Object.prototype.hasOwnProperty;
+
+	// 1. The assert module provides functions that throw
+	// AssertionError's when particular conditions are not met. The
+	// assert module must conform to the following interface.
+
+	var assert = module.exports = ok;
+
+	// 2. The AssertionError is defined in assert.
+	// new assert.AssertionError({ message: message,
+	//                             actual: actual,
+	//                             expected: expected })
+
+	assert.AssertionError = function AssertionError(options) {
+	  this.name = 'AssertionError';
+	  this.actual = options.actual;
+	  this.expected = options.expected;
+	  this.operator = options.operator;
+	  if (options.message) {
+	    this.message = options.message;
+	    this.generatedMessage = false;
+	  } else {
+	    this.message = getMessage(this);
+	    this.generatedMessage = true;
+	  }
+	  var stackStartFunction = options.stackStartFunction || fail;
+
+	  if (Error.captureStackTrace) {
+	    Error.captureStackTrace(this, stackStartFunction);
+	  }
+	  else {
+	    // non v8 browsers so we can have a stacktrace
+	    var err = new Error();
+	    if (err.stack) {
+	      var out = err.stack;
+
+	      // try to strip useless frames
+	      var fn_name = stackStartFunction.name;
+	      var idx = out.indexOf('\n' + fn_name);
+	      if (idx >= 0) {
+	        // once we have located the function frame
+	        // we need to strip out everything before it (and its line)
+	        var next_line = out.indexOf('\n', idx + 1);
+	        out = out.substring(next_line + 1);
+	      }
+
+	      this.stack = out;
+	    }
+	  }
+	};
+
+	// assert.AssertionError instanceof Error
+	util.inherits(assert.AssertionError, Error);
+
+	function replacer(key, value) {
+	  if (util.isUndefined(value)) {
+	    return '' + value;
+	  }
+	  if (util.isNumber(value) && !isFinite(value)) {
+	    return value.toString();
+	  }
+	  if (util.isFunction(value) || util.isRegExp(value)) {
+	    return value.toString();
+	  }
+	  return value;
+	}
+
+	function truncate(s, n) {
+	  if (util.isString(s)) {
+	    return s.length < n ? s : s.slice(0, n);
+	  } else {
+	    return s;
+	  }
+	}
+
+	function getMessage(self) {
+	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
+	         self.operator + ' ' +
+	         truncate(JSON.stringify(self.expected, replacer), 128);
+	}
+
+	// At present only the three keys mentioned above are used and
+	// understood by the spec. Implementations or sub modules can pass
+	// other keys to the AssertionError's constructor - they will be
+	// ignored.
+
+	// 3. All of the following functions must throw an AssertionError
+	// when a corresponding condition is not met, with a message that
+	// may be undefined if not provided.  All assertion methods provide
+	// both the actual and expected values to the assertion error for
+	// display purposes.
+
+	function fail(actual, expected, message, operator, stackStartFunction) {
+	  throw new assert.AssertionError({
+	    message: message,
+	    actual: actual,
+	    expected: expected,
+	    operator: operator,
+	    stackStartFunction: stackStartFunction
+	  });
+	}
+
+	// EXTENSION! allows for well behaved errors defined elsewhere.
+	assert.fail = fail;
+
+	// 4. Pure assertion tests whether a value is truthy, as determined
+	// by !!guard.
+	// assert.ok(guard, message_opt);
+	// This statement is equivalent to assert.equal(true, !!guard,
+	// message_opt);. To test strictly for the value true, use
+	// assert.strictEqual(true, guard, message_opt);.
+
+	function ok(value, message) {
+	  if (!value) fail(value, true, message, '==', assert.ok);
+	}
+	assert.ok = ok;
+
+	// 5. The equality assertion tests shallow, coercive equality with
+	// ==.
+	// assert.equal(actual, expected, message_opt);
+
+	assert.equal = function equal(actual, expected, message) {
+	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
+	};
+
+	// 6. The non-equality assertion tests for whether two objects are not equal
+	// with != assert.notEqual(actual, expected, message_opt);
+
+	assert.notEqual = function notEqual(actual, expected, message) {
+	  if (actual == expected) {
+	    fail(actual, expected, message, '!=', assert.notEqual);
+	  }
+	};
+
+	// 7. The equivalence assertion tests a deep equality relation.
+	// assert.deepEqual(actual, expected, message_opt);
+
+	assert.deepEqual = function deepEqual(actual, expected, message) {
+	  if (!_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
+	  }
+	};
+
+	function _deepEqual(actual, expected) {
+	  // 7.1. All identical values are equivalent, as determined by ===.
+	  if (actual === expected) {
+	    return true;
+
+	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
+	    if (actual.length != expected.length) return false;
+
+	    for (var i = 0; i < actual.length; i++) {
+	      if (actual[i] !== expected[i]) return false;
+	    }
+
+	    return true;
+
+	  // 7.2. If the expected value is a Date object, the actual value is
+	  // equivalent if it is also a Date object that refers to the same time.
+	  } else if (util.isDate(actual) && util.isDate(expected)) {
+	    return actual.getTime() === expected.getTime();
+
+	  // 7.3 If the expected value is a RegExp object, the actual value is
+	  // equivalent if it is also a RegExp object with the same source and
+	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
+	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
+	    return actual.source === expected.source &&
+	           actual.global === expected.global &&
+	           actual.multiline === expected.multiline &&
+	           actual.lastIndex === expected.lastIndex &&
+	           actual.ignoreCase === expected.ignoreCase;
+
+	  // 7.4. Other pairs that do not both pass typeof value == 'object',
+	  // equivalence is determined by ==.
+	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
+	    return actual == expected;
+
+	  // 7.5 For all other Object pairs, including Array objects, equivalence is
+	  // determined by having the same number of owned properties (as verified
+	  // with Object.prototype.hasOwnProperty.call), the same set of keys
+	  // (although not necessarily the same order), equivalent values for every
+	  // corresponding key, and an identical 'prototype' property. Note: this
+	  // accounts for both named and indexed properties on Arrays.
+	  } else {
+	    return objEquiv(actual, expected);
+	  }
+	}
+
+	function isArguments(object) {
+	  return Object.prototype.toString.call(object) == '[object Arguments]';
+	}
+
+	function objEquiv(a, b) {
+	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
+	    return false;
+	  // an identical 'prototype' property.
+	  if (a.prototype !== b.prototype) return false;
+	  // if one is a primitive, the other must be same
+	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
+	    return a === b;
+	  }
+	  var aIsArgs = isArguments(a),
+	      bIsArgs = isArguments(b);
+	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
+	    return false;
+	  if (aIsArgs) {
+	    a = pSlice.call(a);
+	    b = pSlice.call(b);
+	    return _deepEqual(a, b);
+	  }
+	  var ka = objectKeys(a),
+	      kb = objectKeys(b),
+	      key, i;
+	  // having the same number of owned properties (keys incorporates
+	  // hasOwnProperty)
+	  if (ka.length != kb.length)
+	    return false;
+	  //the same set of keys (although not necessarily the same order),
+	  ka.sort();
+	  kb.sort();
+	  //~~~cheap key test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    if (ka[i] != kb[i])
+	      return false;
+	  }
+	  //equivalent values for every corresponding key, and
+	  //~~~possibly expensive deep test
+	  for (i = ka.length - 1; i >= 0; i--) {
+	    key = ka[i];
+	    if (!_deepEqual(a[key], b[key])) return false;
+	  }
+	  return true;
+	}
+
+	// 8. The non-equivalence assertion tests for any deep inequality.
+	// assert.notDeepEqual(actual, expected, message_opt);
+
+	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
+	  if (_deepEqual(actual, expected)) {
+	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
+	  }
+	};
+
+	// 9. The strict equality assertion tests strict equality, as determined by ===.
+	// assert.strictEqual(actual, expected, message_opt);
+
+	assert.strictEqual = function strictEqual(actual, expected, message) {
+	  if (actual !== expected) {
+	    fail(actual, expected, message, '===', assert.strictEqual);
+	  }
+	};
+
+	// 10. The strict non-equality assertion tests for strict inequality, as
+	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
+
+	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
+	  if (actual === expected) {
+	    fail(actual, expected, message, '!==', assert.notStrictEqual);
+	  }
+	};
+
+	function expectedException(actual, expected) {
+	  if (!actual || !expected) {
+	    return false;
+	  }
+
+	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
+	    return expected.test(actual);
+	  } else if (actual instanceof expected) {
+	    return true;
+	  } else if (expected.call({}, actual) === true) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	function _throws(shouldThrow, block, expected, message) {
+	  var actual;
+
+	  if (util.isString(expected)) {
+	    message = expected;
+	    expected = null;
+	  }
+
+	  try {
+	    block();
+	  } catch (e) {
+	    actual = e;
+	  }
+
+	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
+	            (message ? ' ' + message : '.');
+
+	  if (shouldThrow && !actual) {
+	    fail(actual, expected, 'Missing expected exception' + message);
+	  }
+
+	  if (!shouldThrow && expectedException(actual, expected)) {
+	    fail(actual, expected, 'Got unwanted exception' + message);
+	  }
+
+	  if ((shouldThrow && actual && expected &&
+	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
+	    throw actual;
+	  }
+	}
+
+	// 11. Expected to throw an error:
+	// assert.throws(block, Error_opt, message_opt);
+
+	assert.throws = function(block, /*optional*/error, /*optional*/message) {
+	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
+	};
+
+	// EXTENSION! This is annoying to write outside this module.
+	assert.doesNotThrow = function(block, /*optional*/message) {
+	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
+	};
+
+	assert.ifError = function(err) { if (err) {throw err;}};
+
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) {
+	    if (hasOwn.call(obj, key)) keys.push(key);
+	  }
+	  return keys;
+	};
+
+
+/***/ },
+/* 40 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
 	//
 	// Permission is hereby granted, free of charge, to any person obtaining a
@@ -19445,7 +19703,7 @@ var ripple =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(52);
+	exports.isBuffer = __webpack_require__(50);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -19489,7 +19747,7 @@ var ripple =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(64);
+	exports.inherits = __webpack_require__(63);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -19507,372 +19765,7 @@ var ripple =
 	  return Object.prototype.hasOwnProperty.call(obj, prop);
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(57)))
-
-/***/ },
-/* 40 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// http://wiki.commonjs.org/wiki/Unit_Testing/1.0
-	//
-	// THIS IS NOT TESTED NOR LIKELY TO WORK OUTSIDE V8!
-	//
-	// Originally from narwhal.js (http://narwhaljs.org)
-	// Copyright (c) 2009 Thomas Robinson <280north.com>
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a copy
-	// of this software and associated documentation files (the 'Software'), to
-	// deal in the Software without restriction, including without limitation the
-	// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-	// sell copies of the Software, and to permit persons to whom the Software is
-	// furnished to do so, subject to the following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included in
-	// all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	// AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-	// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// when used in node, this will actually load the util module we depend on
-	// versus loading the builtin util module as happens otherwise
-	// this is a bug in node module loading as far as I am concerned
-	var util = __webpack_require__(39);
-
-	var pSlice = Array.prototype.slice;
-	var hasOwn = Object.prototype.hasOwnProperty;
-
-	// 1. The assert module provides functions that throw
-	// AssertionError's when particular conditions are not met. The
-	// assert module must conform to the following interface.
-
-	var assert = module.exports = ok;
-
-	// 2. The AssertionError is defined in assert.
-	// new assert.AssertionError({ message: message,
-	//                             actual: actual,
-	//                             expected: expected })
-
-	assert.AssertionError = function AssertionError(options) {
-	  this.name = 'AssertionError';
-	  this.actual = options.actual;
-	  this.expected = options.expected;
-	  this.operator = options.operator;
-	  if (options.message) {
-	    this.message = options.message;
-	    this.generatedMessage = false;
-	  } else {
-	    this.message = getMessage(this);
-	    this.generatedMessage = true;
-	  }
-	  var stackStartFunction = options.stackStartFunction || fail;
-
-	  if (Error.captureStackTrace) {
-	    Error.captureStackTrace(this, stackStartFunction);
-	  }
-	  else {
-	    // non v8 browsers so we can have a stacktrace
-	    var err = new Error();
-	    if (err.stack) {
-	      var out = err.stack;
-
-	      // try to strip useless frames
-	      var fn_name = stackStartFunction.name;
-	      var idx = out.indexOf('\n' + fn_name);
-	      if (idx >= 0) {
-	        // once we have located the function frame
-	        // we need to strip out everything before it (and its line)
-	        var next_line = out.indexOf('\n', idx + 1);
-	        out = out.substring(next_line + 1);
-	      }
-
-	      this.stack = out;
-	    }
-	  }
-	};
-
-	// assert.AssertionError instanceof Error
-	util.inherits(assert.AssertionError, Error);
-
-	function replacer(key, value) {
-	  if (util.isUndefined(value)) {
-	    return '' + value;
-	  }
-	  if (util.isNumber(value) && !isFinite(value)) {
-	    return value.toString();
-	  }
-	  if (util.isFunction(value) || util.isRegExp(value)) {
-	    return value.toString();
-	  }
-	  return value;
-	}
-
-	function truncate(s, n) {
-	  if (util.isString(s)) {
-	    return s.length < n ? s : s.slice(0, n);
-	  } else {
-	    return s;
-	  }
-	}
-
-	function getMessage(self) {
-	  return truncate(JSON.stringify(self.actual, replacer), 128) + ' ' +
-	         self.operator + ' ' +
-	         truncate(JSON.stringify(self.expected, replacer), 128);
-	}
-
-	// At present only the three keys mentioned above are used and
-	// understood by the spec. Implementations or sub modules can pass
-	// other keys to the AssertionError's constructor - they will be
-	// ignored.
-
-	// 3. All of the following functions must throw an AssertionError
-	// when a corresponding condition is not met, with a message that
-	// may be undefined if not provided.  All assertion methods provide
-	// both the actual and expected values to the assertion error for
-	// display purposes.
-
-	function fail(actual, expected, message, operator, stackStartFunction) {
-	  throw new assert.AssertionError({
-	    message: message,
-	    actual: actual,
-	    expected: expected,
-	    operator: operator,
-	    stackStartFunction: stackStartFunction
-	  });
-	}
-
-	// EXTENSION! allows for well behaved errors defined elsewhere.
-	assert.fail = fail;
-
-	// 4. Pure assertion tests whether a value is truthy, as determined
-	// by !!guard.
-	// assert.ok(guard, message_opt);
-	// This statement is equivalent to assert.equal(true, !!guard,
-	// message_opt);. To test strictly for the value true, use
-	// assert.strictEqual(true, guard, message_opt);.
-
-	function ok(value, message) {
-	  if (!value) fail(value, true, message, '==', assert.ok);
-	}
-	assert.ok = ok;
-
-	// 5. The equality assertion tests shallow, coercive equality with
-	// ==.
-	// assert.equal(actual, expected, message_opt);
-
-	assert.equal = function equal(actual, expected, message) {
-	  if (actual != expected) fail(actual, expected, message, '==', assert.equal);
-	};
-
-	// 6. The non-equality assertion tests for whether two objects are not equal
-	// with != assert.notEqual(actual, expected, message_opt);
-
-	assert.notEqual = function notEqual(actual, expected, message) {
-	  if (actual == expected) {
-	    fail(actual, expected, message, '!=', assert.notEqual);
-	  }
-	};
-
-	// 7. The equivalence assertion tests a deep equality relation.
-	// assert.deepEqual(actual, expected, message_opt);
-
-	assert.deepEqual = function deepEqual(actual, expected, message) {
-	  if (!_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'deepEqual', assert.deepEqual);
-	  }
-	};
-
-	function _deepEqual(actual, expected) {
-	  // 7.1. All identical values are equivalent, as determined by ===.
-	  if (actual === expected) {
-	    return true;
-
-	  } else if (util.isBuffer(actual) && util.isBuffer(expected)) {
-	    if (actual.length != expected.length) return false;
-
-	    for (var i = 0; i < actual.length; i++) {
-	      if (actual[i] !== expected[i]) return false;
-	    }
-
-	    return true;
-
-	  // 7.2. If the expected value is a Date object, the actual value is
-	  // equivalent if it is also a Date object that refers to the same time.
-	  } else if (util.isDate(actual) && util.isDate(expected)) {
-	    return actual.getTime() === expected.getTime();
-
-	  // 7.3 If the expected value is a RegExp object, the actual value is
-	  // equivalent if it is also a RegExp object with the same source and
-	  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-	  } else if (util.isRegExp(actual) && util.isRegExp(expected)) {
-	    return actual.source === expected.source &&
-	           actual.global === expected.global &&
-	           actual.multiline === expected.multiline &&
-	           actual.lastIndex === expected.lastIndex &&
-	           actual.ignoreCase === expected.ignoreCase;
-
-	  // 7.4. Other pairs that do not both pass typeof value == 'object',
-	  // equivalence is determined by ==.
-	  } else if (!util.isObject(actual) && !util.isObject(expected)) {
-	    return actual == expected;
-
-	  // 7.5 For all other Object pairs, including Array objects, equivalence is
-	  // determined by having the same number of owned properties (as verified
-	  // with Object.prototype.hasOwnProperty.call), the same set of keys
-	  // (although not necessarily the same order), equivalent values for every
-	  // corresponding key, and an identical 'prototype' property. Note: this
-	  // accounts for both named and indexed properties on Arrays.
-	  } else {
-	    return objEquiv(actual, expected);
-	  }
-	}
-
-	function isArguments(object) {
-	  return Object.prototype.toString.call(object) == '[object Arguments]';
-	}
-
-	function objEquiv(a, b) {
-	  if (util.isNullOrUndefined(a) || util.isNullOrUndefined(b))
-	    return false;
-	  // an identical 'prototype' property.
-	  if (a.prototype !== b.prototype) return false;
-	  // if one is a primitive, the other must be same
-	  if (util.isPrimitive(a) || util.isPrimitive(b)) {
-	    return a === b;
-	  }
-	  var aIsArgs = isArguments(a),
-	      bIsArgs = isArguments(b);
-	  if ((aIsArgs && !bIsArgs) || (!aIsArgs && bIsArgs))
-	    return false;
-	  if (aIsArgs) {
-	    a = pSlice.call(a);
-	    b = pSlice.call(b);
-	    return _deepEqual(a, b);
-	  }
-	  var ka = objectKeys(a),
-	      kb = objectKeys(b),
-	      key, i;
-	  // having the same number of owned properties (keys incorporates
-	  // hasOwnProperty)
-	  if (ka.length != kb.length)
-	    return false;
-	  //the same set of keys (although not necessarily the same order),
-	  ka.sort();
-	  kb.sort();
-	  //~~~cheap key test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    if (ka[i] != kb[i])
-	      return false;
-	  }
-	  //equivalent values for every corresponding key, and
-	  //~~~possibly expensive deep test
-	  for (i = ka.length - 1; i >= 0; i--) {
-	    key = ka[i];
-	    if (!_deepEqual(a[key], b[key])) return false;
-	  }
-	  return true;
-	}
-
-	// 8. The non-equivalence assertion tests for any deep inequality.
-	// assert.notDeepEqual(actual, expected, message_opt);
-
-	assert.notDeepEqual = function notDeepEqual(actual, expected, message) {
-	  if (_deepEqual(actual, expected)) {
-	    fail(actual, expected, message, 'notDeepEqual', assert.notDeepEqual);
-	  }
-	};
-
-	// 9. The strict equality assertion tests strict equality, as determined by ===.
-	// assert.strictEqual(actual, expected, message_opt);
-
-	assert.strictEqual = function strictEqual(actual, expected, message) {
-	  if (actual !== expected) {
-	    fail(actual, expected, message, '===', assert.strictEqual);
-	  }
-	};
-
-	// 10. The strict non-equality assertion tests for strict inequality, as
-	// determined by !==.  assert.notStrictEqual(actual, expected, message_opt);
-
-	assert.notStrictEqual = function notStrictEqual(actual, expected, message) {
-	  if (actual === expected) {
-	    fail(actual, expected, message, '!==', assert.notStrictEqual);
-	  }
-	};
-
-	function expectedException(actual, expected) {
-	  if (!actual || !expected) {
-	    return false;
-	  }
-
-	  if (Object.prototype.toString.call(expected) == '[object RegExp]') {
-	    return expected.test(actual);
-	  } else if (actual instanceof expected) {
-	    return true;
-	  } else if (expected.call({}, actual) === true) {
-	    return true;
-	  }
-
-	  return false;
-	}
-
-	function _throws(shouldThrow, block, expected, message) {
-	  var actual;
-
-	  if (util.isString(expected)) {
-	    message = expected;
-	    expected = null;
-	  }
-
-	  try {
-	    block();
-	  } catch (e) {
-	    actual = e;
-	  }
-
-	  message = (expected && expected.name ? ' (' + expected.name + ').' : '.') +
-	            (message ? ' ' + message : '.');
-
-	  if (shouldThrow && !actual) {
-	    fail(actual, expected, 'Missing expected exception' + message);
-	  }
-
-	  if (!shouldThrow && expectedException(actual, expected)) {
-	    fail(actual, expected, 'Got unwanted exception' + message);
-	  }
-
-	  if ((shouldThrow && actual && expected &&
-	      !expectedException(actual, expected)) || (!shouldThrow && actual)) {
-	    throw actual;
-	  }
-	}
-
-	// 11. Expected to throw an error:
-	// assert.throws(block, Error_opt, message_opt);
-
-	assert.throws = function(block, /*optional*/error, /*optional*/message) {
-	  _throws.apply(this, [true].concat(pSlice.call(arguments)));
-	};
-
-	// EXTENSION! This is annoying to write outside this module.
-	assert.doesNotThrow = function(block, /*optional*/message) {
-	  _throws.apply(this, [false].concat(pSlice.call(arguments)));
-	};
-
-	assert.ifError = function(err) { if (err) {throw err;}};
-
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) {
-	    if (hasOwn.call(obj, key)) keys.push(key);
-	  }
-	  return keys;
-	};
-
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(55)))
 
 /***/ },
 /* 41 */
@@ -19885,9 +19778,9 @@ var ripple =
 	 * @license  MIT
 	 */
 
-	var base64 = __webpack_require__(65)
-	var ieee754 = __webpack_require__(59)
-	var isArray = __webpack_require__(60)
+	var base64 = __webpack_require__(62)
+	var ieee754 = __webpack_require__(57)
+	var isArray = __webpack_require__(58)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -19944,68 +19837,149 @@ var ripple =
 	 * By augmenting the instances, we can avoid modifying the `Uint8Array`
 	 * prototype.
 	 */
-	function Buffer (subject, encoding) {
-	  var self = this
-	  if (!(self instanceof Buffer)) return new Buffer(subject, encoding)
+	function Buffer (arg) {
+	  if (!(this instanceof Buffer)) {
+	    // Avoid going through an ArgumentsAdaptorTrampoline in the common case.
+	    if (arguments.length > 1) return new Buffer(arg, arguments[1])
+	    return new Buffer(arg)
+	  }
 
-	  var type = typeof subject
-	  var length
+	  this.length = 0
+	  this.parent = undefined
 
-	  if (type === 'number') {
-	    length = +subject
-	  } else if (type === 'string') {
-	    length = Buffer.byteLength(subject, encoding)
-	  } else if (type === 'object' && subject !== null) {
-	    // assume object is array-like
-	    if (subject.type === 'Buffer' && isArray(subject.data)) subject = subject.data
-	    length = +subject.length
-	  } else {
+	  // Common case.
+	  if (typeof arg === 'number') {
+	    return fromNumber(this, arg)
+	  }
+
+	  // Slightly less common case.
+	  if (typeof arg === 'string') {
+	    return fromString(this, arg, arguments.length > 1 ? arguments[1] : 'utf8')
+	  }
+
+	  // Unusual.
+	  return fromObject(this, arg)
+	}
+
+	function fromNumber (that, length) {
+	  that = allocate(that, length < 0 ? 0 : checked(length) | 0)
+	  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+	    for (var i = 0; i < length; i++) {
+	      that[i] = 0
+	    }
+	  }
+	  return that
+	}
+
+	function fromString (that, string, encoding) {
+	  if (typeof encoding !== 'string' || encoding === '') encoding = 'utf8'
+
+	  // Assumption: byteLength() return value is always < kMaxLength.
+	  var length = byteLength(string, encoding) | 0
+	  that = allocate(that, length)
+
+	  that.write(string, encoding)
+	  return that
+	}
+
+	function fromObject (that, object) {
+	  if (Buffer.isBuffer(object)) return fromBuffer(that, object)
+
+	  if (isArray(object)) return fromArray(that, object)
+
+	  if (object == null) {
 	    throw new TypeError('must start with number, buffer, array or string')
 	  }
 
-	  if (length > kMaxLength) {
-	    throw new RangeError('Attempt to allocate Buffer larger than maximum size: 0x' +
-	      kMaxLength.toString(16) + ' bytes')
+	  if (typeof ArrayBuffer !== 'undefined' && object.buffer instanceof ArrayBuffer) {
+	    return fromTypedArray(that, object)
 	  }
 
-	  if (length < 0) length = 0
-	  else length >>>= 0 // coerce to uint32
+	  if (object.length) return fromArrayLike(that, object)
 
+	  return fromJsonObject(that, object)
+	}
+
+	function fromBuffer (that, buffer) {
+	  var length = checked(buffer.length) | 0
+	  that = allocate(that, length)
+	  buffer.copy(that, 0, 0, length)
+	  return that
+	}
+
+	function fromArray (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	// Duplicate of fromArray() to keep fromArray() monomorphic.
+	function fromTypedArray (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  // Truncating the elements is probably not what people expect from typed
+	  // arrays with BYTES_PER_ELEMENT > 1 but it's compatible with the behavior
+	  // of the old Buffer constructor.
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	function fromArrayLike (that, array) {
+	  var length = checked(array.length) | 0
+	  that = allocate(that, length)
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	// Deserialize { type: 'Buffer', data: [1,2,3,...] } into a Buffer object.
+	// Returns a zero-length buffer for inputs that don't conform to the spec.
+	function fromJsonObject (that, object) {
+	  var array
+	  var length = 0
+
+	  if (object.type === 'Buffer' && isArray(object.data)) {
+	    array = object.data
+	    length = checked(array.length) | 0
+	  }
+	  that = allocate(that, length)
+
+	  for (var i = 0; i < length; i += 1) {
+	    that[i] = array[i] & 255
+	  }
+	  return that
+	}
+
+	function allocate (that, length) {
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
-	    // Preferred: Return an augmented `Uint8Array` instance for best performance
-	    self = Buffer._augment(new Uint8Array(length)) // eslint-disable-line consistent-this
+	    // Return an augmented `Uint8Array` instance, for best performance
+	    that = Buffer._augment(new Uint8Array(length))
 	  } else {
-	    // Fallback: Return THIS instance of Buffer (created by `new`)
-	    self.length = length
-	    self._isBuffer = true
+	    // Fallback: Return an object instance of the Buffer class
+	    that.length = length
+	    that._isBuffer = true
 	  }
 
-	  var i
-	  if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
-	    // Speed optimization -- use set if we're copying from a typed array
-	    self._set(subject)
-	  } else if (isArrayish(subject)) {
-	    // Treat array-ish objects as a byte array
-	    if (Buffer.isBuffer(subject)) {
-	      for (i = 0; i < length; i++) {
-	        self[i] = subject.readUInt8(i)
-	      }
-	    } else {
-	      for (i = 0; i < length; i++) {
-	        self[i] = ((subject[i] % 256) + 256) % 256
-	      }
-	    }
-	  } else if (type === 'string') {
-	    self.write(subject, 0, encoding)
-	  } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT) {
-	    for (i = 0; i < length; i++) {
-	      self[i] = 0
-	    }
+	  var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
+	  if (fromPool) that.parent = rootParent
+
+	  return that
+	}
+
+	function checked (length) {
+	  // Note: cannot use `length < kMaxLength` here because that fails when
+	  // length is NaN (which is otherwise coerced to zero.)
+	  if (length >= kMaxLength) {
+	    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+	                         'size: 0x' + kMaxLength.toString(16) + ' bytes')
 	  }
-
-	  if (length > 0 && length <= Buffer.poolSize) self.parent = rootParent
-
-	  return self
+	  return length | 0
 	}
 
 	function SlowBuffer (subject, encoding) {
@@ -20029,11 +20003,20 @@ var ripple =
 
 	  var x = a.length
 	  var y = b.length
-	  for (var i = 0, len = Math.min(x, y); i < len && a[i] === b[i]; i++) {}
+
+	  var i = 0
+	  var len = Math.min(x, y)
+	  while (i < len) {
+	    if (a[i] !== b[i]) break
+
+	    ++i
+	  }
+
 	  if (i !== len) {
 	    x = a[i]
 	    y = b[i]
 	  }
+
 	  if (x < y) return -1
 	  if (y < x) return 1
 	  return 0
@@ -20058,7 +20041,7 @@ var ripple =
 	  }
 	}
 
-	Buffer.concat = function concat (list, totalLength) {
+	Buffer.concat = function concat (list, length) {
 	  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
 
 	  if (list.length === 0) {
@@ -20068,14 +20051,14 @@ var ripple =
 	  }
 
 	  var i
-	  if (totalLength === undefined) {
-	    totalLength = 0
+	  if (length === undefined) {
+	    length = 0
 	    for (i = 0; i < list.length; i++) {
-	      totalLength += list[i].length
+	      length += list[i].length
 	    }
 	  }
 
-	  var buf = new Buffer(totalLength)
+	  var buf = new Buffer(length)
 	  var pos = 0
 	  for (i = 0; i < list.length; i++) {
 	    var item = list[i]
@@ -20085,36 +20068,33 @@ var ripple =
 	  return buf
 	}
 
-	Buffer.byteLength = function byteLength (str, encoding) {
-	  var ret
-	  str = str + ''
+	function byteLength (string, encoding) {
+	  if (typeof string !== 'string') string = String(string)
+
+	  if (string.length === 0) return 0
+
 	  switch (encoding || 'utf8') {
 	    case 'ascii':
 	    case 'binary':
 	    case 'raw':
-	      ret = str.length
-	      break
+	      return string.length
 	    case 'ucs2':
 	    case 'ucs-2':
 	    case 'utf16le':
 	    case 'utf-16le':
-	      ret = str.length * 2
-	      break
+	      return string.length * 2
 	    case 'hex':
-	      ret = str.length >>> 1
-	      break
+	      return string.length >>> 1
 	    case 'utf8':
 	    case 'utf-8':
-	      ret = utf8ToBytes(str).length
-	      break
+	      return utf8ToBytes(string).length
 	    case 'base64':
-	      ret = base64ToBytes(str).length
-	      break
+	      return base64ToBytes(string).length
 	    default:
-	      ret = str.length
+	      return string.length
 	  }
-	  return ret
 	}
+	Buffer.byteLength = byteLength
 
 	// pre-set for values that may exist in the future
 	Buffer.prototype.length = undefined
@@ -20124,8 +20104,8 @@ var ripple =
 	Buffer.prototype.toString = function toString (encoding, start, end) {
 	  var loweredCase = false
 
-	  start = start >>> 0
-	  end = end === undefined || end === Infinity ? this.length : end >>> 0
+	  start = start | 0
+	  end = end === undefined || end === Infinity ? this.length : end | 0
 
 	  if (!encoding) encoding = 'utf8'
 	  if (start < 0) start = 0
@@ -20267,13 +20247,11 @@ var ripple =
 	}
 
 	function utf8Write (buf, string, offset, length) {
-	  var charsWritten = blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
-	  return charsWritten
+	  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
 	}
 
 	function asciiWrite (buf, string, offset, length) {
-	  var charsWritten = blitBuffer(asciiToBytes(string), buf, offset, length)
-	  return charsWritten
+	  return blitBuffer(asciiToBytes(string), buf, offset, length)
 	}
 
 	function binaryWrite (buf, string, offset, length) {
@@ -20281,75 +20259,83 @@ var ripple =
 	}
 
 	function base64Write (buf, string, offset, length) {
-	  var charsWritten = blitBuffer(base64ToBytes(string), buf, offset, length)
-	  return charsWritten
+	  return blitBuffer(base64ToBytes(string), buf, offset, length)
 	}
 
-	function utf16leWrite (buf, string, offset, length) {
-	  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
-	  return charsWritten
+	function ucs2Write (buf, string, offset, length) {
+	  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
 	}
 
 	Buffer.prototype.write = function write (string, offset, length, encoding) {
-	  // Support both (string, offset, length, encoding)
-	  // and the legacy (string, encoding, offset, length)
-	  if (isFinite(offset)) {
-	    if (!isFinite(length)) {
+	  // Buffer#write(string)
+	  if (offset === undefined) {
+	    encoding = 'utf8'
+	    length = this.length
+	    offset = 0
+	  // Buffer#write(string, encoding)
+	  } else if (length === undefined && typeof offset === 'string') {
+	    encoding = offset
+	    length = this.length
+	    offset = 0
+	  // Buffer#write(string, offset[, length][, encoding])
+	  } else if (isFinite(offset)) {
+	    offset = offset | 0
+	    if (isFinite(length)) {
+	      length = length | 0
+	      if (encoding === undefined) encoding = 'utf8'
+	    } else {
 	      encoding = length
 	      length = undefined
 	    }
-	  } else {  // legacy
+	  // legacy write(string, encoding, offset, length) - remove in v0.13
+	  } else {
 	    var swap = encoding
 	    encoding = offset
-	    offset = length
+	    offset = length | 0
 	    length = swap
 	  }
 
-	  offset = Number(offset) || 0
+	  var remaining = this.length - offset
+	  if (length === undefined || length > remaining) length = remaining
 
-	  if (length < 0 || offset < 0 || offset > this.length) {
+	  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
 	    throw new RangeError('attempt to write outside buffer bounds')
 	  }
 
-	  var remaining = this.length - offset
-	  if (!length) {
-	    length = remaining
-	  } else {
-	    length = Number(length)
-	    if (length > remaining) {
-	      length = remaining
+	  if (!encoding) encoding = 'utf8'
+
+	  var loweredCase = false
+	  for (;;) {
+	    switch (encoding) {
+	      case 'hex':
+	        return hexWrite(this, string, offset, length)
+
+	      case 'utf8':
+	      case 'utf-8':
+	        return utf8Write(this, string, offset, length)
+
+	      case 'ascii':
+	        return asciiWrite(this, string, offset, length)
+
+	      case 'binary':
+	        return binaryWrite(this, string, offset, length)
+
+	      case 'base64':
+	        // Warning: maxLength not taken into account in base64Write
+	        return base64Write(this, string, offset, length)
+
+	      case 'ucs2':
+	      case 'ucs-2':
+	      case 'utf16le':
+	      case 'utf-16le':
+	        return ucs2Write(this, string, offset, length)
+
+	      default:
+	        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+	        encoding = ('' + encoding).toLowerCase()
+	        loweredCase = true
 	    }
 	  }
-	  encoding = String(encoding || 'utf8').toLowerCase()
-
-	  var ret
-	  switch (encoding) {
-	    case 'hex':
-	      ret = hexWrite(this, string, offset, length)
-	      break
-	    case 'utf8':
-	    case 'utf-8':
-	      ret = utf8Write(this, string, offset, length)
-	      break
-	    case 'ascii':
-	      ret = asciiWrite(this, string, offset, length)
-	      break
-	    case 'binary':
-	      ret = binaryWrite(this, string, offset, length)
-	      break
-	    case 'base64':
-	      ret = base64Write(this, string, offset, length)
-	      break
-	    case 'ucs2':
-	    case 'ucs-2':
-	    case 'utf16le':
-	    case 'utf-16le':
-	      ret = utf16leWrite(this, string, offset, length)
-	      break
-	    default:
-	      throw new TypeError('Unknown encoding: ' + encoding)
-	  }
-	  return ret
 	}
 
 	Buffer.prototype.toJSON = function toJSON () {
@@ -20472,8 +20458,8 @@ var ripple =
 	}
 
 	Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) checkOffset(offset, byteLength, this.length)
 
 	  var val = this[offset]
@@ -20487,8 +20473,8 @@ var ripple =
 	}
 
 	Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) {
 	    checkOffset(offset, byteLength, this.length)
 	  }
@@ -20536,8 +20522,8 @@ var ripple =
 	}
 
 	Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) checkOffset(offset, byteLength, this.length)
 
 	  var val = this[offset]
@@ -20554,8 +20540,8 @@ var ripple =
 	}
 
 	Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) checkOffset(offset, byteLength, this.length)
 
 	  var i = byteLength
@@ -20635,15 +20621,15 @@ var ripple =
 
 	Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
 
 	  var mul = 1
 	  var i = 0
 	  this[offset] = value & 0xFF
 	  while (++i < byteLength && (mul *= 0x100)) {
-	    this[offset + i] = (value / mul) >>> 0 & 0xFF
+	    this[offset + i] = (value / mul) & 0xFF
 	  }
 
 	  return offset + byteLength
@@ -20651,15 +20637,15 @@ var ripple =
 
 	Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
-	  byteLength = byteLength >>> 0
+	  offset = offset | 0
+	  byteLength = byteLength | 0
 	  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
 
 	  var i = byteLength - 1
 	  var mul = 1
 	  this[offset + i] = value & 0xFF
 	  while (--i >= 0 && (mul *= 0x100)) {
-	    this[offset + i] = (value / mul) >>> 0 & 0xFF
+	    this[offset + i] = (value / mul) & 0xFF
 	  }
 
 	  return offset + byteLength
@@ -20667,7 +20653,7 @@ var ripple =
 
 	Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
 	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
 	  this[offset] = value
@@ -20684,7 +20670,7 @@ var ripple =
 
 	Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = value
@@ -20697,7 +20683,7 @@ var ripple =
 
 	Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = (value >>> 8)
@@ -20717,7 +20703,7 @@ var ripple =
 
 	Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset + 3] = (value >>> 24)
@@ -20732,7 +20718,7 @@ var ripple =
 
 	Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = (value >>> 24)
@@ -20747,13 +20733,11 @@ var ripple =
 
 	Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) {
-	    checkInt(
-	      this, value, offset, byteLength,
-	      Math.pow(2, 8 * byteLength - 1) - 1,
-	      -Math.pow(2, 8 * byteLength - 1)
-	    )
+	    var limit = Math.pow(2, 8 * byteLength - 1)
+
+	    checkInt(this, value, offset, byteLength, limit - 1, -limit)
 	  }
 
 	  var i = 0
@@ -20769,13 +20753,11 @@ var ripple =
 
 	Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) {
-	    checkInt(
-	      this, value, offset, byteLength,
-	      Math.pow(2, 8 * byteLength - 1) - 1,
-	      -Math.pow(2, 8 * byteLength - 1)
-	    )
+	    var limit = Math.pow(2, 8 * byteLength - 1)
+
+	    checkInt(this, value, offset, byteLength, limit - 1, -limit)
 	  }
 
 	  var i = byteLength - 1
@@ -20791,7 +20773,7 @@ var ripple =
 
 	Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
 	  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
 	  if (value < 0) value = 0xff + value + 1
@@ -20801,7 +20783,7 @@ var ripple =
 
 	Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = value
@@ -20814,7 +20796,7 @@ var ripple =
 
 	Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = (value >>> 8)
@@ -20827,7 +20809,7 @@ var ripple =
 
 	Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    this[offset] = value
@@ -20842,7 +20824,7 @@ var ripple =
 
 	Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
 	  value = +value
-	  offset = offset >>> 0
+	  offset = offset | 0
 	  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
 	  if (value < 0) value = 0xffffffff + value + 1
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
@@ -20895,11 +20877,11 @@ var ripple =
 	}
 
 	// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-	Buffer.prototype.copy = function copy (target, target_start, start, end) {
+	Buffer.prototype.copy = function copy (target, targetStart, start, end) {
 	  if (!start) start = 0
 	  if (!end && end !== 0) end = this.length
-	  if (target_start >= target.length) target_start = target.length
-	  if (!target_start) target_start = 0
+	  if (targetStart >= target.length) targetStart = target.length
+	  if (!targetStart) targetStart = 0
 	  if (end > 0 && end < start) end = start
 
 	  // Copy 0 bytes; we're done
@@ -20907,7 +20889,7 @@ var ripple =
 	  if (target.length === 0 || this.length === 0) return 0
 
 	  // Fatal error conditions
-	  if (target_start < 0) {
+	  if (targetStart < 0) {
 	    throw new RangeError('targetStart out of bounds')
 	  }
 	  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
@@ -20915,18 +20897,18 @@ var ripple =
 
 	  // Are we oob?
 	  if (end > this.length) end = this.length
-	  if (target.length - target_start < end - start) {
-	    end = target.length - target_start + start
+	  if (target.length - targetStart < end - start) {
+	    end = target.length - targetStart + start
 	  }
 
 	  var len = end - start
 
 	  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
 	    for (var i = 0; i < len; i++) {
-	      target[i + target_start] = this[i + start]
+	      target[i + targetStart] = this[i + start]
 	    }
 	  } else {
-	    target._set(this.subarray(start, start + len), target_start)
+	    target._set(this.subarray(start, start + len), targetStart)
 	  }
 
 	  return len
@@ -21071,12 +21053,6 @@ var ripple =
 	function stringtrim (str) {
 	  if (str.trim) return str.trim()
 	  return str.replace(/^\s+|\s+$/g, '')
-	}
-
-	function isArrayish (subject) {
-	  return isArray(subject) || Buffer.isBuffer(subject) ||
-	      subject && typeof subject === 'object' &&
-	      typeof subject.length === 'number'
 	}
 
 	function toHex (n) {
@@ -21237,7 +21213,7 @@ var ripple =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(58);
+	var punycode = __webpack_require__(56);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -21309,7 +21285,7 @@ var ripple =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(61);
+	    querystring = __webpack_require__(59);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -34096,7 +34072,7 @@ var ripple =
 	  }
 	}.call(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(60)(module), (function() { return this; }())))
 
 /***/ },
 /* 44 */
@@ -35569,7 +35545,7 @@ var ripple =
 
 	}());
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(57), __webpack_require__(63).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(55), __webpack_require__(61).setImmediate))
 
 /***/ },
 /* 47 */
@@ -38267,10 +38243,10 @@ var ripple =
 	module.exports = function(options) {
 	  var sjcl = options.sjcl; // inject sjcl dependency
 
-	  var base58 = __webpack_require__(53)({ sjcl: options.sjcl });;
-	  var MasterKey = __webpack_require__(54)({ sjcl: options.sjcl });
-	  var RippleAddress = __webpack_require__(55)({ sjcl: options.sjcl });
-	  var PublicGenerator = __webpack_require__(56)({ sjcl: options.sjcl });
+	  var base58 = __webpack_require__(51)({ sjcl: options.sjcl });;
+	  var MasterKey = __webpack_require__(52)({ sjcl: options.sjcl });
+	  var RippleAddress = __webpack_require__(53)({ sjcl: options.sjcl });
+	  var PublicGenerator = __webpack_require__(54)({ sjcl: options.sjcl });
 
 	  function firstHalfOfSHA512(bytes) {
 	    return sjcl.bitArray.bitSlice(
@@ -38362,560 +38338,7 @@ var ripple =
 /* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	var _ = __webpack_require__(43);
-	var assert = __webpack_require__(40);
-	var UInt160 = __webpack_require__(9).UInt160;
-	var Amount = __webpack_require__(3).Amount;
-	var Utils = __webpack_require__(50);
-
-	function assertValidNumber(number, message) {
-	  assert(!_.isNull(number) && !isNaN(number), message);
-	}
-
-	function assertValidLegOneOffer(legOneOffer, message) {
-	  assert(legOneOffer);
-	  assert.strictEqual(typeof legOneOffer, 'object', message);
-	  assert.strictEqual(typeof legOneOffer.TakerPays, 'object', message);
-	  assertValidNumber(legOneOffer.TakerGets, message);
-	}
-
-	function AutobridgeCalculator(currencyGets, currencyPays,
-	  legOneOffers, legTwoOffers) {
-	  this._currencyGets = currencyGets;
-	  this._currencyPays = currencyPays;
-	  this.legOneOffers = _.cloneDeep(legOneOffers);
-	  this.legTwoOffers = _.cloneDeep(legTwoOffers);
-
-	  this._ownerFundsLeftover = {};
-	}
-
-	/**
-	 * Calculates an ordered array of autobridged offers by quality
-	 *
-	 * @return {Array}
-	 */
-
-	AutobridgeCalculator.prototype.calculate = function() {
-	  var legOnePointer = 0;
-	  var legTwoPointer = 0;
-
-	  var offersAutobridged = [];
-
-	  this.clearOwnerFundsLeftover();
-
-	  while (this.legOneOffers[legOnePointer] && this.legTwoOffers[legTwoPointer]) {
-	    var legOneOffer = this.legOneOffers[legOnePointer];
-	    var legTwoOffer = this.legTwoOffers[legTwoPointer];
-	    var leftoverFunds = this.getLeftoverOwnerFunds(legOneOffer.Account);
-	    var autobridgedOffer;
-
-	    if (legOneOffer.Account === legTwoOffer.Account) {
-	      this.unclampLegOneOwnerFunds(legOneOffer);
-	    } else if (!legOneOffer.is_fully_funded && !leftoverFunds.is_zero()) {
-	      this.adjustLegOneFundedAmount(legOneOffer);
-	    }
-
-	    var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
-	    var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
-
-	    if (legOneTakerGetsFunded.is_zero()) {
-	      legOnePointer++;
-
-	      continue;
-	    }
-
-	    if (legTwoTakerPaysFunded.is_zero()) {
-	      legTwoPointer++;
-
-	      continue;
-	    }
-
-	    if (legOneTakerGetsFunded.compareTo(legTwoTakerPaysFunded) > 0) {
-	      autobridgedOffer = this.getAutobridgedOfferWithClampedLegOne(
-	        legOneOffer,
-	        legTwoOffer
-	      );
-
-	      legTwoPointer++;
-	    } else if (legTwoTakerPaysFunded.compareTo(legOneTakerGetsFunded) > 0) {
-	      autobridgedOffer = this.getAutobridgedOfferWithClampedLegTwo(
-	        legOneOffer,
-	        legTwoOffer
-	      );
-
-	      legOnePointer++;
-	    } else {
-	      autobridgedOffer = this.getAutobridgedOfferWithoutClamps(
-	        legOneOffer,
-	        legTwoOffer
-	      );
-
-	      legOnePointer++;
-	      legTwoPointer++;
-	    }
-
-	    offersAutobridged.push(autobridgedOffer);
-	  }
-
-	  return offersAutobridged;
-	};
-
-	/**
-	 * In this case, the output from leg one is greater than the input to leg two.
-	 * Therefore, we must effectively clamp leg one output to leg two input.
-	 *
-	 * @param {Object} legOneOffer
-	 * @param {Object} legTwoOffer
-	 *
-	 * @return {Object}
-	 */
-
-	AutobridgeCalculator.prototype.getAutobridgedOfferWithClampedLegOne =
-	function(legOneOffer, legTwoOffer) {
-	  var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
-	  var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
-	  var legOneQuality = Utils.getOfferQuality(legOneOffer, this._currencyGets);
-
-	  var autobridgedTakerGets = Utils.getOfferTakerGetsFunded(legTwoOffer);
-	  var autobridgedTakerPays = legTwoTakerPaysFunded.multiply(legOneQuality);
-
-	  if (legOneOffer.Account === legTwoOffer.Account) {
-	    var legOneTakerGets = Utils.getOfferTakerGets(legOneOffer);
-	    var updatedTakerGets = legOneTakerGets.subtract(legTwoTakerPaysFunded);
-
-	    this.setLegOneTakerGets(legOneOffer, updatedTakerGets);
-
-	    this.clampLegOneOwnerFunds(legOneOffer);
-	  } else {
-	    // Update funded amount since leg one offer was not completely consumed
-	    var updatedTakerGetsFunded = legOneTakerGetsFunded
-	      .subtract(legTwoTakerPaysFunded);
-
-	    this.setLegOneTakerGetsFunded(legOneOffer, updatedTakerGetsFunded);
-	  }
-
-	  return this.formatAutobridgedOffer(
-	    autobridgedTakerGets,
-	    autobridgedTakerPays
-	  );
-	};
-
-	/**
-	 * In this case, the input from leg two is greater than the output to leg one.
-	 * Therefore, we must effectively clamp leg two input to leg one output.
-	 *
-	 * @param {Object} legOneOffer
-	 * @param {Object} legTwoOffer
-	 *
-	 * @return {Object}
-	 */
-
-	AutobridgeCalculator.prototype.getAutobridgedOfferWithClampedLegTwo =
-	function(legOneOffer, legTwoOffer) {
-	  var legOneTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
-	  var legTwoTakerPaysFunded = Utils.getOfferTakerPaysFunded(legTwoOffer);
-	  var legTwoQuality = Utils.getOfferQuality(legTwoOffer, this._currencyGets);
-
-	  var autobridgedTakerGets = legOneTakerGetsFunded.divide(legTwoQuality);
-	  var autobridgedTakerPays = Utils.getOfferTakerPaysFunded(legOneOffer);
-
-	  // Update funded amount since leg two offer was not completely consumed
-	  legTwoOffer.taker_gets_funded = Utils.getOfferTakerGetsFunded(legTwoOffer)
-	    .subtract(autobridgedTakerGets)
-	    .to_text();
-	  legTwoOffer.taker_pays_funded = legTwoTakerPaysFunded
-	    .subtract(legOneTakerGetsFunded)
-	    .to_text();
-
-	  return this.formatAutobridgedOffer(
-	    autobridgedTakerGets,
-	    autobridgedTakerPays
-	  );
-	};
-
-	/**
-	 * In this case, the output from leg one and the input to leg two are the same.
-	 * We do not need to clamp either.
-	 * @param {Object} legOneOffer
-	 * @param {Object} legTwoOffer
-	 *
-	 * @return {Object}
-	 */
-
-	AutobridgeCalculator.prototype.getAutobridgedOfferWithoutClamps =
-	function(legOneOffer, legTwoOffer) {
-	  var autobridgedTakerGets = Utils.getOfferTakerGetsFunded(legTwoOffer);
-	  var autobridgedTakerPays = Utils.getOfferTakerPaysFunded(legOneOffer);
-
-	  return this.formatAutobridgedOffer(
-	    autobridgedTakerGets,
-	    autobridgedTakerPays
-	  );
-	};
-
-	/**
-	 * Clear owner funds leftovers
-	 */
-
-	AutobridgeCalculator.prototype.clearOwnerFundsLeftover = function() {
-	  this._ownerFundsLeftover = {};
-	};
-
-	/**
-	 * Reset owner funds leftovers for an account to 0
-	 *
-	 * @param {String} account
-	 *
-	 * @return {Amount}
-	 */
-
-	AutobridgeCalculator.prototype.resetOwnerFundsLeftover = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-
-	  this._ownerFundsLeftover[account] = Utils.normalizeAmount('0');
-
-	  return this._ownerFundsLeftover[account];
-	};
-
-	/**
-	 * Retrieve leftover funds found after clamping leg one by account
-	 *
-	 * @param {String} account
-	 *
-	 * @return {Amount}
-	 */
-
-	AutobridgeCalculator.prototype.getLeftoverOwnerFunds = function(account) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-
-	  var amount = this._ownerFundsLeftover[account];
-
-	  if (!amount) {
-	    amount = Utils.normalizeAmount('0');
-	  }
-
-	  return amount;
-	};
-
-	/**
-	 * Add funds to account's leftover funds
-	 *
-	 * @param {String} account
-	 * @param {Amount} amount
-	 *
-	 * @return {Amount}
-	 */
-
-	AutobridgeCalculator.prototype.addLeftoverOwnerFunds =
-	function(account, amount) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(amount instanceof Amount, 'Amount is invalid');
-
-	  this._ownerFundsLeftover[account] = this.getLeftoverOwnerFunds(account)
-	    .add(amount);
-
-	  return this._ownerFundsLeftover[account];
-	};
-
-	/**
-	 * Set account's leftover funds
-	 *
-	 * @param {String} account
-	 * @param {Amount} amount
-	 */
-
-	AutobridgeCalculator.prototype.setLeftoverOwnerFunds =
-	function(account, amount) {
-	  assert(UInt160.is_valid(account), 'Account is invalid');
-	  assert(amount instanceof Amount, 'Amount is invalid');
-
-	  this._ownerFundsLeftover[account] = amount;
-	};
-
-	/**
-	 * Format an autobridged offer and compute synthetic values (e.g. quality)
-	 *
-	 * @param {Amount} takerGets
-	 * @param {Amount} takerPays
-	 *
-	 * @return {Object}
-	 */
-
-	AutobridgeCalculator.prototype.formatAutobridgedOffer =
-	function(takerGets, takerPays) {
-	  assert(takerGets instanceof Amount, 'Autobridged taker gets is invalid');
-	  assert(takerPays instanceof Amount, 'Autobridged taker pays is invalid');
-
-	  var autobridgedOffer = {};
-	  var quality = takerPays.divide(takerGets);
-
-	  autobridgedOffer.TakerGets = {
-	    value: takerGets.to_text(),
-	    currency: this._currencyGets.to_hex(),
-	    issuer: this._issuerGets
-	  };
-
-	  autobridgedOffer.TakerPays = {
-	    value: takerPays.to_text(),
-	    currency: this._currencyPays.to_hex(),
-	    issuer: this._issuerPays
-	  };
-
-	  autobridgedOffer.quality = quality.to_text();
-
-	  autobridgedOffer.taker_gets_funded = autobridgedOffer.TakerGets.value;
-	  autobridgedOffer.taker_pays_funded = autobridgedOffer.TakerPays.value;
-
-	  autobridgedOffer.autobridged = true;
-
-	  autobridgedOffer.BookDirectory = Utils.convertOfferQualityToHex(quality);
-
-	  return autobridgedOffer;
-	};
-
-	/**
-	 * Remove funds clamp on leg one offer. This is necessary when the two offers
-	 * are owned by the same account. In this case, it doesn't matter if offer one
-	 * is not fully funded. Leg one out goes to leg two in and since its the same
-	 * account, an infinite amount can flow.
-	 *
-	 * @param {Object} legOneOffer - IOU:XRP offer
-	 */
-
-	AutobridgeCalculator.prototype.unclampLegOneOwnerFunds = function(legOneOffer) {
-	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
-
-	  legOneOffer.initTakerGetsFunded = Utils.getOfferTakerGetsFunded(legOneOffer);
-
-	  this.setLegOneTakerGetsFunded(
-	    legOneOffer,
-	    Utils.getOfferTakerGets(legOneOffer)
-	  );
-	};
-
-	/**
-	 * Apply clamp back on leg one offer after a round of autobridge calculation
-	 * completes. We must reapply clamps that have been removed because we cannot
-	 * guarantee that the next offer from leg two will also be from the same
-	 * account.
-	 *
-	 * When we reapply, it could happen that the amount of TakerGets left after
-	 * the autobridge calculation is less than the original funded amount. In this
-	 * case, we have extra funds we can use towards unfunded offers with worse
-	 * quality by the same owner.
-	 *
-	 * @param {Object} legOneOffer - IOU:XRP offer
-	 */
-
-	AutobridgeCalculator.prototype.clampLegOneOwnerFunds = function(legOneOffer) {
-	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
-
-	  var takerGets = Utils.getOfferTakerGets(legOneOffer);
-
-	  if (takerGets.compareTo(legOneOffer.initTakerGetsFunded) > 0) {
-	    // After clamping, TakerGets is still greater than initial funded amount
-	    this.setLegOneTakerGetsFunded(legOneOffer, legOneOffer.initTakerGetsFunded);
-	  } else {
-	    var updatedLeftover = legOneOffer.initTakerGetsFunded.subtract(takerGets);
-
-	    this.setLegOneTakerGetsFunded(legOneOffer, takerGets);
-	    this.addLeftoverOwnerFunds(legOneOffer.Account, updatedLeftover);
-	  }
-	};
-
-	/**
-	 * Increase leg one offer funded amount with extra funds found after applying
-	 * clamp.
-	 *
-	 * @param {Object} legOneOffer - IOU:XRP offer
-	 */
-
-	AutobridgeCalculator.prototype.adjustLegOneFundedAmount =
-	function(legOneOffer) {
-	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
-	  assert(!legOneOffer.is_fully_funded, 'Leg one offer cannot be fully funded');
-
-	  var fundedSum = Utils.getOfferTakerGetsFunded(legOneOffer)
-	    .add(this.getLeftoverOwnerFunds(legOneOffer.Account));
-
-	  if (fundedSum.compareTo(Utils.getOfferTakerGets(legOneOffer)) >= 0) {
-	    // There are enough extra funds to fully fund the offer
-	    var legOneTakerGets = Utils.getOfferTakerGets(legOneOffer);
-	    var updatedLeftover = fundedSum.subtract(legOneTakerGets);
-
-	    this.setLegOneTakerGetsFunded(legOneOffer, legOneTakerGets);
-	    this.setLeftoverOwnerFunds(legOneOffer.Account, updatedLeftover);
-	  } else {
-	    // There are not enough extra funds to fully fund the offer
-	    this.setLegOneTakerGetsFunded(legOneOffer, fundedSum);
-	    this.resetOwnerFundsLeftover(legOneOffer.Account);
-	  }
-	};
-
-	/**
-	 * Set taker gets funded amount for a IOU:XRP offer. Also calculates taker
-	 * pays funded using offer quality and updates is_fully_funded flag
-	 *
-	 * @param {Object} legOneOffer - IOU:XRP offer
-	 * @param {Amount} takerGetsFunded
-	 */
-
-	AutobridgeCalculator.prototype.setLegOneTakerGetsFunded =
-	function setLegOneTakerGetsFunded(legOneOffer, takerGetsFunded) {
-	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
-	  assert(takerGetsFunded instanceof Amount, 'Taker gets funded is invalid');
-
-	  legOneOffer.taker_gets_funded = takerGetsFunded.to_text();
-	  legOneOffer.taker_pays_funded = takerGetsFunded
-	    .multiply(Utils.getOfferQuality(legOneOffer, this._currencyGets))
-	    .to_text();
-
-	  if (legOneOffer.taker_gets_funded === legOneOffer.TakerGets.value) {
-	    legOneOffer.is_fully_funded = true;
-	  }
-	};
-
-	/**
-	 * Set taker gets amount for a IOU:XRP offer. Also calculates taker pays
-	 * using offer quality
-	 *
-	 * @param {Object} legOneOffer - IOU:XRP offer
-	 * @param {Amount} takerGets
-	 */
-
-	AutobridgeCalculator.prototype.setLegOneTakerGets =
-	function(legOneOffer, takerGets) {
-	  assertValidLegOneOffer(legOneOffer, 'Leg one offer is invalid');
-	  assert(takerGets instanceof Amount, 'Taker gets funded is invalid');
-
-	  var legOneQuality = Utils.getOfferQuality(legOneOffer, this._currencyGets);
-
-	  legOneOffer.TakerGets = takerGets.to_text();
-	  legOneOffer.TakerPays = takerGets.multiply(legOneQuality);
-	};
-
-	module.exports = AutobridgeCalculator;
-
-
-/***/ },
-/* 50 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _ = __webpack_require__(43);
-	var assert = __webpack_require__(40);
-	var SerializedObject = __webpack_require__(13).SerializedObject;
-	var Types = __webpack_require__(24);
-	var Amount = __webpack_require__(3).Amount;
-
-	var IOU_SUFFIX = '/000/rrrrrrrrrrrrrrrrrrrrrhoLvTp';
-	var OrderBookUtils = {};
-
-	function assertValidNumber(number, message) {
-	  assert(!_.isNull(number) && !isNaN(number), message);
-	}
-
-	/**
-	 * Casts and returns offer's taker gets funded amount as a default IOU amount
-	 *
-	 * @param {Object} offer
-	 * @return {Amount}
-	 */
-
-	OrderBookUtils.getOfferTakerGetsFunded = function(offer) {
-	  assertValidNumber(offer.taker_gets_funded, 'Taker gets funded is invalid');
-
-	  return Amount.from_json(offer.taker_gets_funded + IOU_SUFFIX);
-	};
-
-	/**
-	 * Casts and returns offer's taker pays funded amount as a default IOU amount
-	 *
-	 * @param {Object} offer
-	 * @return {Amount}
-	 */
-
-	OrderBookUtils.getOfferTakerPaysFunded = function(offer) {
-	  assertValidNumber(offer.taker_pays_funded, 'Taker gets funded is invalid');
-
-	  return Amount.from_json(offer.taker_pays_funded + IOU_SUFFIX);
-	};
-
-	/**
-	 * Get offer taker gets amount
-	 *
-	 * @param {Object} offer
-	 *
-	 * @return {Amount}
-	 */
-
-	OrderBookUtils.getOfferTakerGets = function(offer) {
-	  assert(typeof offer, 'object', 'Offer is invalid');
-
-	  return Amount.from_json(offer.TakerGets + IOU_SUFFIX);
-	};
-
-	/**
-	 * Retrieve offer quality
-	 *
-	 * @param {Object} offer
-	 * @param {Currency} currencyGets
-	 */
-
-	OrderBookUtils.getOfferQuality = function(offer, currencyGets) {
-	  var amount;
-
-	  if (currencyGets.has_interest()) {
-	    // XXX Should use Amount#from_quality
-	    amount = Amount.from_json(
-	      offer.TakerPays
-	    ).ratio_human(offer.TakerGets, {
-	      reference_date: new Date()
-	    });
-	  } else {
-	    amount = Amount.from_json(offer.quality + IOU_SUFFIX);
-	  }
-
-	  return amount;
-	};
-
-	/**
-	 * Formats an offer quality amount to a hex that can be parsed by
-	 * Amount.parse_quality
-	 *
-	 * @param {Amount} quality
-	 *
-	 * @return {String}
-	 */
-
-	OrderBookUtils.convertOfferQualityToHex = function(quality) {
-	  assert(quality instanceof Amount, 'Quality is not an amount');
-
-	  var so = new SerializedObject();
-	  Types.Quality.serialize(so, quality.to_text() + IOU_SUFFIX);
-
-	  return so.to_hex();
-	};
-
-	/**
-	 *
-	 */
-
-	OrderBookUtils.normalizeAmount = function(value) {
-	  return Amount.from_json(value + IOU_SUFFIX);
-	};
-
-	module.exports = OrderBookUtils;
-
-
-/***/ },
-/* 51 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(66)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(64)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -38926,9 +38349,9 @@ var ripple =
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(67)
+	exports.createHash = __webpack_require__(65)
 
-	exports.createHmac = __webpack_require__(68)
+	exports.createHmac = __webpack_require__(66)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -38949,7 +38372,7 @@ var ripple =
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 
-	var p = __webpack_require__(69)(exports)
+	var p = __webpack_require__(67)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
 
@@ -38972,7 +38395,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 52 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function isBuffer(arg) {
@@ -38983,7 +38406,7 @@ var ripple =
 	}
 
 /***/ },
-/* 53 */
+/* 51 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -39096,13 +38519,13 @@ var ripple =
 
 
 /***/ },
-/* 54 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	module.exports = function(options) {
 	  var sjcl = options.sjcl;
-	  var base58 = __webpack_require__(53)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(51)({ sjcl: sjcl });
 
 	  function MasterKey(key) {
 	    this.value = key;
@@ -39120,7 +38543,7 @@ var ripple =
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.getRandomValues');
 	    } else if (typeof module === 'object' && module.exports) {
 	      // Node
-	      var entropy = __webpack_require__(51).randomBytes(128);
+	      var entropy = __webpack_require__(49).randomBytes(128);
 	      entropy = new Uint32Array(new Uint8Array(entropy).buffer);
 	      sjcl.random.addEntropy(entropy, 1024, 'crypto.randomBytes');
 	    } else {
@@ -39139,13 +38562,13 @@ var ripple =
 
 
 /***/ },
-/* 55 */
+/* 53 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	module.exports = function(options) { // inject sjcl dependency
 	  var sjcl = options.sjcl
-	  var base58 = __webpack_require__(53)({ sjcl: sjcl });
+	  var base58 = __webpack_require__(51)({ sjcl: sjcl });
 
 
 	  function SHA256_RIPEMD160(bits) {
@@ -39169,7 +38592,7 @@ var ripple =
 
 
 /***/ },
-/* 56 */
+/* 54 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(options) { // inject sjcl dependency
@@ -39202,7 +38625,7 @@ var ripple =
 
 
 /***/ },
-/* 57 */
+/* 55 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// shim for using process in browser
@@ -39266,7 +38689,7 @@ var ripple =
 
 
 /***/ },
-/* 58 */
+/* 56 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -39798,10 +39221,10 @@ var ripple =
 
 	}(this));
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(62)(module), (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(60)(module), (function() { return this; }())))
 
 /***/ },
-/* 59 */
+/* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports.read = function(buffer, offset, isLE, mLen, nBytes) {
@@ -39891,7 +39314,7 @@ var ripple =
 
 
 /***/ },
-/* 60 */
+/* 58 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -39930,17 +39353,17 @@ var ripple =
 
 
 /***/ },
-/* 61 */
+/* 59 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(71);
-	exports.encode = exports.stringify = __webpack_require__(72);
+	exports.decode = exports.parse = __webpack_require__(68);
+	exports.encode = exports.stringify = __webpack_require__(69);
 
 
 /***/ },
-/* 62 */
+/* 60 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function(module) {
@@ -39956,10 +39379,10 @@ var ripple =
 
 
 /***/ },
-/* 63 */
+/* 61 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(57).nextTick;
+	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(55).nextTick;
 	var apply = Function.prototype.apply;
 	var slice = Array.prototype.slice;
 	var immediateIds = {};
@@ -40035,39 +39458,10 @@ var ripple =
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(63).setImmediate, __webpack_require__(63).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(61).setImmediate, __webpack_require__(61).clearImmediate))
 
 /***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 65 */
+/* 62 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -40197,7 +39591,36 @@ var ripple =
 
 
 /***/ },
-/* 66 */
+/* 63 */
+/***/ function(module, exports, __webpack_require__) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
+
+/***/ },
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
@@ -40230,13 +39653,13 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(41).Buffer))
 
 /***/ },
-/* 67 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(74)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(72)
 
-	var md5 = toConstructor(__webpack_require__(73))
-	var rmd160 = toConstructor(__webpack_require__(76))
+	var md5 = toConstructor(__webpack_require__(71))
+	var rmd160 = toConstructor(__webpack_require__(74))
 
 	function toConstructor (fn) {
 	  return function () {
@@ -40267,10 +39690,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 68 */
+/* 66 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(67)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(65)
 
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -40317,10 +39740,10 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 69 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(75)
+	var pbkdf2Export = __webpack_require__(73)
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -40335,13 +39758,7 @@ var ripple =
 
 
 /***/ },
-/* 70 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* (ignored) */
-
-/***/ },
-/* 71 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -40427,7 +39844,7 @@ var ripple =
 
 
 /***/ },
-/* 72 */
+/* 69 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -40497,7 +39914,13 @@ var ripple =
 
 
 /***/ },
-/* 73 */
+/* 70 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* (ignored) */
+
+/***/ },
+/* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -40509,7 +39932,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(77);
+	var helpers = __webpack_require__(75);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -40658,7 +40081,7 @@ var ripple =
 
 
 /***/ },
-/* 74 */
+/* 72 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -40668,15 +40091,15 @@ var ripple =
 	}
 
 	var Buffer = __webpack_require__(41).Buffer
-	var Hash   = __webpack_require__(78)(Buffer)
+	var Hash   = __webpack_require__(76)(Buffer)
 
-	exports.sha1 = __webpack_require__(79)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(80)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(81)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(77)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(78)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(79)(Buffer, Hash)
 
 
 /***/ },
-/* 75 */
+/* 73 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -40767,7 +40190,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 76 */
+/* 74 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -40979,7 +40402,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 77 */
+/* 75 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -41020,7 +40443,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(41).Buffer))
 
 /***/ },
-/* 78 */
+/* 76 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = function (Buffer) {
@@ -41103,7 +40526,7 @@ var ripple =
 
 
 /***/ },
-/* 79 */
+/* 77 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -41115,7 +40538,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41247,7 +40670,7 @@ var ripple =
 
 
 /***/ },
-/* 80 */
+/* 78 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -41259,7 +40682,7 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -41400,10 +40823,10 @@ var ripple =
 
 
 /***/ },
-/* 81 */
+/* 79 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(39).inherits
+	var inherits = __webpack_require__(40).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
