@@ -82,28 +82,28 @@ var ripple =
 	var getLedgerVersion = server.getLedgerVersion;
 	var getTransaction = __webpack_require__(516);
 	var getTransactions = __webpack_require__(535);
-	var getTrustlines = __webpack_require__(713);
-	var getBalances = __webpack_require__(715);
-	var getBalanceSheet = __webpack_require__(716);
-	var getPaths = __webpack_require__(717);
-	var getOrders = __webpack_require__(719);
-	var getOrderbook = __webpack_require__(722);
-	var getSettings = __webpack_require__(724);
-	var getAccountInfo = __webpack_require__(725);
-	var preparePayment = __webpack_require__(726);
-	var prepareTrustline = __webpack_require__(728);
-	var prepareOrder = __webpack_require__(729);
-	var prepareOrderCancellation = __webpack_require__(730);
-	var prepareSuspendedPaymentCreation = __webpack_require__(731);
-	var prepareSuspendedPaymentExecution = __webpack_require__(732);
-	var prepareSuspendedPaymentCancellation = __webpack_require__(733);
-	var prepareSettings = __webpack_require__(734);
-	var sign = __webpack_require__(735);
-	var submit = __webpack_require__(736);
+	var getTrustlines = __webpack_require__(620);
+	var getBalances = __webpack_require__(622);
+	var getBalanceSheet = __webpack_require__(623);
+	var getPaths = __webpack_require__(624);
+	var getOrders = __webpack_require__(626);
+	var getOrderbook = __webpack_require__(629);
+	var getSettings = __webpack_require__(631);
+	var getAccountInfo = __webpack_require__(632);
+	var preparePayment = __webpack_require__(633);
+	var prepareTrustline = __webpack_require__(635);
+	var prepareOrder = __webpack_require__(636);
+	var prepareOrderCancellation = __webpack_require__(637);
+	var prepareSuspendedPaymentCreation = __webpack_require__(638);
+	var prepareSuspendedPaymentExecution = __webpack_require__(639);
+	var prepareSuspendedPaymentCancellation = __webpack_require__(640);
+	var prepareSettings = __webpack_require__(641);
+	var sign = __webpack_require__(642);
+	var submit = __webpack_require__(643);
 	var errors = __webpack_require__(265).errors;
 	var generateAddress = common.generateAddressAPI;
-	var computeLedgerHash = __webpack_require__(737);
-	var getLedger = __webpack_require__(738);
+	var computeLedgerHash = __webpack_require__(644);
+	var getLedger = __webpack_require__(645);
 
 	// prevent access to non-validated ledger versions
 
@@ -40752,8 +40752,12 @@ var ripple =
 
 	// NOTE: These type checking functions intentionally don't use `instanceof`
 	// because it is fragile and can be easily faked with `Object.create()`.
-	function isArray(ar) {
-	  return Array.isArray(ar);
+
+	function isArray(arg) {
+	  if (Array.isArray) {
+	    return Array.isArray(arg);
+	  }
+	  return objectToString(arg) === '[object Array]';
 	}
 	exports.isArray = isArray;
 
@@ -40793,7 +40797,7 @@ var ripple =
 	exports.isUndefined = isUndefined;
 
 	function isRegExp(re) {
-	  return isObject(re) && objectToString(re) === '[object RegExp]';
+	  return objectToString(re) === '[object RegExp]';
 	}
 	exports.isRegExp = isRegExp;
 
@@ -40803,13 +40807,12 @@ var ripple =
 	exports.isObject = isObject;
 
 	function isDate(d) {
-	  return isObject(d) && objectToString(d) === '[object Date]';
+	  return objectToString(d) === '[object Date]';
 	}
 	exports.isDate = isDate;
 
 	function isError(e) {
-	  return isObject(e) &&
-	      (objectToString(e) === '[object Error]' || e instanceof Error);
+	  return (objectToString(e) === '[object Error]' || e instanceof Error);
 	}
 	exports.isError = isError;
 
@@ -40828,14 +40831,12 @@ var ripple =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	function isBuffer(arg) {
-	  return Buffer.isBuffer(arg);
-	}
-	exports.isBuffer = isBuffer;
+	exports.isBuffer = Buffer.isBuffer;
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
 	}
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
@@ -49695,36 +49696,45 @@ var ripple =
 		"properties": {
 			"feeBase": {
 				"type": "integer",
-				"minimum": 0
+				"minimum": 0,
+				"description": "Base fee, in drops."
 			},
 			"feeReference": {
 				"type": "integer",
-				"minimum": 0
+				"minimum": 0,
+				"description": "Cost of the 'reference transaction' in 'fee units'."
 			},
 			"ledgerHash": {
-				"$ref": "hash256"
+				"$ref": "hash256",
+				"description": "Unique hash of the ledger that was closed, as hex."
 			},
 			"ledgerVersion": {
-				"$ref": "ledgerVersion"
+				"$ref": "ledgerVersion",
+				"description": "Ledger version of the ledger that closed."
 			},
 			"ledgerTimestamp": {
 				"type": "string",
-				"format": "date-time"
+				"format": "date-time",
+				"description": "The time at which this ledger closed."
 			},
 			"reserveBase": {
 				"type": "integer",
-				"minimum": 0
+				"minimum": 0,
+				"description": "The minimum reserve, in drops of XRP, that is required for an account."
 			},
 			"reserveIncrement": {
 				"type": "integer",
-				"minimum": 0
+				"minimum": 0,
+				"description": "The increase in account reserve that is added for each item the account owns, such as offers or trust lines."
 			},
 			"transactionCount": {
 				"type": "integer",
-				"minimum": 0
+				"minimum": 0,
+				"description": "Number of new transactions included in this ledger."
 			},
 			"validatedLedgerVersions": {
-				"type": "string"
+				"type": "string",
+				"description": "Range of ledgers that the server has available. This may be discontiguous."
 			}
 		},
 		"addtionalProperties": false,
@@ -52462,7 +52472,7 @@ var ripple =
 	var _ = __webpack_require__(262);
 	var binary = __webpack_require__(536);
 
-	var _require = __webpack_require__(642);
+	var _require = __webpack_require__(601);
 
 	var computeTransactionHash = _require.computeTransactionHash;
 
@@ -52673,19 +52683,19 @@ var ripple =
 	var enums = __webpack_require__(538);
 	var Field = enums.Field;
 
-	var types = __webpack_require__(590);
-	var binary = __webpack_require__(621);
+	var types = __webpack_require__(553);
+	var binary = __webpack_require__(580);
 
-	var _require = __webpack_require__(638);
+	var _require = __webpack_require__(597);
 
 	var ShaMap = _require.ShaMap;
 
-	var ledgerHashes = __webpack_require__(639);
-	var hashes = __webpack_require__(624);
-	var quality = __webpack_require__(640);
-	var signing = __webpack_require__(641);
+	var ledgerHashes = __webpack_require__(598);
+	var hashes = __webpack_require__(583);
+	var quality = __webpack_require__(599);
+	var signing = __webpack_require__(600);
 
-	var _require2 = __webpack_require__(622);
+	var _require2 = __webpack_require__(581);
 
 	var HashPrefix = _require2.HashPrefix;
 
@@ -52711,13 +52721,13 @@ var ripple =
 	var assert = __webpack_require__(273);
 	var _ = __webpack_require__(262);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var parseBytes = _require.parseBytes;
 	var serializeUIntN = _require.serializeUIntN;
 
-	var makeClass = __webpack_require__(582);
-	var enums = __webpack_require__(589);
+	var makeClass = __webpack_require__(547);
+	var enums = __webpack_require__(552);
 
 	function transformWith(func, obj) {
 	  return _.transform(obj, func);
@@ -52855,7 +52865,7 @@ var ripple =
 
 	var _getIterator = __webpack_require__(540)["default"];
 
-	var _isIterable = __webpack_require__(578)["default"];
+	var _isIterable = __webpack_require__(543)["default"];
 
 	exports["default"] = (function () {
 	  function sliceIterator(arr, i) {
@@ -52907,588 +52917,52 @@ var ripple =
 /* 541 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(542);
-	__webpack_require__(570);
-	module.exports = __webpack_require__(573);
+	__webpack_require__(49);
+	__webpack_require__(33);
+	module.exports = __webpack_require__(542);
 
 /***/ },
 /* 542 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(543);
-	var Iterators = __webpack_require__(546);
-	Iterators.NodeList = Iterators.HTMLCollection = Iterators.Array;
-
-/***/ },
-/* 543 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var addToUnscopables = __webpack_require__(544)
-	  , step             = __webpack_require__(545)
-	  , Iterators        = __webpack_require__(546)
-	  , toIObject        = __webpack_require__(547);
-
-	// 22.1.3.4 Array.prototype.entries()
-	// 22.1.3.13 Array.prototype.keys()
-	// 22.1.3.29 Array.prototype.values()
-	// 22.1.3.30 Array.prototype[@@iterator]()
-	module.exports = __webpack_require__(551)(Array, 'Array', function(iterated, kind){
-	  this._t = toIObject(iterated); // target
-	  this._i = 0;                   // next index
-	  this._k = kind;                // kind
-	// 22.1.5.2.1 %ArrayIteratorPrototype%.next()
-	}, function(){
-	  var O     = this._t
-	    , kind  = this._k
-	    , index = this._i++;
-	  if(!O || index >= O.length){
-	    this._t = undefined;
-	    return step(1);
-	  }
-	  if(kind == 'keys'  )return step(0, index);
-	  if(kind == 'values')return step(0, O[index]);
-	  return step(0, [index, O[index]]);
-	}, 'values');
-
-	// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
-	Iterators.Arguments = Iterators.Array;
-
-	addToUnscopables('keys');
-	addToUnscopables('values');
-	addToUnscopables('entries');
-
-/***/ },
-/* 544 */
-/***/ function(module, exports) {
-
-	module.exports = function(){ /* empty */ };
-
-/***/ },
-/* 545 */
-/***/ function(module, exports) {
-
-	module.exports = function(done, value){
-	  return {value: value, done: !!done};
-	};
-
-/***/ },
-/* 546 */
-/***/ function(module, exports) {
-
-	module.exports = {};
-
-/***/ },
-/* 547 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// to indexed object, toObject with fallback for non-array-like ES3 strings
-	var IObject = __webpack_require__(548)
-	  , defined = __webpack_require__(550);
-	module.exports = function(it){
-	  return IObject(defined(it));
-	};
-
-/***/ },
-/* 548 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-	var cof = __webpack_require__(549);
-	module.exports = Object('z').propertyIsEnumerable(0) ? Object : function(it){
-	  return cof(it) == 'String' ? it.split('') : Object(it);
-	};
-
-/***/ },
-/* 549 */
-/***/ function(module, exports) {
-
-	var toString = {}.toString;
-
-	module.exports = function(it){
-	  return toString.call(it).slice(8, -1);
-	};
-
-/***/ },
-/* 550 */
-/***/ function(module, exports) {
-
-	// 7.2.1 RequireObjectCoercible(argument)
-	module.exports = function(it){
-	  if(it == undefined)throw TypeError("Can't call method on  " + it);
-	  return it;
-	};
-
-/***/ },
-/* 551 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var LIBRARY        = __webpack_require__(552)
-	  , $export        = __webpack_require__(553)
-	  , redefine       = __webpack_require__(558)
-	  , hide           = __webpack_require__(559)
-	  , has            = __webpack_require__(564)
-	  , Iterators      = __webpack_require__(546)
-	  , $iterCreate    = __webpack_require__(565)
-	  , setToStringTag = __webpack_require__(566)
-	  , getProto       = __webpack_require__(560).getProto
-	  , ITERATOR       = __webpack_require__(567)('iterator')
-	  , BUGGY          = !([].keys && 'next' in [].keys()) // Safari has buggy iterators w/o `next`
-	  , FF_ITERATOR    = '@@iterator'
-	  , KEYS           = 'keys'
-	  , VALUES         = 'values';
-
-	var returnThis = function(){ return this; };
-
-	module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED){
-	  $iterCreate(Constructor, NAME, next);
-	  var getMethod = function(kind){
-	    if(!BUGGY && kind in proto)return proto[kind];
-	    switch(kind){
-	      case KEYS: return function keys(){ return new Constructor(this, kind); };
-	      case VALUES: return function values(){ return new Constructor(this, kind); };
-	    } return function entries(){ return new Constructor(this, kind); };
-	  };
-	  var TAG        = NAME + ' Iterator'
-	    , DEF_VALUES = DEFAULT == VALUES
-	    , VALUES_BUG = false
-	    , proto      = Base.prototype
-	    , $native    = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT]
-	    , $default   = $native || getMethod(DEFAULT)
-	    , methods, key;
-	  // Fix native
-	  if($native){
-	    var IteratorPrototype = getProto($default.call(new Base));
-	    // Set @@toStringTag to native iterators
-	    setToStringTag(IteratorPrototype, TAG, true);
-	    // FF fix
-	    if(!LIBRARY && has(proto, FF_ITERATOR))hide(IteratorPrototype, ITERATOR, returnThis);
-	    // fix Array#{values, @@iterator}.name in V8 / FF
-	    if(DEF_VALUES && $native.name !== VALUES){
-	      VALUES_BUG = true;
-	      $default = function values(){ return $native.call(this); };
-	    }
-	  }
-	  // Define iterator
-	  if((!LIBRARY || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])){
-	    hide(proto, ITERATOR, $default);
-	  }
-	  // Plug for library
-	  Iterators[NAME] = $default;
-	  Iterators[TAG]  = returnThis;
-	  if(DEFAULT){
-	    methods = {
-	      values:  DEF_VALUES  ? $default : getMethod(VALUES),
-	      keys:    IS_SET      ? $default : getMethod(KEYS),
-	      entries: !DEF_VALUES ? $default : getMethod('entries')
-	    };
-	    if(FORCED)for(key in methods){
-	      if(!(key in proto))redefine(proto, key, methods[key]);
-	    } else $export($export.P + $export.F * (BUGGY || VALUES_BUG), NAME, methods);
-	  }
-	  return methods;
-	};
-
-/***/ },
-/* 552 */
-/***/ function(module, exports) {
-
-	module.exports = true;
-
-/***/ },
-/* 553 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var global    = __webpack_require__(554)
-	  , core      = __webpack_require__(555)
-	  , ctx       = __webpack_require__(556)
-	  , PROTOTYPE = 'prototype';
-
-	var $export = function(type, name, source){
-	  var IS_FORCED = type & $export.F
-	    , IS_GLOBAL = type & $export.G
-	    , IS_STATIC = type & $export.S
-	    , IS_PROTO  = type & $export.P
-	    , IS_BIND   = type & $export.B
-	    , IS_WRAP   = type & $export.W
-	    , exports   = IS_GLOBAL ? core : core[name] || (core[name] = {})
-	    , target    = IS_GLOBAL ? global : IS_STATIC ? global[name] : (global[name] || {})[PROTOTYPE]
-	    , key, own, out;
-	  if(IS_GLOBAL)source = name;
-	  for(key in source){
-	    // contains in native
-	    own = !IS_FORCED && target && key in target;
-	    if(own && key in exports)continue;
-	    // export native or passed
-	    out = own ? target[key] : source[key];
-	    // prevent global pollution for namespaces
-	    exports[key] = IS_GLOBAL && typeof target[key] != 'function' ? source[key]
-	    // bind timers to global for call from export context
-	    : IS_BIND && own ? ctx(out, global)
-	    // wrap global constructors for prevent change them in library
-	    : IS_WRAP && target[key] == out ? (function(C){
-	      var F = function(param){
-	        return this instanceof C ? new C(param) : C(param);
-	      };
-	      F[PROTOTYPE] = C[PROTOTYPE];
-	      return F;
-	    // make static versions for prototype methods
-	    })(out) : IS_PROTO && typeof out == 'function' ? ctx(Function.call, out) : out;
-	    if(IS_PROTO)(exports[PROTOTYPE] || (exports[PROTOTYPE] = {}))[key] = out;
-	  }
-	};
-	// type bitmap
-	$export.F = 1;  // forced
-	$export.G = 2;  // global
-	$export.S = 4;  // static
-	$export.P = 8;  // proto
-	$export.B = 16; // bind
-	$export.W = 32; // wrap
-	module.exports = $export;
-
-/***/ },
-/* 554 */
-/***/ function(module, exports) {
-
-	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-	var global = module.exports = typeof window != 'undefined' && window.Math == Math
-	  ? window : typeof self != 'undefined' && self.Math == Math ? self : Function('return this')();
-	if(typeof __g == 'number')__g = global; // eslint-disable-line no-undef
-
-/***/ },
-/* 555 */
-/***/ function(module, exports) {
-
-	var core = module.exports = {version: '1.2.6'};
-	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
-
-/***/ },
-/* 556 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// optional / simple context binding
-	var aFunction = __webpack_require__(557);
-	module.exports = function(fn, that, length){
-	  aFunction(fn);
-	  if(that === undefined)return fn;
-	  switch(length){
-	    case 1: return function(a){
-	      return fn.call(that, a);
-	    };
-	    case 2: return function(a, b){
-	      return fn.call(that, a, b);
-	    };
-	    case 3: return function(a, b, c){
-	      return fn.call(that, a, b, c);
-	    };
-	  }
-	  return function(/* ...args */){
-	    return fn.apply(that, arguments);
-	  };
-	};
-
-/***/ },
-/* 557 */
-/***/ function(module, exports) {
-
-	module.exports = function(it){
-	  if(typeof it != 'function')throw TypeError(it + ' is not a function!');
-	  return it;
-	};
-
-/***/ },
-/* 558 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(559);
-
-/***/ },
-/* 559 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var $          = __webpack_require__(560)
-	  , createDesc = __webpack_require__(561);
-	module.exports = __webpack_require__(562) ? function(object, key, value){
-	  return $.setDesc(object, key, createDesc(1, value));
-	} : function(object, key, value){
-	  object[key] = value;
-	  return object;
-	};
-
-/***/ },
-/* 560 */
-/***/ function(module, exports) {
-
-	var $Object = Object;
-	module.exports = {
-	  create:     $Object.create,
-	  getProto:   $Object.getPrototypeOf,
-	  isEnum:     {}.propertyIsEnumerable,
-	  getDesc:    $Object.getOwnPropertyDescriptor,
-	  setDesc:    $Object.defineProperty,
-	  setDescs:   $Object.defineProperties,
-	  getKeys:    $Object.keys,
-	  getNames:   $Object.getOwnPropertyNames,
-	  getSymbols: $Object.getOwnPropertySymbols,
-	  each:       [].forEach
-	};
-
-/***/ },
-/* 561 */
-/***/ function(module, exports) {
-
-	module.exports = function(bitmap, value){
-	  return {
-	    enumerable  : !(bitmap & 1),
-	    configurable: !(bitmap & 2),
-	    writable    : !(bitmap & 4),
-	    value       : value
-	  };
-	};
-
-/***/ },
-/* 562 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Thank's IE8 for his funny defineProperty
-	module.exports = !__webpack_require__(563)(function(){
-	  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
-	});
-
-/***/ },
-/* 563 */
-/***/ function(module, exports) {
-
-	module.exports = function(exec){
-	  try {
-	    return !!exec();
-	  } catch(e){
-	    return true;
-	  }
-	};
-
-/***/ },
-/* 564 */
-/***/ function(module, exports) {
-
-	var hasOwnProperty = {}.hasOwnProperty;
-	module.exports = function(it, key){
-	  return hasOwnProperty.call(it, key);
-	};
-
-/***/ },
-/* 565 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var $              = __webpack_require__(560)
-	  , descriptor     = __webpack_require__(561)
-	  , setToStringTag = __webpack_require__(566)
-	  , IteratorPrototype = {};
-
-	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-	__webpack_require__(559)(IteratorPrototype, __webpack_require__(567)('iterator'), function(){ return this; });
-
-	module.exports = function(Constructor, NAME, next){
-	  Constructor.prototype = $.create(IteratorPrototype, {next: descriptor(1, next)});
-	  setToStringTag(Constructor, NAME + ' Iterator');
-	};
-
-/***/ },
-/* 566 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var def = __webpack_require__(560).setDesc
-	  , has = __webpack_require__(564)
-	  , TAG = __webpack_require__(567)('toStringTag');
-
-	module.exports = function(it, tag, stat){
-	  if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
-	};
-
-/***/ },
-/* 567 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var store  = __webpack_require__(568)('wks')
-	  , uid    = __webpack_require__(569)
-	  , Symbol = __webpack_require__(554).Symbol;
-	module.exports = function(name){
-	  return store[name] || (store[name] =
-	    Symbol && Symbol[name] || (Symbol || uid)('Symbol.' + name));
-	};
-
-/***/ },
-/* 568 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var global = __webpack_require__(554)
-	  , SHARED = '__core-js_shared__'
-	  , store  = global[SHARED] || (global[SHARED] = {});
-	module.exports = function(key){
-	  return store[key] || (store[key] = {});
-	};
-
-/***/ },
-/* 569 */
-/***/ function(module, exports) {
-
-	var id = 0
-	  , px = Math.random();
-	module.exports = function(key){
-	  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
-	};
-
-/***/ },
-/* 570 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var $at  = __webpack_require__(571)(true);
-
-	// 21.1.3.27 String.prototype[@@iterator]()
-	__webpack_require__(551)(String, 'String', function(iterated){
-	  this._t = String(iterated); // target
-	  this._i = 0;                // next index
-	// 21.1.5.2.1 %StringIteratorPrototype%.next()
-	}, function(){
-	  var O     = this._t
-	    , index = this._i
-	    , point;
-	  if(index >= O.length)return {value: undefined, done: true};
-	  point = $at(O, index);
-	  this._i += point.length;
-	  return {value: point, done: false};
-	});
-
-/***/ },
-/* 571 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var toInteger = __webpack_require__(572)
-	  , defined   = __webpack_require__(550);
-	// true  -> String#at
-	// false -> String#codePointAt
-	module.exports = function(TO_STRING){
-	  return function(that, pos){
-	    var s = String(defined(that))
-	      , i = toInteger(pos)
-	      , l = s.length
-	      , a, b;
-	    if(i < 0 || i >= l)return TO_STRING ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? TO_STRING ? s.charAt(i) : a
-	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-	  };
-	};
-
-/***/ },
-/* 572 */
-/***/ function(module, exports) {
-
-	// 7.1.4 ToInteger
-	var ceil  = Math.ceil
-	  , floor = Math.floor;
-	module.exports = function(it){
-	  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
-	};
-
-/***/ },
-/* 573 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var anObject = __webpack_require__(574)
-	  , get      = __webpack_require__(576);
-	module.exports = __webpack_require__(555).getIterator = function(it){
+	var anObject = __webpack_require__(23)
+	  , get      = __webpack_require__(60);
+	module.exports = __webpack_require__(13).getIterator = function(it){
 	  var iterFn = get(it);
 	  if(typeof iterFn != 'function')throw TypeError(it + ' is not iterable!');
 	  return anObject(iterFn.call(it));
 	};
 
 /***/ },
-/* 574 */
+/* 543 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(575);
-	module.exports = function(it){
-	  if(!isObject(it))throw TypeError(it + ' is not an object!');
-	  return it;
-	};
+	module.exports = { "default": __webpack_require__(544), __esModule: true };
 
 /***/ },
-/* 575 */
-/***/ function(module, exports) {
-
-	module.exports = function(it){
-	  return typeof it === 'object' ? it !== null : typeof it === 'function';
-	};
-
-/***/ },
-/* 576 */
+/* 544 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var classof   = __webpack_require__(577)
-	  , ITERATOR  = __webpack_require__(567)('iterator')
-	  , Iterators = __webpack_require__(546);
-	module.exports = __webpack_require__(555).getIteratorMethod = function(it){
-	  if(it != undefined)return it[ITERATOR]
-	    || it['@@iterator']
-	    || Iterators[classof(it)];
-	};
+	__webpack_require__(49);
+	__webpack_require__(33);
+	module.exports = __webpack_require__(545);
 
 /***/ },
-/* 577 */
+/* 545 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// getting tag from 19.1.3.6 Object.prototype.toString()
-	var cof = __webpack_require__(549)
-	  , TAG = __webpack_require__(567)('toStringTag')
-	  // ES3 wrong here
-	  , ARG = cof(function(){ return arguments; }()) == 'Arguments';
-
-	module.exports = function(it){
-	  var O, T, B;
-	  return it === undefined ? 'Undefined' : it === null ? 'Null'
-	    // @@toStringTag case
-	    : typeof (T = (O = Object(it))[TAG]) == 'string' ? T
-	    // builtinTag case
-	    : ARG ? cof(O)
-	    // ES3 arguments fallback
-	    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-	};
-
-/***/ },
-/* 578 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(579), __esModule: true };
-
-/***/ },
-/* 579 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(542);
-	__webpack_require__(570);
-	module.exports = __webpack_require__(580);
-
-/***/ },
-/* 580 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var classof   = __webpack_require__(577)
-	  , ITERATOR  = __webpack_require__(567)('iterator')
-	  , Iterators = __webpack_require__(546);
-	module.exports = __webpack_require__(555).isIterable = function(it){
+	var classof   = __webpack_require__(54)
+	  , ITERATOR  = __webpack_require__(43)('iterator')
+	  , Iterators = __webpack_require__(46);
+	module.exports = __webpack_require__(13).isIterable = function(it){
 	  var O = Object(it);
-	  return O[ITERATOR] !== undefined
+	  return ITERATOR in O
 	    || '@@iterator' in O
 	    || Iterators.hasOwnProperty(classof(O));
 	};
 
 /***/ },
-/* 581 */
+/* 546 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -53615,15 +53089,15 @@ var ripple =
 	};
 
 /***/ },
-/* 582 */
+/* 547 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _Object$keys = __webpack_require__(583)['default'];
+	var _Object$keys = __webpack_require__(548)['default'];
 
 	var _ = __webpack_require__(262);
-	var inherits = __webpack_require__(588);
+	var inherits = __webpack_require__(551);
 
 	function forEach(obj, func) {
 	  _Object$keys(obj || {}).forEach(function (k) {
@@ -53709,58 +53183,33 @@ var ripple =
 	};
 
 /***/ },
-/* 583 */
+/* 548 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(584), __esModule: true };
+	module.exports = { "default": __webpack_require__(549), __esModule: true };
 
 /***/ },
-/* 584 */
+/* 549 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(585);
-	module.exports = __webpack_require__(555).Object.keys;
+	__webpack_require__(550);
+	module.exports = __webpack_require__(13).Object.keys;
 
 /***/ },
-/* 585 */
+/* 550 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(586);
+	var toObject = __webpack_require__(344);
 
-	__webpack_require__(587)('keys', function($keys){
+	__webpack_require__(10)('keys', function($keys){
 	  return function keys(it){
 	    return $keys(toObject(it));
 	  };
 	});
 
 /***/ },
-/* 586 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 7.1.13 ToObject(argument)
-	var defined = __webpack_require__(550);
-	module.exports = function(it){
-	  return Object(defined(it));
-	};
-
-/***/ },
-/* 587 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// most Object methods by ES6 should accept primitives
-	var $export = __webpack_require__(553)
-	  , core    = __webpack_require__(555)
-	  , fails   = __webpack_require__(563);
-	module.exports = function(KEY, exec){
-	  var fn  = (core.Object || {})[KEY] || Object[KEY]
-	    , exp = {};
-	  exp[KEY] = exec(fn);
-	  $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
-	};
-
-/***/ },
-/* 588 */
+/* 551 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -53789,7 +53238,7 @@ var ripple =
 
 
 /***/ },
-/* 589 */
+/* 552 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -55433,7 +54882,7 @@ var ripple =
 	};
 
 /***/ },
-/* 590 */
+/* 553 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -55441,63 +54890,63 @@ var ripple =
 	var enums = __webpack_require__(538);
 	var Field = enums.Field;
 
-	var _require = __webpack_require__(591);
+	var _require = __webpack_require__(554);
 
 	var AccountID = _require.AccountID;
 
-	var _require2 = __webpack_require__(596);
+	var _require2 = __webpack_require__(559);
 
 	var Amount = _require2.Amount;
 
-	var _require3 = __webpack_require__(611);
+	var _require3 = __webpack_require__(570);
 
 	var Blob = _require3.Blob;
 
-	var _require4 = __webpack_require__(608);
+	var _require4 = __webpack_require__(567);
 
 	var Currency = _require4.Currency;
 
-	var _require5 = __webpack_require__(612);
+	var _require5 = __webpack_require__(571);
 
 	var Hash128 = _require5.Hash128;
 
-	var _require6 = __webpack_require__(592);
+	var _require6 = __webpack_require__(555);
 
 	var Hash160 = _require6.Hash160;
 
-	var _require7 = __webpack_require__(613);
+	var _require7 = __webpack_require__(572);
 
 	var Hash256 = _require7.Hash256;
 
-	var _require8 = __webpack_require__(614);
+	var _require8 = __webpack_require__(573);
 
 	var PathSet = _require8.PathSet;
 
-	var _require9 = __webpack_require__(615);
+	var _require9 = __webpack_require__(574);
 
 	var STArray = _require9.STArray;
 
-	var _require10 = __webpack_require__(616);
+	var _require10 = __webpack_require__(575);
 
 	var STObject = _require10.STObject;
 
-	var _require11 = __webpack_require__(617);
+	var _require11 = __webpack_require__(576);
 
 	var UInt16 = _require11.UInt16;
 
-	var _require12 = __webpack_require__(618);
+	var _require12 = __webpack_require__(577);
 
 	var UInt32 = _require12.UInt32;
 
-	var _require13 = __webpack_require__(609);
+	var _require13 = __webpack_require__(568);
 
 	var UInt64 = _require13.UInt64;
 
-	var _require14 = __webpack_require__(619);
+	var _require14 = __webpack_require__(578);
 
 	var UInt8 = _require14.UInt8;
 
-	var _require15 = __webpack_require__(620);
+	var _require15 = __webpack_require__(579);
 
 	var Vector256 = _require15.Vector256;
 
@@ -55530,19 +54979,19 @@ var ripple =
 	module.exports = coreTypes;
 
 /***/ },
-/* 591 */
+/* 554 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
 	var _require = __webpack_require__(320);
 
 	var decodeAccountID = _require.decodeAccountID;
 	var encodeAccountID = _require.encodeAccountID;
 
-	var _require2 = __webpack_require__(592);
+	var _require2 = __webpack_require__(555);
 
 	var Hash160 = _require2.Hash160;
 
@@ -55584,14 +55033,14 @@ var ripple =
 	};
 
 /***/ },
-/* 592 */
+/* 555 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(593);
+	var _require = __webpack_require__(556);
 
 	var Hash = _require.Hash;
 
@@ -55605,20 +55054,20 @@ var ripple =
 	};
 
 /***/ },
-/* 593 */
+/* 556 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(594);
+	var _require = __webpack_require__(557);
 
 	var Comparable = _require.Comparable;
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(546);
 
 	var compareBytes = _require2.compareBytes;
 	var parseBytes = _require2.parseBytes;
@@ -55665,17 +55114,17 @@ var ripple =
 	};
 
 /***/ },
-/* 594 */
+/* 557 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var bytesToHex = _require.bytesToHex;
 	var slice = _require.slice;
 
-	var _require2 = __webpack_require__(595);
+	var _require2 = __webpack_require__(558);
 
 	var BytesList = _require2.BytesList;
 
@@ -55742,19 +55191,19 @@ var ripple =
 	};
 
 /***/ },
-/* 595 */
+/* 558 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var parseBytes = _require.parseBytes;
 	var bytesToHex = _require.bytesToHex;
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
 	var _require2 = __webpack_require__(538);
 
@@ -55865,38 +55314,38 @@ var ripple =
 	};
 
 /***/ },
-/* 596 */
+/* 559 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _toConsumableArray = __webpack_require__(597)['default'];
+	var _toConsumableArray = __webpack_require__(560)['default'];
 
-	var _bind = __webpack_require__(605)['default'];
+	var _bind = __webpack_require__(564)['default'];
 
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(606);
-	var Decimal = __webpack_require__(607);
-	var makeClass = __webpack_require__(582);
+	var BN = __webpack_require__(565);
+	var Decimal = __webpack_require__(566);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(594);
+	var _require = __webpack_require__(557);
 
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(546);
 
 	var bytesToHex = _require2.bytesToHex;
 
-	var _require3 = __webpack_require__(608);
+	var _require3 = __webpack_require__(567);
 
 	var Currency = _require3.Currency;
 
-	var _require4 = __webpack_require__(591);
+	var _require4 = __webpack_require__(554);
 
 	var AccountID = _require4.AccountID;
 
-	var _require5 = __webpack_require__(609);
+	var _require5 = __webpack_require__(568);
 
 	var UInt64 = _require5.UInt64;
 
@@ -56021,12 +55470,12 @@ var ripple =
 	};
 
 /***/ },
-/* 597 */
+/* 560 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _Array$from = __webpack_require__(598)["default"];
+	var _Array$from = __webpack_require__(561)["default"];
 
 	exports["default"] = function (arr) {
 	  if (Array.isArray(arr)) {
@@ -56041,32 +55490,32 @@ var ripple =
 	exports.__esModule = true;
 
 /***/ },
-/* 598 */
+/* 561 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(599), __esModule: true };
+	module.exports = { "default": __webpack_require__(562), __esModule: true };
 
 /***/ },
-/* 599 */
+/* 562 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(570);
-	__webpack_require__(600);
-	module.exports = __webpack_require__(555).Array.from;
+	__webpack_require__(33);
+	__webpack_require__(563);
+	module.exports = __webpack_require__(13).Array.from;
 
 /***/ },
-/* 600 */
+/* 563 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var ctx         = __webpack_require__(556)
-	  , $export     = __webpack_require__(553)
-	  , toObject    = __webpack_require__(586)
-	  , call        = __webpack_require__(601)
-	  , isArrayIter = __webpack_require__(602)
-	  , toLength    = __webpack_require__(603)
-	  , getIterFn   = __webpack_require__(576);
-	$export($export.S + $export.F * !__webpack_require__(604)(function(iter){ Array.from(iter); }), 'Array', {
+	var ctx         = __webpack_require__(24)
+	  , $def        = __webpack_require__(11)
+	  , toObject    = __webpack_require__(344)
+	  , call        = __webpack_require__(57)
+	  , isArrayIter = __webpack_require__(58)
+	  , toLength    = __webpack_require__(59)
+	  , getIterFn   = __webpack_require__(60);
+	$def($def.S + $def.F * !__webpack_require__(70)(function(iter){ Array.from(iter); }), 'Array', {
 	  // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
 	  from: function from(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
 	    var O       = toObject(arrayLike)
@@ -56097,74 +55546,7 @@ var ripple =
 
 
 /***/ },
-/* 601 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// call something on iterator step with safe closing on error
-	var anObject = __webpack_require__(574);
-	module.exports = function(iterator, fn, value, entries){
-	  try {
-	    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
-	  // 7.4.6 IteratorClose(iterator, completion)
-	  } catch(e){
-	    var ret = iterator['return'];
-	    if(ret !== undefined)anObject(ret.call(iterator));
-	    throw e;
-	  }
-	};
-
-/***/ },
-/* 602 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// check on default Array iterator
-	var Iterators  = __webpack_require__(546)
-	  , ITERATOR   = __webpack_require__(567)('iterator')
-	  , ArrayProto = Array.prototype;
-
-	module.exports = function(it){
-	  return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
-	};
-
-/***/ },
-/* 603 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 7.1.15 ToLength
-	var toInteger = __webpack_require__(572)
-	  , min       = Math.min;
-	module.exports = function(it){
-	  return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
-	};
-
-/***/ },
-/* 604 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var ITERATOR     = __webpack_require__(567)('iterator')
-	  , SAFE_CLOSING = false;
-
-	try {
-	  var riter = [7][ITERATOR]();
-	  riter['return'] = function(){ SAFE_CLOSING = true; };
-	  Array.from(riter, function(){ throw 2; });
-	} catch(e){ /* empty */ }
-
-	module.exports = function(exec, skipClosing){
-	  if(!skipClosing && !SAFE_CLOSING)return false;
-	  var safe = false;
-	  try {
-	    var arr  = [7]
-	      , iter = arr[ITERATOR]();
-	    iter.next = function(){ safe = true; };
-	    arr[ITERATOR] = function(){ return iter; };
-	    exec(arr);
-	  } catch(e){ /* empty */ }
-	  return safe;
-	};
-
-/***/ },
-/* 605 */
+/* 564 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56173,7 +55555,7 @@ var ripple =
 	exports.__esModule = true;
 
 /***/ },
-/* 606 */
+/* 565 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {(function (module, exports) {
@@ -58627,7 +58009,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(263)(module)))
 
 /***/ },
-/* 607 */
+/* 566 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! decimal.js v4.0.3 https://github.com/MikeMcl/decimal.js/LICENCE */
@@ -62698,19 +62080,19 @@ var ripple =
 
 
 /***/ },
-/* 608 */
+/* 567 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var slice = _require.slice;
 
-	var _require2 = __webpack_require__(592);
+	var _require2 = __webpack_require__(555);
 
 	var Hash160 = _require2.Hash160;
 
@@ -62808,22 +62190,22 @@ var ripple =
 	};
 
 /***/ },
-/* 609 */
+/* 568 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(606);
-	var makeClass = __webpack_require__(582);
+	var BN = __webpack_require__(565);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var bytesToHex = _require.bytesToHex;
 	var parseBytes = _require.parseBytes;
 	var serializeUIntN = _require.serializeUIntN;
 
-	var _require2 = __webpack_require__(610);
+	var _require2 = __webpack_require__(569);
 
 	var UInt = _require2.UInt;
 
@@ -62874,21 +62256,21 @@ var ripple =
 	};
 
 /***/ },
-/* 610 */
+/* 569 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(606);
-	var makeClass = __webpack_require__(582);
+	var BN = __webpack_require__(565);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(594);
+	var _require = __webpack_require__(557);
 
 	var Comparable = _require.Comparable;
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(546);
 
 	var serializeUIntN = _require2.serializeUIntN;
 
@@ -62949,18 +62331,18 @@ var ripple =
 	};
 
 /***/ },
-/* 611 */
+/* 570 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var parseBytes = _require.parseBytes;
 
-	var _require2 = __webpack_require__(594);
+	var _require2 = __webpack_require__(557);
 
 	var SerializedType = _require2.SerializedType;
 
@@ -62991,14 +62373,14 @@ var ripple =
 	};
 
 /***/ },
-/* 612 */
+/* 571 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(593);
+	var _require = __webpack_require__(556);
 
 	var Hash = _require.Hash;
 
@@ -63012,14 +62394,14 @@ var ripple =
 	};
 
 /***/ },
-/* 613 */
+/* 572 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(593);
+	var _require = __webpack_require__(556);
 
 	var Hash = _require.Hash;
 
@@ -63038,24 +62420,24 @@ var ripple =
 	};
 
 /***/ },
-/* 614 */
+/* 573 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	/* eslint-disable no-unused-expressions */
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(594);
+	var _require = __webpack_require__(557);
 
 	var SerializedType = _require.SerializedType;
 	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
 
-	var _require2 = __webpack_require__(608);
+	var _require2 = __webpack_require__(567);
 
 	var Currency = _require2.Currency;
 
-	var _require3 = __webpack_require__(591);
+	var _require3 = __webpack_require__(554);
 
 	var AccountID = _require3.AccountID;
 
@@ -63171,14 +62553,14 @@ var ripple =
 	};
 
 /***/ },
-/* 615 */
+/* 574 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(594);
+	var _require = __webpack_require__(557);
 
 	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
 	var SerializedType = _require.SerializedType;
@@ -63187,7 +62569,7 @@ var ripple =
 
 	var Field = _require2.Field;
 
-	var _require3 = __webpack_require__(616);
+	var _require3 = __webpack_require__(575);
 
 	var STObject = _require3.STObject;
 	var ArrayEndMarker = Field.ArrayEndMarker;
@@ -63230,28 +62612,28 @@ var ripple =
 	};
 
 /***/ },
-/* 616 */
+/* 575 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	// const assert = require('assert');
 
-	var _Object$keys = __webpack_require__(583)['default'];
+	var _Object$keys = __webpack_require__(548)['default'];
 
 	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
 	var _require = __webpack_require__(538);
 
 	var Field = _require.Field;
 
-	var _require2 = __webpack_require__(595);
+	var _require2 = __webpack_require__(558);
 
 	var BinarySerializer = _require2.BinarySerializer;
 	var ObjectEndMarker = Field.ObjectEndMarker;
 
-	var _require3 = __webpack_require__(594);
+	var _require3 = __webpack_require__(557);
 
 	var SerializedType = _require3.SerializedType;
 
@@ -63322,14 +62704,14 @@ var ripple =
 	};
 
 /***/ },
-/* 617 */
+/* 576 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(610);
+	var _require = __webpack_require__(569);
 
 	var UInt = _require.UInt;
 
@@ -63343,14 +62725,14 @@ var ripple =
 	};
 
 /***/ },
-/* 618 */
+/* 577 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(610);
+	var _require = __webpack_require__(569);
 
 	var UInt = _require.UInt;
 
@@ -63364,14 +62746,14 @@ var ripple =
 	};
 
 /***/ },
-/* 619 */
+/* 578 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(610);
+	var _require = __webpack_require__(569);
 
 	var UInt = _require.UInt;
 
@@ -63385,18 +62767,18 @@ var ripple =
 	};
 
 /***/ },
-/* 620 */
+/* 579 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(613);
+	var _require = __webpack_require__(572);
 
 	var Hash256 = _require.Hash256;
 
-	var _require2 = __webpack_require__(594);
+	var _require2 = __webpack_require__(557);
 
 	var ensureArrayLikeIs = _require2.ensureArrayLikeIs;
 	var SerializedType = _require2.SerializedType;
@@ -63435,35 +62817,35 @@ var ripple =
 	};
 
 /***/ },
-/* 621 */
+/* 580 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* eslint-disable func-style */
 
 	'use strict';
 
-	var types = __webpack_require__(590);
+	var types = __webpack_require__(553);
 
-	var _require = __webpack_require__(622);
+	var _require = __webpack_require__(581);
 
 	var HashPrefix = _require.HashPrefix;
 
-	var _require2 = __webpack_require__(623);
+	var _require2 = __webpack_require__(582);
 
 	var BinaryParser = _require2.BinaryParser;
 
-	var _require3 = __webpack_require__(595);
+	var _require3 = __webpack_require__(558);
 
 	var BinarySerializer = _require3.BinarySerializer;
 	var BytesList = _require3.BytesList;
 
-	var _require4 = __webpack_require__(581);
+	var _require4 = __webpack_require__(546);
 
 	var bytesToHex = _require4.bytesToHex;
 	var slice = _require4.slice;
 	var parseBytes = _require4.parseBytes;
 
-	var _require5 = __webpack_require__(624);
+	var _require5 = __webpack_require__(583);
 
 	var sha512Half = _require5.sha512Half;
 	var transactionID = _require5.transactionID;
@@ -63529,12 +62911,12 @@ var ripple =
 	};
 
 /***/ },
-/* 622 */
+/* 581 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var serializeUIntN = _require.serializeUIntN;
 
@@ -63567,19 +62949,19 @@ var ripple =
 	};
 
 /***/ },
-/* 623 */
+/* 582 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
 	var _require = __webpack_require__(538);
 
 	var Field = _require.Field;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(546);
 
 	var slice = _require2.slice;
 	var parseBytes = _require2.parseBytes;
@@ -63681,26 +63063,26 @@ var ripple =
 	};
 
 /***/ },
-/* 624 */
+/* 583 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(622);
+	var _require = __webpack_require__(581);
 
 	var HashPrefix = _require.HashPrefix;
 
-	var _require2 = __webpack_require__(590);
+	var _require2 = __webpack_require__(553);
 
 	var Hash256 = _require2.Hash256;
 
-	var _require3 = __webpack_require__(581);
+	var _require3 = __webpack_require__(546);
 
 	var parseBytes = _require3.parseBytes;
 
-	var createHash = __webpack_require__(625);
+	var createHash = __webpack_require__(584);
 
 	var Sha512Half = makeClass({
 	  Sha512Half: function Sha512Half() {
@@ -63749,16 +63131,16 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 625 */
+/* 584 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-	var inherits = __webpack_require__(588)
-	var md5 = __webpack_require__(626)
-	var rmd160 = __webpack_require__(628)
-	var sha = __webpack_require__(629)
+	var inherits = __webpack_require__(551)
+	var md5 = __webpack_require__(585)
+	var rmd160 = __webpack_require__(587)
+	var sha = __webpack_require__(588)
 
-	var Base = __webpack_require__(637)
+	var Base = __webpack_require__(596)
 
 	function HashNoConstructor(hash) {
 	  Base.call(this, 'digest')
@@ -63808,7 +63190,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 626 */
+/* 585 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -63821,7 +63203,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(627);
+	var helpers = __webpack_require__(586);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -63969,7 +63351,7 @@ var ripple =
 	};
 
 /***/ },
-/* 627 */
+/* 586 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
@@ -64009,7 +63391,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 628 */
+/* 587 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -64226,7 +63608,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 629 */
+/* 588 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -64238,16 +63620,16 @@ var ripple =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(630)
-	exports.sha1 = __webpack_require__(632)
-	exports.sha224 = __webpack_require__(633)
-	exports.sha256 = __webpack_require__(634)
-	exports.sha384 = __webpack_require__(635)
-	exports.sha512 = __webpack_require__(636)
+	exports.sha = __webpack_require__(589)
+	exports.sha1 = __webpack_require__(591)
+	exports.sha224 = __webpack_require__(592)
+	exports.sha256 = __webpack_require__(593)
+	exports.sha384 = __webpack_require__(594)
+	exports.sha512 = __webpack_require__(595)
 
 
 /***/ },
-/* 630 */
+/* 589 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -64258,8 +63640,8 @@ var ripple =
 	 * operation was added.
 	 */
 
-	var inherits = __webpack_require__(588)
-	var Hash = __webpack_require__(631)
+	var inherits = __webpack_require__(551)
+	var Hash = __webpack_require__(590)
 
 	var W = new Array(80)
 
@@ -64354,7 +63736,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 631 */
+/* 590 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
@@ -64430,7 +63812,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 632 */
+/* 591 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -64442,8 +63824,8 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(588)
-	var Hash = __webpack_require__(631)
+	var inherits = __webpack_require__(551)
+	var Hash = __webpack_require__(590)
 
 	var W = new Array(80)
 
@@ -64533,7 +63915,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 633 */
+/* 592 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -64544,9 +63926,9 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(588)
-	var Sha256 = __webpack_require__(634)
-	var Hash = __webpack_require__(631)
+	var inherits = __webpack_require__(551)
+	var Sha256 = __webpack_require__(593)
+	var Hash = __webpack_require__(590)
 
 	var W = new Array(64)
 
@@ -64592,7 +63974,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 634 */
+/* 593 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -64603,8 +63985,8 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(588)
-	var Hash = __webpack_require__(631)
+	var inherits = __webpack_require__(551)
+	var Hash = __webpack_require__(590)
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -64740,12 +64122,12 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 635 */
+/* 594 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(588)
-	var SHA512 = __webpack_require__(636)
-	var Hash = __webpack_require__(631)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(551)
+	var SHA512 = __webpack_require__(595)
+	var Hash = __webpack_require__(590)
 
 	var W = new Array(160)
 
@@ -64803,11 +64185,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 636 */
+/* 595 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(588)
-	var Hash = __webpack_require__(631)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(551)
+	var Hash = __webpack_require__(590)
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -65076,11 +64458,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 637 */
+/* 596 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(365).Transform
-	var inherits = __webpack_require__(588)
+	var inherits = __webpack_require__(551)
 	var StringDecoder = __webpack_require__(375).StringDecoder
 	module.exports = CipherBase
 	inherits(CipherBase, Transform)
@@ -65173,23 +64555,23 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 638 */
+/* 597 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(582);
+	var makeClass = __webpack_require__(547);
 
-	var _require = __webpack_require__(590);
+	var _require = __webpack_require__(553);
 
 	var Hash256 = _require.Hash256;
 
-	var _require2 = __webpack_require__(622);
+	var _require2 = __webpack_require__(581);
 
 	var HashPrefix = _require2.HashPrefix;
 
-	var _require3 = __webpack_require__(624);
+	var _require3 = __webpack_require__(583);
 
 	var Hasher = _require3.Sha512Half;
 
@@ -65299,33 +64681,33 @@ var ripple =
 	};
 
 /***/ },
-/* 639 */
+/* 598 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _toConsumableArray = __webpack_require__(597)['default'];
+	var _toConsumableArray = __webpack_require__(560)['default'];
 
 	var _ = __webpack_require__(262);
-	var BN = __webpack_require__(606);
+	var BN = __webpack_require__(565);
 	var assert = __webpack_require__(273);
-	var types = __webpack_require__(590);
+	var types = __webpack_require__(553);
 	var STObject = types.STObject;
 	var Hash256 = types.Hash256;
 
-	var _require = __webpack_require__(638);
+	var _require = __webpack_require__(597);
 
 	var ShaMap = _require.ShaMap;
 
-	var _require2 = __webpack_require__(622);
+	var _require2 = __webpack_require__(581);
 
 	var HashPrefix = _require2.HashPrefix;
 
-	var _require3 = __webpack_require__(624);
+	var _require3 = __webpack_require__(583);
 
 	var Sha512Half = _require3.Sha512Half;
 
-	var _require4 = __webpack_require__(621);
+	var _require4 = __webpack_require__(580);
 
 	var BinarySerializer = _require4.BinarySerializer;
 	var serializeObject = _require4.serializeObject;
@@ -65396,23 +64778,23 @@ var ripple =
 	};
 
 /***/ },
-/* 640 */
+/* 599 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var Decimal = __webpack_require__(607);
+	var Decimal = __webpack_require__(566);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(546);
 
 	var bytesToHex = _require.bytesToHex;
 	var slice = _require.slice;
 	var parseBytes = _require.parseBytes;
 
-	var _require2 = __webpack_require__(590);
+	var _require2 = __webpack_require__(553);
 
 	var UInt64 = _require2.UInt64;
 
-	var BN = __webpack_require__(606);
+	var BN = __webpack_require__(565);
 
 	module.exports = {
 	  encode: function encode(arg) {
@@ -65432,7 +64814,7 @@ var ripple =
 	};
 
 /***/ },
-/* 641 */
+/* 600 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65440,11 +64822,11 @@ var ripple =
 
 	var _ = __webpack_require__(262);
 
-	var _require = __webpack_require__(590);
+	var _require = __webpack_require__(553);
 
 	var AccountID = _require.AccountID;
 
-	var binary = __webpack_require__(621);
+	var binary = __webpack_require__(580);
 	var serializeObject = binary.serializeObject;
 	var bytesToHex = binary.bytesToHex;
 	var multiSigningData = binary.multiSigningData;
@@ -65514,18 +64896,18 @@ var ripple =
 	};
 
 /***/ },
-/* 642 */
+/* 601 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 	var BigNumber = __webpack_require__(267);
 	var decodeAddress = __webpack_require__(320).decodeAddress;
-	var binary = __webpack_require__(643);
-	var hashprefixes = __webpack_require__(709);
-	var SHAMap = __webpack_require__(710).SHAMap;
-	var SHAMapTreeNode = __webpack_require__(710).SHAMapTreeNode;
-	var ledgerspaces = __webpack_require__(712);
-	var sha512half = __webpack_require__(711);
+	var binary = __webpack_require__(536);
+	var hashprefixes = __webpack_require__(602);
+	var SHAMap = __webpack_require__(603).SHAMap;
+	var SHAMapTreeNode = __webpack_require__(603).SHAMapTreeNode;
+	var ledgerspaces = __webpack_require__(619);
+	var sha512half = __webpack_require__(604);
 
 	function hash(hex) {
 	  return sha512half(new Buffer(hex, 'hex'));
@@ -65676,12270 +65058,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 643 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var coreTypes = __webpack_require__(644);
-	var quality = coreTypes.quality;
-	var _coreTypes$binary = coreTypes.binary;
-	var bytesToHex = _coreTypes$binary.bytesToHex;
-	var signingData = _coreTypes$binary.signingData;
-	var multiSigningData = _coreTypes$binary.multiSigningData;
-	var binaryToJSON = _coreTypes$binary.binaryToJSON;
-	var serializeObject = _coreTypes$binary.serializeObject;
-
-	function decode(binary) {
-	  assert(typeof binary === 'string', 'binary must be a hex string');
-	  return binaryToJSON(binary);
-	}
-
-	function encode(json) {
-	  assert(typeof json === 'object');
-	  return bytesToHex(serializeObject(json));
-	}
-
-	function encodeForSigning(json) {
-	  assert(typeof json === 'object');
-	  return bytesToHex(signingData(json));
-	}
-
-	function encodeForMultisigning(json, signer) {
-	  assert(typeof json === 'object');
-	  assert.equal(json.SigningPubKey, '');
-	  return bytesToHex(multiSigningData(json, signer));
-	}
-
-	function encodeQuality(value) {
-	  assert(typeof value === 'string');
-	  return bytesToHex(quality.encode(value));
-	}
-
-	function decodeQuality(value) {
-	  assert(typeof value === 'string');
-	  return quality.decode(value).toString();
-	}
-
-	module.exports = {
-	  decode: decode,
-	  encode: encode,
-	  encodeForSigning: encodeForSigning,
-	  encodeForMultisigning: encodeForMultisigning,
-	  encodeQuality: encodeQuality,
-	  decodeQuality: decodeQuality
-	};
-
-/***/ },
-/* 644 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _ = __webpack_require__(262);
-	var enums = __webpack_require__(645);
-	var Field = enums.Field;
-
-	var types = __webpack_require__(660);
-	var binary = __webpack_require__(687);
-
-	var _require = __webpack_require__(705);
-
-	var ShaMap = _require.ShaMap;
-
-	var ledgerHashes = __webpack_require__(706);
-	var hashes = __webpack_require__(690);
-	var quality = __webpack_require__(707);
-	var signing = __webpack_require__(708);
-
-	var _require2 = __webpack_require__(688);
-
-	var HashPrefix = _require2.HashPrefix;
-
-	module.exports = _.assign({
-	  hashes: _.assign({}, hashes, ledgerHashes),
-	  binary: binary,
-	  enums: enums,
-	  signing: signing,
-	  quality: quality,
-	  Field: Field,
-	  HashPrefix: HashPrefix,
-	  ShaMap: ShaMap
-	}, types);
-
-/***/ },
-/* 645 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _slicedToArray = __webpack_require__(646)['default'];
-
-	var assert = __webpack_require__(273);
-	var _ = __webpack_require__(262);
-
-	var _require = __webpack_require__(653);
-
-	var parseBytes = _require.parseBytes;
-	var serializeUIntN = _require.serializeUIntN;
-
-	var makeClass = __webpack_require__(654);
-	var enums = __webpack_require__(659);
-
-	function transformWith(func, obj) {
-	  return _.transform(obj, func);
-	}
-
-	function biMap(obj, valueKey) {
-	  return _.transform(obj, function (result, value, key) {
-	    result[key] = value;
-	    result[value[valueKey]] = value;
-	  });
-	}
-
-	var EnumType = makeClass({
-	  EnumType: function EnumType(definition) {
-	    _.assign(this, definition);
-	    // At minimum
-	    assert(this.bytes instanceof Uint8Array);
-	    assert(typeof this.ordinal === 'number');
-	    assert(typeof this.name === 'string');
-	  },
-	  toString: function toString() {
-	    return this.name;
-	  },
-	  toJSON: function toJSON() {
-	    return this.name;
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    sink.put(this.bytes);
-	  },
-	  statics: {
-	    ordinalByteWidth: 1,
-	    fromParser: function fromParser(parser) {
-	      return this.from(parser.readUIntN(this.ordinalByteWidth));
-	    },
-	    from: function from(val) {
-	      var ret = val instanceof this ? val : this[val];
-	      if (!ret) {
-	        throw new Error(val + ' is not a valid name or ordinal for ' + this.enumName);
-	      }
-	      return ret;
-	    },
-	    valuesByName: function valuesByName() {
-	      var _this = this;
-
-	      return _.transform(this.initVals, function (result, ordinal, name) {
-	        var bytes = serializeUIntN(ordinal, _this.ordinalByteWidth);
-	        var type = new _this({ name: name, ordinal: ordinal, bytes: bytes });
-	        result[name] = type;
-	      });
-	    },
-	    init: function init() {
-	      var mapped = this.valuesByName();
-	      _.assign(this, biMap(mapped, 'ordinal'));
-	      this.values = _.values(mapped);
-	      return this;
-	    }
-	  }
-	});
-
-	function makeEnum(name, definition) {
-	  return makeClass({
-	    inherits: EnumType,
-	    statics: _.assign(definition, { enumName: name })
-	  });
-	}
-
-	function makeEnums(to, definition, name) {
-	  to[name] = makeEnum(name, definition);
-	}
-
-	var Enums = transformWith(makeEnums, {
-	  Type: {
-	    initVals: enums.TYPES
-	  },
-	  LedgerEntryType: {
-	    initVals: enums.LEDGER_ENTRY_TYPES, ordinalByteWidth: 2
-	  },
-	  TransactionType: {
-	    initVals: enums.TRANSACTION_TYPES, ordinalByteWidth: 2
-	  },
-	  TransactionResult: {
-	    initVals: enums.TRANSACTION_RESULTS, ordinalByteWidth: 1
-	  }
-	});
-
-	Enums.Field = makeClass({
-	  inherits: EnumType,
-	  statics: {
-	    enumName: 'Field',
-	    initVals: enums.FIELDS,
-	    valuesByName: function valuesByName() {
-	      var _this2 = this;
-
-	      var fields = _.map(this.initVals, function (_ref) {
-	        var _ref2 = _slicedToArray(_ref, 2);
-
-	        var name = _ref2[0];
-	        var definition = _ref2[1];
-
-	        var type = Enums.Type[definition.type];
-	        var bytes = _this2.header(type.ordinal, definition.nth);
-	        var ordinal = type.ordinal << 16 | definition.nth;
-	        var extra = { ordinal: ordinal, name: name, type: type, bytes: bytes };
-	        return new _this2(_.assign(definition, extra));
-	      });
-	      return _.indexBy(fields, 'name');
-	    },
-	    header: function header(type, nth) {
-	      var name = nth;
-	      var header = [];
-	      var push = header.push.bind(header);
-	      if (type < 16) {
-	        if (name < 16) {
-	          push(type << 4 | name);
-	        } else {
-	          push(type << 4, name);
-	        }
-	      } else if (name < 16) {
-	        push(name, type);
-	      } else {
-	        push(0, type, name);
-	      }
-	      return parseBytes(header, Uint8Array);
-	    }
-	  }
-	});
-
-	module.exports = Enums;
-
-/***/ },
-/* 646 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _getIterator = __webpack_require__(647)["default"];
-
-	var _isIterable = __webpack_require__(650)["default"];
-
-	exports["default"] = (function () {
-	  function sliceIterator(arr, i) {
-	    var _arr = [];
-	    var _n = true;
-	    var _d = false;
-	    var _e = undefined;
-
-	    try {
-	      for (var _i = _getIterator(arr), _s; !(_n = (_s = _i.next()).done); _n = true) {
-	        _arr.push(_s.value);
-
-	        if (i && _arr.length === i) break;
-	      }
-	    } catch (err) {
-	      _d = true;
-	      _e = err;
-	    } finally {
-	      try {
-	        if (!_n && _i["return"]) _i["return"]();
-	      } finally {
-	        if (_d) throw _e;
-	      }
-	    }
-
-	    return _arr;
-	  }
-
-	  return function (arr, i) {
-	    if (Array.isArray(arr)) {
-	      return arr;
-	    } else if (_isIterable(Object(arr))) {
-	      return sliceIterator(arr, i);
-	    } else {
-	      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-	    }
-	  };
-	})();
-
-	exports.__esModule = true;
-
-/***/ },
-/* 647 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(648), __esModule: true };
-
-/***/ },
-/* 648 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(49);
-	__webpack_require__(33);
-	module.exports = __webpack_require__(649);
-
-/***/ },
-/* 649 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var anObject = __webpack_require__(23)
-	  , get      = __webpack_require__(60);
-	module.exports = __webpack_require__(13).getIterator = function(it){
-	  var iterFn = get(it);
-	  if(typeof iterFn != 'function')throw TypeError(it + ' is not iterable!');
-	  return anObject(iterFn.call(it));
-	};
-
-/***/ },
-/* 650 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(651), __esModule: true };
-
-/***/ },
-/* 651 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(49);
-	__webpack_require__(33);
-	module.exports = __webpack_require__(652);
-
-/***/ },
-/* 652 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var classof   = __webpack_require__(54)
-	  , ITERATOR  = __webpack_require__(43)('iterator')
-	  , Iterators = __webpack_require__(46);
-	module.exports = __webpack_require__(13).isIterable = function(it){
-	  var O = Object(it);
-	  return ITERATOR in O
-	    || '@@iterator' in O
-	    || Iterators.hasOwnProperty(classof(O));
-	};
-
-/***/ },
-/* 653 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-
-	function signum(a, b) {
-	  return a < b ? -1 : a === b ? 0 : 1;
-	}
-
-	var hexLookup = (function () {
-	  var res = {};
-	  var reverse = res.reverse = new Array(256);
-	  for (var i = 0; i < 16; i++) {
-	    var char = i.toString(16).toUpperCase();
-	    res[char] = i;
-
-	    for (var j = 0; j < 16; j++) {
-	      var char2 = j.toString(16).toUpperCase();
-	      var byte = (i << 4) + j;
-	      var byteHex = char + char2;
-	      res[byteHex] = byte;
-	      reverse[byte] = byteHex;
-	    }
-	  }
-	  return res;
-	})();
-
-	var reverseHexLookup = hexLookup.reverse;
-
-	function bytesToHex(sequence) {
-	  var buf = Array(sequence.length);
-	  for (var i = sequence.length - 1; i >= 0; i--) {
-	    buf[i] = reverseHexLookup[sequence[i]];
-	  }
-	  return buf.join('');
-	}
-
-	function byteForHex(hex) {
-	  var byte = hexLookup[hex];
-	  if (byte === undefined) {
-	    throw new Error('`' + hex + '` is not a valid hex representation of a byte');
-	  }
-	  return byte;
-	}
-
-	function parseBytes(val) {
-	  var Output = arguments.length <= 1 || arguments[1] === undefined ? Array : arguments[1];
-
-	  if (!val || val.length === undefined) {
-	    throw new Error(val + ' is not a sequence');
-	  }
-
-	  if (typeof val === 'string') {
-	    var start = val.length % 2;
-	    var _res = new Output((val.length + start) / 2);
-	    for (var i = val.length, to = _res.length - 1; to >= start; i -= 2, to--) {
-	      _res[to] = byteForHex(val.slice(i - 2, i));
-	    }
-	    if (start === 1) {
-	      _res[0] = byteForHex(val[0]);
-	    }
-	    return _res;
-	  } else if (val instanceof Output) {
-	    return val;
-	  } else if (Output === Uint8Array) {
-	    return new Output(val);
-	  }
-	  var res = new Output(val.length);
-	  for (var i = val.length - 1; i >= 0; i--) {
-	    res[i] = val[i];
-	  }
-	  return res;
-	}
-
-	function serializeUIntN(val, width) {
-	  var newBytes = new Uint8Array(width);
-	  var lastIx = width - 1;
-	  for (var i = 0; i < width; i++) {
-	    newBytes[lastIx - i] = val >>> i * 8 & 0xff;
-	  }
-	  return newBytes;
-	}
-
-	function compareBytes(a, b) {
-	  assert(a.length === b.length);
-	  for (var i = 0; i < a.length; i++) {
-	    var cmp = signum(a[i], b[i]);
-	    if (cmp !== 0) {
-	      return cmp;
-	    }
-	  }
-	  return 0;
-	}
-
-	function slice(val) {
-	  var startIx = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
-	  var endIx = arguments.length <= 2 || arguments[2] === undefined ? val.length : arguments[2];
-	  var Output = arguments.length <= 3 || arguments[3] === undefined ? val.constructor : arguments[3];
-	  return (function () {
-	    /* eslint-disable no-param-reassign*/
-	    if (startIx < 0) {
-	      startIx += val.length;
-	    }
-	    if (endIx < 0) {
-	      endIx += val.length;
-	    }
-	    /* eslint-enable no-param-reassign*/
-	    var len = endIx - startIx;
-	    var res = new Output(len);
-	    for (var i = endIx - 1; i >= startIx; i--) {
-	      res[i - startIx] = val[i];
-	    }
-	    return res;
-	  })();
-	}
-
-	module.exports = {
-	  parseBytes: parseBytes,
-	  bytesToHex: bytesToHex,
-	  slice: slice,
-	  compareBytes: compareBytes,
-	  serializeUIntN: serializeUIntN
-	};
-
-/***/ },
-/* 654 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _Object$keys = __webpack_require__(655)['default'];
-
-	var _ = __webpack_require__(262);
-	var inherits = __webpack_require__(658);
-
-	function forEach(obj, func) {
-	  _Object$keys(obj || {}).forEach(function (k) {
-	    func(obj[k], k);
-	  });
-	}
-
-	function ensureArray(val) {
-	  return Array.isArray(val) ? val : [val];
-	}
-
-	module.exports = function makeClass(klass_, definition_) {
-	  var definition = definition_ || klass_;
-	  var klass = typeof klass_ === 'function' ? klass_ : null;
-	  if (klass === null) {
-	    for (var k in definition) {
-	      if (k[0].match(/[A-Z]/)) {
-	        klass = definition[k];
-	        break;
-	      }
-	    }
-	  }
-	  var parent = definition.inherits;
-	  if (parent) {
-	    if (klass === null) {
-	      klass = function () {
-	        parent.apply(this, arguments);
-	      };
-	    }
-	    inherits(klass, parent);
-	    _.defaults(klass, parent);
-	  }
-	  if (klass === null) {
-	    klass = function () {};
-	  }
-	  var proto = klass.prototype;
-	  function addFunc(original, wrapper) {
-	    proto[original.name] = wrapper || original;
-	  }
-	  (definition.getters || []).forEach(function (k) {
-	    var key = '_' + k;
-	    proto[k] = function () {
-	      return this[key];
-	    };
-	  });
-	  forEach(definition.virtuals, function (f) {
-	    addFunc(f, function () {
-	      throw new Error('unimplemented');
-	    });
-	  });
-	  forEach(definition.methods, addFunc);
-	  forEach(definition, function (f) {
-	    if (_.isFunction(f) && f !== klass) {
-	      addFunc(f);
-	    }
-	  });
-	  _.assign(klass, definition.statics);
-	  if (typeof klass.init === 'function') {
-	    klass.init();
-	  }
-	  forEach(definition.cached, function (f) {
-	    var key = '_' + f.name;
-	    addFunc(f, function () {
-	      var value = this[key];
-	      if (value === undefined) {
-	        value = this[key] = f.call(this);
-	      }
-	      return value;
-	    });
-	  });
-	  if (definition.mixins) {
-	    (function () {
-	      var mixins = {};
-	      // Right-most in the list win
-	      ensureArray(definition.mixins).reverse().forEach(function (o) {
-	        _.defaults(mixins, o);
-	      });
-	      _.defaults(proto, mixins);
-	    })();
-	  }
-
-	  return klass;
-	};
-
-/***/ },
-/* 655 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(656), __esModule: true };
-
-/***/ },
-/* 656 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(657);
-	module.exports = __webpack_require__(13).Object.keys;
-
-/***/ },
-/* 657 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 19.1.2.14 Object.keys(O)
-	var toObject = __webpack_require__(344);
-
-	__webpack_require__(10)('keys', function($keys){
-	  return function keys(it){
-	    return $keys(toObject(it));
-	  };
-	});
-
-/***/ },
-/* 658 */
-/***/ function(module, exports) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 659 */
-/***/ function(module, exports) {
-
-	module.exports = {
-		"TYPES": {
-			"Validation": 10003,
-			"Done": -1,
-			"Hash128": 4,
-			"Blob": 7,
-			"AccountID": 8,
-			"Amount": 6,
-			"Hash256": 5,
-			"UInt8": 16,
-			"Vector256": 19,
-			"STObject": 14,
-			"Unknown": -2,
-			"Transaction": 10001,
-			"Hash160": 17,
-			"PathSet": 18,
-			"LedgerEntry": 10002,
-			"UInt16": 1,
-			"NotPresent": 0,
-			"UInt64": 3,
-			"UInt32": 2,
-			"STArray": 15
-		},
-		"LEDGER_ENTRY_TYPES": {
-			"Ticket": 84,
-			"LedgerHashes": 104,
-			"EnabledAmendments": 102,
-			"SignerList": 83,
-			"Offer": 111,
-			"AccountRoot": 97,
-			"RippleState": 114,
-			"FeeSettings": 115,
-			"DirectoryNode": 100,
-			"GeneratorMap": 103,
-			"Contract": 99,
-			"Invalid": -1
-		},
-		"FIELDS": [
-			[
-				"Generic",
-				{
-					"nth": 0,
-					"isVLEncoded": false,
-					"bytes": "E0",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Unknown"
-				}
-			],
-			[
-				"Invalid",
-				{
-					"nth": -1,
-					"isVLEncoded": false,
-					"bytes": "FF",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Unknown"
-				}
-			],
-			[
-				"LedgerEntryType",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "11",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt16"
-				}
-			],
-			[
-				"TransactionType",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "12",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt16"
-				}
-			],
-			[
-				"SignerWeight",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "13",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt16"
-				}
-			],
-			[
-				"Flags",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "22",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"SourceTag",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "23",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"Sequence",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "24",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"PreviousTxnLgrSeq",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "25",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"LedgerSequence",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "26",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"CloseTime",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "27",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"ParentCloseTime",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "28",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"SigningTime",
-				{
-					"nth": 9,
-					"isVLEncoded": false,
-					"bytes": "29",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"Expiration",
-				{
-					"nth": 10,
-					"isVLEncoded": false,
-					"bytes": "2A",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"TransferRate",
-				{
-					"nth": 11,
-					"isVLEncoded": false,
-					"bytes": "2B",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"WalletSize",
-				{
-					"nth": 12,
-					"isVLEncoded": false,
-					"bytes": "2C",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"OwnerCount",
-				{
-					"nth": 13,
-					"isVLEncoded": false,
-					"bytes": "2D",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"DestinationTag",
-				{
-					"nth": 14,
-					"isVLEncoded": false,
-					"bytes": "2E",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"HighQualityIn",
-				{
-					"nth": 16,
-					"isVLEncoded": false,
-					"bytes": "2010",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"HighQualityOut",
-				{
-					"nth": 17,
-					"isVLEncoded": false,
-					"bytes": "2011",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"LowQualityIn",
-				{
-					"nth": 18,
-					"isVLEncoded": false,
-					"bytes": "2012",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"LowQualityOut",
-				{
-					"nth": 19,
-					"isVLEncoded": false,
-					"bytes": "2013",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"QualityIn",
-				{
-					"nth": 20,
-					"isVLEncoded": false,
-					"bytes": "2014",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"QualityOut",
-				{
-					"nth": 21,
-					"isVLEncoded": false,
-					"bytes": "2015",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"StampEscrow",
-				{
-					"nth": 22,
-					"isVLEncoded": false,
-					"bytes": "2016",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"BondAmount",
-				{
-					"nth": 23,
-					"isVLEncoded": false,
-					"bytes": "2017",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"LoadFee",
-				{
-					"nth": 24,
-					"isVLEncoded": false,
-					"bytes": "2018",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"OfferSequence",
-				{
-					"nth": 25,
-					"isVLEncoded": false,
-					"bytes": "2019",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"FirstLedgerSequence",
-				{
-					"nth": 26,
-					"isVLEncoded": false,
-					"bytes": "201A",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"LastLedgerSequence",
-				{
-					"nth": 27,
-					"isVLEncoded": false,
-					"bytes": "201B",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"TransactionIndex",
-				{
-					"nth": 28,
-					"isVLEncoded": false,
-					"bytes": "201C",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"OperationLimit",
-				{
-					"nth": 29,
-					"isVLEncoded": false,
-					"bytes": "201D",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"ReferenceFeeUnits",
-				{
-					"nth": 30,
-					"isVLEncoded": false,
-					"bytes": "201E",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"ReserveBase",
-				{
-					"nth": 31,
-					"isVLEncoded": false,
-					"bytes": "201F",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"ReserveIncrement",
-				{
-					"nth": 32,
-					"isVLEncoded": false,
-					"bytes": "2020",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"SetFlag",
-				{
-					"nth": 33,
-					"isVLEncoded": false,
-					"bytes": "2021",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"ClearFlag",
-				{
-					"nth": 34,
-					"isVLEncoded": false,
-					"bytes": "2022",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"SignerQuorum",
-				{
-					"nth": 35,
-					"isVLEncoded": false,
-					"bytes": "2023",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt32"
-				}
-			],
-			[
-				"IndexNext",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "31",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"IndexPrevious",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "32",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"BookNode",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "33",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"OwnerNode",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "34",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"BaseFee",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "35",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"ExchangeRate",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "36",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"LowNode",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "37",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"HighNode",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "38",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt64"
-				}
-			],
-			[
-				"EmailHash",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "41",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash128"
-				}
-			],
-			[
-				"LedgerHash",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "51",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"ParentHash",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "52",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"TransactionHash",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "53",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"AccountHash",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "54",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"PreviousTxnID",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "55",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"LedgerIndex",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "56",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"WalletLocator",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "57",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"RootIndex",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "58",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"AccountTxnID",
-				{
-					"nth": 9,
-					"isVLEncoded": false,
-					"bytes": "59",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"BookDirectory",
-				{
-					"nth": 16,
-					"isVLEncoded": false,
-					"bytes": "5010",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"InvoiceID",
-				{
-					"nth": 17,
-					"isVLEncoded": false,
-					"bytes": "5011",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"Nickname",
-				{
-					"nth": 18,
-					"isVLEncoded": false,
-					"bytes": "5012",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"Amendment",
-				{
-					"nth": 19,
-					"isVLEncoded": false,
-					"bytes": "5013",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"TicketID",
-				{
-					"nth": 20,
-					"isVLEncoded": false,
-					"bytes": "5014",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash256"
-				}
-			],
-			[
-				"hash",
-				{
-					"nth": 257,
-					"isVLEncoded": false,
-					"bytes": "5001",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Hash256"
-				}
-			],
-			[
-				"index",
-				{
-					"nth": 258,
-					"isVLEncoded": false,
-					"bytes": "5002",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Hash256"
-				}
-			],
-			[
-				"Amount",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "61",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"Balance",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "62",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"LimitAmount",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "63",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"TakerPays",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "64",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"TakerGets",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "65",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"LowLimit",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "66",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"HighLimit",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "67",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"Fee",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "68",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"SendMax",
-				{
-					"nth": 9,
-					"isVLEncoded": false,
-					"bytes": "69",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"MinimumOffer",
-				{
-					"nth": 16,
-					"isVLEncoded": false,
-					"bytes": "6010",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"RippleEscrow",
-				{
-					"nth": 17,
-					"isVLEncoded": false,
-					"bytes": "6011",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"DeliveredAmount",
-				{
-					"nth": 18,
-					"isVLEncoded": false,
-					"bytes": "6012",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Amount"
-				}
-			],
-			[
-				"taker_gets_funded",
-				{
-					"nth": 258,
-					"isVLEncoded": false,
-					"bytes": "6002",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Amount"
-				}
-			],
-			[
-				"taker_pays_funded",
-				{
-					"nth": 259,
-					"isVLEncoded": false,
-					"bytes": "6003",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Amount"
-				}
-			],
-			[
-				"PublicKey",
-				{
-					"nth": 1,
-					"isVLEncoded": true,
-					"bytes": "71",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"MessageKey",
-				{
-					"nth": 2,
-					"isVLEncoded": true,
-					"bytes": "72",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"SigningPubKey",
-				{
-					"nth": 3,
-					"isVLEncoded": true,
-					"bytes": "73",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"TxnSignature",
-				{
-					"nth": 4,
-					"isVLEncoded": true,
-					"bytes": "74",
-					"isSerialized": true,
-					"isSigningField": false,
-					"type": "Blob"
-				}
-			],
-			[
-				"Generator",
-				{
-					"nth": 5,
-					"isVLEncoded": true,
-					"bytes": "75",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"Signature",
-				{
-					"nth": 6,
-					"isVLEncoded": true,
-					"bytes": "76",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"Domain",
-				{
-					"nth": 7,
-					"isVLEncoded": true,
-					"bytes": "77",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"FundCode",
-				{
-					"nth": 8,
-					"isVLEncoded": true,
-					"bytes": "78",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"RemoveCode",
-				{
-					"nth": 9,
-					"isVLEncoded": true,
-					"bytes": "79",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"ExpireCode",
-				{
-					"nth": 10,
-					"isVLEncoded": true,
-					"bytes": "7A",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"CreateCode",
-				{
-					"nth": 11,
-					"isVLEncoded": true,
-					"bytes": "7B",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"MemoType",
-				{
-					"nth": 12,
-					"isVLEncoded": true,
-					"bytes": "7C",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"MemoData",
-				{
-					"nth": 13,
-					"isVLEncoded": true,
-					"bytes": "7D",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"MemoFormat",
-				{
-					"nth": 14,
-					"isVLEncoded": true,
-					"bytes": "7E",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Blob"
-				}
-			],
-			[
-				"Account",
-				{
-					"nth": 1,
-					"isVLEncoded": true,
-					"bytes": "81",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"Owner",
-				{
-					"nth": 2,
-					"isVLEncoded": true,
-					"bytes": "82",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"Destination",
-				{
-					"nth": 3,
-					"isVLEncoded": true,
-					"bytes": "83",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"Issuer",
-				{
-					"nth": 4,
-					"isVLEncoded": true,
-					"bytes": "84",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"Target",
-				{
-					"nth": 7,
-					"isVLEncoded": true,
-					"bytes": "87",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"RegularKey",
-				{
-					"nth": 8,
-					"isVLEncoded": true,
-					"bytes": "88",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "AccountID"
-				}
-			],
-			[
-				"ObjectEndMarker",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "E1",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"TransactionMetaData",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "E2",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"CreatedNode",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "E3",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"DeletedNode",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "E4",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"ModifiedNode",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "E5",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"PreviousFields",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "E6",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"FinalFields",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "E7",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"NewFields",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "E8",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"TemplateEntry",
-				{
-					"nth": 9,
-					"isVLEncoded": false,
-					"bytes": "E9",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"Memo",
-				{
-					"nth": 10,
-					"isVLEncoded": false,
-					"bytes": "EA",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"SignerEntry",
-				{
-					"nth": 11,
-					"isVLEncoded": false,
-					"bytes": "EB",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"Signer",
-				{
-					"nth": 16,
-					"isVLEncoded": false,
-					"bytes": "E010",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STObject"
-				}
-			],
-			[
-				"ArrayEndMarker",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "F1",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"Signers",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "F3",
-					"isSerialized": true,
-					"isSigningField": false,
-					"type": "STArray"
-				}
-			],
-			[
-				"SignerEntries",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "F4",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"Template",
-				{
-					"nth": 5,
-					"isVLEncoded": false,
-					"bytes": "F5",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"Necessary",
-				{
-					"nth": 6,
-					"isVLEncoded": false,
-					"bytes": "F6",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"Sufficient",
-				{
-					"nth": 7,
-					"isVLEncoded": false,
-					"bytes": "F7",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"AffectedNodes",
-				{
-					"nth": 8,
-					"isVLEncoded": false,
-					"bytes": "F8",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"Memos",
-				{
-					"nth": 9,
-					"isVLEncoded": false,
-					"bytes": "F9",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "STArray"
-				}
-			],
-			[
-				"CloseResolution",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0110",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt8"
-				}
-			],
-			[
-				"TemplateEntryType",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "0210",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt8"
-				}
-			],
-			[
-				"TransactionResult",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "0310",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "UInt8"
-				}
-			],
-			[
-				"TakerPaysCurrency",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0111",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash160"
-				}
-			],
-			[
-				"TakerPaysIssuer",
-				{
-					"nth": 2,
-					"isVLEncoded": false,
-					"bytes": "0211",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash160"
-				}
-			],
-			[
-				"TakerGetsCurrency",
-				{
-					"nth": 3,
-					"isVLEncoded": false,
-					"bytes": "0311",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash160"
-				}
-			],
-			[
-				"TakerGetsIssuer",
-				{
-					"nth": 4,
-					"isVLEncoded": false,
-					"bytes": "0411",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Hash160"
-				}
-			],
-			[
-				"Paths",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0112",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "PathSet"
-				}
-			],
-			[
-				"Indexes",
-				{
-					"nth": 1,
-					"isVLEncoded": true,
-					"bytes": "0113",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Vector256"
-				}
-			],
-			[
-				"Hashes",
-				{
-					"nth": 2,
-					"isVLEncoded": true,
-					"bytes": "0213",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Vector256"
-				}
-			],
-			[
-				"Features",
-				{
-					"nth": 3,
-					"isVLEncoded": true,
-					"bytes": "0313",
-					"isSerialized": true,
-					"isSigningField": true,
-					"type": "Vector256"
-				}
-			],
-			[
-				"Transaction",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0111",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Transaction"
-				}
-			],
-			[
-				"LedgerEntry",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0112",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "LedgerEntry"
-				}
-			],
-			[
-				"Validation",
-				{
-					"nth": 1,
-					"isVLEncoded": false,
-					"bytes": "0113",
-					"isSerialized": false,
-					"isSigningField": false,
-					"type": "Validation"
-				}
-			]
-		],
-		"date-generated": "Fri Sep 11 11:35:38 ICT 2015",
-		"TRANSACTION_RESULTS": {
-			"tecINSUFFICIENT_RESERVE": 141,
-			"telNO_DST_PARTIAL": -393,
-			"tecUNFUNDED_PAYMENT": 104,
-			"tecNO_TARGET": 138,
-			"temBAD_SRC_ACCOUNT": -281,
-			"tefPAST_SEQ": -189,
-			"terNO_ACCOUNT": -96,
-			"temREDUNDANT": -275,
-			"tefCREATED": -194,
-			"temDST_IS_SRC": -279,
-			"terRETRY": -99,
-			"temINVALID_FLAG": -276,
-			"temBAD_SEND_XRP_LIMIT": -288,
-			"terNO_LINE": -94,
-			"tefBAD_AUTH": -196,
-			"temBAD_EXPIRATION": -295,
-			"tecNO_ISSUER": 133,
-			"temBAD_SEND_XRP_NO_DIRECT": -286,
-			"temBAD_SEND_XRP_PATHS": -284,
-			"tefBAD_LEDGER": -195,
-			"tefNO_AUTH_REQUIRED": -190,
-			"tecINSUF_RESERVE_LINE": 122,
-			"terOWNERS": -93,
-			"tecNO_REGULAR_KEY": 131,
-			"tecINSUFF_FEE": 136,
-			"tecNO_ALTERNATIVE_KEY": 130,
-			"tecNO_ENTRY": 140,
-			"terLAST": -91,
-			"terNO_RIPPLE": -90,
-			"tecNO_PERMISSION": 139,
-			"tecNEED_MASTER_KEY": 142,
-			"temBAD_FEE": -294,
-			"terPRE_SEQ": -92,
-			"tecOVERSIZE": 145,
-			"tefMASTER_DISABLED": -187,
-			"temBAD_CURRENCY": -296,
-			"tefDST_TAG_NEEDED": -193,
-			"tecUNFUNDED_ADD": 102,
-			"tecOWNERS": 132,
-			"tecNO_LINE_REDUNDANT": 127,
-			"temBAD_SIGNATURE": -282,
-			"tefFAILURE": -199,
-			"telBAD_PATH_COUNT": -397,
-			"temBAD_TRANSFER_RATE": -280,
-			"tefWRONG_PRIOR": -188,
-			"tecNO_DST": 124,
-			"tecNO_AUTH": 134,
-			"telBAD_DOMAIN": -398,
-			"temBAD_AMOUNT": -298,
-			"temBAD_AUTH_MASTER": -297,
-			"temBAD_LIMIT": -292,
-			"temBAD_ISSUER": -293,
-			"tecNO_DST_INSUF_XRP": 125,
-			"tecPATH_PARTIAL": 101,
-			"telBAD_PUBLIC_KEY": -396,
-			"tefBAD_ADD_AUTH": -197,
-			"tecDST_TAG_NEEDED": 143,
-			"temBAD_OFFER": -291,
-			"temBAD_SEND_XRP_PARTIAL": -285,
-			"temDST_NEEDED": -278,
-			"tefALREADY": -198,
-			"tecUNFUNDED": 129,
-			"tecNO_LINE": 135,
-			"tecFROZEN": 137,
-			"temUNCERTAIN": -272,
-			"tecFAILED_PROCESSING": 105,
-			"telLOCAL_ERROR": -399,
-			"temREDUNDANT_SEND_MAX": -274,
-			"tefINTERNAL": -191,
-			"temBAD_PATH_LOOP": -289,
-			"tecPATH_DRY": 128,
-			"tefEXCEPTION": -192,
-			"tecDIR_FULL": 121,
-			"tecUNFUNDED_OFFER": 103,
-			"temRIPPLE_EMPTY": -273,
-			"telINSUF_FEE_P": -394,
-			"temBAD_SEQUENCE": -283,
-			"tefMAX_LEDGER": -186,
-			"terFUNDS_SPENT": -98,
-			"temBAD_SEND_XRP_MAX": -287,
-			"telFAILED_PROCESSING": -395,
-			"terINSUF_FEE_B": -97,
-			"tecCLAIM": 100,
-			"tesSUCCESS": 0,
-			"temBAD_PATH": -290,
-			"temMALFORMED": -299,
-			"temUNKNOWN": -271,
-			"tecINTERNAL": 144,
-			"temINVALID": -277,
-			"tecINSUF_RESERVE_OFFER": 123,
-			"tecNO_LINE_INSUF_RESERVE": 126,
-			"terNO_AUTH": -95
-		},
-		"TRANSACTION_TYPES": {
-			"OfferCancel": 8,
-			"EnableAmendment": 100,
-			"SetFee": 101,
-			"SetRegularKey": 5,
-			"TicketCreate": 10,
-			"TicketCancel": 11,
-			"NickNameSet": 6,
-			"WalletAdd": 2,
-			"TrustSet": 20,
-			"PasswordFund": 4,
-			"Payment": 0,
-			"AccountSet": 3,
-			"OfferCreate": 7,
-			"SignerListSet": 12,
-			"Contract": 9,
-			"Claim": 1,
-			"Invalid": -1
-		}
-	};
-
-/***/ },
-/* 660 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var enums = __webpack_require__(645);
-	var Field = enums.Field;
-
-	var _require = __webpack_require__(661);
-
-	var AccountID = _require.AccountID;
-
-	var _require2 = __webpack_require__(666);
-
-	var Amount = _require2.Amount;
-
-	var _require3 = __webpack_require__(677);
-
-	var Blob = _require3.Blob;
-
-	var _require4 = __webpack_require__(674);
-
-	var Currency = _require4.Currency;
-
-	var _require5 = __webpack_require__(678);
-
-	var Hash128 = _require5.Hash128;
-
-	var _require6 = __webpack_require__(662);
-
-	var Hash160 = _require6.Hash160;
-
-	var _require7 = __webpack_require__(679);
-
-	var Hash256 = _require7.Hash256;
-
-	var _require8 = __webpack_require__(680);
-
-	var PathSet = _require8.PathSet;
-
-	var _require9 = __webpack_require__(681);
-
-	var STArray = _require9.STArray;
-
-	var _require10 = __webpack_require__(682);
-
-	var STObject = _require10.STObject;
-
-	var _require11 = __webpack_require__(683);
-
-	var UInt16 = _require11.UInt16;
-
-	var _require12 = __webpack_require__(684);
-
-	var UInt32 = _require12.UInt32;
-
-	var _require13 = __webpack_require__(675);
-
-	var UInt64 = _require13.UInt64;
-
-	var _require14 = __webpack_require__(685);
-
-	var UInt8 = _require14.UInt8;
-
-	var _require15 = __webpack_require__(686);
-
-	var Vector256 = _require15.Vector256;
-
-	var coreTypes = {
-	  AccountID: AccountID,
-	  Amount: Amount,
-	  Blob: Blob,
-	  Currency: Currency,
-	  Hash128: Hash128,
-	  Hash160: Hash160,
-	  Hash256: Hash256,
-	  PathSet: PathSet,
-	  STArray: STArray,
-	  STObject: STObject,
-	  UInt8: UInt8,
-	  UInt16: UInt16,
-	  UInt32: UInt32,
-	  UInt64: UInt64,
-	  Vector256: Vector256
-	};
-
-	Field.values.forEach(function (field) {
-	  field.associatedType = coreTypes[field.type];
-	});
-
-	Field.TransactionType.associatedType = enums.TransactionType;
-	Field.TransactionResult.associatedType = enums.TransactionResult;
-	Field.LedgerEntryType.associatedType = enums.LedgerEntryType;
-
-	module.exports = coreTypes;
-
-/***/ },
-/* 661 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(320);
-
-	var decodeAccountID = _require.decodeAccountID;
-	var encodeAccountID = _require.encodeAccountID;
-
-	var _require2 = __webpack_require__(662);
-
-	var Hash160 = _require2.Hash160;
-
-	var AccountID = makeClass({
-	  AccountID: function AccountID(bytes) {
-	    Hash160.call(this, bytes);
-	  },
-	  inherits: Hash160,
-	  statics: {
-	    from: function from(value) {
-	      return value instanceof this ? value : /^r/.test(value) ? this.fromBase58(value) : new this(value);
-	    },
-	    cache: {},
-	    fromCache: function fromCache(base58) {
-	      var cached = this.cache[base58];
-	      if (!cached) {
-	        cached = this.cache[base58] = this.fromBase58(base58);
-	      }
-	      return cached;
-	    },
-	    fromBase58: function fromBase58(value) {
-	      var acc = new this(decodeAccountID(value));
-	      acc._toBase58 = value;
-	      return acc;
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    return this.toBase58();
-	  },
-	  cached: {
-	    toBase58: function toBase58() {
-	      return encodeAccountID(this._bytes);
-	    }
-	  }
-	});
-
-	module.exports = {
-	  AccountID: AccountID
-	};
-
-/***/ },
-/* 662 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(663);
-
-	var Hash = _require.Hash;
-
-	var Hash160 = makeClass({
-	  inherits: Hash,
-	  statics: { width: 20 }
-	});
-
-	module.exports = {
-	  Hash160: Hash160
-	};
-
-/***/ },
-/* 663 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(664);
-
-	var Comparable = _require.Comparable;
-	var SerializedType = _require.SerializedType;
-
-	var _require2 = __webpack_require__(653);
-
-	var compareBytes = _require2.compareBytes;
-	var parseBytes = _require2.parseBytes;
-
-	var Hash = makeClass({
-	  Hash: function Hash(bytes) {
-	    var width = this.constructor.width;
-	    this._bytes = bytes ? parseBytes(bytes, Uint8Array) : new Uint8Array(width);
-	    assert.equal(this._bytes.length, width);
-	  },
-	  mixins: [Comparable, SerializedType],
-	  statics: {
-	    width: NaN,
-	    from: function from(value) {
-	      if (value instanceof this) {
-	        return value;
-	      }
-	      return new this(parseBytes(value));
-	    },
-	    fromParser: function fromParser(parser, hint) {
-	      return new this(parser.read(hint || this.width));
-	    }
-	  },
-	  compareTo: function compareTo(other) {
-	    return compareBytes(this._bytes, this.constructor.from(other)._bytes);
-	  },
-	  toString: function toString() {
-	    return this.toHex();
-	  },
-	  nibblet: function nibblet(depth) {
-	    var byte_ix = depth > 0 ? depth / 2 | 0 : 0;
-	    var b = this._bytes[byte_ix];
-	    if (depth % 2 === 0) {
-	      b = (b & 0xF0) >>> 4;
-	    } else {
-	      b = b & 0x0F;
-	    }
-	    return b;
-	  }
-	});
-
-	module.exports = {
-	  Hash: Hash
-	};
-
-/***/ },
-/* 664 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _require = __webpack_require__(653);
-
-	var bytesToHex = _require.bytesToHex;
-	var slice = _require.slice;
-
-	var _require2 = __webpack_require__(665);
-
-	var BytesList = _require2.BytesList;
-
-	var Comparable = {
-	  lt: function lt(other) {
-	    return this.compareTo(other) < 0;
-	  },
-	  eq: function eq(other) {
-	    return this.compareTo(other) === 0;
-	  },
-	  gt: function gt(other) {
-	    return this.compareTo(other) > 0;
-	  },
-	  gte: function gte(other) {
-	    return this.compareTo(other) > -1;
-	  },
-	  lte: function lte(other) {
-	    return this.compareTo(other) < 1;
-	  }
-	};
-
-	var SerializedType = {
-	  toBytesSink: function toBytesSink(sink) {
-	    sink.put(this._bytes);
-	  },
-	  toHex: function toHex() {
-	    return bytesToHex(this.toBytes());
-	  },
-	  toBytes: function toBytes() {
-	    if (this._bytes) {
-	      return slice(this._bytes);
-	    }
-	    var bl = new BytesList();
-	    this.toBytesSink(bl);
-	    return bl.toBytes();
-	  },
-	  toJSON: function toJSON() {
-	    return this.toHex();
-	  },
-	  toString: function toString() {
-	    return this.toHex();
-	  }
-	};
-
-	function ensureArrayLikeIs(Type, arrayLike) {
-	  return {
-	    withChildren: function withChildren(Child) {
-	      if (arrayLike instanceof Type) {
-	        return arrayLike;
-	      }
-	      var obj = new Type();
-	      for (var i = 0; i < arrayLike.length; i++) {
-	        obj.push(Child.from(arrayLike[i]));
-	      }
-	      return obj;
-	    }
-	  };
-	}
-
-	module.exports = {
-	  ensureArrayLikeIs: ensureArrayLikeIs,
-	  SerializedType: SerializedType,
-	  Comparable: Comparable
-	};
-
-/***/ },
-/* 665 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-
-	var _require = __webpack_require__(653);
-
-	var parseBytes = _require.parseBytes;
-	var bytesToHex = _require.bytesToHex;
-
-	var makeClass = __webpack_require__(654);
-
-	var _require2 = __webpack_require__(645);
-
-	var Type = _require2.Type;
-	var Field = _require2.Field;
-
-	var BytesSink = {
-	  put: function put() /* bytesSequence */{
-	    // any hex string or any object with a `length` and where 0 <= [ix] <= 255
-	  }
-	};
-
-	var BytesList = makeClass({
-	  implementing: BytesSink,
-	  BytesList: function BytesList() {
-	    this.arrays = [];
-	    this.length = 0;
-	  },
-	  put: function put(bytesArg) {
-	    var bytes = parseBytes(bytesArg, Uint8Array);
-	    this.length += bytes.length;
-	    this.arrays.push(bytes);
-	    return this;
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    this.arrays.forEach(function (arr) {
-	      sink.put(arr);
-	    });
-	  },
-	  toBytes: function toBytes() {
-	    var concatenated = new Uint8Array(this.length);
-	    var pointer = 0;
-	    this.arrays.forEach(function (arr) {
-	      concatenated.set(arr, pointer);
-	      pointer += arr.length;
-	    });
-	    return concatenated;
-	  },
-	  toHex: function toHex() {
-	    return bytesToHex(this.toBytes());
-	  }
-	});
-
-	var BinarySerializer = makeClass({
-	  BinarySerializer: function BinarySerializer(sink) {
-	    this.sink = sink;
-	  },
-	  write: function write(value) {
-	    value.toBytesSink(this.sink);
-	  },
-	  put: function put(bytes) {
-	    this.sink.put(bytes);
-	  },
-	  writeType: function writeType(type, value) {
-	    this.write(type.from(value));
-	  },
-	  writeBytesList: function writeBytesList(bl) {
-	    bl.toBytesSink(this.sink);
-	  },
-	  encodeVL: function encodeVL(len) {
-	    var length = len;
-	    var lenBytes = new Uint8Array(4);
-	    if (length <= 192) {
-	      lenBytes[0] = length;
-	      return lenBytes.subarray(0, 1);
-	    } else if (length <= 12480) {
-	      length -= 193;
-	      lenBytes[0] = 193 + (length >>> 8);
-	      lenBytes[1] = length & 0xff;
-	      return lenBytes.subarray(0, 2);
-	    } else if (length <= 918744) {
-	      length -= 12481;
-	      lenBytes[0] = 241 + (length >>> 16);
-	      lenBytes[1] = length >> 8 & 0xff;
-	      lenBytes[2] = length & 0xff;
-	      return lenBytes.subarray(0, 3);
-	    }
-	    throw new Error('Overflow error');
-	  },
-	  writeFieldAndValue: function writeFieldAndValue(field, _value) {
-	    var sink = this.sink;
-	    var value = field.associatedType.from(_value);
-	    assert(value.toBytesSink, field);
-	    sink.put(field.bytes);
-
-	    if (field.isVLEncoded) {
-	      this.writeLengthEncoded(value);
-	    } else {
-	      value.toBytesSink(sink);
-	      if (field.type === Type.STObject) {
-	        sink.put(Field.ObjectEndMarker.bytes);
-	      } else if (field.type === Type.STArray) {
-	        sink.put(Field.ArrayEndMarker.bytes);
-	      }
-	    }
-	  },
-	  writeLengthEncoded: function writeLengthEncoded(value) {
-	    var bytes = new BytesList();
-	    value.toBytesSink(bytes);
-	    this.put(this.encodeVL(bytes.length));
-	    this.writeBytesList(bytes);
-	  }
-	});
-
-	module.exports = {
-	  BytesList: BytesList,
-	  BinarySerializer: BinarySerializer
-	};
-
-/***/ },
-/* 666 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _toConsumableArray = __webpack_require__(667)['default'];
-
-	var _bind = __webpack_require__(671)['default'];
-
-	var _ = __webpack_require__(262);
-	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(672);
-	var Decimal = __webpack_require__(673);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(664);
-
-	var SerializedType = _require.SerializedType;
-
-	var _require2 = __webpack_require__(653);
-
-	var bytesToHex = _require2.bytesToHex;
-
-	var _require3 = __webpack_require__(674);
-
-	var Currency = _require3.Currency;
-
-	var _require4 = __webpack_require__(661);
-
-	var AccountID = _require4.AccountID;
-
-	var _require5 = __webpack_require__(675);
-
-	var UInt64 = _require5.UInt64;
-
-	Decimal.config({
-	  toExpPos: 32,
-	  toExpNeg: -32
-	});
-
-	function isDefined(val) {
-	  return !_.isUndefined(val);
-	}
-
-	var parsers = {
-	  string: function string(str) {
-	    return [new Decimal(str).dividedBy('1e6'), Currency.XRP];
-	  },
-	  object: function object(_object) {
-	    assert(isDefined(_object.currency), 'currency must be defined');
-	    assert(isDefined(_object.issuer), 'issuer must be defined');
-	    return [new Decimal(_object.value), Currency.from(_object.currency), AccountID.from(_object.issuer)];
-	  }
-	};
-
-	var Amount = makeClass({
-	  Amount: function Amount(value, currency, issuer) {
-	    this.value = value || new Decimal('0');
-	    this.currency = currency || Currency.XRP;
-	    this.issuer = issuer || null;
-	  },
-	  mixins: SerializedType,
-	  statics: {
-	    from: function from(value) {
-	      if (value instanceof this) {
-	        return value;
-	      }
-	      var parser = parsers[typeof value];
-	      if (parser) {
-	        return new (_bind.apply(this, [null].concat(_toConsumableArray(parser(value)))))();
-	      }
-	      throw new Error('unsupported value: ' + value);
-	    },
-	    fromParser: function fromParser(parser) {
-	      var mantissa = parser.read(8);
-	      var b1 = mantissa[0];
-	      var b2 = mantissa[1];
-
-	      var isIOU = b1 & 0x80;
-	      var isPositive = b1 & 0x40;
-	      var sign = isPositive ? '+' : '-';
-
-	      if (isIOU) {
-	        mantissa[0] = 0;
-	        var currency = parser.readType(Currency);
-	        var issuer = parser.readType(AccountID);
-	        var exponent = ((b1 & 0x3F) << 2) + ((b2 & 0xff) >> 6) - 97;
-	        mantissa[1] &= 0x3F;
-	        // decimal.js won't accept e notation with hex
-	        var value = new Decimal(sign + bytesToHex(mantissa), 16).times('1e' + exponent);
-	        return new this(value, currency, issuer);
-	      }
-
-	      mantissa[0] &= 0x3F;
-	      var drops = new Decimal(sign + bytesToHex(mantissa), 16);
-	      var xrpValue = drops.dividedBy('1e6');
-	      return new this(xrpValue, Currency.XRP);
-	    }
-	  },
-	  isNative: function isNative() {
-	    return this.currency.isNative();
-	  },
-	  mantissa: function mantissa() {
-	    return new UInt64(new BN(this.value.times('1e' + -this.exponent()).abs().toString()));
-	  },
-	  isZero: function isZero() {
-	    return this.value.isZero();
-	  },
-	  exponent: function exponent() {
-	    return this.isNative() ? -6 : this.value.e - 15;
-	  },
-	  valueString: function valueString() {
-	    return (this.isNative() ? this.value.times('1e6') : this.value).toString();
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    var isNative = this.isNative();
-	    var notNegative = !this.value.isNegative();
-	    var mantissa = this.mantissa().toBytes();
-
-	    if (isNative) {
-	      mantissa[0] |= notNegative ? 0x40 : 0;
-	      sink.put(mantissa);
-	    } else {
-	      mantissa[0] |= 0x80;
-	      if (!this.isZero()) {
-	        if (notNegative) {
-	          mantissa[0] |= 0x40;
-	        }
-	        var exponent = this.value.e - 15;
-	        var exponentByte = 97 + exponent;
-	        mantissa[0] |= exponentByte >>> 2;
-	        mantissa[1] |= (exponentByte & 0x03) << 6;
-	      }
-	      sink.put(mantissa);
-	      this.currency.toBytesSink(sink);
-	      this.issuer.toBytesSink(sink);
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    var valueString = this.valueString();
-	    if (this.isNative()) {
-	      return valueString;
-	    }
-	    return {
-	      value: valueString,
-	      currency: this.currency.toJSON(),
-	      issuer: this.issuer.toJSON()
-	    };
-	  }
-	});
-
-	module.exports = {
-	  Amount: Amount
-	};
-
-/***/ },
-/* 667 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _Array$from = __webpack_require__(668)["default"];
-
-	exports["default"] = function (arr) {
-	  if (Array.isArray(arr)) {
-	    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-	    return arr2;
-	  } else {
-	    return _Array$from(arr);
-	  }
-	};
-
-	exports.__esModule = true;
-
-/***/ },
-/* 668 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(669), __esModule: true };
-
-/***/ },
-/* 669 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(33);
-	__webpack_require__(670);
-	module.exports = __webpack_require__(13).Array.from;
-
-/***/ },
-/* 670 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var ctx         = __webpack_require__(24)
-	  , $def        = __webpack_require__(11)
-	  , toObject    = __webpack_require__(344)
-	  , call        = __webpack_require__(57)
-	  , isArrayIter = __webpack_require__(58)
-	  , toLength    = __webpack_require__(59)
-	  , getIterFn   = __webpack_require__(60);
-	$def($def.S + $def.F * !__webpack_require__(70)(function(iter){ Array.from(iter); }), 'Array', {
-	  // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
-	  from: function from(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
-	    var O       = toObject(arrayLike)
-	      , C       = typeof this == 'function' ? this : Array
-	      , $$      = arguments
-	      , $$len   = $$.length
-	      , mapfn   = $$len > 1 ? $$[1] : undefined
-	      , mapping = mapfn !== undefined
-	      , index   = 0
-	      , iterFn  = getIterFn(O)
-	      , length, result, step, iterator;
-	    if(mapping)mapfn = ctx(mapfn, $$len > 2 ? $$[2] : undefined, 2);
-	    // if object isn't iterable or it's array with default iterator - use simple case
-	    if(iterFn != undefined && !(C == Array && isArrayIter(iterFn))){
-	      for(iterator = iterFn.call(O), result = new C; !(step = iterator.next()).done; index++){
-	        result[index] = mapping ? call(iterator, mapfn, [step.value, index], true) : step.value;
-	      }
-	    } else {
-	      length = toLength(O.length);
-	      for(result = new C(length); length > index; index++){
-	        result[index] = mapping ? mapfn(O[index], index) : O[index];
-	      }
-	    }
-	    result.length = index;
-	    return result;
-	  }
-	});
-
-
-/***/ },
-/* 671 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = Function.prototype.bind;
-	exports.__esModule = true;
-
-/***/ },
-/* 672 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(module) {(function (module, exports) {
-
-	'use strict';
-
-	// Utils
-
-	function assert(val, msg) {
-	  if (!val)
-	    throw new Error(msg || 'Assertion failed');
-	}
-
-	// Could use `inherits` module, but don't want to move from single file
-	// architecture yet.
-	function inherits(ctor, superCtor) {
-	  ctor.super_ = superCtor;
-	  var TempCtor = function () {};
-	  TempCtor.prototype = superCtor.prototype;
-	  ctor.prototype = new TempCtor();
-	  ctor.prototype.constructor = ctor;
-	}
-
-	// BN
-
-	function BN(number, base, endian) {
-	  // May be `new BN(bn)` ?
-	  if (number !== null &&
-	      typeof number === 'object' &&
-	      Array.isArray(number.words)) {
-	    return number;
-	  }
-
-	  this.sign = false;
-	  this.words = null;
-	  this.length = 0;
-
-	  // Reduction context
-	  this.red = null;
-
-	  if (base === 'le' || base === 'be') {
-	    endian = base;
-	    base = 10;
-	  }
-
-	  if (number !== null)
-	    this._init(number || 0, base || 10, endian || 'be');
-	}
-	if (typeof module === 'object')
-	  module.exports = BN;
-	else
-	  exports.BN = BN;
-
-	BN.BN = BN;
-	BN.wordSize = 26;
-
-	BN.max = function max(left, right) {
-	  if (left.cmp(right) > 0)
-	    return left;
-	  else
-	    return right;
-	};
-
-	BN.min = function min(left, right) {
-	  if (left.cmp(right) < 0)
-	    return left;
-	  else
-	    return right;
-	};
-
-	BN.prototype._init = function init(number, base, endian) {
-	  if (typeof number === 'number') {
-	    return this._initNumber(number, base, endian);
-	  } else if (typeof number === 'object') {
-	    return this._initArray(number, base, endian);
-	  }
-	  if (base === 'hex')
-	    base = 16;
-	  assert(base === (base | 0) && base >= 2 && base <= 36);
-
-	  number = number.toString().replace(/\s+/g, '');
-	  var start = 0;
-	  if (number[0] === '-')
-	    start++;
-
-	  if (base === 16)
-	    this._parseHex(number, start);
-	  else
-	    this._parseBase(number, base, start);
-
-	  if (number[0] === '-')
-	    this.sign = true;
-
-	  this.strip();
-
-	  if (endian !== 'le')
-	    return;
-
-	  this._initArray(this.toArray(), base, endian);
-	};
-
-	BN.prototype._initNumber = function _initNumber(number, base, endian) {
-	  if (number < 0) {
-	    this.sign = true;
-	    number = -number;
-	  }
-	  if (number < 0x4000000) {
-	    this.words = [ number & 0x3ffffff ];
-	    this.length = 1;
-	  } else if (number < 0x10000000000000) {
-	    this.words = [
-	      number & 0x3ffffff,
-	      (number / 0x4000000) & 0x3ffffff
-	    ];
-	    this.length = 2;
-	  } else {
-	    assert(number < 0x20000000000000); // 2 ^ 53 (unsafe)
-	    this.words = [
-	      number & 0x3ffffff,
-	      (number / 0x4000000) & 0x3ffffff,
-	      1
-	    ];
-	    this.length = 3;
-	  }
-
-	  if (endian !== 'le')
-	    return;
-
-	  // Reverse the bytes
-	  this._initArray(this.toArray(), base, endian);
-	};
-
-	BN.prototype._initArray = function _initArray(number, base, endian) {
-	  // Perhaps a Uint8Array
-	  assert(typeof number.length === 'number');
-	  if (number.length <= 0) {
-	    this.words = [ 0 ];
-	    this.length = 1;
-	    return this;
-	  }
-
-	  this.length = Math.ceil(number.length / 3);
-	  this.words = new Array(this.length);
-	  for (var i = 0; i < this.length; i++)
-	    this.words[i] = 0;
-
-	  var off = 0;
-	  if (endian === 'be') {
-	    for (var i = number.length - 1, j = 0; i >= 0; i -= 3) {
-	      var w = number[i] | (number[i - 1] << 8) | (number[i - 2] << 16);
-	      this.words[j] |= (w << off) & 0x3ffffff;
-	      this.words[j + 1] = (w >>> (26 - off)) & 0x3ffffff;
-	      off += 24;
-	      if (off >= 26) {
-	        off -= 26;
-	        j++;
-	      }
-	    }
-	  } else if (endian === 'le') {
-	    for (var i = 0, j = 0; i < number.length; i += 3) {
-	      var w = number[i] | (number[i + 1] << 8) | (number[i + 2] << 16);
-	      this.words[j] |= (w << off) & 0x3ffffff;
-	      this.words[j + 1] = (w >>> (26 - off)) & 0x3ffffff;
-	      off += 24;
-	      if (off >= 26) {
-	        off -= 26;
-	        j++;
-	      }
-	    }
-	  }
-	  return this.strip();
-	};
-
-	function parseHex(str, start, end) {
-	  var r = 0;
-	  var len = Math.min(str.length, end);
-	  for (var i = start; i < len; i++) {
-	    var c = str.charCodeAt(i) - 48;
-
-	    r <<= 4;
-
-	    // 'a' - 'f'
-	    if (c >= 49 && c <= 54)
-	      r |= c - 49 + 0xa;
-
-	    // 'A' - 'F'
-	    else if (c >= 17 && c <= 22)
-	      r |= c - 17 + 0xa;
-
-	    // '0' - '9'
-	    else
-	      r |= c & 0xf;
-	  }
-	  return r;
-	}
-
-	BN.prototype._parseHex = function _parseHex(number, start) {
-	  // Create possibly bigger array to ensure that it fits the number
-	  this.length = Math.ceil((number.length - start) / 6);
-	  this.words = new Array(this.length);
-	  for (var i = 0; i < this.length; i++)
-	    this.words[i] = 0;
-
-	  // Scan 24-bit chunks and add them to the number
-	  var off = 0;
-	  for (var i = number.length - 6, j = 0; i >= start; i -= 6) {
-	    var w = parseHex(number, i, i + 6);
-	    this.words[j] |= (w << off) & 0x3ffffff;
-	    this.words[j + 1] |= w >>> (26 - off) & 0x3fffff;
-	    off += 24;
-	    if (off >= 26) {
-	      off -= 26;
-	      j++;
-	    }
-	  }
-	  if (i + 6 !== start) {
-	    var w = parseHex(number, start, i + 6);
-	    this.words[j] |= (w << off) & 0x3ffffff;
-	    this.words[j + 1] |= w >>> (26 - off) & 0x3fffff;
-	  }
-	  this.strip();
-	};
-
-	function parseBase(str, start, end, mul) {
-	  var r = 0;
-	  var len = Math.min(str.length, end);
-	  for (var i = start; i < len; i++) {
-	    var c = str.charCodeAt(i) - 48;
-
-	    r *= mul;
-
-	    // 'a'
-	    if (c >= 49)
-	      r += c - 49 + 0xa;
-
-	    // 'A'
-	    else if (c >= 17)
-	      r += c - 17 + 0xa;
-
-	    // '0' - '9'
-	    else
-	      r += c;
-	  }
-	  return r;
-	}
-
-	BN.prototype._parseBase = function _parseBase(number, base, start) {
-	  // Initialize as zero
-	  this.words = [ 0 ];
-	  this.length = 1;
-
-	  // Find length of limb in base
-	  for (var limbLen = 0, limbPow = 1; limbPow <= 0x3ffffff; limbPow *= base)
-	    limbLen++;
-	  limbLen--;
-	  limbPow = (limbPow / base) | 0;
-
-	  var total = number.length - start;
-	  var mod = total % limbLen;
-	  var end = Math.min(total, total - mod) + start;
-
-	  var word = 0;
-	  for (var i = start; i < end; i += limbLen) {
-	    word = parseBase(number, i, i + limbLen, base);
-
-	    this.imuln(limbPow);
-	    if (this.words[0] + word < 0x4000000)
-	      this.words[0] += word;
-	    else
-	      this._iaddn(word);
-	  }
-
-	  if (mod !== 0) {
-	    var pow = 1;
-	    var word = parseBase(number, i, number.length, base);
-
-	    for (var i = 0; i < mod; i++)
-	      pow *= base;
-	    this.imuln(pow);
-	    if (this.words[0] + word < 0x4000000)
-	      this.words[0] += word;
-	    else
-	      this._iaddn(word);
-	  }
-	};
-
-	BN.prototype.copy = function copy(dest) {
-	  dest.words = new Array(this.length);
-	  for (var i = 0; i < this.length; i++)
-	    dest.words[i] = this.words[i];
-	  dest.length = this.length;
-	  dest.sign = this.sign;
-	  dest.red = this.red;
-	};
-
-	BN.prototype.clone = function clone() {
-	  var r = new BN(null);
-	  this.copy(r);
-	  return r;
-	};
-
-	// Remove leading `0` from `this`
-	BN.prototype.strip = function strip() {
-	  while (this.length > 1 && this.words[this.length - 1] === 0)
-	    this.length--;
-	  return this._normSign();
-	};
-
-	BN.prototype._normSign = function _normSign() {
-	  // -0 = 0
-	  if (this.length === 1 && this.words[0] === 0)
-	    this.sign = false;
-	  return this;
-	};
-
-	BN.prototype.inspect = function inspect() {
-	  return (this.red ? '<BN-R: ' : '<BN: ') + this.toString(16) + '>';
-	};
-
-	/*
-
-	var zeros = [];
-	var groupSizes = [];
-	var groupBases = [];
-
-	var s = '';
-	var i = -1;
-	while (++i < BN.wordSize) {
-	  zeros[i] = s;
-	  s += '0';
-	}
-	groupSizes[0] = 0;
-	groupSizes[1] = 0;
-	groupBases[0] = 0;
-	groupBases[1] = 0;
-	var base = 2 - 1;
-	while (++base < 36 + 1) {
-	  var groupSize = 0;
-	  var groupBase = 1;
-	  while (groupBase < (1 << BN.wordSize) / base) {
-	    groupBase *= base;
-	    groupSize += 1;
-	  }
-	  groupSizes[base] = groupSize;
-	  groupBases[base] = groupBase;
-	}
-
-	*/
-
-	var zeros = [
-	  '',
-	  '0',
-	  '00',
-	  '000',
-	  '0000',
-	  '00000',
-	  '000000',
-	  '0000000',
-	  '00000000',
-	  '000000000',
-	  '0000000000',
-	  '00000000000',
-	  '000000000000',
-	  '0000000000000',
-	  '00000000000000',
-	  '000000000000000',
-	  '0000000000000000',
-	  '00000000000000000',
-	  '000000000000000000',
-	  '0000000000000000000',
-	  '00000000000000000000',
-	  '000000000000000000000',
-	  '0000000000000000000000',
-	  '00000000000000000000000',
-	  '000000000000000000000000',
-	  '0000000000000000000000000'
-	];
-
-	var groupSizes = [
-	  0, 0,
-	  25, 16, 12, 11, 10, 9, 8,
-	  8, 7, 7, 7, 7, 6, 6,
-	  6, 6, 6, 6, 6, 5, 5,
-	  5, 5, 5, 5, 5, 5, 5,
-	  5, 5, 5, 5, 5, 5, 5
-	];
-
-	var groupBases = [
-	  0, 0,
-	  33554432, 43046721, 16777216, 48828125, 60466176, 40353607, 16777216,
-	  43046721, 10000000, 19487171, 35831808, 62748517, 7529536, 11390625,
-	  16777216, 24137569, 34012224, 47045881, 64000000, 4084101, 5153632,
-	  6436343, 7962624, 9765625, 11881376, 14348907, 17210368, 20511149,
-	  24300000, 28629151, 33554432, 39135393, 45435424, 52521875, 60466176
-	];
-
-	BN.prototype.toString = function toString(base, padding) {
-	  base = base || 10;
-	  var padding = padding | 0 || 1;
-	  if (base === 16 || base === 'hex') {
-	    var out = '';
-	    var off = 0;
-	    var carry = 0;
-	    for (var i = 0; i < this.length; i++) {
-	      var w = this.words[i];
-	      var word = (((w << off) | carry) & 0xffffff).toString(16);
-	      carry = (w >>> (24 - off)) & 0xffffff;
-	      if (carry !== 0 || i !== this.length - 1)
-	        out = zeros[6 - word.length] + word + out;
-	      else
-	        out = word + out;
-	      off += 2;
-	      if (off >= 26) {
-	        off -= 26;
-	        i--;
-	      }
-	    }
-	    if (carry !== 0)
-	      out = carry.toString(16) + out;
-	    while (out.length % padding !== 0)
-	      out = '0' + out;
-	    if (this.sign)
-	      out = '-' + out;
-	    return out;
-	  } else if (base === (base | 0) && base >= 2 && base <= 36) {
-	    // var groupSize = Math.floor(BN.wordSize * Math.LN2 / Math.log(base));
-	    var groupSize = groupSizes[base];
-	    // var groupBase = Math.pow(base, groupSize);
-	    var groupBase = groupBases[base];
-	    var out = '';
-	    var c = this.clone();
-	    c.sign = false;
-	    while (c.cmpn(0) !== 0) {
-	      var r = c.modn(groupBase).toString(base);
-	      c = c.idivn(groupBase);
-
-	      if (c.cmpn(0) !== 0)
-	        out = zeros[groupSize - r.length] + r + out;
-	      else
-	        out = r + out;
-	    }
-	    if (this.cmpn(0) === 0)
-	      out = '0' + out;
-	    while (out.length % padding !== 0)
-	      out = '0' + out;
-	    if (this.sign)
-	      out = '-' + out;
-	    return out;
-	  } else {
-	    assert(false, 'Base should be between 2 and 36');
-	  }
-	};
-
-	BN.prototype.toJSON = function toJSON() {
-	  return this.toString(16);
-	};
-
-	BN.prototype.toArray = function toArray(endian, length) {
-	  this.strip();
-	  var littleEndian = endian === 'le';
-	  var res = new Array(this.byteLength());
-	  res[0] = 0;
-
-	  var q = this.clone();
-	  if (!littleEndian) {
-	    // Assume big-endian
-	    for (var i = 0; q.cmpn(0) !== 0; i++) {
-	      var b = q.andln(0xff);
-	      q.iushrn(8);
-
-	      res[res.length - i - 1] = b;
-	    }
-	  } else {
-	    for (var i = 0; q.cmpn(0) !== 0; i++) {
-	      var b = q.andln(0xff);
-	      q.iushrn(8);
-
-	      res[i] = b;
-	    }
-	  }
-
-	  if (length) {
-	    assert(res.length <= length, 'byte array longer than desired length');
-
-	    while (res.length < length) {
-	      if (littleEndian)
-	        res.push(0);
-	      else
-	        res.unshift(0);
-	    }
-	  }
-
-	  return res;
-	};
-
-	if (Math.clz32) {
-	  BN.prototype._countBits = function _countBits(w) {
-	    return 32 - Math.clz32(w);
-	  };
-	} else {
-	  BN.prototype._countBits = function _countBits(w) {
-	    var t = w;
-	    var r = 0;
-	    if (t >= 0x1000) {
-	      r += 13;
-	      t >>>= 13;
-	    }
-	    if (t >= 0x40) {
-	      r += 7;
-	      t >>>= 7;
-	    }
-	    if (t >= 0x8) {
-	      r += 4;
-	      t >>>= 4;
-	    }
-	    if (t >= 0x02) {
-	      r += 2;
-	      t >>>= 2;
-	    }
-	    return r + t;
-	  };
-	}
-
-	BN.prototype._zeroBits = function _zeroBits(w) {
-	  // Short-cut
-	  if (w === 0)
-	    return 26;
-
-	  var t = w;
-	  var r = 0;
-	  if ((t & 0x1fff) === 0) {
-	    r += 13;
-	    t >>>= 13;
-	  }
-	  if ((t & 0x7f) === 0) {
-	    r += 7;
-	    t >>>= 7;
-	  }
-	  if ((t & 0xf) === 0) {
-	    r += 4;
-	    t >>>= 4;
-	  }
-	  if ((t & 0x3) === 0) {
-	    r += 2;
-	    t >>>= 2;
-	  }
-	  if ((t & 0x1) === 0)
-	    r++;
-	  return r;
-	};
-
-	// Return number of used bits in a BN
-	BN.prototype.bitLength = function bitLength() {
-	  var hi = 0;
-	  var w = this.words[this.length - 1];
-	  var hi = this._countBits(w);
-	  return (this.length - 1) * 26 + hi;
-	};
-
-	function toBitArray(num) {
-	  var w = new Array(num.bitLength());
-
-	  for (var bit = 0; bit < w.length; bit++) {
-	    var off = (bit / 26) | 0;
-	    var wbit = bit % 26;
-
-	    w[bit] = (num.words[off] & (1 << wbit)) >>> wbit;
-	  }
-
-	  return w;
-	}
-
-	// Number of trailing zero bits
-	BN.prototype.zeroBits = function zeroBits() {
-	  if (this.cmpn(0) === 0)
-	    return 0;
-
-	  var r = 0;
-	  for (var i = 0; i < this.length; i++) {
-	    var b = this._zeroBits(this.words[i]);
-	    r += b;
-	    if (b !== 26)
-	      break;
-	  }
-	  return r;
-	};
-
-	BN.prototype.byteLength = function byteLength() {
-	  return Math.ceil(this.bitLength() / 8);
-	};
-
-	// Return negative clone of `this`
-	BN.prototype.neg = function neg() {
-	  if (this.cmpn(0) === 0)
-	    return this.clone();
-
-	  var r = this.clone();
-	  r.sign = !this.sign;
-	  return r;
-	};
-
-
-	// Or `num` with `this` in-place
-	BN.prototype.iuor = function iuor(num) {
-	  while (this.length < num.length)
-	    this.words[this.length++] = 0;
-
-	  for (var i = 0; i < num.length; i++)
-	    this.words[i] = this.words[i] | num.words[i];
-
-	  return this.strip();
-	};
-
-	BN.prototype.ior = function ior(num) {
-	  assert(!this.sign && !num.sign);
-	  return this.iuor(num);
-	};
-
-
-	// Or `num` with `this`
-	BN.prototype.or = function or(num) {
-	  if (this.length > num.length)
-	    return this.clone().ior(num);
-	  else
-	    return num.clone().ior(this);
-	};
-
-	BN.prototype.uor = function uor(num) {
-	  if (this.length > num.length)
-	    return this.clone().iuor(num);
-	  else
-	    return num.clone().iuor(this);
-	};
-
-
-	// And `num` with `this` in-place
-	BN.prototype.iuand = function iuand(num) {
-	  // b = min-length(num, this)
-	  var b;
-	  if (this.length > num.length)
-	    b = num;
-	  else
-	    b = this;
-
-	  for (var i = 0; i < b.length; i++)
-	    this.words[i] = this.words[i] & num.words[i];
-
-	  this.length = b.length;
-
-	  return this.strip();
-	};
-
-	BN.prototype.iand = function iand(num) {
-	  assert(!this.sign && !num.sign);
-	  return this.iuand(num);
-	};
-
-
-	// And `num` with `this`
-	BN.prototype.and = function and(num) {
-	  if (this.length > num.length)
-	    return this.clone().iand(num);
-	  else
-	    return num.clone().iand(this);
-	};
-
-	BN.prototype.uand = function uand(num) {
-	  if (this.length > num.length)
-	    return this.clone().iuand(num);
-	  else
-	    return num.clone().iuand(this);
-	};
-
-
-	// Xor `num` with `this` in-place
-	BN.prototype.iuxor = function iuxor(num) {
-	  // a.length > b.length
-	  var a;
-	  var b;
-	  if (this.length > num.length) {
-	    a = this;
-	    b = num;
-	  } else {
-	    a = num;
-	    b = this;
-	  }
-
-	  for (var i = 0; i < b.length; i++)
-	    this.words[i] = a.words[i] ^ b.words[i];
-
-	  if (this !== a)
-	    for (; i < a.length; i++)
-	      this.words[i] = a.words[i];
-
-	  this.length = a.length;
-
-	  return this.strip();
-	};
-
-	BN.prototype.ixor = function ixor(num) {
-	  assert(!this.sign && !num.sign);
-	  return this.iuxor(num);
-	};
-
-
-	// Xor `num` with `this`
-	BN.prototype.xor = function xor(num) {
-	  if (this.length > num.length)
-	    return this.clone().ixor(num);
-	  else
-	    return num.clone().ixor(this);
-	};
-
-	BN.prototype.uxor = function uxor(num) {
-	  if (this.length > num.length)
-	    return this.clone().iuxor(num);
-	  else
-	    return num.clone().iuxor(this);
-	};
-
-
-	// Set `bit` of `this`
-	BN.prototype.setn = function setn(bit, val) {
-	  assert(typeof bit === 'number' && bit >= 0);
-
-	  var off = (bit / 26) | 0;
-	  var wbit = bit % 26;
-
-	  while (this.length <= off)
-	    this.words[this.length++] = 0;
-
-	  if (val)
-	    this.words[off] = this.words[off] | (1 << wbit);
-	  else
-	    this.words[off] = this.words[off] & ~(1 << wbit);
-
-	  return this.strip();
-	};
-
-
-	// Add `num` to `this` in-place
-	BN.prototype.iadd = function iadd(num) {
-	  // negative + positive
-	  if (this.sign && !num.sign) {
-	    this.sign = false;
-	    var r = this.isub(num);
-	    this.sign = !this.sign;
-	    return this._normSign();
-
-	  // positive + negative
-	  } else if (!this.sign && num.sign) {
-	    num.sign = false;
-	    var r = this.isub(num);
-	    num.sign = true;
-	    return r._normSign();
-	  }
-
-	  // a.length > b.length
-	  var a;
-	  var b;
-	  if (this.length > num.length) {
-	    a = this;
-	    b = num;
-	  } else {
-	    a = num;
-	    b = this;
-	  }
-
-	  var carry = 0;
-	  for (var i = 0; i < b.length; i++) {
-	    var r = a.words[i] + b.words[i] + carry;
-	    this.words[i] = r & 0x3ffffff;
-	    carry = r >>> 26;
-	  }
-	  for (; carry !== 0 && i < a.length; i++) {
-	    var r = a.words[i] + carry;
-	    this.words[i] = r & 0x3ffffff;
-	    carry = r >>> 26;
-	  }
-
-	  this.length = a.length;
-	  if (carry !== 0) {
-	    this.words[this.length] = carry;
-	    this.length++;
-	  // Copy the rest of the words
-	  } else if (a !== this) {
-	    for (; i < a.length; i++)
-	      this.words[i] = a.words[i];
-	  }
-
-	  return this;
-	};
-
-	// Add `num` to `this`
-	BN.prototype.add = function add(num) {
-	  if (num.sign && !this.sign) {
-	    num.sign = false;
-	    var res = this.sub(num);
-	    num.sign = true;
-	    return res;
-	  } else if (!num.sign && this.sign) {
-	    this.sign = false;
-	    var res = num.sub(this);
-	    this.sign = true;
-	    return res;
-	  }
-
-	  if (this.length > num.length)
-	    return this.clone().iadd(num);
-	  else
-	    return num.clone().iadd(this);
-	};
-
-	// Subtract `num` from `this` in-place
-	BN.prototype.isub = function isub(num) {
-	  // this - (-num) = this + num
-	  if (num.sign) {
-	    num.sign = false;
-	    var r = this.iadd(num);
-	    num.sign = true;
-	    return r._normSign();
-
-	  // -this - num = -(this + num)
-	  } else if (this.sign) {
-	    this.sign = false;
-	    this.iadd(num);
-	    this.sign = true;
-	    return this._normSign();
-	  }
-
-	  // At this point both numbers are positive
-	  var cmp = this.cmp(num);
-
-	  // Optimization - zeroify
-	  if (cmp === 0) {
-	    this.sign = false;
-	    this.length = 1;
-	    this.words[0] = 0;
-	    return this;
-	  }
-
-	  // a > b
-	  var a;
-	  var b;
-	  if (cmp > 0) {
-	    a = this;
-	    b = num;
-	  } else {
-	    a = num;
-	    b = this;
-	  }
-
-	  var carry = 0;
-	  for (var i = 0; i < b.length; i++) {
-	    var r = a.words[i] - b.words[i] + carry;
-	    carry = r >> 26;
-	    this.words[i] = r & 0x3ffffff;
-	  }
-	  for (; carry !== 0 && i < a.length; i++) {
-	    var r = a.words[i] + carry;
-	    carry = r >> 26;
-	    this.words[i] = r & 0x3ffffff;
-	  }
-
-	  // Copy rest of the words
-	  if (carry === 0 && i < a.length && a !== this)
-	    for (; i < a.length; i++)
-	      this.words[i] = a.words[i];
-	  this.length = Math.max(this.length, i);
-
-	  if (a !== this)
-	    this.sign = true;
-
-	  return this.strip();
-	};
-
-	// Subtract `num` from `this`
-	BN.prototype.sub = function sub(num) {
-	  return this.clone().isub(num);
-	};
-
-	/*
-	// NOTE: This could be potentionally used to generate loop-less multiplications
-	function _genCombMulTo(alen, blen) {
-	  var len = alen + blen - 1;
-	  var src = [
-	    'var a = this.words, b = num.words, o = out.words, c = 0, w, ' +
-	        'mask = 0x3ffffff, shift = 0x4000000;',
-	    'out.length = ' + len + ';'
-	  ];
-	  for (var k = 0; k < len; k++) {
-	    var minJ = Math.max(0, k - alen + 1);
-	    var maxJ = Math.min(k, blen - 1);
-
-	    for (var j = minJ; j <= maxJ; j++) {
-	      var i = k - j;
-	      var mul = 'a[' + i + '] * b[' + j + ']';
-
-	      if (j === minJ) {
-	        src.push('w = ' + mul + ' + c;');
-	        src.push('c = (w / shift) | 0;');
-	      } else {
-	        src.push('w += ' + mul + ';');
-	        src.push('c += (w / shift) | 0;');
-	      }
-	      src.push('w &= mask;');
-	    }
-	    src.push('o[' + k + '] = w;');
-	  }
-	  src.push('if (c !== 0) {',
-	           '  o[' + k + '] = c;',
-	           '  out.length++;',
-	           '}',
-	           'return out;');
-
-	  return src.join('\n');
-	}
-	*/
-
-	BN.prototype._smallMulTo = function _smallMulTo(num, out) {
-	  out.sign = num.sign !== this.sign;
-	  out.length = this.length + num.length;
-
-	  var carry = 0;
-	  for (var k = 0; k < out.length - 1; k++) {
-	    // Sum all words with the same `i + j = k` and accumulate `ncarry`,
-	    // note that ncarry could be >= 0x3ffffff
-	    var ncarry = carry >>> 26;
-	    var rword = carry & 0x3ffffff;
-	    var maxJ = Math.min(k, num.length - 1);
-	    for (var j = Math.max(0, k - this.length + 1); j <= maxJ; j++) {
-	      var i = k - j;
-	      var a = this.words[i] | 0;
-	      var b = num.words[j] | 0;
-	      var r = a * b;
-
-	      var lo = r & 0x3ffffff;
-	      ncarry = (ncarry + ((r / 0x4000000) | 0)) | 0;
-	      lo = (lo + rword) | 0;
-	      rword = lo & 0x3ffffff;
-	      ncarry = (ncarry + (lo >>> 26)) | 0;
-	    }
-	    out.words[k] = rword;
-	    carry = ncarry;
-	  }
-	  if (carry !== 0) {
-	    out.words[k] = carry;
-	  } else {
-	    out.length--;
-	  }
-
-	  return out.strip();
-	};
-
-	BN.prototype._bigMulTo = function _bigMulTo(num, out) {
-	  out.sign = num.sign !== this.sign;
-	  out.length = this.length + num.length;
-
-	  var carry = 0;
-	  var hncarry = 0;
-	  for (var k = 0; k < out.length - 1; k++) {
-	    // Sum all words with the same `i + j = k` and accumulate `ncarry`,
-	    // note that ncarry could be >= 0x3ffffff
-	    var ncarry = hncarry;
-	    hncarry = 0;
-	    var rword = carry & 0x3ffffff;
-	    var maxJ = Math.min(k, num.length - 1);
-	    for (var j = Math.max(0, k - this.length + 1); j <= maxJ; j++) {
-	      var i = k - j;
-	      var a = this.words[i] | 0;
-	      var b = num.words[j] | 0;
-	      var r = a * b;
-
-	      var lo = r & 0x3ffffff;
-	      ncarry = (ncarry + ((r / 0x4000000) | 0)) | 0;
-	      lo = (lo + rword) | 0;
-	      rword = lo & 0x3ffffff;
-	      ncarry = (ncarry + (lo >>> 26)) | 0;
-
-	      hncarry += ncarry >>> 26;
-	      ncarry &= 0x3ffffff;
-	    }
-	    out.words[k] = rword;
-	    carry = ncarry;
-	    ncarry = hncarry;
-	  }
-	  if (carry !== 0) {
-	    out.words[k] = carry;
-	  } else {
-	    out.length--;
-	  }
-
-	  return out.strip();
-	};
-
-	BN.prototype.mulTo = function mulTo(num, out) {
-	  var res;
-	  if (this.length + num.length < 63)
-	    res = this._smallMulTo(num, out);
-	  else
-	    res = this._bigMulTo(num, out);
-	  return res;
-	};
-
-	// Multiply `this` by `num`
-	BN.prototype.mul = function mul(num) {
-	  var out = new BN(null);
-	  out.words = new Array(this.length + num.length);
-	  return this.mulTo(num, out);
-	};
-
-	// In-place Multiplication
-	BN.prototype.imul = function imul(num) {
-	  if (this.cmpn(0) === 0 || num.cmpn(0) === 0) {
-	    this.words[0] = 0;
-	    this.length = 1;
-	    return this;
-	  }
-
-	  var tlen = this.length;
-	  var nlen = num.length;
-
-	  this.sign = num.sign !== this.sign;
-	  this.length = this.length + num.length;
-	  this.words[this.length - 1] = 0;
-
-	  for (var k = this.length - 2; k >= 0; k--) {
-	    // Sum all words with the same `i + j = k` and accumulate `carry`,
-	    // note that carry could be >= 0x3ffffff
-	    var carry = 0;
-	    var rword = 0;
-	    var maxJ = Math.min(k, nlen - 1);
-	    for (var j = Math.max(0, k - tlen + 1); j <= maxJ; j++) {
-	      var i = k - j;
-	      var a = this.words[i];
-	      var b = num.words[j];
-	      var r = a * b;
-
-	      var lo = r & 0x3ffffff;
-	      carry += (r / 0x4000000) | 0;
-	      lo += rword;
-	      rword = lo & 0x3ffffff;
-	      carry += lo >>> 26;
-	    }
-	    this.words[k] = rword;
-	    this.words[k + 1] += carry;
-	    carry = 0;
-	  }
-
-	  // Propagate overflows
-	  var carry = 0;
-	  for (var i = 1; i < this.length; i++) {
-	    var w = this.words[i] + carry;
-	    this.words[i] = w & 0x3ffffff;
-	    carry = w >>> 26;
-	  }
-
-	  return this.strip();
-	};
-
-	BN.prototype.imuln = function imuln(num) {
-	  assert(typeof num === 'number');
-
-	  // Carry
-	  var carry = 0;
-	  for (var i = 0; i < this.length; i++) {
-	    var w = this.words[i] * num;
-	    var lo = (w & 0x3ffffff) + (carry & 0x3ffffff);
-	    carry >>= 26;
-	    carry += (w / 0x4000000) | 0;
-	    // NOTE: lo is 27bit maximum
-	    carry += lo >>> 26;
-	    this.words[i] = lo & 0x3ffffff;
-	  }
-
-	  if (carry !== 0) {
-	    this.words[i] = carry;
-	    this.length++;
-	  }
-
-	  return this;
-	};
-
-	BN.prototype.muln = function muln(num) {
-	  return this.clone().imuln(num);
-	};
-
-	// `this` * `this`
-	BN.prototype.sqr = function sqr() {
-	  return this.mul(this);
-	};
-
-	// `this` * `this` in-place
-	BN.prototype.isqr = function isqr() {
-	  return this.mul(this);
-	};
-
-	// Math.pow(`this`, `num`)
-	BN.prototype.pow = function pow(num) {
-	  var w = toBitArray(num);
-	  if (w.length === 0)
-	    return new BN(1);
-
-	  // Skip leading zeroes
-	  var res = this;
-	  for (var i = 0; i < w.length; i++, res = res.sqr())
-	    if (w[i] !== 0)
-	      break;
-
-	  if (++i < w.length) {
-	    for (var q = res.sqr(); i < w.length; i++, q = q.sqr()) {
-	      if (w[i] === 0)
-	        continue;
-	      res = res.mul(q);
-	    }
-	  }
-
-	  return res;
-	};
-
-	// Shift-left in-place
-	BN.prototype.iushln = function iushln(bits) {
-	  assert(typeof bits === 'number' && bits >= 0);
-	  var r = bits % 26;
-	  var s = (bits - r) / 26;
-	  var carryMask = (0x3ffffff >>> (26 - r)) << (26 - r);
-
-	  if (r !== 0) {
-	    var carry = 0;
-	    for (var i = 0; i < this.length; i++) {
-	      var newCarry = this.words[i] & carryMask;
-	      var c = (this.words[i] - newCarry) << r;
-	      this.words[i] = c | carry;
-	      carry = newCarry >>> (26 - r);
-	    }
-	    if (carry) {
-	      this.words[i] = carry;
-	      this.length++;
-	    }
-	  }
-
-	  if (s !== 0) {
-	    for (var i = this.length - 1; i >= 0; i--)
-	      this.words[i + s] = this.words[i];
-	    for (var i = 0; i < s; i++)
-	      this.words[i] = 0;
-	    this.length += s;
-	  }
-
-	  return this.strip();
-	};
-
-	BN.prototype.ishln = function ishln(bits) {
-	  // TODO(indutny): implement me
-	  assert(!this.sign);
-	  return this.iushln(bits);
-	};
-
-	// Shift-right in-place
-	// NOTE: `hint` is a lowest bit before trailing zeroes
-	// NOTE: if `extended` is present - it will be filled with destroyed bits
-	BN.prototype.iushrn = function iushrn(bits, hint, extended) {
-	  assert(typeof bits === 'number' && bits >= 0);
-	  var h;
-	  if (hint)
-	    h = (hint - (hint % 26)) / 26;
-	  else
-	    h = 0;
-
-	  var r = bits % 26;
-	  var s = Math.min((bits - r) / 26, this.length);
-	  var mask = 0x3ffffff ^ ((0x3ffffff >>> r) << r);
-	  var maskedWords = extended;
-
-	  h -= s;
-	  h = Math.max(0, h);
-
-	  // Extended mode, copy masked part
-	  if (maskedWords) {
-	    for (var i = 0; i < s; i++)
-	      maskedWords.words[i] = this.words[i];
-	    maskedWords.length = s;
-	  }
-
-	  if (s === 0) {
-	    // No-op, we should not move anything at all
-	  } else if (this.length > s) {
-	    this.length -= s;
-	    for (var i = 0; i < this.length; i++)
-	      this.words[i] = this.words[i + s];
-	  } else {
-	    this.words[0] = 0;
-	    this.length = 1;
-	  }
-
-	  var carry = 0;
-	  for (var i = this.length - 1; i >= 0 && (carry !== 0 || i >= h); i--) {
-	    var word = this.words[i];
-	    this.words[i] = (carry << (26 - r)) | (word >>> r);
-	    carry = word & mask;
-	  }
-
-	  // Push carried bits as a mask
-	  if (maskedWords && carry !== 0)
-	    maskedWords.words[maskedWords.length++] = carry;
-
-	  if (this.length === 0) {
-	    this.words[0] = 0;
-	    this.length = 1;
-	  }
-
-	  this.strip();
-
-	  return this;
-	};
-
-	BN.prototype.ishrn = function ishrn(bits, hint, extended) {
-	  // TODO(indutny): implement me
-	  assert(!this.sign);
-	  return this.iushrn(bits, hint, extended);
-	};
-
-	// Shift-left
-	BN.prototype.shln = function shln(bits) {
-	  return this.clone().ishln(bits);
-	};
-
-	BN.prototype.ushln = function ushln(bits) {
-	  return this.clone().iushln(bits);
-	};
-
-	// Shift-right
-	BN.prototype.shrn = function shrn(bits) {
-	  return this.clone().ishrn(bits);
-	};
-
-	BN.prototype.ushrn = function ushrn(bits) {
-	  return this.clone().iushrn(bits);
-	};
-
-	// Test if n bit is set
-	BN.prototype.testn = function testn(bit) {
-	  assert(typeof bit === 'number' && bit >= 0);
-	  var r = bit % 26;
-	  var s = (bit - r) / 26;
-	  var q = 1 << r;
-
-	  // Fast case: bit is much higher than all existing words
-	  if (this.length <= s) {
-	    return false;
-	  }
-
-	  // Check bit and return
-	  var w = this.words[s];
-
-	  return !!(w & q);
-	};
-
-	// Return only lowers bits of number (in-place)
-	BN.prototype.imaskn = function imaskn(bits) {
-	  assert(typeof bits === 'number' && bits >= 0);
-	  var r = bits % 26;
-	  var s = (bits - r) / 26;
-
-	  assert(!this.sign, 'imaskn works only with positive numbers');
-
-	  if (r !== 0)
-	    s++;
-	  this.length = Math.min(s, this.length);
-
-	  if (r !== 0) {
-	    var mask = 0x3ffffff ^ ((0x3ffffff >>> r) << r);
-	    this.words[this.length - 1] &= mask;
-	  }
-
-	  return this.strip();
-	};
-
-	// Return only lowers bits of number
-	BN.prototype.maskn = function maskn(bits) {
-	  return this.clone().imaskn(bits);
-	};
-
-	// Add plain number `num` to `this`
-	BN.prototype.iaddn = function iaddn(num) {
-	  assert(typeof num === 'number');
-	  if (num < 0)
-	    return this.isubn(-num);
-
-	  // Possible sign change
-	  if (this.sign) {
-	    if (this.length === 1 && this.words[0] < num) {
-	      this.words[0] = num - this.words[0];
-	      this.sign = false;
-	      return this;
-	    }
-
-	    this.sign = false;
-	    this.isubn(num);
-	    this.sign = true;
-	    return this;
-	  }
-
-	  // Add without checks
-	  return this._iaddn(num);
-	};
-
-	BN.prototype._iaddn = function _iaddn(num) {
-	  this.words[0] += num;
-
-	  // Carry
-	  for (var i = 0; i < this.length && this.words[i] >= 0x4000000; i++) {
-	    this.words[i] -= 0x4000000;
-	    if (i === this.length - 1)
-	      this.words[i + 1] = 1;
-	    else
-	      this.words[i + 1]++;
-	  }
-	  this.length = Math.max(this.length, i + 1);
-
-	  return this;
-	};
-
-	// Subtract plain number `num` from `this`
-	BN.prototype.isubn = function isubn(num) {
-	  assert(typeof num === 'number');
-	  if (num < 0)
-	    return this.iaddn(-num);
-
-	  if (this.sign) {
-	    this.sign = false;
-	    this.iaddn(num);
-	    this.sign = true;
-	    return this;
-	  }
-
-	  this.words[0] -= num;
-
-	  // Carry
-	  for (var i = 0; i < this.length && this.words[i] < 0; i++) {
-	    this.words[i] += 0x4000000;
-	    this.words[i + 1] -= 1;
-	  }
-
-	  return this.strip();
-	};
-
-	BN.prototype.addn = function addn(num) {
-	  return this.clone().iaddn(num);
-	};
-
-	BN.prototype.subn = function subn(num) {
-	  return this.clone().isubn(num);
-	};
-
-	BN.prototype.iabs = function iabs() {
-	  this.sign = false;
-
-	  return this;
-	};
-
-	BN.prototype.abs = function abs() {
-	  return this.clone().iabs();
-	};
-
-	BN.prototype._ishlnsubmul = function _ishlnsubmul(num, mul, shift) {
-	  // Bigger storage is needed
-	  var len = num.length + shift;
-	  var i;
-	  if (this.words.length < len) {
-	    var t = new Array(len);
-	    for (var i = 0; i < this.length; i++)
-	      t[i] = this.words[i];
-	    this.words = t;
-	  } else {
-	    i = this.length;
-	  }
-
-	  // Zeroify rest
-	  this.length = Math.max(this.length, len);
-	  for (; i < this.length; i++)
-	    this.words[i] = 0;
-
-	  var carry = 0;
-	  for (var i = 0; i < num.length; i++) {
-	    var w = this.words[i + shift] + carry;
-	    var right = num.words[i] * mul;
-	    w -= right & 0x3ffffff;
-	    carry = (w >> 26) - ((right / 0x4000000) | 0);
-	    this.words[i + shift] = w & 0x3ffffff;
-	  }
-	  for (; i < this.length - shift; i++) {
-	    var w = this.words[i + shift] + carry;
-	    carry = w >> 26;
-	    this.words[i + shift] = w & 0x3ffffff;
-	  }
-
-	  if (carry === 0)
-	    return this.strip();
-
-	  // Subtraction overflow
-	  assert(carry === -1);
-	  carry = 0;
-	  for (var i = 0; i < this.length; i++) {
-	    var w = -this.words[i] + carry;
-	    carry = w >> 26;
-	    this.words[i] = w & 0x3ffffff;
-	  }
-	  this.sign = true;
-
-	  return this.strip();
-	};
-
-	BN.prototype._wordDiv = function _wordDiv(num, mode) {
-	  var shift = this.length - num.length;
-
-	  var a = this.clone();
-	  var b = num;
-
-	  // Normalize
-	  var bhi = b.words[b.length - 1];
-	  var bhiBits = this._countBits(bhi);
-	  shift = 26 - bhiBits;
-	  if (shift !== 0) {
-	    b = b.ushln(shift);
-	    a.iushln(shift);
-	    bhi = b.words[b.length - 1];
-	  }
-
-	  // Initialize quotient
-	  var m = a.length - b.length;
-	  var q;
-
-	  if (mode !== 'mod') {
-	    q = new BN(null);
-	    q.length = m + 1;
-	    q.words = new Array(q.length);
-	    for (var i = 0; i < q.length; i++)
-	      q.words[i] = 0;
-	  }
-
-	  var diff = a.clone()._ishlnsubmul(b, 1, m);
-	  if (!diff.sign) {
-	    a = diff;
-	    if (q)
-	      q.words[m] = 1;
-	  }
-
-	  for (var j = m - 1; j >= 0; j--) {
-	    var qj = a.words[b.length + j] * 0x4000000 + a.words[b.length + j - 1];
-
-	    // NOTE: (qj / bhi) is (0x3ffffff * 0x4000000 + 0x3ffffff) / 0x2000000 max
-	    // (0x7ffffff)
-	    qj = Math.min((qj / bhi) | 0, 0x3ffffff);
-
-	    a._ishlnsubmul(b, qj, j);
-	    while (a.sign) {
-	      qj--;
-	      a.sign = false;
-	      a._ishlnsubmul(b, 1, j);
-	      if (a.cmpn(0) !== 0)
-	        a.sign = !a.sign;
-	    }
-	    if (q)
-	      q.words[j] = qj;
-	  }
-	  if (q)
-	    q.strip();
-	  a.strip();
-
-	  // Denormalize
-	  if (mode !== 'div' && shift !== 0)
-	    a.iushrn(shift);
-	  return { div: q ? q : null, mod: a };
-	};
-
-	BN.prototype.divmod = function divmod(num, mode, positive) {
-	  assert(num.cmpn(0) !== 0);
-
-	  if (this.sign && !num.sign) {
-	    var res = this.neg().divmod(num, mode);
-	    var div;
-	    var mod;
-	    if (mode !== 'mod')
-	      div = res.div.neg();
-	    if (mode !== 'div') {
-	      mod = res.mod.neg();
-	      if (positive && mod.neg)
-	        mod = mod.add(num);
-	    }
-	    return {
-	      div: div,
-	      mod: mod
-	    };
-	  } else if (!this.sign && num.sign) {
-	    var res = this.divmod(num.neg(), mode);
-	    var div;
-	    if (mode !== 'mod')
-	      div = res.div.neg();
-	    return { div: div, mod: res.mod };
-	  } else if (this.sign && num.sign) {
-	    var res = this.neg().divmod(num.neg(), mode);
-	    var mod;
-	    if (mode !== 'div') {
-	      mod = res.mod.neg();
-	      if (positive && mod.neg)
-	        mod = mod.isub(num);
-	    }
-	    return {
-	      div: res.div,
-	      mod: mod
-	    };
-	  }
-
-	  // Both numbers are positive at this point
-
-	  // Strip both numbers to approximate shift value
-	  if (num.length > this.length || this.cmp(num) < 0)
-	    return { div: new BN(0), mod: this };
-
-	  // Very short reduction
-	  if (num.length === 1) {
-	    if (mode === 'div')
-	      return { div: this.divn(num.words[0]), mod: null };
-	    else if (mode === 'mod')
-	      return { div: null, mod: new BN(this.modn(num.words[0])) };
-	    return {
-	      div: this.divn(num.words[0]),
-	      mod: new BN(this.modn(num.words[0]))
-	    };
-	  }
-
-	  return this._wordDiv(num, mode);
-	};
-
-	// Find `this` / `num`
-	BN.prototype.div = function div(num) {
-	  return this.divmod(num, 'div', false).div;
-	};
-
-	// Find `this` % `num`
-	BN.prototype.mod = function mod(num) {
-	  return this.divmod(num, 'mod', false).mod;
-	};
-
-	BN.prototype.umod = function umod(num) {
-	  return this.divmod(num, 'mod', true).mod;
-	};
-
-	// Find Round(`this` / `num`)
-	BN.prototype.divRound = function divRound(num) {
-	  var dm = this.divmod(num);
-
-	  // Fast case - exact division
-	  if (dm.mod.cmpn(0) === 0)
-	    return dm.div;
-
-	  var mod = dm.div.sign ? dm.mod.isub(num) : dm.mod;
-
-	  var half = num.ushrn(1);
-	  var r2 = num.andln(1);
-	  var cmp = mod.cmp(half);
-
-	  // Round down
-	  if (cmp < 0 || r2 === 1 && cmp === 0)
-	    return dm.div;
-
-	  // Round up
-	  return dm.div.sign ? dm.div.isubn(1) : dm.div.iaddn(1);
-	};
-
-	BN.prototype.modn = function modn(num) {
-	  assert(num <= 0x3ffffff);
-	  var p = (1 << 26) % num;
-
-	  var acc = 0;
-	  for (var i = this.length - 1; i >= 0; i--)
-	    acc = (p * acc + this.words[i]) % num;
-
-	  return acc;
-	};
-
-	// In-place division by number
-	BN.prototype.idivn = function idivn(num) {
-	  assert(num <= 0x3ffffff);
-
-	  var carry = 0;
-	  for (var i = this.length - 1; i >= 0; i--) {
-	    var w = this.words[i] + carry * 0x4000000;
-	    this.words[i] = (w / num) | 0;
-	    carry = w % num;
-	  }
-
-	  return this.strip();
-	};
-
-	BN.prototype.divn = function divn(num) {
-	  return this.clone().idivn(num);
-	};
-
-	BN.prototype.egcd = function egcd(p) {
-	  assert(!p.sign);
-	  assert(p.cmpn(0) !== 0);
-
-	  var x = this;
-	  var y = p.clone();
-
-	  if (x.sign)
-	    x = x.umod(p);
-	  else
-	    x = x.clone();
-
-	  // A * x + B * y = x
-	  var A = new BN(1);
-	  var B = new BN(0);
-
-	  // C * x + D * y = y
-	  var C = new BN(0);
-	  var D = new BN(1);
-
-	  var g = 0;
-
-	  while (x.isEven() && y.isEven()) {
-	    x.iushrn(1);
-	    y.iushrn(1);
-	    ++g;
-	  }
-
-	  var yp = y.clone();
-	  var xp = x.clone();
-
-	  while (x.cmpn(0) !== 0) {
-	    while (x.isEven()) {
-	      x.iushrn(1);
-	      if (A.isEven() && B.isEven()) {
-	        A.iushrn(1);
-	        B.iushrn(1);
-	      } else {
-	        A.iadd(yp).iushrn(1);
-	        B.isub(xp).iushrn(1);
-	      }
-	    }
-
-	    while (y.isEven()) {
-	      y.iushrn(1);
-	      if (C.isEven() && D.isEven()) {
-	        C.iushrn(1);
-	        D.iushrn(1);
-	      } else {
-	        C.iadd(yp).iushrn(1);
-	        D.isub(xp).iushrn(1);
-	      }
-	    }
-
-	    if (x.cmp(y) >= 0) {
-	      x.isub(y);
-	      A.isub(C);
-	      B.isub(D);
-	    } else {
-	      y.isub(x);
-	      C.isub(A);
-	      D.isub(B);
-	    }
-	  }
-
-	  return {
-	    a: C,
-	    b: D,
-	    gcd: y.iushln(g)
-	  };
-	};
-
-	// This is reduced incarnation of the binary EEA
-	// above, designated to invert members of the
-	// _prime_ fields F(p) at a maximal speed
-	BN.prototype._invmp = function _invmp(p) {
-	  assert(!p.sign);
-	  assert(p.cmpn(0) !== 0);
-
-	  var a = this;
-	  var b = p.clone();
-
-	  if (a.sign)
-	    a = a.umod(p);
-	  else
-	    a = a.clone();
-
-	  var x1 = new BN(1);
-	  var x2 = new BN(0);
-
-	  var delta = b.clone();
-
-	  while (a.cmpn(1) > 0 && b.cmpn(1) > 0) {
-	    while (a.isEven()) {
-	      a.iushrn(1);
-	      if (x1.isEven())
-	        x1.iushrn(1);
-	      else
-	        x1.iadd(delta).iushrn(1);
-	    }
-	    while (b.isEven()) {
-	      b.iushrn(1);
-	      if (x2.isEven())
-	        x2.iushrn(1);
-	      else
-	        x2.iadd(delta).iushrn(1);
-	    }
-	    if (a.cmp(b) >= 0) {
-	      a.isub(b);
-	      x1.isub(x2);
-	    } else {
-	      b.isub(a);
-	      x2.isub(x1);
-	    }
-	  }
-
-	  var res;
-	  if (a.cmpn(1) === 0)
-	    res = x1;
-	  else
-	    res = x2;
-
-	  if (res.cmpn(0) < 0)
-	    res.iadd(p);
-
-	  return res;
-	};
-
-	BN.prototype.gcd = function gcd(num) {
-	  if (this.cmpn(0) === 0)
-	    return num.clone();
-	  if (num.cmpn(0) === 0)
-	    return this.clone();
-
-	  var a = this.clone();
-	  var b = num.clone();
-	  a.sign = false;
-	  b.sign = false;
-
-	  // Remove common factor of two
-	  for (var shift = 0; a.isEven() && b.isEven(); shift++) {
-	    a.iushrn(1);
-	    b.iushrn(1);
-	  }
-
-	  do {
-	    while (a.isEven())
-	      a.iushrn(1);
-	    while (b.isEven())
-	      b.iushrn(1);
-
-	    var r = a.cmp(b);
-	    if (r < 0) {
-	      // Swap `a` and `b` to make `a` always bigger than `b`
-	      var t = a;
-	      a = b;
-	      b = t;
-	    } else if (r === 0 || b.cmpn(1) === 0) {
-	      break;
-	    }
-
-	    a.isub(b);
-	  } while (true);
-
-	  return b.iushln(shift);
-	};
-
-	// Invert number in the field F(num)
-	BN.prototype.invm = function invm(num) {
-	  return this.egcd(num).a.umod(num);
-	};
-
-	BN.prototype.isEven = function isEven() {
-	  return (this.words[0] & 1) === 0;
-	};
-
-	BN.prototype.isOdd = function isOdd() {
-	  return (this.words[0] & 1) === 1;
-	};
-
-	// And first word and num
-	BN.prototype.andln = function andln(num) {
-	  return this.words[0] & num;
-	};
-
-	// Increment at the bit position in-line
-	BN.prototype.bincn = function bincn(bit) {
-	  assert(typeof bit === 'number');
-	  var r = bit % 26;
-	  var s = (bit - r) / 26;
-	  var q = 1 << r;
-
-	  // Fast case: bit is much higher than all existing words
-	  if (this.length <= s) {
-	    for (var i = this.length; i < s + 1; i++)
-	      this.words[i] = 0;
-	    this.words[s] |= q;
-	    this.length = s + 1;
-	    return this;
-	  }
-
-	  // Add bit and propagate, if needed
-	  var carry = q;
-	  for (var i = s; carry !== 0 && i < this.length; i++) {
-	    var w = this.words[i];
-	    w += carry;
-	    carry = w >>> 26;
-	    w &= 0x3ffffff;
-	    this.words[i] = w;
-	  }
-	  if (carry !== 0) {
-	    this.words[i] = carry;
-	    this.length++;
-	  }
-	  return this;
-	};
-
-	BN.prototype.cmpn = function cmpn(num) {
-	  var sign = num < 0;
-	  if (sign)
-	    num = -num;
-
-	  if (this.sign && !sign)
-	    return -1;
-	  else if (!this.sign && sign)
-	    return 1;
-
-	  num &= 0x3ffffff;
-	  this.strip();
-
-	  var res;
-	  if (this.length > 1) {
-	    res = 1;
-	  } else {
-	    var w = this.words[0];
-	    res = w === num ? 0 : w < num ? -1 : 1;
-	  }
-	  if (this.sign)
-	    res = -res;
-	  return res;
-	};
-
-	// Compare two numbers and return:
-	// 1 - if `this` > `num`
-	// 0 - if `this` == `num`
-	// -1 - if `this` < `num`
-	BN.prototype.cmp = function cmp(num) {
-	  if (this.sign && !num.sign)
-	    return -1;
-	  else if (!this.sign && num.sign)
-	    return 1;
-
-	  var res = this.ucmp(num);
-	  if (this.sign)
-	    return -res;
-	  else
-	    return res;
-	};
-
-	// Unsigned comparison
-	BN.prototype.ucmp = function ucmp(num) {
-	  // At this point both numbers have the same sign
-	  if (this.length > num.length)
-	    return 1;
-	  else if (this.length < num.length)
-	    return -1;
-
-	  var res = 0;
-	  for (var i = this.length - 1; i >= 0; i--) {
-	    var a = this.words[i];
-	    var b = num.words[i];
-
-	    if (a === b)
-	      continue;
-	    if (a < b)
-	      res = -1;
-	    else if (a > b)
-	      res = 1;
-	    break;
-	  }
-	  return res;
-	};
-
-	//
-	// A reduce context, could be using montgomery or something better, depending
-	// on the `m` itself.
-	//
-	BN.red = function red(num) {
-	  return new Red(num);
-	};
-
-	BN.prototype.toRed = function toRed(ctx) {
-	  assert(!this.red, 'Already a number in reduction context');
-	  assert(!this.sign, 'red works only with positives');
-	  return ctx.convertTo(this)._forceRed(ctx);
-	};
-
-	BN.prototype.fromRed = function fromRed() {
-	  assert(this.red, 'fromRed works only with numbers in reduction context');
-	  return this.red.convertFrom(this);
-	};
-
-	BN.prototype._forceRed = function _forceRed(ctx) {
-	  this.red = ctx;
-	  return this;
-	};
-
-	BN.prototype.forceRed = function forceRed(ctx) {
-	  assert(!this.red, 'Already a number in reduction context');
-	  return this._forceRed(ctx);
-	};
-
-	BN.prototype.redAdd = function redAdd(num) {
-	  assert(this.red, 'redAdd works only with red numbers');
-	  return this.red.add(this, num);
-	};
-
-	BN.prototype.redIAdd = function redIAdd(num) {
-	  assert(this.red, 'redIAdd works only with red numbers');
-	  return this.red.iadd(this, num);
-	};
-
-	BN.prototype.redSub = function redSub(num) {
-	  assert(this.red, 'redSub works only with red numbers');
-	  return this.red.sub(this, num);
-	};
-
-	BN.prototype.redISub = function redISub(num) {
-	  assert(this.red, 'redISub works only with red numbers');
-	  return this.red.isub(this, num);
-	};
-
-	BN.prototype.redShl = function redShl(num) {
-	  assert(this.red, 'redShl works only with red numbers');
-	  return this.red.ushl(this, num);
-	};
-
-	BN.prototype.redMul = function redMul(num) {
-	  assert(this.red, 'redMul works only with red numbers');
-	  this.red._verify2(this, num);
-	  return this.red.mul(this, num);
-	};
-
-	BN.prototype.redIMul = function redIMul(num) {
-	  assert(this.red, 'redMul works only with red numbers');
-	  this.red._verify2(this, num);
-	  return this.red.imul(this, num);
-	};
-
-	BN.prototype.redSqr = function redSqr() {
-	  assert(this.red, 'redSqr works only with red numbers');
-	  this.red._verify1(this);
-	  return this.red.sqr(this);
-	};
-
-	BN.prototype.redISqr = function redISqr() {
-	  assert(this.red, 'redISqr works only with red numbers');
-	  this.red._verify1(this);
-	  return this.red.isqr(this);
-	};
-
-	// Square root over p
-	BN.prototype.redSqrt = function redSqrt() {
-	  assert(this.red, 'redSqrt works only with red numbers');
-	  this.red._verify1(this);
-	  return this.red.sqrt(this);
-	};
-
-	BN.prototype.redInvm = function redInvm() {
-	  assert(this.red, 'redInvm works only with red numbers');
-	  this.red._verify1(this);
-	  return this.red.invm(this);
-	};
-
-	// Return negative clone of `this` % `red modulo`
-	BN.prototype.redNeg = function redNeg() {
-	  assert(this.red, 'redNeg works only with red numbers');
-	  this.red._verify1(this);
-	  return this.red.neg(this);
-	};
-
-	BN.prototype.redPow = function redPow(num) {
-	  assert(this.red && !num.red, 'redPow(normalNum)');
-	  this.red._verify1(this);
-	  return this.red.pow(this, num);
-	};
-
-	// Prime numbers with efficient reduction
-	var primes = {
-	  k256: null,
-	  p224: null,
-	  p192: null,
-	  p25519: null
-	};
-
-	// Pseudo-Mersenne prime
-	function MPrime(name, p) {
-	  // P = 2 ^ N - K
-	  this.name = name;
-	  this.p = new BN(p, 16);
-	  this.n = this.p.bitLength();
-	  this.k = new BN(1).iushln(this.n).isub(this.p);
-
-	  this.tmp = this._tmp();
-	}
-
-	MPrime.prototype._tmp = function _tmp() {
-	  var tmp = new BN(null);
-	  tmp.words = new Array(Math.ceil(this.n / 13));
-	  return tmp;
-	};
-
-	MPrime.prototype.ireduce = function ireduce(num) {
-	  // Assumes that `num` is less than `P^2`
-	  // num = HI * (2 ^ N - K) + HI * K + LO = HI * K + LO (mod P)
-	  var r = num;
-	  var rlen;
-
-	  do {
-	    this.split(r, this.tmp);
-	    r = this.imulK(r);
-	    r = r.iadd(this.tmp);
-	    rlen = r.bitLength();
-	  } while (rlen > this.n);
-
-	  var cmp = rlen < this.n ? -1 : r.ucmp(this.p);
-	  if (cmp === 0) {
-	    r.words[0] = 0;
-	    r.length = 1;
-	  } else if (cmp > 0) {
-	    r.isub(this.p);
-	  } else {
-	    r.strip();
-	  }
-
-	  return r;
-	};
-
-	MPrime.prototype.split = function split(input, out) {
-	  input.iushrn(this.n, 0, out);
-	};
-
-	MPrime.prototype.imulK = function imulK(num) {
-	  return num.imul(this.k);
-	};
-
-	function K256() {
-	  MPrime.call(
-	    this,
-	    'k256',
-	    'ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff fffffffe fffffc2f');
-	}
-	inherits(K256, MPrime);
-
-	K256.prototype.split = function split(input, output) {
-	  // 256 = 9 * 26 + 22
-	  var mask = 0x3fffff;
-
-	  var outLen = Math.min(input.length, 9);
-	  for (var i = 0; i < outLen; i++)
-	    output.words[i] = input.words[i];
-	  output.length = outLen;
-
-	  if (input.length <= 9) {
-	    input.words[0] = 0;
-	    input.length = 1;
-	    return;
-	  }
-
-	  // Shift by 9 limbs
-	  var prev = input.words[9];
-	  output.words[output.length++] = prev & mask;
-
-	  for (var i = 10; i < input.length; i++) {
-	    var next = input.words[i];
-	    input.words[i - 10] = ((next & mask) << 4) | (prev >>> 22);
-	    prev = next;
-	  }
-	  input.words[i - 10] = prev >>> 22;
-	  input.length -= 9;
-	};
-
-	K256.prototype.imulK = function imulK(num) {
-	  // K = 0x1000003d1 = [ 0x40, 0x3d1 ]
-	  num.words[num.length] = 0;
-	  num.words[num.length + 1] = 0;
-	  num.length += 2;
-
-	  // bounded at: 0x40 * 0x3ffffff + 0x3d0 = 0x100000390
-	  var hi;
-	  var lo = 0;
-	  for (var i = 0; i < num.length; i++) {
-	    var w = num.words[i];
-	    hi = w * 0x40;
-	    lo += w * 0x3d1;
-	    hi += (lo / 0x4000000) | 0;
-	    lo &= 0x3ffffff;
-
-	    num.words[i] = lo;
-
-	    lo = hi;
-	  }
-
-	  // Fast length reduction
-	  if (num.words[num.length - 1] === 0) {
-	    num.length--;
-	    if (num.words[num.length - 1] === 0)
-	      num.length--;
-	  }
-	  return num;
-	};
-
-	function P224() {
-	  MPrime.call(
-	    this,
-	    'p224',
-	    'ffffffff ffffffff ffffffff ffffffff 00000000 00000000 00000001');
-	}
-	inherits(P224, MPrime);
-
-	function P192() {
-	  MPrime.call(
-	    this,
-	    'p192',
-	    'ffffffff ffffffff ffffffff fffffffe ffffffff ffffffff');
-	}
-	inherits(P192, MPrime);
-
-	function P25519() {
-	  // 2 ^ 255 - 19
-	  MPrime.call(
-	    this,
-	    '25519',
-	    '7fffffffffffffff ffffffffffffffff ffffffffffffffff ffffffffffffffed');
-	}
-	inherits(P25519, MPrime);
-
-	P25519.prototype.imulK = function imulK(num) {
-	  // K = 0x13
-	  var carry = 0;
-	  for (var i = 0; i < num.length; i++) {
-	    var hi = num.words[i] * 0x13 + carry;
-	    var lo = hi & 0x3ffffff;
-	    hi >>>= 26;
-
-	    num.words[i] = lo;
-	    carry = hi;
-	  }
-	  if (carry !== 0)
-	    num.words[num.length++] = carry;
-	  return num;
-	};
-
-	// Exported mostly for testing purposes, use plain name instead
-	BN._prime = function prime(name) {
-	  // Cached version of prime
-	  if (primes[name])
-	    return primes[name];
-
-	  var prime;
-	  if (name === 'k256')
-	    prime = new K256();
-	  else if (name === 'p224')
-	    prime = new P224();
-	  else if (name === 'p192')
-	    prime = new P192();
-	  else if (name === 'p25519')
-	    prime = new P25519();
-	  else
-	    throw new Error('Unknown prime ' + name);
-	  primes[name] = prime;
-
-	  return prime;
-	};
-
-	//
-	// Base reduction engine
-	//
-	function Red(m) {
-	  if (typeof m === 'string') {
-	    var prime = BN._prime(m);
-	    this.m = prime.p;
-	    this.prime = prime;
-	  } else {
-	    this.m = m;
-	    this.prime = null;
-	  }
-	}
-
-	Red.prototype._verify1 = function _verify1(a) {
-	  assert(!a.sign, 'red works only with positives');
-	  assert(a.red, 'red works only with red numbers');
-	};
-
-	Red.prototype._verify2 = function _verify2(a, b) {
-	  assert(!a.sign && !b.sign, 'red works only with positives');
-	  assert(a.red && a.red === b.red,
-	         'red works only with red numbers');
-	};
-
-	Red.prototype.imod = function imod(a) {
-	  if (this.prime)
-	    return this.prime.ireduce(a)._forceRed(this);
-	  return a.umod(this.m)._forceRed(this);
-	};
-
-	Red.prototype.neg = function neg(a) {
-	  var r = a.clone();
-	  r.sign = !r.sign;
-	  return r.iadd(this.m)._forceRed(this);
-	};
-
-	Red.prototype.add = function add(a, b) {
-	  this._verify2(a, b);
-
-	  var res = a.add(b);
-	  if (res.cmp(this.m) >= 0)
-	    res.isub(this.m);
-	  return res._forceRed(this);
-	};
-
-	Red.prototype.iadd = function iadd(a, b) {
-	  this._verify2(a, b);
-
-	  var res = a.iadd(b);
-	  if (res.cmp(this.m) >= 0)
-	    res.isub(this.m);
-	  return res;
-	};
-
-	Red.prototype.sub = function sub(a, b) {
-	  this._verify2(a, b);
-
-	  var res = a.sub(b);
-	  if (res.cmpn(0) < 0)
-	    res.iadd(this.m);
-	  return res._forceRed(this);
-	};
-
-	Red.prototype.isub = function isub(a, b) {
-	  this._verify2(a, b);
-
-	  var res = a.isub(b);
-	  if (res.cmpn(0) < 0)
-	    res.iadd(this.m);
-	  return res;
-	};
-
-	Red.prototype.shl = function shl(a, num) {
-	  this._verify1(a);
-	  return this.imod(a.ushln(num));
-	};
-
-	Red.prototype.imul = function imul(a, b) {
-	  this._verify2(a, b);
-	  return this.imod(a.imul(b));
-	};
-
-	Red.prototype.mul = function mul(a, b) {
-	  this._verify2(a, b);
-	  return this.imod(a.mul(b));
-	};
-
-	Red.prototype.isqr = function isqr(a) {
-	  return this.imul(a, a);
-	};
-
-	Red.prototype.sqr = function sqr(a) {
-	  return this.mul(a, a);
-	};
-
-	Red.prototype.sqrt = function sqrt(a) {
-	  if (a.cmpn(0) === 0)
-	    return a.clone();
-
-	  var mod3 = this.m.andln(3);
-	  assert(mod3 % 2 === 1);
-
-	  // Fast case
-	  if (mod3 === 3) {
-	    var pow = this.m.add(new BN(1)).iushrn(2);
-	    var r = this.pow(a, pow);
-	    return r;
-	  }
-
-	  // Tonelli-Shanks algorithm (Totally unoptimized and slow)
-	  //
-	  // Find Q and S, that Q * 2 ^ S = (P - 1)
-	  var q = this.m.subn(1);
-	  var s = 0;
-	  while (q.cmpn(0) !== 0 && q.andln(1) === 0) {
-	    s++;
-	    q.iushrn(1);
-	  }
-	  assert(q.cmpn(0) !== 0);
-
-	  var one = new BN(1).toRed(this);
-	  var nOne = one.redNeg();
-
-	  // Find quadratic non-residue
-	  // NOTE: Max is such because of generalized Riemann hypothesis.
-	  var lpow = this.m.subn(1).iushrn(1);
-	  var z = this.m.bitLength();
-	  z = new BN(2 * z * z).toRed(this);
-	  while (this.pow(z, lpow).cmp(nOne) !== 0)
-	    z.redIAdd(nOne);
-
-	  var c = this.pow(z, q);
-	  var r = this.pow(a, q.addn(1).iushrn(1));
-	  var t = this.pow(a, q);
-	  var m = s;
-	  while (t.cmp(one) !== 0) {
-	    var tmp = t;
-	    for (var i = 0; tmp.cmp(one) !== 0; i++)
-	      tmp = tmp.redSqr();
-	    assert(i < m);
-	    var b = this.pow(c, new BN(1).iushln(m - i - 1));
-
-	    r = r.redMul(b);
-	    c = b.redSqr();
-	    t = t.redMul(c);
-	    m = i;
-	  }
-
-	  return r;
-	};
-
-	Red.prototype.invm = function invm(a) {
-	  var inv = a._invmp(this.m);
-	  if (inv.sign) {
-	    inv.sign = false;
-	    return this.imod(inv).redNeg();
-	  } else {
-	    return this.imod(inv);
-	  }
-	};
-
-	Red.prototype.pow = function pow(a, num) {
-	  var w = toBitArray(num);
-	  if (w.length === 0)
-	    return new BN(1);
-
-	  // Skip leading zeroes
-	  var res = a;
-	  for (var i = 0; i < w.length; i++, res = this.sqr(res))
-	    if (w[i] !== 0)
-	      break;
-
-	  if (++i < w.length) {
-	    for (var q = this.sqr(res); i < w.length; i++, q = this.sqr(q)) {
-	      if (w[i] === 0)
-	        continue;
-	      res = this.mul(res, q);
-	    }
-	  }
-
-	  return res;
-	};
-
-	Red.prototype.convertTo = function convertTo(num) {
-	  var r = num.umod(this.m);
-	  if (r === num)
-	    return r.clone();
-	  else
-	    return r;
-	};
-
-	Red.prototype.convertFrom = function convertFrom(num) {
-	  var res = num.clone();
-	  res.red = null;
-	  return res;
-	};
-
-	//
-	// Montgomery method engine
-	//
-
-	BN.mont = function mont(num) {
-	  return new Mont(num);
-	};
-
-	function Mont(m) {
-	  Red.call(this, m);
-
-	  this.shift = this.m.bitLength();
-	  if (this.shift % 26 !== 0)
-	    this.shift += 26 - (this.shift % 26);
-	  this.r = new BN(1).iushln(this.shift);
-	  this.r2 = this.imod(this.r.sqr());
-	  this.rinv = this.r._invmp(this.m);
-
-	  this.minv = this.rinv.mul(this.r).isubn(1).div(this.m);
-	  this.minv = this.minv.umod(this.r);
-	  this.minv = this.r.sub(this.minv);
-	}
-	inherits(Mont, Red);
-
-	Mont.prototype.convertTo = function convertTo(num) {
-	  return this.imod(num.ushln(this.shift));
-	};
-
-	Mont.prototype.convertFrom = function convertFrom(num) {
-	  var r = this.imod(num.mul(this.rinv));
-	  r.red = null;
-	  return r;
-	};
-
-	Mont.prototype.imul = function imul(a, b) {
-	  if (a.cmpn(0) === 0 || b.cmpn(0) === 0) {
-	    a.words[0] = 0;
-	    a.length = 1;
-	    return a;
-	  }
-
-	  var t = a.imul(b);
-	  var c = t.maskn(this.shift).mul(this.minv).imaskn(this.shift).mul(this.m);
-	  var u = t.isub(c).iushrn(this.shift);
-	  var res = u;
-	  if (u.cmp(this.m) >= 0)
-	    res = u.isub(this.m);
-	  else if (u.cmpn(0) < 0)
-	    res = u.iadd(this.m);
-
-	  return res._forceRed(this);
-	};
-
-	Mont.prototype.mul = function mul(a, b) {
-	  if (a.cmpn(0) === 0 || b.cmpn(0) === 0)
-	    return new BN(0)._forceRed(this);
-
-	  var t = a.mul(b);
-	  var c = t.maskn(this.shift).mul(this.minv).imaskn(this.shift).mul(this.m);
-	  var u = t.isub(c).iushrn(this.shift);
-	  var res = u;
-	  if (u.cmp(this.m) >= 0)
-	    res = u.isub(this.m);
-	  else if (u.cmpn(0) < 0)
-	    res = u.iadd(this.m);
-
-	  return res._forceRed(this);
-	};
-
-	Mont.prototype.invm = function invm(a) {
-	  // (AR)^-1 * R^2 = (A^-1 * R^-1) * R^2 = A^-1 * R
-	  var res = this.imod(a._invmp(this.m).mul(this.r2));
-	  return res._forceRed(this);
-	};
-
-	})(typeof module === 'undefined' || module, this);
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(263)(module)))
-
-/***/ },
-/* 673 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var __WEBPACK_AMD_DEFINE_RESULT__;/*! decimal.js v4.0.3 https://github.com/MikeMcl/decimal.js/LICENCE */
-	;(function (global) {
-	    'use strict';
-
-
-	    /*
-	     *  decimal.js v4.0.3
-	     *  An arbitrary-precision Decimal type for JavaScript.
-	     *  https://github.com/MikeMcl/decimal.js
-	     *  Copyright (c) 2014 Michael Mclaughlin <M8ch88l@gmail.com>
-	     *  MIT Expat Licence
-	     */
-
-
-	    var convertBase, decimal, noConflict,
-	        crypto = global['crypto'],
-	        external = true,
-	        id = 0,
-	        mathfloor = Math.floor,
-	        mathpow = Math.pow,
-	        outOfRange,
-	        toString = Object.prototype.toString,
-	        BASE = 1e7,
-	        LOGBASE = 7,
-	        NUMERALS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$_',
-	        P = {},
-
-	        /*
-	         The maximum exponent magnitude.
-	         The limit on the value of toExpNeg, toExpPos, minE and maxE.
-	         */
-	        EXP_LIMIT = 9e15,                      // 0 to 9e15
-
-	        /*
-	         The limit on the value of precision, and on the argument to toDecimalPlaces,
-	         toExponential, toFixed, toFormat, toPrecision and toSignificantDigits.
-	         */
-	        MAX_DIGITS = 1E9,                      // 0 to 1e+9
-
-	        /*
-	         To decide whether or not to calculate x.pow(integer y) using the 'exponentiation by
-	         squaring' algorithm or by exp(y*ln(x)), the number of significant digits of x is multiplied
-	         by y. If this number is less than INT_POW_LIMIT then the former algorithm is used.
-	         */
-	        INT_POW_LIMIT = 3000,                  // 0 to 5000
-
-	        // The natural logarithm of 10 (1025 digits).
-	        LN10 = '2.3025850929940456840179914546843642076011014886287729760333279009675726096773524802359972050895982983419677840422862486334095254650828067566662873690987816894829072083255546808437998948262331985283935053089653777326288461633662222876982198867465436674744042432743651550489343149393914796194044002221051017141748003688084012647080685567743216228355220114804663715659121373450747856947683463616792101806445070648000277502684916746550586856935673420670581136429224554405758925724208241314695689016758940256776311356919292033376587141660230105703089634572075440370847469940168269282808481184289314848524948644871927809676271275775397027668605952496716674183485704422507197965004714951050492214776567636938662976979522110718264549734772662425709429322582798502585509785265383207606726317164309505995087807523710333101197857547331541421808427543863591778117054309827482385045648019095610299291824318237525357709750539565187697510374970888692180205189339507238539205144634197265287286965110862571492198849978748873771345686209167058';
-
-
-	    // Decimal prototype methods
-
-
-	    /*
-	     * Return a new Decimal whose value is the absolute value of this Decimal.
-	     *
-	     */
-	    P['absoluteValue'] = P['abs'] = function () {
-	        var x = new this['constructor'](this);
-
-	        if ( x['s'] < 0 ) {
-	            x['s'] = 1;
-	        }
-
-	        return rnd(x);
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal rounded to a whole number in
-	     * the direction of positive Infinity.
-	     *
-	     */
-	    P['ceil'] = function () {
-
-	        return rnd( new this['constructor'](this), this['e'] + 1, 2 );
-	    };
-
-
-	    /*
-	     * Return
-	     *   1    if the value of this Decimal is greater than the value of Decimal(y, b),
-	     *  -1    if the value of this Decimal is less than the value of Decimal(y, b),
-	     *   0    if they have the same value,
-	     *  null  if the value of either Decimal is NaN.
-	     *
-	     */
-	    P['comparedTo'] = P['cmp'] = function ( y, b ) {
-	        var a,
-	            x = this,
-	            xc = x['c'],
-	            yc = ( id = -id, y = new x['constructor']( y, b ), y['c'] ),
-	            i = x['s'],
-	            j = y['s'],
-	            k = x['e'],
-	            l = y['e'];
-
-	        // Either NaN?
-	        if ( !i || !j ) {
-	            return null;
-	        }
-
-	        a = xc && !xc[0];
-	        b = yc && !yc[0];
-
-	        // Either zero?
-	        if ( a || b ) {
-	            return a ? b ? 0 : -j : i;
-	        }
-
-	        // Signs differ?
-	        if ( i != j ) {
-	            return i;
-	        }
-
-	        a = i < 0;
-
-	        // Either Infinity?
-	        if ( !xc || !yc ) {
-	            return k == l ? 0 : !xc ^ a ? 1 : -1;
-	        }
-
-	        // Compare exponents.
-	        if ( k != l ) {
-	            return k > l ^ a ? 1 : -1;
-	        }
-
-	        // Compare digit by digit.
-	        for ( i = -1,
-	              j = ( k = xc.length ) < ( l = yc.length ) ? k : l;
-	              ++i < j; ) {
-
-	            if ( xc[i] != yc[i] ) {
-	                return xc[i] > yc[i] ^ a ? 1 : -1;
-	            }
-	        }
-
-	        // Compare lengths.
-	        return k == l ? 0 : k > l ^ a ? 1 : -1;
-	    };
-
-
-	    /*
-	     * Return the number of decimal places of the value of this Decimal.
-	     *
-	     */
-	     P['decimalPlaces'] = P['dp'] = function () {
-	        var c, v,
-	            n = null;
-
-	        if ( c = this['c'] ) {
-	            n = ( ( v = c.length - 1 ) - mathfloor( this['e'] / LOGBASE ) ) * LOGBASE;
-
-	            if ( v = c[v] ) {
-
-	                // Subtract the number of trailing zeros of the last number.
-	                for ( ; v % 10 == 0; v /= 10, n-- );
-	            }
-
-	            if ( n < 0 ) {
-	                n = 0;
-	            }
-	        }
-
-	        return n;
-	    };
-
-
-	    /*
-	     *  n / 0 = I
-	     *  n / N = N
-	     *  n / I = 0
-	     *  0 / n = 0
-	     *  0 / 0 = N
-	     *  0 / N = N
-	     *  0 / I = 0
-	     *  N / n = N
-	     *  N / 0 = N
-	     *  N / N = N
-	     *  N / I = N
-	     *  I / n = I
-	     *  I / 0 = I
-	     *  I / N = N
-	     *  I / I = N
-	     *
-	     * Return a new Decimal whose value is the value of this Decimal divided by Decimal(y, b),
-	     * rounded to precision significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['dividedBy'] = P['div'] = function ( y, b ) {
-	        id = 2;
-
-	        return div( this, new this['constructor']( y, b ) );
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the integer part of dividing the value of this Decimal by
-	     * the value of Decimal(y, b), rounded to precision significant digits using rounding mode
-	     * rounding.
-	     *
-	     */
-	    P['dividedToIntegerBy'] = P['divToInt'] = function ( y, b ) {
-	        var x = this,
-	            Decimal = x['constructor'];
-	        id = 18;
-
-	        return rnd(
-	          div( x, new Decimal( y, b ), 0, 1, 1 ), Decimal['precision'], Decimal['rounding']
-	        );
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is equal to the value of Decimal(n, b), otherwise
-	     * return false.
-	     *
-	     */
-	    P['equals'] = P['eq'] = function ( n, b ) {
-	        id = 3;
-
-	        return this['cmp']( n, b ) === 0;
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the exponential of the value of this Decimal, i.e. the
-	     * base e raised to the power the value of this Decimal, rounded to precision significant digits
-	     * using rounding mode rounding.
-	     *
-	     */
-	    P['exponential'] = P['exp'] = function () {
-
-	        return exp(this);
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal rounded to a whole number in
-	     * the direction of negative Infinity.
-	     *
-	     */
-	    P['floor'] = function () {
-
-	        return rnd( new this['constructor'](this), this['e'] + 1, 3 );
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is greater than the value of Decimal(n, b), otherwise
-	     * return false.
-	     *
-	     */
-	    P['greaterThan'] = P['gt'] = function ( n, b ) {
-	        id = 4;
-
-	        return this['cmp']( n, b ) > 0;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is greater than or equal to the value of
-	     * Decimal(n, b), otherwise return false.
-	     *
-	     */
-	    P['greaterThanOrEqualTo'] = P['gte'] = function ( n, b ) {
-	        id = 5;
-	        b = this['cmp']( n, b );
-
-	        return b == 1 || b === 0;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is a finite number, otherwise return false.
-	     *
-	     */
-	    P['isFinite'] = function () {
-
-	        return !!this['c'];
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is an integer, otherwise return false.
-	     *
-	     */
-	    P['isInteger'] = P['isInt'] = function () {
-
-	        return !!this['c'] && mathfloor( this['e'] / LOGBASE ) > this['c'].length - 2;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is NaN, otherwise return false.
-	     *
-	     */
-	    P['isNaN'] = function () {
-
-	        return !this['s'];
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is negative, otherwise return false.
-	     *
-	     */
-	    P['isNegative'] = P['isNeg'] = function () {
-
-	        return this['s'] < 0;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is 0 or -0, otherwise return false.
-	     *
-	     */
-	    P['isZero'] = function () {
-
-	        return !!this['c'] && this['c'][0] == 0;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is less than Decimal(n, b), otherwise return false.
-	     *
-	     */
-	    P['lessThan'] = P['lt'] = function ( n, b ) {
-	        id = 6;
-
-	        return this['cmp']( n, b ) < 0;
-	    };
-
-
-	    /*
-	     * Return true if the value of this Decimal is less than or equal to Decimal(n, b), otherwise
-	     * return false.
-	     *
-	     */
-	    P['lessThanOrEqualTo'] = P['lte'] = function ( n, b ) {
-	        id = 7;
-	        b = this['cmp']( n, b );
-
-	        return b == -1 || b === 0;
-	    };
-
-
-	    /*
-	     * Return the logarithm of the value of this Decimal to the specified base, rounded
-	     * to precision significant digits using rounding mode rounding.
-	     *
-	     * If no base is specified, return log[10](arg).
-	     *
-	     * log[base](arg) = ln(arg) / ln(base)
-	     *
-	     * The result will always be correctly rounded if the base of the log is 2 or 10, and
-	     * 'almost always' if not:
-	     *
-	     * Depending on the rounding mode, the result may be incorrectly rounded if the first fifteen
-	     * rounding digits are [49]99999999999999 or [50]00000000000000. In that case, the maximum error
-	     * between the result and the correctly rounded result will be one ulp (unit in the last place).
-	     *
-	     * log[-b](a)       = NaN
-	     * log[0](a)        = NaN
-	     * log[1](a)        = NaN
-	     * log[NaN](a)      = NaN
-	     * log[Infinity](a) = NaN
-	     * log[b](0)        = -Infinity
-	     * log[b](-0)       = -Infinity
-	     * log[b](-a)       = NaN
-	     * log[b](1)        = 0
-	     * log[b](Infinity) = Infinity
-	     * log[b](NaN)      = NaN
-	     *
-	     * [base] {number|string|Decimal} The base of the logarithm.
-	     * [b] {number} The base of base.
-	     *
-	     */
-	    P['logarithm'] = P['log'] = function ( base, b ) {
-	        var base10, c, denom, i, inf, num, sd, sd10, r,
-	            arg = this,
-	            Decimal = arg['constructor'],
-	            pr = Decimal['precision'],
-	            rm = Decimal['rounding'],
-	            guard = 5;
-
-	        // Default base is 10.
-	        if ( base == null ) {
-	            base = new Decimal(10);
-	            base10 = true;
-	        } else {
-	            id = 15;
-	            base = new Decimal( base, b );
-	            c = base['c'];
-
-	            // If base < 0 or +-Infinity/NaN or 0 or 1.
-	            if ( base['s'] < 0 || !c || !c[0] || !base['e'] && c[0] == 1 && c.length == 1 ) {
-
-	                return new Decimal(NaN);
-	            }
-	            base10 = base['eq'](10);
-	        }
-	        c = arg['c'];
-
-	        // If arg < 0 or +-Infinity/NaN or 0 or 1.
-	        if ( arg['s'] < 0 || !c || !c[0] || !arg['e'] && c[0] == 1 && c.length == 1 ) {
-
-	            return new Decimal( c && !c[0] ? -1 / 0 : arg['s'] != 1 ? NaN : c ? 0 : 1 / 0 );
-	        }
-
-	        /*
-	          The result will have an infinite decimal expansion if base is 10 and arg is not an
-	          integer power of 10...
-	         */
-	        inf = base10 && ( i = c[0], c.length > 1 || i != 1 && i != 10 &&
-	          i != 1e2 && i != 1e3 && i != 1e4 && i != 1e5 && i != 1e6 );
-	            /*
-	            // or if base last digit's evenness is not the same as arg last digit's evenness...
-	            // (FAILS when e.g. base.c[0] = 10 and c[0] = 1)
-	            || ( base['c'][ base['c'].length - 1 ] & 1 ) != ( c[ c.length - 1 ] & 1 )
-	              // or if base is 2 and there is more than one 1 in arg in base 2.
-	              // (SLOWS the method down significantly)
-	              || base['eq'](2) && arg.toString(2).replace( /[^1]+/g, '' ) != '1';
-	             */
-
-	        external = false;
-	        sd = pr + guard;
-	        sd10 = sd + 10;
-
-	        num = ln( arg, sd );
-
-	        if (base10) {
-
-	            if ( sd10 > LN10.length ) {
-	                ifExceptionsThrow( Decimal, 1, sd10, 'log' );
-	            }
-	            denom = new Decimal( LN10.slice( 0, sd10 ) );
-	        } else {
-	            denom = ln( base, sd );
-	        }
-
-	        // The result will have 5 rounding digits.
-	        r = div( num, denom, sd, 1 );
-
-	        /*
-	         If at a rounding boundary, i.e. the result's rounding digits are [49]9999 or [50]0000,
-	         calculate 10 further digits.
-
-	         If the result is known to have an infinite decimal expansion, repeat this until it is
-	         clear that the result is above or below the boundary. Otherwise, if after calculating
-	         the 10 further digits, the last 14 are nines, round up and assume the result is exact.
-	         Also assume the result is exact if the last 14 are zero.
-
-	         Example of a result that will be incorrectly rounded:
-	         log[1048576](4503599627370502) = 2.60000000000000009610279511444746...
-	         The above result correctly rounded using ROUND_CEIL to 1 decimal place should be 2.7,
-	         but it will be given as 2.6 as there are 15 zeros immediately after the requested
-	         decimal place, so the exact result would be assumed to be 2.6, which rounded using
-	         ROUND_CEIL to 1 decimal place is still 2.6.
-	         */
-	        if ( checkRoundingDigits( r['c'], i = pr, rm ) ) {
-
-	            do {
-	                sd += 10;
-	                num = ln( arg, sd );
-
-	                if (base10) {
-	                    sd10 = sd + 10;
-
-	                    if ( sd10 > LN10.length ) {
-	                        ifExceptionsThrow( Decimal, 1, sd10, 'log' );
-	                    }
-	                    denom = new Decimal( LN10.slice( 0, sd10 ) );
-	                } else {
-	                    denom = ln( base, sd );
-	                }
-
-	                r = div( num, denom, sd, 1 );
-
-	                if ( !inf ) {
-
-	                    // Check for 14 nines from the 2nd rounding digit, as the first may be 4.
-	                    if ( +coefficientToString( r['c'] ).slice( i + 1, i + 15 ) + 1 == 1e14 ) {
-	                        r = rnd( r, pr + 1, 0 );
-	                    }
-
-	                    break;
-	                }
-	            } while ( checkRoundingDigits( r['c'], i += 10, rm ) );
-	        }
-	        external = true;
-
-	        return rnd( r, pr, rm );
-	    };
-
-
-	    /*
-	     *  n - 0 = n
-	     *  n - N = N
-	     *  n - I = -I
-	     *  0 - n = -n
-	     *  0 - 0 = 0
-	     *  0 - N = N
-	     *  0 - I = -I
-	     *  N - n = N
-	     *  N - 0 = N
-	     *  N - N = N
-	     *  N - I = N
-	     *  I - n = I
-	     *  I - 0 = I
-	     *  I - N = N
-	     *  I - I = N
-	     *
-	     * Return a new Decimal whose value is the value of this Decimal minus Decimal(y, b), rounded
-	     * to precision significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['minus'] = function ( y, b ) {
-	        var t, i, j, xLTy,
-	            x = this,
-	            Decimal = x['constructor'],
-	            a = x['s'];
-
-	        id = 8;
-	        y = new Decimal( y, b );
-	        b = y['s'];
-
-	        // Either NaN?
-	        if ( !a || !b ) {
-
-	            return new Decimal(NaN);
-	        }
-
-	        // Signs differ?
-	        if ( a != b ) {
-	            y['s'] = -b;
-
-	            return x['plus'](y);
-	        }
-
-	        var xc = x['c'],
-	            yc = y['c'],
-	            e = mathfloor( y['e'] / LOGBASE ),
-	            k = mathfloor( x['e'] / LOGBASE ),
-	            pr = Decimal['precision'],
-	            rm = Decimal['rounding'];
-
-	        if ( !k || !e ) {
-
-	            // Either Infinity?
-	            if ( !xc || !yc ) {
-
-	                return xc ? ( y['s'] = -b, y ) : new Decimal( yc ? x : NaN );
-	            }
-
-	            // Either zero?
-	            if ( !xc[0] || !yc[0] ) {
-
-	                // Return y if y is non-zero, x if x is non-zero, or zero if both are zero.
-	                x = yc[0] ? ( y['s'] = -b, y ) : new Decimal( xc[0] ? x :
-
-	                  // IEEE 754 (2008) 6.3: n - n = -0 when rounding to -Infinity
-	                  rm == 3 ? -0 : 0 );
-
-	                return external ? rnd( x, pr, rm ) : x;
-	            }
-	        }
-
-	        xc = xc.slice();
-	        i = xc.length;
-
-	        // Determine which is the bigger number. Prepend zeros to equalise exponents.
-	        if ( a = k - e ) {
-
-	            if ( xLTy = a < 0 ) {
-	                a = -a;
-	                t = xc;
-	                i = yc.length;
-	            } else {
-	                e = k;
-	                t = yc;
-	            }
-
-	            if ( ( k = Math.ceil( pr / LOGBASE ) ) > i ) {
-	                i = k;
-	            }
-
-	            /*
-	             Numbers with massively different exponents would result in a massive number of
-	             zeros needing to be prepended, but this can be avoided while still ensuring correct
-	             rounding by limiting the number of zeros to max( pr, i ) + 2, where pr is precision and
-	             i is the length of the coefficient of whichever is greater, x or y.
-	             */
-	            if ( a > ( i += 2 ) ) {
-	                a = i;
-	                t.length = 1;
-	            }
-
-	            t.reverse();
-	            for ( b = a; b--; t.push(0) );
-	            t.reverse();
-	        } else {
-	            // Exponents equal. Check digits.
-
-	            if ( xLTy = i < ( j = yc.length ) ) {
-	                j = i;
-	            }
-
-	            for ( a = b = 0; b < j; b++ ) {
-
-	                if ( xc[b] != yc[b] ) {
-	                    xLTy = xc[b] < yc[b];
-
-	                    break;
-	                }
-	            }
-	        }
-
-	        // x < y? Point xc to the array of the bigger number.
-	        if ( xLTy ) {
-	            t = xc, xc = yc, yc = t;
-	            y['s'] = -y['s'];
-	        }
-
-	        /*
-	         Append zeros to xc if shorter. No need to add zeros to yc if shorter as subtraction only
-	         needs to start at yc length.
-	         */
-	        if ( ( b = -( ( j = xc.length ) - yc.length ) ) > 0 ) {
-
-	            for ( ; b--; xc[j++] = 0 );
-	        }
-
-	        // Subtract yc from xc.
-	        for ( k = BASE - 1, b = yc.length; b > a; ) {
-
-	            if ( xc[--b] < yc[b] ) {
-
-	                for ( i = b; i && !xc[--i]; xc[i] = k );
-	                --xc[i];
-	                xc[b] += BASE;
-	            }
-	            xc[b] -= yc[b];
-	        }
-
-	        // Remove trailing zeros.
-	        for ( ; xc[--j] == 0; xc.pop() );
-
-	        // Remove leading zeros and adjust exponent accordingly.
-	        for ( ; xc[0] == 0; xc.shift(), --e );
-
-	        if ( !xc[0] ) {
-
-	            // Zero.
-	            xc = [ e = 0 ];
-
-	            // Following IEEE 754 (2008) 6.3, n - n = -0 when rounding towards -Infinity.
-	            y['s'] = rm == 3 ? -1 : 1;
-	        }
-
-	        y['c'] = xc;
-
-	        // Get the number of digits of xc[0].
-	        for ( a = 1, b = xc[0]; b >= 10; b /= 10, a++ );
-	        y['e'] = a + e * LOGBASE - 1;
-
-	        return external ? rnd( y, pr, rm ) : y;
-	    };
-
-
-	    /*
-	     *   n % 0 =  N
-	     *   n % N =  N
-	     *   n % I =  n
-	     *   0 % n =  0
-	     *  -0 % n = -0
-	     *   0 % 0 =  N
-	     *   0 % N =  N
-	     *   0 % I =  0
-	     *   N % n =  N
-	     *   N % 0 =  N
-	     *   N % N =  N
-	     *   N % I =  N
-	     *   I % n =  N
-	     *   I % 0 =  N
-	     *   I % N =  N
-	     *   I % I =  N
-	     *
-	     * Return a new Decimal whose value is the value of this Decimal modulo Decimal(y, b), rounded
-	     * to precision significant digits using rounding mode rounding.
-	     *
-	     * The result depends on the modulo mode.
-	     *
-	     */
-	    P['modulo'] = P['mod'] = function ( y, b ) {
-	        var n, q,
-	            x = this,
-	            Decimal = x['constructor'],
-	            m = Decimal['modulo'];
-
-	        id = 9;
-	        y = new Decimal( y, b );
-	        b = y['s'];
-	        n = !x['c'] || !b || y['c'] && !y['c'][0];
-
-	        /*
-	         Return NaN if x is Infinity or NaN, or y is NaN or zero, else return x if y is Infinity
-	         or x is zero.
-	         */
-	        if ( n || !y['c'] || x['c'] && !x['c'][0] ) {
-
-	            return n
-	              ? new Decimal(NaN)
-	              : rnd( new Decimal(x), Decimal['precision'], Decimal['rounding'] );
-	        }
-
-	        external = false;
-
-	        if ( m == 9 ) {
-
-	            // Euclidian division: q = sign(y) * floor(x / abs(y))
-	            // r = x - qy    where  0 <= r < abs(y)
-	            y['s'] = 1;
-	            q = div( x, y, 0, 3, 1 );
-	            y['s'] = b;
-	            q['s'] *= b;
-	        } else {
-	            q = div( x, y, 0, m, 1 );
-	        }
-
-	        q = q['times'](y);
-	        external = true;
-
-	        return x['minus'](q);
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the natural logarithm of the value of this Decimal,
-	     * rounded to precision significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['naturalLogarithm'] = P['ln'] = function () {
-
-	        return ln(this);
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal negated, i.e. as if
-	     * multiplied by -1.
-	     *
-	     */
-	    P['negated'] = P['neg'] = function () {
-	        var x = new this['constructor'](this);
-	        x['s'] = -x['s'] || null;
-
-	        return rnd(x);
-	    };
-
-
-	    /*
-	     *  n + 0 = n
-	     *  n + N = N
-	     *  n + I = I
-	     *  0 + n = n
-	     *  0 + 0 = 0
-	     *  0 + N = N
-	     *  0 + I = I
-	     *  N + n = N
-	     *  N + 0 = N
-	     *  N + N = N
-	     *  N + I = N
-	     *  I + n = I
-	     *  I + 0 = I
-	     *  I + N = N
-	     *  I + I = I
-	     *
-	     * Return a new Decimal whose value is the value of this Decimal plus Decimal(y, b), rounded
-	     * to precision significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['plus'] = function ( y, b ) {
-	        var t,
-	            x = this,
-	            Decimal = x['constructor'],
-	            a = x['s'];
-
-	        id = 10;
-	        y = new Decimal( y, b );
-	        b = y['s'];
-
-	        // Either NaN?
-	        if ( !a || !b ) {
-
-	            return new Decimal(NaN);
-	        }
-
-	        // Signs differ?
-	        if ( a != b ) {
-	            y['s'] = -b;
-
-	            return x['minus'](y);
-	        }
-
-	        var xc = x['c'],
-	            yc = y['c'],
-	            e = mathfloor( y['e'] / LOGBASE ),
-	            k = mathfloor( x['e'] / LOGBASE ),
-	            pr = Decimal['precision'],
-	            rm = Decimal['rounding'];
-
-	        if ( !k || !e ) {
-
-	            // Either Infinity?
-	            if ( !xc || !yc ) {
-
-	                // Return +-Infinity.
-	                return new Decimal( a / 0 );
-	            }
-
-	            // Either zero?
-	            if ( !xc[0] || !yc[0] ) {
-
-	                // Return y if y is non-zero, x if x is non-zero, or zero if both are zero.
-	                x = yc[0] ? y : new Decimal( xc[0] ? x : a * 0 );
-
-	                return external ? rnd( x, pr, rm ) : x;
-	            }
-	        }
-
-	        xc = xc.slice();
-
-	        // Prepend zeros to equalise exponents. Note: Faster to use reverse then do unshifts.
-	        if ( a = k - e ) {
-
-	            if ( a < 0 ) {
-	                a = -a;
-	                t = xc;
-	                b = yc.length;
-	            } else {
-	                e = k;
-	                t = yc;
-	                b = xc.length;
-	            }
-
-	            if ( ( k = Math.ceil( pr / LOGBASE ) ) > b ) {
-	                b = k;
-	            }
-
-	            // Limit number of zeros prepended to max( pr, b ) + 1.
-	            if ( a > ++b ) {
-	                a = b;
-	                t.length = 1;
-	            }
-
-	            for ( t.reverse(); a--; t.push(0) );
-	            t.reverse();
-	        }
-
-	        // Point xc to the longer array.
-	        if ( xc.length - yc.length < 0 ) {
-	            t = yc, yc = xc, xc = t;
-	        }
-
-	        // Only start adding at yc.length - 1 as the further digits of xc can be left as they are.
-	        for ( a = yc.length, b = 0, k = BASE; a; xc[a] %= k ) {
-	            b = ( xc[--a] = xc[a] + yc[a] + b ) / k | 0;
-	        }
-
-	        if (b) {
-	            xc.unshift(b);
-	            ++e;
-	        }
-
-	        // Remove trailing zeros.
-	        for ( a = xc.length; xc[--a] == 0; xc.pop() );
-
-	        // No need to check for zero, as +x + +y != 0 && -x + -y != 0
-
-	        y['c'] = xc;
-
-	        // Get the number of digits of xc[0].
-	        for ( a = 1, b = xc[0]; b >= 10; b /= 10, a++ );
-	        y['e'] = a + e * LOGBASE - 1;
-
-	        return external ? rnd( y, pr, rm ) : y;
-	    };
-
-
-	    /*
-	     * Return the number of significant digits of this Decimal.
-	     *
-	     * [z] {boolean|number} Whether to count integer-part trailing zeros: true, false, 1 or 0.
-	     *
-	     */
-	    P['precision'] = P['sd'] = function (z) {
-	        var n = null,
-	            x = this;
-
-	        if ( z != n && z !== !!z && z !== 1 && z !== 0 ) {
-
-	            // 'precision() argument not a boolean or binary digit: {z}'
-	            ifExceptionsThrow( x['constructor'], 'argument', z, 'precision', 1 );
-	        }
-
-	        if ( x['c'] ) {
-	            n = getCoeffLength( x['c'] );
-
-	            if ( z && x['e'] + 1 > n ) {
-	                n = x['e'] + 1;
-	            }
-	        }
-
-	        return n;
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal rounded to a whole number using
-	     * rounding mode rounding.
-	     *
-	     */
-	    P['round'] = function () {
-	        var x = this,
-	            Decimal = x['constructor'];
-
-	        return rnd( new Decimal(x), x['e'] + 1, Decimal['rounding'] );
-	    };
-
-
-	    /*
-	     *  sqrt(-n) =  N
-	     *  sqrt( N) =  N
-	     *  sqrt(-I) =  N
-	     *  sqrt( I) =  I
-	     *  sqrt( 0) =  0
-	     *  sqrt(-0) = -0
-	     *
-	     * Return a new Decimal whose value is the square root of this Decimal, rounded to precision
-	     * significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['squareRoot'] = P['sqrt'] = function () {
-	        var m, n, sd, r, rep, t,
-	            x = this,
-	            c = x['c'],
-	            s = x['s'],
-	            e = x['e'],
-	            Decimal = x['constructor'],
-	            half = new Decimal(0.5);
-
-	        // Negative/NaN/Infinity/zero?
-	        if ( s !== 1 || !c || !c[0] ) {
-
-	            return new Decimal( !s || s < 0 && ( !c || c[0] ) ? NaN : c ? x : 1 / 0 );
-	        }
-
-	        external = false;
-
-	        // Initial estimate.
-	        s = Math.sqrt( +x );
-
-	        /*
-	         Math.sqrt underflow/overflow?
-	         Pass x to Math.sqrt as integer, then adjust the exponent of the result.
-	         */
-	        if ( s == 0 || s == 1 / 0 ) {
-	            n = coefficientToString(c);
-
-	            if ( ( n.length + e ) % 2 == 0 ) {
-	                n += '0';
-	            }
-
-	            s = Math.sqrt(n);
-	            e = mathfloor( ( e + 1 ) / 2 ) - ( e < 0 || e % 2 );
-
-	            if ( s == 1 / 0 ) {
-	                n = '1e' + e;
-	            } else {
-	                n = s.toExponential();
-	                n = n.slice( 0, n.indexOf('e') + 1 ) + e;
-	            }
-
-	            r = new Decimal(n);
-	        } else {
-	            r = new Decimal( s.toString() );
-	        }
-
-	        sd = ( e = Decimal['precision'] ) + 3;
-
-	        // Newton-Raphson iteration.
-	        for ( ; ; ) {
-	            t = r;
-	            r = half['times']( t['plus']( div( x, t, sd + 2, 1 ) ) );
-
-	            if ( coefficientToString( t['c'] ).slice( 0, sd ) ===
-	                ( n = coefficientToString( r['c'] ) ).slice( 0, sd ) ) {
-	                n = n.slice( sd - 3, sd + 1 );
-
-	                /*
-	                 The 4th rounding digit may be in error by -1 so if the 4 rounding digits are
-	                 9999 or 4999 (i.e. approaching a rounding boundary) continue the iteration.
-	                 */
-	                if ( n == '9999' || !rep && n == '4999' ) {
-
-	                    /*
-	                     On the first iteration only, check to see if rounding up gives the exact result
-	                     as the nines may infinitely repeat.
-	                     */
-	                    if ( !rep ) {
-	                        rnd( t, e + 1, 0 );
-
-	                        if ( t['times'](t)['eq'](x) ) {
-	                            r = t;
-
-	                            break;
-	                        }
-	                    }
-	                    sd += 4;
-	                    rep = 1;
-	                } else {
-
-	                    /*
-	                     If the rounding digits are null, 0{0,4} or 50{0,3}, check for an exact result.
-	                     If not, then there are further digits and m will be truthy.
-	                     */
-	                    if ( !+n || !+n.slice(1) && n.charAt(0) == '5' ) {
-
-	                        // Truncate to the first rounding digit.
-	                        rnd( r, e + 1, 1 );
-	                        m = !r['times'](r)['eq'](x);
-	                    }
-
-	                    break;
-	                }
-	            }
-	        }
-	        external = true;
-
-	        return rnd( r, e, Decimal['rounding'], m );
-	    };
-
-
-	    /*
-	     *  n * 0 = 0
-	     *  n * N = N
-	     *  n * I = I
-	     *  0 * n = 0
-	     *  0 * 0 = 0
-	     *  0 * N = N
-	     *  0 * I = N
-	     *  N * n = N
-	     *  N * 0 = N
-	     *  N * N = N
-	     *  N * I = N
-	     *  I * n = I
-	     *  I * 0 = N
-	     *  I * N = N
-	     *  I * I = I
-	     *
-	     * Return a new Decimal whose value is this Decimal times Decimal(y), rounded to precision
-	     * significant digits using rounding mode rounding.
-	     *
-	     */
-	    P['times'] = function ( y, b ) {
-	        var c, e,
-	            x = this,
-	            Decimal = x['constructor'],
-	            xc = x['c'],
-	            yc = ( id = 11, y = new Decimal( y, b ), y['c'] ),
-	            i = mathfloor( x['e'] / LOGBASE ),
-	            j = mathfloor( y['e'] / LOGBASE ),
-	            a = x['s'];
-
-	        b = y['s'];
-
-	        y['s'] = a == b ? 1 : -1;
-
-	        // Either NaN/Infinity/0?
-	        if ( !i && ( !xc || !xc[0] ) || !j && ( !yc || !yc[0] ) ) {
-
-	            // Either NaN?
-	            return new Decimal( !a || !b ||
-
-	              // x is 0 and y is Infinity  or y is 0 and x is Infinity?
-	              xc && !xc[0] && !yc || yc && !yc[0] && !xc
-
-	                // Return NaN.
-	                ? NaN
-
-	                // Either Infinity?
-	                : !xc || !yc
-
-	                  // Return +-Infinity.
-	                  ? y['s'] / 0
-
-	                  // x or y is 0. Return +-0.
-	                  : y['s'] * 0 );
-	        }
-
-	        e = i + j;
-	        a = xc.length;
-	        b = yc.length;
-
-	        if ( a < b ) {
-
-	            // Swap.
-	            c = xc, xc = yc, yc = c;
-	            j = a, a = b, b = j;
-	        }
-
-	        for ( j = a + b, c = []; j--; c.push(0) );
-
-	        // Multiply!
-	        for ( i = b - 1; i > -1; i-- ) {
-	            b = 0;
-
-	            for ( j = a + i; j > i; ) {
-	                  b = c[j] + yc[i] * xc[j - i - 1] + b;
-	                  c[j--] = b % BASE | 0;
-	                  b = b / BASE | 0;
-	            }
-	            c[j] = ( c[j] + b ) % BASE | 0;
-	        }
-
-	        if (b) {
-	            ++e;
-	        } else if ( !c[0] ) {
-
-	            // Remove leading zero.
-	            c.shift();
-	        }
-
-	        // Remove trailing zeros.
-	        for ( j = c.length; !c[--j]; c.pop() );
-	        y['c'] = c;
-
-	        // Get the number of digits of c[0].
-	        for ( a = 1, b = c[0]; b >= 10; b /= 10, a++ );
-	        y['e'] = a + e * LOGBASE - 1;
-
-	        return external ? rnd( y, Decimal['precision'], Decimal['rounding'] ) : y;
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal rounded to a maximum of dp
-	     * decimal places using rounding mode rm or rounding if rm is omitted.
-	     *
-	     * If dp is omitted, return a new Decimal whose value is the value of this Decimal.
-	     *
-	     * [dp] {number} Decimal places. Integer, 0 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * 'toDP() dp out of range: {dp}'
-	     * 'toDP() dp not an integer: {dp}'
-	     * 'toDP() rounding mode not an integer: {rm}'
-	     * 'toDP() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toDecimalPlaces'] = P['toDP'] = function ( dp, rm ) {
-	        var x = this;
-	        x = new x['constructor'](x);
-
-	        return dp == null || !checkArg( x, dp, 'toDP' )
-	          ? x
-	          : rnd( x, ( dp | 0 ) + x['e'] + 1, checkRM( x, rm, 'toDP' ) );
-	    };
-
-
-	    /*
-	     * Return a string representing the value of this Decimal in exponential notation rounded to dp
-	     * fixed decimal places using rounding mode rounding.
-	     *
-	     * [dp] {number} Decimal places. Integer, 0 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * errors true: Throw if dp and rm are not undefined, null or integers in range.
-	     * errors false: Ignore dp and rm if not numbers or not in range, and truncate non-integers.
-	     *
-	     * 'toExponential() dp not an integer: {dp}'
-	     * 'toExponential() dp out of range: {dp}'
-	     * 'toExponential() rounding mode not an integer: {rm}'
-	     * 'toExponential() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toExponential'] = function ( dp, rm ) {
-	        var x = this;
-
-	        return x['c']
-	          ? format( x, dp != null && checkArg( x, dp, 'toExponential' ) ? dp | 0 : null,
-	            dp != null && checkRM( x, rm, 'toExponential' ), 1 )
-	          : x.toString();
-	    };
-
-
-	    /*
-	     * Return a string representing the value of this Decimal in normal (fixed-point) notation to
-	     * dp fixed decimal places and rounded using rounding mode rm or rounding if rm is omitted.
-	     *
-	     * Note: as with JS numbers, (-0).toFixed(0) is '0', but e.g. (-0.00001).toFixed(0) is '-0'.
-	     *
-	     * [dp] {number} Decimal places. Integer, 0 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * errors true: Throw if dp and rm are not undefined, null or integers in range.
-	     * errors false: Ignore dp and rm if not numbers or not in range, and truncate non-integers.
-	     *
-	     * 'toFixed() dp not an integer: {dp}'
-	     * 'toFixed() dp out of range: {dp}'
-	     * 'toFixed() rounding mode not an integer: {rm}'
-	     * 'toFixed() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toFixed'] = function ( dp, rm ) {
-	        var str,
-	            x = this,
-	            Decimal = x['constructor'],
-	            neg = Decimal['toExpNeg'],
-	            pos = Decimal['toExpPos'];
-
-	        if ( dp != null ) {
-	            dp = checkArg( x, dp, str = 'toFixed' ) ? x['e'] + ( dp | 0 ) : null;
-	            rm = checkRM( x, rm, str );
-	        }
-
-	        // Prevent toString returning exponential notation;
-	        Decimal['toExpNeg'] = -( Decimal['toExpPos'] = 1 / 0 );
-
-	        if ( dp == null || !x['c'] ) {
-	            str = x.toString();
-	        } else {
-	            str = format( x, dp, rm );
-
-	            // (-0).toFixed() is '0', but (-0.1).toFixed() is '-0'.
-	            // (-0).toFixed(1) is '0.0', but (-0.01).toFixed(1) is '-0.0'.
-	            if ( x['s'] < 0 && x['c'] ) {
-
-	                // As e.g. (-0).toFixed(3), will wrongly be returned as -0.000 from toString.
-	                if ( !x['c'][0] ) {
-	                    str = str.replace( '-', '' );
-
-	                // As e.g. -0.5 if rounded to -0 will cause toString to omit the minus sign.
-	                } else if ( str.indexOf('-') < 0 ) {
-	                    str = '-' + str;
-	                }
-	            }
-	        }
-	        Decimal['toExpNeg'] = neg;
-	        Decimal['toExpPos'] = pos;
-
-	        return str;
-	    };
-
-
-	    /*
-	     * Return a string representing the value of this Decimal in fixed-point notation to dp decimal
-	     * places, rounded using rounding mode rm or Decimal.rounding if rm is omitted, and formatted
-	     * according to the following properties of the Decimal.format object.
-	     *
-	     *  Decimal.format = {
-	     *      decimalSeparator : '.',
-	     *      groupSeparator : ',',
-	     *      groupSize : 3,
-	     *      secondaryGroupSize : 0,
-	     *      fractionGroupSeparator : '\xA0',    // non-breaking space
-	     *      fractionGroupSize : 0
-	     *  };
-	     *
-	     * [dp] {number} Decimal places. Integer, 0 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive
-	     *
-	     * (If dp or rm are invalid the error message will give the offending method call as toFixed.)
-	     *
-	     */
-	    P['toFormat'] = function( dp, rm ) {
-	        var x = this;
-
-	        if ( !x['c'] ) {
-	            return x.toString();
-	        }
-
-	        var i,
-	            isNeg = x['s'] < 0,
-	            f = x['constructor']['format'],
-	            groupSeparator = f['groupSeparator'],
-	            g1 = +f['groupSize'],
-	            g2 = +f['secondaryGroupSize'],
-	            arr = x.toFixed( dp, rm ).split('.'),
-	            intPart = arr[0],
-	            fractionPart = arr[1],
-	            intDigits = isNeg ? intPart.slice(1) : intPart,
-	            len = intDigits.length;
-
-	        if (g2) {
-	            len -= ( i = g1, g1 = g2, g2 = i );
-	        }
-
-	        if ( g1 > 0 && len > 0 ) {
-	            i = len % g1 || g1;
-	            intPart = intDigits.substr( 0, i );
-
-	            for ( ; i < len; i += g1 ) {
-	                intPart += groupSeparator + intDigits.substr( i, g1 );
-	            }
-
-	            if ( g2 > 0 ) {
-	                intPart += groupSeparator + intDigits.slice(i);
-	            }
-
-	            if (isNeg) {
-	                intPart = '-' + intPart;
-	            }
-	        }
-
-	        return fractionPart
-	          ? intPart + f['decimalSeparator'] + ( ( g2 = +f['fractionGroupSize'] )
-	            ? fractionPart.replace( new RegExp( '\\d{' + g2 + '}\\B', 'g' ),
-	              '$&' + f['fractionGroupSeparator'] )
-	            : fractionPart )
-	          : intPart;
-	    };
-
-
-	    /*
-	     * Return a string array representing the value of this Decimal as a simple fraction with an
-	     * integer numerator and an integer denominator.
-	     *
-	     * The denominator will be a positive non-zero value less than or equal to the specified
-	     * maximum denominator. If a maximum denominator is not specified, the denominator will be
-	     * the lowest value necessary to represent the number exactly.
-	     *
-	     * [maxD] {number|string|Decimal} Maximum denominator. Integer >= 1 and < Infinity.
-	     *
-	     */
-	    P['toFraction'] = function (maxD) {
-	        var d0, d2, e, frac, n, n0, p, q,
-	            x = this,
-	            Decimal = x['constructor'],
-	            n1 = d0 = new Decimal( Decimal['ONE'] ),
-	            d1 = n0 = new Decimal(0),
-	            xc = x['c'],
-	            d = new Decimal(d1);
-
-	        // NaN, Infinity.
-	        if ( !xc ) {
-
-	            return x.toString();
-	        }
-
-	        e = d['e'] = getCoeffLength(xc) - x['e'] - 1;
-	        d['c'][0] = mathpow( 10, ( p = e % LOGBASE ) < 0 ? LOGBASE + p : p );
-
-	        // If maxD is undefined or null...
-	        if ( maxD == null ||
-
-	             // or NaN...
-	             ( !( id = 12, n = new Decimal(maxD) )['s'] ||
-
-	               // or less than 1, or Infinity...
-	               ( outOfRange = n['cmp'](n1) < 0 || !n['c'] ) ||
-
-	                 // or not an integer...
-	                 ( Decimal['errors'] && mathfloor( n['e'] / LOGBASE ) < n['c'].length - 1 ) ) &&
-
-	                   // 'toFraction() max denominator not an integer: {maxD}'
-	                   // 'toFraction() max denominator out of range: {maxD}'
-	                   !ifExceptionsThrow( Decimal, 'max denominator', maxD, 'toFraction', 0 ) ||
-
-	                     // or greater than the maximum denominator needed to specify the value exactly.
-	                     ( maxD = n )['cmp'](d) > 0 ) {
-
-	            // d is 10**e, n1 is 1.
-	            maxD = e > 0 ? d : n1;
-	        }
-
-	        external = false;
-	        n = new Decimal( coefficientToString(xc) );
-	        p = Decimal['precision'];
-	        Decimal['precision'] = e = xc.length * LOGBASE * 2;
-
-	        for ( ; ; )  {
-	            q = div( n, d, 0, 1, 1 );
-	            d2 = d0['plus']( q['times'](d1) );
-
-	            if ( d2['cmp'](maxD) == 1 ) {
-
-	                break;
-	            }
-	            d0 = d1;
-	            d1 = d2;
-
-	            n1 = n0['plus']( q['times']( d2 = n1 ) );
-	            n0 = d2;
-
-	            d = n['minus']( q['times']( d2 = d ) );
-	            n = d2;
-	        }
-
-	        d2 = div( maxD['minus'](d0), d1, 0, 1, 1 );
-	        n0 = n0['plus']( d2['times'](n1) );
-	        d0 = d0['plus']( d2['times'](d1) );
-	        n0['s'] = n1['s'] = x['s'];
-
-	        // Determine which fraction is closer to x, n0/d0 or n1/d1?
-	        frac = div( n1, d1, e, 1 )['minus'](x)['abs']()['cmp'](
-	               div( n0, d0, e, 1 )['minus'](x)['abs']() ) < 1
-	          ? [ n1 + '', d1 + '' ]
-	          : [ n0 + '', d0 + '' ];
-
-	        external = true;
-	        Decimal['precision'] = p;
-
-	        return frac;
-	    };
-
-
-	    /*
-	     * Returns a new Decimal whose value is the nearest multiple of the magnitude of n to the value
-	     * of this Decimal.
-	     *
-	     * If the value of this Decimal is equidistant from two multiples of n, the rounding mode rm,
-	     * or rounding if rm is omitted or is null or undefined, determines the direction of the
-	     * nearest multiple.
-	     *
-	     * In the context of this method, rounding mode 4 (ROUND_HALF_UP) is the same as rounding mode 0
-	     * (ROUND_UP), and so on.
-	     *
-	     * The return value will always have the same sign as this Decimal, unless either this Decimal
-	     * or n is NaN, in which case the return value will be also be NaN.
-	     *
-	     * The return value is not rounded to precision significant digits.
-	     *
-	     * n {number|string|Decimal} The magnitude to round to a multiple of.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * 'toNearest() rounding mode not an integer: {rm}'
-	     * 'toNearest() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toNearest'] = function ( n, rm ) {
-	        var x = this,
-	            Decimal = x['constructor'];
-
-	        x = new Decimal(x);
-
-	        if ( n == null ) {
-	            n = new Decimal( Decimal['ONE'] );
-	            rm = Decimal['rounding'];
-	        } else {
-	            id = 17;
-	            n = new Decimal(n);
-	            rm = checkRM( x, rm, 'toNearest' );
-	        }
-
-	        // If n is finite...
-	        if ( n['c'] ) {
-
-	           // If x is finite...
-	            if ( x['c'] ) {
-
-	                if ( n['c'][0] ) {
-	                    external = false;
-	                    x = div( x, n, 0, rm < 4 ? [4, 5, 7, 8][rm] : rm, 1 )['times'](n);
-	                    external = true;
-	                    rnd(x);
-	                } else {
-	                    x['c'] = [ x['e'] = 0 ];
-	                }
-	            }
-
-	        // n is NaN or +-Infinity. If x is not NaN...
-	        } else if ( x['s'] ) {
-
-	            // If n is +-Infinity...
-	            if ( n['s'] ) {
-	                n['s'] = x['s'];
-	            }
-	            x = n;
-	        }
-
-	        return x;
-	    };
-
-
-	    /*
-	     * Return the value of this Decimal converted to a number primitive.
-	     *
-	     */
-	    P['toNumber'] = function () {
-	        var x = this;
-
-	        // Ensure zero has correct sign.
-	        return +x || ( x['s'] ? 0 * x['s'] : NaN );
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal raised to the power
-	     * Decimal(y, b), rounded to precision significant digits using rounding mode rounding.
-	     *
-	     * ECMAScript compliant.
-	     *
-	     *   x is any value, including NaN.
-	     *   n is any number, including �Infinity unless stated.
-	     *
-	     *   pow( x, NaN )                           = NaN
-	     *   pow( x, �0 )                            = 1
-
-	     *   pow( NaN, nonzero )                     = NaN
-	     *   pow( abs(n) > 1, +Infinity )            = +Infinity
-	     *   pow( abs(n) > 1, -Infinity )            = +0
-	     *   pow( abs(n) == 1, �Infinity )           = NaN
-	     *   pow( abs(n) < 1, +Infinity )            = +0
-	     *   pow( abs(n) < 1, -Infinity )            = +Infinity
-	     *   pow( +Infinity, n > 0 )                 = +Infinity
-	     *   pow( +Infinity, n < 0 )                 = +0
-	     *   pow( -Infinity, odd integer > 0 )       = -Infinity
-	     *   pow( -Infinity, even integer > 0 )      = +Infinity
-	     *   pow( -Infinity, odd integer < 0 )       = -0
-	     *   pow( -Infinity, even integer < 0 )      = +0
-	     *   pow( +0, n > 0 )                        = +0
-	     *   pow( +0, n < 0 )                        = +Infinity
-	     *   pow( -0, odd integer > 0 )              = -0
-	     *   pow( -0, even integer > 0 )             = +0
-	     *   pow( -0, odd integer < 0 )              = -Infinity
-	     *   pow( -0, even integer < 0 )             = +Infinity
-	     *   pow( finite n < 0, finite non-integer ) = NaN
-	     *
-	     * For non-integer and larger exponents pow(x, y) is calculated using
-	     *
-	     *   x^y = exp(y*ln(x))
-	     *
-	     * Assuming the first 15 rounding digits are each equally likely to be any digit 0-9, the
-	     * probability of an incorrectly rounded result
-	     * P( [49]9{14} | [50]0{14} ) = 2 * 0.2 * 10^-14 = 4e-15 = 1/2.5e+14
-	     * i.e. 1 in 250,000,000,000,000
-	     *
-	     * If a result is incorrectly rounded the maximum error will be 1 ulp (unit in last place).
-	     *
-	     * y {number|string|Decimal} The power to which to raise this Decimal.
-	     * [b] {number} The base of y.
-	     *
-	     */
-	    P['toPower'] = P['pow'] = function ( y, b ) {
-	        var a, e, n, r,
-	            x = this,
-	            Decimal = x['constructor'],
-	            s = x['s'],
-	            yN = +( id = 13, y = new Decimal( y, b ) ),
-	            i = yN < 0 ? -yN : yN,
-	            pr = Decimal['precision'],
-	            rm = Decimal['rounding'];
-
-	        // Handle +-Infinity, NaN and +-0.
-	        if ( !x['c'] || !y['c'] || ( n = !x['c'][0] ) || !y['c'][0] ) {
-
-	            // valueOf -0 is 0, so check for 0 then multiply it by the sign.
-	            return new Decimal( mathpow( n ? s * 0 : +x, yN ) );
-	        }
-
-	        x = new Decimal(x);
-	        a = x['c'].length;
-
-	        // if x == 1
-	        if ( !x['e'] && x['c'][0] == x['s'] && a == 1 ) {
-
-	            return x;
-	        }
-
-	        b = y['c'].length - 1;
-
-	        // if y == 1
-	        if ( !y['e'] && y['c'][0] == y['s'] && !b ) {
-	            r = rnd( x, pr, rm );
-	        } else {
-	            e = mathfloor( y['e'] / LOGBASE );
-	            n = e >= b;
-
-	            // If y is not an integer and x is negative, return NaN.
-	            if ( !n && s < 0 ) {
-	                r = new Decimal(NaN);
-	            } else {
-
-	                /*
-	                 If the approximate number of significant digits of x multiplied by abs(y) is less
-	                 than INT_POW_LIMIT use the 'exponentiation by squaring' algorithm.
-	                 */
-	                if ( n && a * LOGBASE * i < INT_POW_LIMIT ) {
-	                    r = intPow( Decimal, x, i );
-
-	                    if ( y['s'] < 0 ) {
-
-	                        return Decimal['ONE']['div'](r);
-	                    }
-	                } else {
-
-	                    // Result is negative if x is negative and the last digit of integer y is odd.
-	                    s = s < 0 && y['c'][ Math.max( e, b ) ] & 1 ? -1 : 1;
-
-	                    b = mathpow( +x, yN );
-
-	                    /*
-	                     Estimate result exponent.
-	                     x^y = 10^e,  where e = y * log10(x)
-	                     log10(x) = log10(x_significand) + x_exponent
-	                     log10(x_significand) = ln(x_significand) / ln(10)
-	                     */
-	                    e = b == 0 || !isFinite(b)
-	                      ? mathfloor( yN * ( Math.log( '0.' + coefficientToString( x['c'] ) ) /
-	                        Math.LN10 + x['e'] + 1 ) )
-	                      : new Decimal( b + '' )['e'];
-
-	                    // Estimate may be incorrect e.g. x: 0.999999999999999999, y: 2.29, e: 0, r.e:-1
-
-	                    // Overflow/underflow?
-	                    if ( e > Decimal['maxE'] + 1 || e < Decimal['minE'] - 1 ) {
-
-	                        return new Decimal( e > 0 ? s / 0 : 0 );
-	                    }
-
-	                    external = false;
-	                    Decimal['rounding'] = x['s'] = 1;
-
-	                    /*
-	                     Estimate extra digits needed from ln(x) to ensure five correct rounding digits
-	                     in result (i was unnecessary before max exponent was extended?).
-	                     Example of failure before i was introduced: (precision: 10),
-	                     new Decimal(2.32456).pow('2087987436534566.46411')
-	                     should be 1.162377823e+764914905173815, but is 1.162355823e+764914905173815
-	                     */
-	                    i = Math.min( 12, ( e + '' ).length );
-
-	                    // r = x^y = exp(y*ln(x))
-	                    r = exp( y['times']( ln( x, pr + i ) ), pr );
-
-	                    // Truncate to the required precision plus five rounding digits.
-	                    r = rnd( r, pr + 5, 1 );
-
-	                    /*
-	                     If the rounding digits are [49]9999 or [50]0000 increase the precision by 10
-	                     and recalculate the result.
-	                     */
-	                    if ( checkRoundingDigits( r['c'], pr, rm ) ) {
-	                        e = pr + 10;
-
-	                        // Truncate to the increased precision plus five rounding digits.
-	                        r = rnd( exp( y['times']( ln( x, e + i ) ), e ), e + 5, 1 );
-
-	                        /*
-	                          Check for 14 nines from the 2nd rounding digit (the first rounding digit
-	                          may be 4 or 9).
-	                         */
-	                        if ( +coefficientToString( r['c'] ).slice( pr + 1, pr + 15 ) + 1 == 1e14 ) {
-	                            r = rnd( r, pr + 1, 0 );
-	                        }
-	                    }
-
-	                    r['s'] = s;
-	                    external = true;
-	                    Decimal['rounding'] = rm;
-	                }
-
-	                r = rnd( r, pr, rm );
-	            }
-	        }
-
-	        return r;
-	    };
-
-
-	    /*
-	     * Return a string representing the value of this Decimal rounded to sd significant digits
-	     * using rounding mode rounding.
-	     *
-	     * Return exponential notation if sd is less than the number of digits necessary to represent
-	     * the integer part of the value in normal notation.
-	     *
-	     * sd {number} Significant digits. Integer, 1 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * errors true: Throw if sd and rm are not undefined, null or integers in range.
-	     * errors false: Ignore sd and rm if not numbers or not in range, and truncate non-integers.
-	     *
-	     * 'toPrecision() sd not an integer: {sd}'
-	     * 'toPrecision() sd out of range: {sd}'
-	     * 'toPrecision() rounding mode not an integer: {rm}'
-	     * 'toPrecision() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toPrecision'] = function ( sd, rm ) {
-	        var x = this;
-
-	        return sd != null && checkArg( x, sd, 'toPrecision', 1 ) && x['c']
-	          ? format( x, --sd | 0, checkRM( x, rm, 'toPrecision' ), 2 )
-	          : x.toString();
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is this Decimal rounded to a maximum of d significant
-	     * digits using rounding mode rm, or to precision and rounding respectively if omitted.
-	     *
-	     * [d] {number} Significant digits. Integer, 1 to MAX_DIGITS inclusive.
-	     * [rm] {number} Rounding mode. Integer, 0 to 8 inclusive.
-	     *
-	     * 'toSD() digits out of range: {d}'
-	     * 'toSD() digits not an integer: {d}'
-	     * 'toSD() rounding mode not an integer: {rm}'
-	     * 'toSD() rounding mode out of range: {rm}'
-	     *
-	     */
-	    P['toSignificantDigits'] = P['toSD'] = function ( d, rm ) {
-	        var x = this,
-	            Decimal = x['constructor'];
-
-	        x = new Decimal(x);
-
-	        return d == null || !checkArg( x, d, 'toSD', 1 )
-	          ? rnd( x, Decimal['precision'], Decimal['rounding'] )
-	          : rnd( x, d | 0, checkRM( x, rm, 'toSD' ) );
-	    };
-
-
-	    /*
-	     * Return a string representing the value of this Decimal in base b, or base 10 if b is
-	     * omitted. If a base is specified, including base 10, round to precision significant digits
-	     * using rounding mode rounding.
-	     *
-	     * Return exponential notation if a base is not specified, and this Decimal has a positive
-	     * exponent equal to or greater than toExpPos, or a negative exponent equal to or less than
-	     * toExpNeg.
-	     *
-	     * [b] {number} Base. Integer, 2 to 64 inclusive.
-	     *
-	     */
-	    P['toString'] = function (b) {
-	        var u, str, strL,
-	            x = this,
-	            Decimal = x['constructor'],
-	            xe = x['e'];
-
-	        // Infinity or NaN?
-	        if ( xe === null ) {
-	            str = x['s'] ? 'Infinity' : 'NaN';
-
-	        // Exponential format?
-	        } else if ( b === u && ( xe <= Decimal['toExpNeg'] || xe >= Decimal['toExpPos'] ) ) {
-
-	            return format( x, null, Decimal['rounding'], 1 );
-	        } else {
-	            str = coefficientToString( x['c'] );
-
-	            // Negative exponent?
-	            if ( xe < 0 ) {
-
-	                // Prepend zeros.
-	                for ( ; ++xe; str = '0' + str );
-	                str = '0.' + str;
-
-	            // Positive exponent?
-	            } else if ( strL = str.length, xe > 0 ) {
-
-	                if ( ++xe > strL ) {
-
-	                    // Append zeros.
-	                    for ( xe -= strL; xe-- ; str += '0' );
-
-	                } else if ( xe < strL ) {
-	                    str = str.slice( 0, xe ) + '.' + str.slice(xe);
-	                }
-
-	            // Exponent zero.
-	            } else {
-	                u = str.charAt(0);
-
-	                if ( strL > 1 ) {
-	                    str = u + '.' + str.slice(1);
-
-	                // Avoid '-0'
-	                } else if ( u == '0' ) {
-
-	                    return u;
-	                }
-	            }
-
-	            if ( b != null ) {
-
-	                if ( !( outOfRange = !( b >= 2 && b < 65 ) ) &&
-	                  ( b == (b | 0) || !Decimal['errors'] ) ) {
-	                    str = convertBase( Decimal, str, b | 0, 10, x['s'] );
-
-	                    // Avoid '-0'
-	                    if ( str == '0' ) {
-
-	                        return str;
-	                    }
-	                } else {
-
-	                    // 'toString() base not an integer: {b}'
-	                    // 'toString() base out of range: {b}'
-	                    ifExceptionsThrow( Decimal, 'base', b, 'toString', 0 );
-	                }
-	            }
-	        }
-
-	        return x['s'] < 0 ? '-' + str : str;
-	    };
-
-
-	    /*
-	     * Return a new Decimal whose value is the value of this Decimal truncated to a whole number.
-	     *
-	     */
-	    P['truncated'] = P['trunc'] = function () {
-
-	        return rnd( new this['constructor'](this), this['e'] + 1, 1 );
-	    };
-
-
-	    /*
-	     * Return as toString, but do not accept a base argument.
-	     *
-	     * Ensures that JSON.stringify() uses toString for serialization.
-	     *
-	     */
-	    P['valueOf'] = P['toJSON'] = function () {
-
-	        return this.toString();
-	    };
-
-
-	    /*
-	    // Add aliases to match BigDecimal method names.
-	    P['add'] = P['plus'];
-	    P['subtract'] = P['minus'];
-	    P['multiply'] = P['times'];
-	    P['divide'] = P['div'];
-	    P['remainder'] = P['mod'];
-	    P['compareTo'] = P['cmp'];
-	    P['negate'] = P['neg'];
-	     */
-
-
-	    // Private functions for Decimal.prototype methods.
-
-
-	    /*
-	     *  coefficientToString
-	     *  checkRoundingDigits
-	     *  checkRM
-	     *  checkArg
-	     *  convertBase
-	     *  div
-	     *  exp
-	     *  format
-	     *  getCoeffLength
-	     *  ifExceptionsThrow
-	     *  intPow
-	     *  ln
-	     *  rnd
-	     */
-
-
-	    function coefficientToString(a) {
-	        var s, z,
-	            i = 1,
-	            j = a.length,
-	            r = a[0] + '';
-
-	        for ( ; i < j; i++ ) {
-	            s = a[i] + '';
-
-	            for ( z = LOGBASE - s.length; z--; ) {
-	                s = '0' + s;
-	            }
-
-	            r += s;
-	        }
-
-	        // '0'
-	        for ( j = r.length; r.charCodeAt(--j) === 48; );
-
-	        return r.slice( 0, j + 1 || 1 );
-	    }
-
-
-	    /*
-	     * Check 5 rounding digits if repeating is null, 4 otherwise.
-	     * repeating == null if caller is log or pow,
-	     * repeating != null if caller is ln or exp.
-	     *
-	     *
-	     // Previous, much simpler implementation when coefficient was base 10.
-	     function checkRoundingDigits( c, i, rm, repeating ) {
-	         return ( !repeating && rm > 3 && c[i] == 4 ||
-	           ( repeating || rm < 4 ) && c[i] == 9 ) && c[i + 1] == 9 && c[i + 2] == 9 &&
-	             c[i + 3] == 9 && ( repeating != null || c[i + 4] == 9 ) ||
-	               repeating == null && ( c[i] == 5 || !c[i] ) && !c[i + 1] && !c[i + 2] &&
-	                 !c[i + 3] && !c[i + 4];
-	     }
-	     */
-	    function checkRoundingDigits( c, i, rm, repeating ) {
-	        var ci, k, n, r, rd;
-
-	        // Get the length of the first element of the array c.
-	        for ( k = 1, n = c[0]; n >= 10; n /= 10, k++ );
-
-	        n = i - k;
-
-	        // Is the rounding digit in the first element of c?
-	        if ( n < 0 ) {
-	            n += LOGBASE;
-	            ci = 0;
-	        } else {
-	            ci = Math.ceil( ( n + 1 ) / LOGBASE );
-	            n %= LOGBASE;
-	        }
-
-	        k = mathpow( 10, LOGBASE - n );
-	        rd = c[ci] % k | 0;
-
-	        if ( repeating == null ) {
-
-	            if ( n < 3 ) {
-
-	                if ( n == 0 ) {
-	                    rd = rd / 100 | 0;
-	                } else if ( n == 1 ) {
-	                    rd = rd / 10 | 0;
-	                }
-
-	                r = rm < 4 && rd == 99999 || rm > 3 && rd == 49999 || rd == 50000 || rd == 0;
-	            } else {
-	                r = ( rm < 4 && rd + 1 == k || rm > 3 && rd + 1 == k / 2 ) &&
-	                    ( c[ci + 1] / k / 100 | 0 ) == mathpow( 10, n - 2 ) - 1 ||
-	                        ( rd == k / 2 || rd == 0 ) && ( c[ci + 1] / k / 100 | 0 ) == 0;
-	            }
-	        } else {
-
-	            if ( n < 4 ) {
-
-	                if ( n == 0 ) {
-	                    rd = rd / 1000 | 0;
-	                } else if ( n == 1 ) {
-	                    rd = rd / 100 | 0;
-	                } else if ( n == 2 ) {
-	                    rd = rd / 10 | 0;
-	                }
-
-	                r = ( repeating || rm < 4 ) && rd == 9999 || !repeating && rm > 3 && rd == 4999;
-	            } else {
-	                r = ( ( repeating || rm < 4 ) && rd + 1 == k ||
-	                ( !repeating && rm > 3 ) && rd + 1 == k / 2 ) &&
-	                    ( c[ci + 1] / k / 1000 | 0 ) == mathpow( 10, n - 3 ) - 1;
-	            }
-	        }
-
-	        return r;
-	    }
-
-
-	    /*
-	     * Check and return rounding mode. If rm is invalid, return rounding mode rounding.
-	     */
-	    function checkRM( x, rm, method ) {
-	        var Decimal = x['constructor'];
-
-	        return rm == null || ( ( outOfRange = rm < 0 || rm > 8 ) ||
-	          rm !== 0 && ( Decimal['errors'] ? parseInt : parseFloat )(rm) != rm ) &&
-	            !ifExceptionsThrow( Decimal, 'rounding mode', rm, method, 0 )
-	              ? Decimal['rounding'] : rm | 0;
-	    }
-
-
-	    /*
-	     * Check that argument n is in range, return true or false.
-	     */
-	    function checkArg( x, n, method, min ) {
-	        var Decimal = x['constructor'];
-
-	        return !( outOfRange = n < ( min || 0 ) || n >= MAX_DIGITS + 1 ) &&
-
-	          /*
-	           * Include 'n === 0' because Opera has 'parseFloat(-0) == -0' as false
-	           * despite having 'parseFloat(-0) === -0 && parseFloat('-0') === -0 && 0 == -0' as true.
-	           */
-	          ( n === 0 || ( Decimal['errors'] ? parseInt : parseFloat )(n) == n ) ||
-	            ifExceptionsThrow( Decimal, 'argument', n, method, 0 );
-	    }
-
-
-	    /*
-	     * Convert a numeric string of baseIn to a numeric string of baseOut.
-	     */
-	    convertBase = (function () {
-
-	        /*
-	         * Convert string of baseIn to an array of numbers of baseOut.
-	         * Eg. convertBase('255', 10, 16) returns [15, 15].
-	         * Eg. convertBase('ff', 16, 10) returns [2, 5, 5].
-	         */
-	        function toBaseOut( str, baseIn, baseOut ) {
-	            var j,
-	                arr = [0],
-	                arrL,
-	                i = 0,
-	                strL = str.length;
-
-	            for ( ; i < strL; ) {
-	                for ( arrL = arr.length; arrL--; arr[arrL] *= baseIn );
-	                arr[ j = 0 ] += NUMERALS.indexOf( str.charAt( i++ ) );
-
-	                for ( ; j < arr.length; j++ ) {
-
-	                    if ( arr[j] > baseOut - 1 ) {
-
-	                        if ( arr[j + 1] == null ) {
-	                            arr[j + 1] = 0;
-	                        }
-	                        arr[j + 1] += arr[j] / baseOut | 0;
-	                        arr[j] %= baseOut;
-	                    }
-	                }
-	            }
-
-	            return arr.reverse();
-	        }
-
-	        return function ( Decimal, str, baseOut, baseIn, sign ) {
-	            var e, j, r, x, xc, y,
-	                i = str.indexOf( '.' ),
-	                pr = Decimal['precision'],
-	                rm = Decimal['rounding'];
-
-	            if ( baseIn < 37 ) {
-	                str = str.toLowerCase();
-	            }
-
-	            // Non-integer.
-	            if ( i >= 0 ) {
-	                str = str.replace( '.', '' );
-	                y = new Decimal(baseIn);
-	                x = intPow( Decimal, y, str.length - i );
-
-	                /*
-	                 Convert str as if an integer, then divide the result by its base raised to a power
-	                 such that the fraction part will be restored.
-	                 Use toFixed to avoid possible exponential notation.
-	                 */
-	                y['c'] = toBaseOut( x.toFixed(), 10, baseOut );
-	                y['e'] = y['c'].length;
-	            }
-
-	            // Convert the number as integer.
-	            xc = toBaseOut( str, baseIn, baseOut );
-	            e = j = xc.length;
-
-	            // Remove trailing zeros.
-	            for ( ; xc[--j] == 0; xc.pop() );
-
-	            if ( !xc[0] ) {
-
-	                return '0';
-	            }
-
-	            if ( i < 0 ) {
-	                e--;
-	            } else {
-	                x['c'] = xc;
-	                x['e'] = e;
-
-	                // sign is needed for correct rounding.
-	                x['s'] = sign;
-	                x = div( x, y, pr, rm, 0, baseOut );
-	                xc = x['c'];
-	                r = x['r'];
-	                e = x['e'];
-	            }
-
-	            // The rounding digit, i.e. the digit after the digit that may be rounded up.
-	            i = xc[pr];
-	            j = baseOut / 2;
-	            r = r || xc[pr + 1] != null;
-
-	            if ( rm < 4
-	              ? ( i != null || r ) && ( rm == 0 || rm == ( sign < 0 ? 3 : 2 ) )
-	              : i > j || i == j && ( rm == 4 || r || rm == 6 && xc[pr - 1] & 1 ||
-	                rm == ( sign < 0 ? 8 : 7 ) ) ) {
-
-	                xc.length = pr;
-
-	                // Rounding up may mean the previous digit has to be rounded up and so on.
-	                for ( --baseOut; ++xc[--pr] > baseOut; ) {
-	                    xc[pr] = 0;
-
-	                    if ( !pr ) {
-	                        ++e;
-	                        xc.unshift(1);
-	                    }
-	                }
-	            } else {
-	                xc.length = pr;
-	            }
-
-	            // Determine trailing zeros.
-	            for ( j = xc.length; !xc[--j]; );
-
-	            // E.g. [4, 11, 15] becomes 4bf.
-	            for ( i = 0, str = ''; i <= j; str += NUMERALS.charAt( xc[i++] ) );
-
-	            // Negative exponent?
-	            if ( e < 0 ) {
-
-	                // Prepend zeros.
-	                for ( ; ++e; str = '0' + str );
-
-	                str = '0.' + str;
-
-	            // Positive exponent?
-	            } else {
-	                i = str.length;
-
-	                if ( ++e > i ) {
-
-	                    // Append zeros.
-	                    for ( e -= i; e-- ; str += '0' );
-
-	                } else if ( e < i ) {
-	                    str = str.slice( 0, e ) + '.' + str.slice(e);
-	                }
-	            }
-
-	            // No negative numbers: the caller will add the sign.
-	            return str;
-	        };
-	    })();
-
-
-
-	    /*
-	     * Perform division in the specified base. Called by div and convertBase.
-	     */
-	    var div = ( function () {
-
-	        // Assumes non-zero x and k, and hence non-zero result.
-	        function multiplyInteger( x, k, base ) {
-	            var temp,
-	                carry = 0,
-	                i = x.length;
-
-	            for ( x = x.slice(); i--; ) {
-	                temp = x[i] * k + carry;
-	                x[i] = temp % base | 0;
-	                carry = temp / base | 0;
-	            }
-
-	            if (carry) {
-	                x.unshift(carry);
-	            }
-
-	            return x;
-	        }
-
-	        function compare( a, b, aL, bL ) {
-	            var i, cmp;
-
-	            if ( aL != bL ) {
-	                cmp = aL > bL ? 1 : -1;
-	            } else {
-
-	                for ( i = cmp = 0; i < aL; i++ ) {
-
-	                    if ( a[i] != b[i] ) {
-	                        cmp = a[i] > b[i] ? 1 : -1;
-
-	                        break;
-	                    }
-	                }
-	            }
-
-	            return cmp;
-	        }
-
-	        function subtract( a, b, aL, base ) {
-	            var i = 0;
-
-	            // Subtract b from a.
-	            for ( ; aL--; ) {
-	                a[aL] -= i;
-	                i = a[aL] < b[aL] ? 1 : 0;
-	                a[aL] = i * base + a[aL] - b[aL];
-	            }
-
-	            // Remove leading zeros.
-	            for ( ; !a[0] && a.length > 1; a.shift() );
-	        }
-
-	        // x: dividend, y: divisor.
-	        return function ( x, y, pr, rm, dp, base ) {
-	            var cmp, e, i, logbase, more, n, prod, prodL, q, qc, rem, remL, rem0, t, xi, xL, yc0,
-	                yL, yz,
-	                Decimal = x['constructor'],
-	                s = x['s'] == y['s'] ? 1 : -1,
-	                xc = x['c'],
-	                yc = y['c'];
-
-	            // Either NaN, Infinity or 0?
-	            if ( !xc || !xc[0] || !yc || !yc[0] ) {
-
-	                return new Decimal(
-
-	                  // Return NaN if either NaN, or both Infinity or 0.
-	                  !x['s'] || !y['s'] || ( xc ? yc && xc[0] == yc[0] : !yc ) ? NaN :
-
-	                    // Return +-0 if x is 0 or y is +-Infinity, or return +-Infinity as y is 0.
-	                    xc && xc[0] == 0 || !yc ? s * 0 : s / 0
-	                );
-	            }
-
-	            if (base) {
-	                logbase = 1;
-	                e = x['e'] - y['e'];
-	            } else {
-	                base = BASE;
-	                logbase = LOGBASE;
-	                e = mathfloor( x['e'] / logbase ) - mathfloor( y['e'] / logbase );
-	            }
-
-	            yL = yc.length;
-	            xL = xc.length;
-	            q = new Decimal(s);
-	            qc = q['c'] = [];
-
-	            // Result exponent may be one less then the current value of e.
-	            // The coefficients of the Decimals from convertBase may have trailing zeros.
-	            for ( i = 0; yc[i] == ( xc[i] || 0 ); i++ );
-
-	            if ( yc[i] > ( xc[i] || 0 ) ) {
-	                e--;
-	            }
-
-	            if ( pr == null ) {
-	                s = pr = Decimal['precision'];
-	                rm = Decimal['rounding'];
-	            } else if (dp) {
-	                s = pr + ( x['e'] - y['e'] ) + 1;
-	            } else {
-	                s = pr;
-	            }
-
-	            if ( s < 0 ) {
-	                qc.push(1);
-	                more = true;
-	            } else {
-
-	                // Convert base 10 decimal places to base 1e7 decimal places.
-	                s = s / logbase + 2 | 0;
-	                i = 0;
-
-	                // divisor < 1e7
-	                if ( yL == 1 ) {
-	                    n = 0;
-	                    yc = yc[0];
-	                    s++;
-
-	                    // 'n' is the carry.
-	                    for ( ; ( i < xL || n ) && s--; i++ ) {
-	                        t = n * base + ( xc[i] || 0 );
-	                        qc[i] = t / yc | 0;
-	                        n = t % yc | 0;
-	                    }
-
-	                    more = n || i < xL;
-
-	                // divisor >= 1e7
-	                } else {
-
-	                    // Normalise xc and yc so highest order digit of yc is >= base/2
-	                    n = base / ( yc[0] + 1 ) | 0;
-
-	                    if ( n > 1 ) {
-	                        yc = multiplyInteger( yc, n, base );
-	                        xc = multiplyInteger( xc, n, base );
-	                        yL = yc.length;
-	                        xL = xc.length;
-	                    }
-
-	                    xi = yL;
-	                    rem = xc.slice( 0, yL );
-	                    remL = rem.length;
-
-	                    // Add zeros to make remainder as long as divisor.
-	                    for ( ; remL < yL; rem[remL++] = 0 );
-
-	                    yz = yc.slice();
-	                    yz.unshift(0);
-	                    yc0 = yc[0];
-
-	                    if ( yc[1] >= base / 2 ) {
-	                        yc0++;
-	                    }
-
-	                    do {
-	                        n = 0;
-
-	                        // Compare divisor and remainder.
-	                        cmp = compare( yc, rem, yL, remL );
-
-	                        // If divisor < remainder.
-	                        if ( cmp < 0 ) {
-
-	                            // Calculate trial digit, n.
-	                            rem0 = rem[0];
-
-	                            if ( yL != remL ) {
-	                                rem0 = rem0 * base + ( rem[1] || 0 );
-	                            }
-
-	                            // n will be how many times the divisor goes into the current remainder.
-	                            n = rem0 / yc0 | 0;
-
-	                            /*
-	                              Algorithm:
-	                              1. product = divisor * trial digit (n)
-	                              2. if product > remainder: product -= divisor, n--
-	                              3. remainder -= product
-	                              4. if product was < remainder at 2:
-	                                5. compare new remainder and divisor
-	                                6. If remainder > divisor: remainder -= divisor, n++
-	                            */
-
-	                            if ( n > 1 ) {
-
-	                                if ( n >= base ) {
-	                                    n = base - 1;
-	                                }
-
-	                                // product = divisor * trial digit.
-	                                prod = multiplyInteger( yc, n, base );
-	                                prodL = prod.length;
-	                                remL = rem.length;
-
-	                                // Compare product and remainder.
-	                                cmp = compare( prod, rem, prodL, remL );
-
-	                                // product > remainder.
-	                                if ( cmp == 1 ) {
-	                                    n--;
-
-	                                    // Subtract divisor from product.
-	                                    subtract( prod, yL < prodL ? yz : yc, prodL, base );
-	                                }
-	                            } else {
-
-	                                // cmp is -1.
-	                                // If n is 0, there is no need to compare yc and rem again below, so change cmp to 1 to avoid it.
-	                                // If n is 1 there IS a need to compare yc and rem again below.
-	                                if ( n == 0 ) {
-	                                    cmp = n = 1;
-	                                }
-	                                prod = yc.slice();
-	                            }
-	                            prodL = prod.length;
-
-	                            if ( prodL < remL ) {
-	                                prod.unshift(0);
-	                            }
-
-	                            // Subtract product from remainder.
-	                            subtract( rem, prod, remL, base );
-
-	                            // If product was < previous remainder.
-	                            if ( cmp == -1 ) {
-	                                remL = rem.length;
-
-	                                // Compare divisor and new remainder.
-	                                cmp = compare( yc, rem, yL, remL );
-
-	                                // If divisor < new remainder, subtract divisor from remainder.
-	                                if ( cmp < 1 ) {
-	                                    n++;
-
-	                                    // Subtract divisor from remainder.
-	                                    subtract( rem, yL < remL ? yz : yc, remL, base );
-	                                }
-	                            }
-
-	                            remL = rem.length;
-
-	                        } else if ( cmp === 0 ) {
-	                            n++;
-	                            rem = [0];
-	                        }    // if cmp === 1, n will be 0
-
-	                        // Add the next digit, n, to the result array.
-	                        qc[i++] = n;
-
-	                        // Update the remainder.
-	                        if ( cmp && rem[0] ) {
-	                            rem[remL++] = xc[xi] || 0;
-	                        } else {
-	                            rem = [ xc[xi] ];
-	                            remL = 1;
-	                        }
-
-	                    } while ( ( xi++ < xL || rem[0] != null ) && s-- );
-
-	                    more = rem[0] != null;
-	                }
-
-	                // Leading zero?
-	                if ( !qc[0] ) {
-	                    qc.shift();
-	                }
-	            }
-
-	            // If div is being used for base conversion.
-	            if ( logbase == 1 ) {
-	                q['e'] = e;
-	                q['r'] = +more;
-	            } else {
-
-	                // To calculate q.e, first get the number of digits of qc[0].
-	                for ( i = 1, s = qc[0]; s >= 10; s /= 10, i++ );
-	                q['e'] = i + e * logbase - 1;
-
-	                rnd( q, dp ? pr + q['e'] + 1 : pr, rm, more );
-	            }
-
-	            return q;
-	        };
-	    })();
-
-
-	    /*
-	     * Taylor/Maclaurin series.
-	     *
-	     * exp(x) = x^0/0! + x^1/1! + x^2/2! + x^3/3! + ...
-	     *
-	     * Argument reduction:
-	     *   Repeat x = x / 32, k += 5, until |x| < 0.1
-	     *   exp(x) = exp(x / 2^k)^(2^k)
-	     *
-	     * Previously, the argument was initially reduced by
-	     * exp(x) = exp(r) * 10^k  where r = x - k * ln10, k = floor(x / ln10)
-	     * to first put r in the range [0, ln10], before dividing by 32 until |x| < 0.1, but this was
-	     * found to be slower than just dividing repeatedly by 32 as above.
-	     *
-	     * Max integer argument: exp('20723265836946413') = 6.3e+9000000000000000
-	     * Min integer argument: exp('-20723265836946411') = 1.2e-9000000000000000
-	     * ( Math object integer min/max: Math.exp(709) = 8.2e+307, Math.exp(-745) = 5e-324 )
-	     *
-	     *  exp(Infinity)  = Infinity
-	     *  exp(-Infinity) = 0
-	     *  exp(NaN)       = NaN
-	     *  exp(+-0)       = 1
-	     *
-	     *  exp(x) is non-terminating for any finite, non-zero x.
-	     *
-	     *  The result will always be correctly rounded.
-	     *
-	     */
-	    function exp( x, pr ) {
-	        var denom, guard, j, pow, sd, sum, t,
-	            rep = 0,
-	            i = 0,
-	            k = 0,
-	            Decimal = x['constructor'],
-	            one = Decimal['ONE'],
-	            rm = Decimal['rounding'],
-	            precision = Decimal['precision'];
-
-	        // 0/NaN/Infinity?
-	        if ( !x['c'] || !x['c'][0] || x['e'] > 17 ) {
-
-	            return new Decimal( x['c']
-	              ? !x['c'][0] ? one : x['s'] < 0 ? 0 : 1 / 0
-	              : x['s'] ? x['s'] < 0 ? 0 : x : NaN );
-	        }
-
-	        if ( pr == null ) {
-
-	            /*
-	             Estimate result exponent.
-	             e^x = 10^j, where j = x * log10(e) and
-	             log10(e) = ln(e) / ln(10) = 1 / ln(10),
-	             so j = x / ln(10)
-	            j = mathfloor( x / Math.LN10 );
-
-	            // Overflow/underflow? Estimate may be +-1 of true value.
-	            if ( j > Decimal['maxE'] + 1 || j < Decimal['minE'] - 1 ) {
-
-	                return new Decimal( j > 0 ? 1 / 0 : 0 );
-	            }
-	             */
-
-	            external = false;
-	            sd = precision;
-	        } else {
-	            sd = pr;
-	        }
-
-	        t = new Decimal(0.03125);
-
-	        // while abs(x) >= 0.1
-	        while ( x['e'] > -2 ) {
-
-	            // x = x / 2^5
-	            x = x['times'](t);
-	            k += 5;
-	        }
-
-	        /*
-	         Use 2 * log10(2^k) + 5 to estimate the increase in precision necessary to ensure the first
-	         4 rounding digits are correct.
-	         */
-	        guard = Math.log( mathpow( 2, k ) ) / Math.LN10 * 2 + 5 | 0;
-	        sd += guard;
-
-	        denom = pow = sum = new Decimal(one);
-	        Decimal['precision'] = sd;
-
-	        for ( ; ; ) {
-	            pow = rnd( pow['times'](x), sd, 1 );
-	            denom = denom['times'](++i);
-	            t = sum['plus']( div( pow, denom, sd, 1 ) );
-
-	            if ( coefficientToString( t['c'] ).slice( 0, sd ) ===
-	                 coefficientToString( sum['c'] ).slice( 0, sd ) ) {
-	                j = k;
-
-	                while ( j-- ) {
-	                    sum = rnd( sum['times'](sum), sd, 1 );
-	                }
-
-	                /*
-	                 Check to see if the first 4 rounding digits are [49]999.
-	                 If so, repeat the summation with a higher precision, otherwise
-	                 E.g. with precision: 18, rounding: 1
-	                 exp(18.404272462595034083567793919843761) = 98372560.1229999999
-	                                           when it should be 98372560.123
-
-	                 sd - guard is the index of first rounding digit.
-	                 */
-	                if ( pr == null ) {
-
-	                    if ( rep < 3 && checkRoundingDigits( sum['c'], sd - guard, rm, rep ) ) {
-	                        Decimal['precision'] = sd += 10;
-	                        denom = pow = t = new Decimal(one);
-	                        i = 0;
-	                        rep++;
-	                    } else {
-
-	                        return rnd( sum, Decimal['precision'] = precision, rm, external = true );
-	                    }
-	                } else {
-	                    Decimal['precision'] = precision;
-
-	                    return sum;
-	                }
-	            }
-	            sum = t;
-	        }
-	    }
-
-
-	    /*
-	     * Return a string representing the value of Decimal n in normal or exponential notation
-	     * rounded to the specified decimal places or significant digits.
-	     * Called by toString, toExponential (k is 1), toFixed, and toPrecision (k is 2).
-	     * i is the index (with the value in normal notation) of the digit that may be rounded up.
-	     * j is the rounding mode, then the number of digits required including fraction-part trailing
-	     * zeros.
-	     */
-	    function format( n, i, j, k ) {
-	        var s, z,
-	            Decimal = n['constructor'],
-	            e = ( n = new Decimal(n) )['e'];
-
-	        // i == null when toExponential(no arg), or toString() when x >= toExpPos etc.
-	        if ( i == null ) {
-	            j = 0;
-	        } else {
-	            rnd( n, ++i, j );
-
-	            // If toFixed, n['e'] may have changed if the value was rounded up.
-	            j = k ? i : i + n['e'] - e;
-	        }
-
-	        e = n['e'];
-	        s = coefficientToString( n['c'] );
-
-	        /*
-	         toPrecision returns exponential notation if the number of significant digits specified
-	         is less than the number of digits necessary to represent the integer part of the value
-	         in normal notation.
-	         */
-
-	        // Exponential notation.
-	        if ( k == 1 || k == 2 && ( i <= e || e <= Decimal['toExpNeg'] ) ) {
-
-	            // Append zeros?
-	            for ( ; s.length < j; s += '0' );
-
-	            if ( s.length > 1 ) {
-	                s = s.charAt(0) + '.' + s.slice(1);
-	            }
-
-	            s += ( e < 0 ? 'e' : 'e+' ) + e;
-
-	        // Normal notation.
-	        } else {
-	            k = s.length;
-
-	            // Negative exponent?
-	            if ( e < 0 ) {
-	                z = j - k;
-
-	                // Prepend zeros.
-	                for ( ; ++e; s = '0' + s );
-	                s = '0.' + s;
-
-	            // Positive exponent?
-	            } else {
-
-	                if ( ++e > k ) {
-	                    z = j - e;
-
-	                    // Append zeros.
-	                    for ( e -= k; e-- ; s += '0' );
-
-	                    if ( z > 0 ) {
-	                        s += '.';
-	                    }
-
-	                } else {
-	                    z = j - k;
-
-	                    if ( e < k ) {
-	                        s = s.slice( 0, e ) + '.' + s.slice(e);
-	                    } else if ( z > 0 ) {
-	                        s += '.';
-	                    }
-	                }
-	            }
-
-	            // Append more zeros?
-	            if ( z > 0 ) {
-
-	                for ( ; z--; s += '0' );
-	            }
-	        }
-
-	        return n['s'] < 0 && n['c'][0] ? '-' + s : s;
-	    }
-
-
-	    function getCoeffLength(c) {
-	        var v = c.length - 1,
-	            n = v * LOGBASE + 1;
-
-	        if ( v = c[v] ) {
-
-	            // Subtract the number of trailing zeros of the last number.
-	            for ( ; v % 10 == 0; v /= 10, n-- );
-
-	            // Add the number of digits of the first number.
-	            for ( v = c[0]; v >= 10; v /= 10, n++ );
-	        }
-
-	        return n;
-	    }
-
-
-	    /*
-	     * Assemble error messages. Throw Decimal Errors.
-	     */
-	    function ifExceptionsThrow( Decimal, message, arg, method, more ) {
-
-	        if ( Decimal['errors'] ) {
-	            var error = new Error( ( method || [
-	              'new Decimal', 'cmp', 'div', 'eq', 'gt', 'gte', 'lt', 'lte', 'minus', 'mod',
-	              'plus', 'times', 'toFraction', 'pow', 'random', 'log', 'sqrt', 'toNearest', 'divToInt'
-	              ][ id ? id < 0 ? -id : id : 1 / id < 0 ? 1 : 0 ] ) + '() ' + ( [
-	              'number type has more than 15 significant digits', 'LN10 out of digits' ][message]
-	              || message + ( [ outOfRange ? ' out of range' : ' not an integer',
-	              ' not a boolean or binary digit' ][more] || '' ) ) + ': ' + arg
-	            );
-	            error['name'] = 'Decimal Error';
-	            outOfRange = id = 0;
-
-	            throw error;
-	        }
-	    }
-
-
-
-
-	    /*
-	     * Use 'exponentiation by squaring' for small integers. Called by convertBase and pow.
-	     */
-	    function intPow( Decimal, x, i ) {
-	        var r = new Decimal( Decimal['ONE'] );
-
-	        for ( external = false; ; ) {
-
-	            if ( i & 1 ) {
-	                r = r['times'](x);
-	            }
-	            i >>= 1;
-
-	            if ( !i ) {
-
-	                break;
-	            }
-	            x = x['times'](x);
-	        }
-	        external = true;
-
-	        return r;
-	    }
-
-
-	    /*
-	     *  ln(-n)        = NaN
-	     *  ln(0)         = -Infinity
-	     *  ln(-0)        = -Infinity
-	     *  ln(1)         = 0
-	     *  ln(Infinity)  = Infinity
-	     *  ln(-Infinity) = NaN
-	     *  ln(NaN)       = NaN
-	     *
-	     *  ln(n) (n != 1) is non-terminating.
-	     *
-	     */
-	    function ln( y, pr ) {
-	        var c, c0, denom, e, num, rep, sd, sum, t, x1, x2,
-	            n = 1,
-	            guard = 10,
-	            x = y,
-	            xc = x['c'],
-	            Decimal = x['constructor'],
-	            one = Decimal['ONE'],
-	            rm = Decimal['rounding'],
-	            precision = Decimal['precision'];
-
-	        // x < 0 or +-Infinity/NaN or 0 or 1.
-	        if ( x['s'] < 0 || !xc || !xc[0] || !x['e'] && xc[0] == 1 && xc.length == 1 ) {
-
-	            return new Decimal( xc && !xc[0] ? -1 / 0 : x['s'] != 1 ? NaN : xc ? 0 : x );
-	        }
-
-	        if ( pr == null ) {
-	            external = false;
-	            sd = precision;
-	        } else {
-	            sd = pr;
-	        }
-
-	        Decimal['precision'] = sd += guard;
-
-	        c = coefficientToString(xc);
-	        c0 = c.charAt(0);
-
-	        if ( Math.abs( e = x['e'] ) < 1.5e15 ) {
-
-	            /*
-	             Argument reduction.
-	             The series converges faster the closer the argument is to 1, so using
-	             ln(a^b) = b * ln(a),   ln(a) = ln(a^b) / b
-	             multiply the argument by itself until the leading digits of the significand are 7, 8,
-	             9, 10, 11, 12 or 13, recording the number of multiplications so the sum of the series
-	             can later be divided by this number, then separate out the power of 10 using
-	             ln(a*10^b) = ln(a) + b*ln(10).
-	             */
-
-	            // max n is 21 ( gives 0.9, 1.0 or 1.1 ) ( 9e15 / 21 = 4.2e14 ).
-	            //while ( c0 < 9 && c0 != 1 || c0 == 1 && c.charAt(1) > 1 ) {
-	            // max n is 6 ( gives 0.7 - 1.3 )
-	            while ( c0 < 7 && c0 != 1 || c0 == 1 && c.charAt(1) > 3 ) {
-	                x = x['times'](y);
-	                c = coefficientToString( x['c'] );
-	                c0 = c.charAt(0);
-	                n++;
-	            }
-
-	            e = x['e'];
-
-	            if ( c0 > 1 ) {
-	                x = new Decimal( '0.' + c );
-	                e++;
-	            } else {
-	                x = new Decimal( c0 + '.' + c.slice(1) );
-	            }
-	        } else {
-
-	            /*
-	             The argument reduction method above may result in overflow if the argument y is a
-	             massive number with exponent >= 1500000000000000 ( 9e15 / 6 = 1.5e15 ), so instead
-	             recall this function using ln(x*10^e) = ln(x) + e*ln(10).
-	             */
-	            x = new Decimal( c0 + '.' + c.slice(1) );
-
-	            if ( sd + 2 > LN10.length ) {
-	                ifExceptionsThrow( Decimal, 1, sd + 2, 'ln' );
-	            }
-
-	            x = ln( x, sd - guard )['plus'](
-	                new Decimal( LN10.slice( 0, sd + 2 ) )['times']( e + '' )
-	            );
-
-	            Decimal['precision'] = precision;
-
-	            return pr == null ? rnd( x, precision, rm, external = true ) : x;
-	        }
-
-	        // x1 is x reduced to a value near 1.
-	        x1 = x;
-
-	        /*
-	         Taylor series.
-	         ln(y) = ln( (1 + x)/(1 - x) ) = 2( x + x^3/3 + x^5/5 + x^7/7 + ... )
-	         where
-	         x = (y - 1)/(y + 1)              ( |x| < 1 )
-	         */
-	        sum = num = x = div( x['minus'](one), x['plus'](one), sd, 1 );
-	        x2 = rnd( x['times'](x), sd, 1 );
-	        denom = 3;
-
-	        for ( ; ; ) {
-	            num = rnd( num['times'](x2), sd, 1 );
-	            t = sum['plus']( div( num, new Decimal(denom), sd, 1 ) );
-
-	            if ( coefficientToString( t['c'] ).slice( 0, sd ) ===
-	                 coefficientToString( sum['c'] ).slice( 0, sd ) ) {
-	                sum = sum['times'](2);
-
-	                /*
-	                 Reverse the argument reduction. Check that e is not 0 because, as well as
-	                 preventing an unnecessary calculation, -0 + 0 = +0 and to ensure correct
-	                 rounding later -0 needs to stay -0.
-	                 */
-	                if ( e !== 0 ) {
-
-	                    if ( sd + 2 > LN10.length ) {
-	                        ifExceptionsThrow( Decimal, 1, sd + 2, 'ln' );
-	                    }
-
-	                    sum = sum['plus'](
-	                        new Decimal( LN10.slice( 0, sd + 2 ) )['times']( e + '' )
-	                    );
-	                }
-
-	                sum = div( sum, new Decimal(n), sd, 1 );
-
-	                /*
-	                 Is rm > 3 and the first 4 rounding digits 4999, or rm < 4 (or the summation has
-	                 been repeated previously) and the first 4 rounding digits 9999?
-
-	                 If so, restart the summation with a higher precision, otherwise
-	                 e.g. with precision: 12, rounding: 1
-	                 ln(135520028.6126091714265381533) = 18.7246299999 when it should be 18.72463.
-
-	                 sd - guard is the index of first rounding digit.
-	                 */
-	                if ( pr == null ) {
-
-	                    if ( checkRoundingDigits( sum['c'], sd - guard, rm, rep ) ) {
-	                        Decimal['precision'] = sd += guard;
-	                        t = num = x = div( x1['minus'](one), x1['plus'](one), sd, 1 );
-	                        x2 = rnd( x['times'](x), sd, 1 );
-	                        denom = rep = 1;
-	                    } else {
-
-	                        return rnd( sum, Decimal['precision'] = precision, rm, external = true );
-	                    }
-	                } else {
-	                    Decimal['precision'] = precision;
-
-	                    return sum;
-	                }
-	            }
-
-	            sum = t;
-	            denom += 2;
-	        }
-	    }
-
-
-	    /*
-	     * Round x to sd significant digits using rounding mode rm. Check for over/under-flow.
-	     */
-	     function rnd( x, sd, rm, r ) {
-	        var digits, i, j, k, n, rd, xc, xci,
-	            Decimal = x['constructor'];
-
-	        // Don't round if sd is null or undefined.
-	        out: if ( sd != null ) {
-
-	            // Infinity/NaN.
-	            if ( !( xc = x['c'] ) ) {
-
-	                return x;
-	            }
-
-	            /*
-	             rd, the rounding digit, i.e. the digit after the digit that may be rounded up,
-	             n, a base 1e7 number, the element of xc containing rd,
-	             xci, the index of n within xc,
-	             digits, the number of digits of n,
-	             i, what would be the index of rd within n if all the numbers were 7 digits long (i.e. they had leading zeros)
-	             j, if > 0, the actual index of rd within n (if < 0, rd is a leading zero),
-	             nLeadingZeros, the number of leading zeros n would have if it were 7 digits long.
-	             */
-
-	            // Get the length of the first element of the coefficient array xc.
-	            for ( digits = 1, k = xc[0]; k >= 10; k /= 10, digits++ );
-
-	            i = sd - digits;
-
-	            // Is the rounding digit in the first element of xc?
-	            if ( i < 0 ) {
-	                i += LOGBASE;
-	                j = sd;
-	                n = xc[ xci = 0 ];
-
-	                // Get the rounding digit at index j of n.
-	                rd = n / mathpow( 10, digits - j - 1 ) % 10 | 0;
-	            } else {
-	                xci = Math.ceil( ( i + 1 ) / LOGBASE );
-
-	                if ( xci >= xc.length ) {
-
-	                    if (r) {
-
-	                        // Needed by exp, ln and sqrt.
-	                        for ( ; xc.length <= xci; xc.push(0) );
-
-	                        n = rd = 0;
-	                        digits = 1;
-	                        i %= LOGBASE;
-	                        j = i - LOGBASE + 1;
-	                    } else {
-
-	                      break out;
-	                    }
-	                } else {
-	                    n = k = xc[xci];
-
-	                    // Get the number of digits of n.
-	                    for ( digits = 1; k >= 10; k /= 10, digits++ );
-
-	                    // Get the index of rd within n.
-	                    i %= LOGBASE;
-
-	                    // Get the index of rd within n, adjusted for leading zeros.
-	                    // The number of leading zeros of n is given by LOGBASE - digits.
-	                    j = i - LOGBASE + digits;
-
-	                    // Get the rounding digit at index j of n.
-	                    // Floor using Math.floor instead of | 0 as rd may be outside int range.
-	                    rd = j < 0 ? 0 : mathfloor( n / mathpow( 10, digits - j - 1 ) % 10 );
-	                }
-	            }
-
-	            r = r || sd < 0 ||
-	              // Are there any non-zero digits after the rounding digit?
-	              xc[xci + 1] != null || ( j < 0 ? n : n % mathpow( 10, digits - j - 1 ) );
-
-	            /*
-	             The expression  n % mathpow( 10, digits - j - 1 )  returns all the digits of n to the
-	             right of the digit at (left-to-right) index j,
-	             e.g. if n is 908714 and j is 2, the expression will give 714.
-	             */
-
-	            r = rm < 4
-	              ? ( rd || r ) && ( rm == 0 || rm == ( x['s'] < 0 ? 3 : 2 ) )
-	              : rd > 5 || rd == 5 && ( rm == 4 || r ||
-	                // Check whether the digit to the left of the rounding digit is odd.
-	                rm == 6 && ( ( i > 0 ? j > 0 ? n / mathpow( 10, digits - j ) : 0 : xc[xci - 1] ) % 10 ) & 1 ||
-	                  rm == ( x['s'] < 0 ? 8 : 7 ) );
-
-	            if ( sd < 1 || !xc[0] ) {
-	                xc.length = 0;
-
-	                if (r) {
-
-	                    // Convert sd to decimal places.
-	                    sd -= x['e'] + 1;
-
-	                    // 1, 0.1, 0.01, 0.001, 0.0001 etc.
-	                    xc[0] = mathpow( 10, ( LOGBASE - sd % LOGBASE ) % LOGBASE );
-	                    x['e'] = -sd || 0;
-	                } else {
-
-	                    // Zero.
-	                    xc[0] = x['e'] = 0;
-	                }
-
-	                return x;
-	            }
-
-	            // Remove excess digits.
-
-	            if ( i == 0 ) {
-	                xc.length = xci;
-	                k = 1;
-	                xci--;
-	            } else {
-	                xc.length = xci + 1;
-	                k = mathpow( 10, LOGBASE - i );
-
-	                // E.g. 56700 becomes 56000 if 7 is the rounding digit.
-	                // j > 0 means i > number of leading zeros of n.
-	                xc[xci] = j > 0 ? ( n / mathpow( 10, digits - j ) % mathpow( 10, j ) | 0 ) * k : 0;
-	            }
-
-	            // Round up?
-	            if (r) {
-
-	                for ( ; ; ) {
-
-	                    // Is the digit to be rounded up in the first element of xc?
-	                    if ( xci == 0 ) {
-
-	                        // i will be the length of xc[0] before k is added.
-	                        for ( i = 1, j = xc[0]; j >= 10; j /= 10, i++ );
-
-	                        j = xc[0] += k;
-
-	                        for ( k = 1; j >= 10; j /= 10, k++ );
-
-	                        // if i != k the length has increased.
-	                        if ( i != k ) {
-	                            x['e']++;
-
-	                            if ( xc[0] == BASE ) {
-	                                xc[0] = 1;
-	                            }
-	                        }
-
-	                        break;
-	                    } else {
-	                        xc[xci] += k;
-
-	                        if ( xc[xci] != BASE ) {
-
-	                            break;
-	                        }
-
-	                        xc[xci--] = 0;
-	                        k = 1;
-	                    }
-	                }
-	            }
-
-	            // Remove trailing zeros.
-	            for ( i = xc.length; xc[--i] === 0; xc.pop() );
-	        }
-
-	        if (external) {
-
-	            // Overflow?
-	            if ( x['e'] > Decimal['maxE'] ) {
-
-	                // Infinity.
-	                x['c'] = x['e'] = null;
-
-	            // Underflow?
-	            } else if ( x['e'] < Decimal['minE'] ) {
-
-	                // Zero.
-	                x['c'] = [ x['e'] = 0 ];
-	            }
-	        }
-
-	        return x;
-	    }
-
-
-	    decimal = (function () {
-
-
-	        // Private functions used by static Decimal methods.
-
-
-	        /*
-	         *  The following emulations or wrappers of Math object functions are currently
-	         *  commented-out and not in the public API.
-	         *
-	         *  abs
-	         *  acos
-	         *  asin
-	         *  atan
-	         *  atan2
-	         *  ceil
-	         *  cos
-	         *  floor
-	         *  round
-	         *  sin
-	         *  tan
-	         *  trunc
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the absolute value of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function abs(n) { return new this(n)['abs']() }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the arccosine in radians of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function acos(n) { return new this( Math.acos(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the arcsine in radians of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function asin(n) { return new this( Math.asin(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the arctangent in radians of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function atan(n) { return new this( Math.atan(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the arctangent in radians of y/x in the range
-	         * -PI to PI (inclusive).
-	         *
-	         * y {number|string|Decimal} The y-coordinate.
-	         * x {number|string|Decimal} The x-coordinate.
-	         *
-	        function atan2( y, x ) { return new this( Math.atan2( y, x ) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is n round to an integer using ROUND_CEIL.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function ceil(n) { return new this(n)['ceil']() }
-	         */
-
-
-	        /*
-	         * Configure global settings for a Decimal constructor.
-	         *
-	         * obj is an object with any of the following properties,
-	         *
-	         *   precision  {number}
-	         *   rounding   {number}
-	         *   toExpNeg   {number}
-	         *   toExpPos   {number}
-	         *   minE       {number}
-	         *   maxE       {number}
-	         *   errors     {boolean|number}
-	         *   crypto     {boolean|number}
-	         *   modulo     {number}
-	         *
-	         *   format     {object}     See Decimal.prototype.toFormat
-	         *      decimalSeparator       {string}
-	         *      groupSeparator         {string}
-	         *      groupSize              {number}
-	         *      secondaryGroupSize     {number}
-	         *      fractionGroupSeparator {string}
-	         *      fractionGroupSize      {number}
-	         *
-	         *   A format object will replace the existing Decimal.format object without any property
-	         *   checking.
-	         *
-	         * E.g.
-	         *   Decimal.config({ precision: 20, rounding: 4 })
-	         *
-	         */
-	        function config(obj) {
-	            var p, u, v,
-	                Decimal = this,
-	                c = 'config',
-	                parse = Decimal['errors'] ? parseInt : parseFloat;
-
-	            if ( obj == u || typeof obj != 'object' &&
-	              // 'config() object expected: {obj}'
-	              !ifExceptionsThrow( Decimal, 'object expected', obj, c ) ) {
-
-	                return Decimal;
-	            }
-
-	            // precision {number} Integer, 1 to MAX_DIGITS inclusive.
-	            if ( ( v = obj[ p = 'precision' ] ) != u ) {
-
-	                if ( !( outOfRange = v < 1 || v > MAX_DIGITS ) && parse(v) == v ) {
-	                    Decimal[p] = v | 0;
-	                } else {
-
-	                    // 'config() precision not an integer: {v}'
-	                    // 'config() precision out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // rounding {number} Integer, 0 to 8 inclusive.
-	            if ( ( v = obj[ p = 'rounding' ] ) != u ) {
-
-	                if ( !( outOfRange = v < 0 || v > 8 ) && parse(v) == v ) {
-	                    Decimal[p] = v | 0;
-	                } else {
-
-	                    // 'config() rounding not an integer: {v}'
-	                    // 'config() rounding out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // toExpNeg {number} Integer, -EXP_LIMIT to 0 inclusive.
-	            if ( ( v = obj[ p = 'toExpNeg' ] ) != u ) {
-
-	                if ( !( outOfRange = v < -EXP_LIMIT || v > 0 ) && parse(v) == v ) {
-	                    Decimal[p] = mathfloor(v);
-	                } else {
-
-	                    // 'config() toExpNeg not an integer: {v}'
-	                    // 'config() toExpNeg out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // toExpPos {number} Integer, 0 to EXP_LIMIT inclusive.
-	            if ( ( v = obj[ p = 'toExpPos' ] ) != u ) {
-
-	                if ( !( outOfRange = v < 0 || v > EXP_LIMIT ) && parse(v) == v ) {
-	                    Decimal[p] = mathfloor(v);
-	                } else {
-
-	                    // 'config() toExpPos not an integer: {v}'
-	                    // 'config() toExpPos out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	             // minE {number} Integer, -EXP_LIMIT to 0 inclusive.
-	            if ( ( v = obj[ p = 'minE' ] ) != u ) {
-
-	                if ( !( outOfRange = v < -EXP_LIMIT || v > 0 ) && parse(v) == v ) {
-	                    Decimal[p] = mathfloor(v);
-	                } else {
-
-	                    // 'config() minE not an integer: {v}'
-	                    // 'config() minE out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // maxE {number} Integer, 0 to EXP_LIMIT inclusive.
-	            if ( ( v = obj[ p = 'maxE' ] ) != u ) {
-
-	                if ( !( outOfRange = v < 0 || v > EXP_LIMIT ) && parse(v) == v ) {
-	                    Decimal[p] = mathfloor(v);
-	                } else {
-
-	                    // 'config() maxE not an integer: {v}'
-	                    // 'config() maxE out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // errors {boolean|number} true, false, 1 or 0.
-	            if ( ( v = obj[ p = 'errors' ] ) != u ) {
-
-	                if ( v === !!v || v === 1 || v === 0 ) {
-	                    outOfRange = id = 0;
-	                    Decimal[p] = !!v;
-	                } else {
-
-	                    // 'config() errors not a boolean or binary digit: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 1 );
-	                }
-	            }
-
-	            // crypto {boolean|number} true, false, 1 or 0.
-	            if ( ( v = obj[ p = 'crypto' ] ) != u ) {
-
-	                if ( v === !!v || v === 1 || v === 0 ) {
-	                    Decimal[p] = !!( v && crypto && typeof crypto == 'object' );
-	                } else {
-
-	                    // 'config() crypto not a boolean or binary digit: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 1 );
-	                }
-	            }
-
-	            // modulo {number} Integer, 0 to 9 inclusive.
-	            if ( ( v = obj[ p = 'modulo' ] ) != u ) {
-
-	                if ( !( outOfRange = v < 0 || v > 9 ) && parse(v) == v ) {
-	                    Decimal[p] = v | 0;
-	                } else {
-
-	                    // 'config() modulo not an integer: {v}'
-	                    // 'config() modulo out of range: {v}'
-	                    ifExceptionsThrow( Decimal, p, v, c, 0 );
-	                }
-	            }
-
-	            // format {object}
-	            if ( ( obj = obj[ p = 'format' ] ) != u ) {
-
-	                if ( typeof obj == 'object' ) {
-	                    Decimal[p] = obj;
-	                } else {
-
-	                    // 'config() format object expected: {obj}'
-	                    ifExceptionsThrow( Decimal, 'format object expected', obj, c );
-	                }
-	            }
-
-	            return Decimal;
-	        }
-
-
-	        /*
-	         * Return a new Decimal whose value is the cosine of n.
-	         *
-	         * n {number|string|Decimal} A number given in radians.
-	         *
-	        function cos(n) { return new this( Math.cos(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the exponential of n,
-	         *
-	         * n {number|string|Decimal} The power to which to raise the base of the natural log.
-	         *
-	         */
-	        function exp(n) { return new this(n)['exp'](); }
-
-
-	        /*
-	         * Return a new Decimal whose value is n round to an integer using ROUND_FLOOR.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function floor(n) { return new this(n)['floor']() }
-	         */
-
-
-
-
-	        /*
-	         * Return a new Decimal whose value is the natural logarithm of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	         */
-	        function ln(n) { return new this(n)['ln'](); }
-
-
-	        /*
-	         * Return a new Decimal whose value is the log of x to the base y, or to base 10 if no
-	         * base is specified.
-	         *
-	         * log[y](x)
-	         *
-	         * x {number|string|Decimal} The argument of the logarithm.
-	         * y {number|string|Decimal} The base of the logarithm.
-	         *
-	         */
-	        function log( x, y ) { return new this(x)['log'](y); }
-
-
-	        /*
-	         * Handle max and min. ltgt is 'lt' or 'gt'.
-	         */
-	        function maxOrMin( Decimal, args, ltgt ) {
-	            var m, n,
-	                i = 0;
-
-	            if ( toString.call( args[0] ) == '[object Array]' ) {
-	                args = args[0];
-	            }
-
-	            m = new Decimal( args[0] );
-
-	            for ( ; ++i < args.length; ) {
-	                n = new Decimal( args[i] );
-
-	                if ( !n['s'] ) {
-	                    m = n;
-
-	                    break;
-	                } else if ( m[ltgt](n) ) {
-	                    m = n;
-	                }
-	            }
-
-	            return m;
-	        }
-
-
-	        /*
-	         * Return a new Decimal whose value is the maximum of the arguments.
-	         *
-	         * arguments {number|string|Decimal}
-	         *
-	         */
-	        function max() { return maxOrMin( this, arguments, 'lt' ); }
-
-
-	        /*
-	         * Return a new Decimal whose value is the minimum of the arguments.
-	         *
-	         * arguments {number|string|Decimal}
-	         *
-	         */
-	        function min() { return maxOrMin( this, arguments, 'gt' ); }
-
-
-	        /*
-	         * Parse the value of a new Decimal from a number or string.
-	         */
-	        var parseDecimal = (function () {
-	            var isValid = /^-?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i,
-	                trim = String.prototype.trim ||
-	                  function () { return this.replace(/^\s+|\s+$/g, ''); };
-
-	            return function ( Decimal, x, n, b ) {
-	                var d, e, i, isNum, orig, valid;
-
-	                if ( typeof n != 'string' ) {
-
-	                    // If n is a number, check if minus zero.
-	                    n = ( isNum = typeof n == 'number' || toString.call(n) == '[object Number]' ) &&
-	                        n === 0 && 1 / n < 0 ? '-0' : n + '';
-	                }
-	                orig = n;
-
-	                if ( b == null && isValid.test(n) ) {
-
-	                    // Determine sign.
-	                    x['s'] = n.charCodeAt(0) === 45 ? ( n = n.slice(1), -1 ) : 1;
-
-	                // Either n is not a valid Decimal or a base has been specified.
-	                } else {
-
-	                    /*
-	                     Enable exponential notation to be used with base 10 argument.
-	                     Ensure return value is rounded to precision as with other bases.
-	                     */
-	                    if ( b == 10 ) {
-
-	                        return rnd( new Decimal(n), Decimal['precision'], Decimal['rounding'] );
-	                    }
-
-	                    n = trim.call(n).replace( /^\+(?!-)/, '' );
-
-	                    x['s'] = n.charCodeAt(0) === 45 ? ( n = n.replace( /^-(?!-)/, '' ), -1 ) : 1;
-
-	                    if ( b != null ) {
-
-	                        if ( ( b == (b | 0) || !Decimal['errors'] ) &&
-	                          !( outOfRange = !( b >= 2 && b < 65 ) ) ) {
-	                            d = '[' + NUMERALS.slice( 0, b = b | 0 ) + ']+';
-
-	                           // Remove the `.` from e.g. '1.', and replace e.g. '.1' with '0.1'.
-	                            n = n.replace( /\.$/, '' ).replace( /^\./, '0.' );
-
-	                            // Any number in exponential form will fail due to the e+/-.
-	                            if ( valid = new RegExp(
-	                              '^' + d + '(?:\\.' + d + ')?$', b < 37 ? 'i' : '' ).test(n) ) {
-
-	                                if (isNum) {
-
-	                                    if ( n.replace( /^0\.0*|\./, '' ).length > 15 ) {
-
-	                                        // '{method} number type has more than 15 significant digits: {n}'
-	                                        ifExceptionsThrow( Decimal, 0, orig );
-	                                    }
-
-	                                    // Prevent later check for length on converted number.
-	                                    isNum = !isNum;
-	                                }
-	                                n = convertBase( Decimal, n, 10, b, x['s'] );
-
-	                            } else if ( n != 'Infinity' && n != 'NaN' ) {
-
-	                                // '{method} not a base {b} number: {n}'
-	                                ifExceptionsThrow( Decimal, 'not a base ' + b + ' number', orig );
-	                                n = 'NaN';
-	                            }
-	                        } else {
-
-	                            // '{method} base not an integer: {b}'
-	                            // '{method} base out of range: {b}'
-	                            ifExceptionsThrow( Decimal, 'base', b, 0, 0 );
-
-	                            // Ignore base.
-	                            valid = isValid.test(n);
-	                        }
-	                    } else {
-	                        valid = isValid.test(n);
-	                    }
-
-	                    if ( !valid ) {
-
-	                        // Infinity/NaN
-	                        x['c'] = x['e'] = null;
-
-	                        // NaN
-	                        if ( n != 'Infinity' ) {
-
-	                            // No exception on NaN.
-	                            if ( n != 'NaN' ) {
-
-	                                // '{method} not a number: {n}'
-	                                ifExceptionsThrow( Decimal, 'not a number', orig );
-	                            }
-	                            x['s'] = null;
-	                        }
-	                        id = 0;
-
-	                        return x;
-	                    }
-	                }
-
-	                // Decimal point?
-	                if ( ( e = n.indexOf('.') ) > -1 ) {
-	                    n = n.replace( '.', '' );
-	                }
-
-	                // Exponential form?
-	                if ( ( i = n.search(/e/i) ) > 0 ) {
-
-	                    // Determine exponent.
-	                    if ( e < 0 ) {
-	                        e = i;
-	                    }
-	                    e += +n.slice( i + 1 );
-	                    n = n.substring( 0, i );
-
-	                } else if ( e < 0 ) {
-
-	                    // Integer.
-	                    e = n.length;
-	                }
-
-	                // Determine leading zeros.
-	                for ( i = 0; n.charCodeAt(i) === 48; i++ );
-
-	                // Determine trailing zeros.
-	                for ( b = n.length; n.charCodeAt(--b) === 48; );
-
-	                n = n.slice( i, b + 1 );
-
-	                if (n) {
-	                    b = n.length;
-
-	                    // Disallow numbers with over 15 significant digits if number type.
-	                    if ( isNum && b > 15 ) {
-
-	                        // '{method} number type has more than 15 significant digits: {n}'
-	                        ifExceptionsThrow( Decimal, 0, orig );
-	                    }
-
-	                    x['e'] = e = e - i - 1;
-	                    x['c'] = [];
-
-	                    // Transform base
-
-	                    // e is the base 10 exponent.
-	                    // i is where to slice n to get the first element of the coefficient array.
-	                    i = ( e + 1 ) % LOGBASE;
-
-	                    if ( e < 0 ) {
-	                        i += LOGBASE;
-	                    }
-
-	                    // b is n.length.
-	                    if ( i < b ) {
-
-	                        if (i) {
-	                            x['c'].push( +n.slice( 0, i ) );
-	                        }
-
-	                        for ( b -= LOGBASE; i < b; ) {
-	                            x['c'].push( +n.slice( i, i += LOGBASE ) );
-	                        }
-
-	                        n = n.slice(i);
-	                        i = LOGBASE - n.length;
-	                    } else {
-	                        i -= b;
-	                    }
-
-	                    for ( ; i--; n += '0' );
-
-	                    x['c'].push( +n );
-
-	                    if (external) {
-
-	                        // Overflow?
-	                        if ( x['e'] > Decimal['maxE'] ) {
-
-	                            // Infinity.
-	                            x['c'] = x['e'] = null;
-
-	                        // Underflow?
-	                        } else if ( x['e'] < Decimal['minE'] ) {
-
-	                            // Zero.
-	                            x['c'] = [ x['e'] = 0 ];
-	                        }
-	                    }
-	                } else {
-
-	                    // Zero.
-	                    x['c'] = [ x['e'] = 0 ];
-	                }
-	                id = 0;
-
-	                return x;
-	            };
-	        })();
-
-
-	        /*
-	         * Return a new Decimal whose value is x raised to the power y.
-	         *
-	         * x {number|string|Decimal} The base.
-	         * y {number|string|Decimal} The exponent.
-	         *
-	         */
-	        function pow( x, y ) { return new this(x)['pow'](y); }
-
-
-	        /*
-	         * Returns a new Decimal with a random value equal to or greater than 0 and less than 1, and
-	         * with dp, or Decimal.precision if dp is omitted, decimal places (or less if trailing
-	         * zeros are produced).
-	         *
-	         * [dp] {number} Decimal places. Integer, 0 to MAX_DIGITS inclusive.
-	         *
-	         */
-	        function random(dp) {
-	            var a, n, v,
-	                i = 0,
-	                r = [],
-	                Decimal = this,
-	                rand = new Decimal( Decimal['ONE'] );
-
-	            if ( dp == null || !checkArg( rand, dp, 'random' ) ) {
-	                dp = Decimal['precision'];
-	            } else {
-	                dp |= 0;
-	            }
-
-	            n = Math.ceil( dp / LOGBASE );
-
-	            if ( Decimal['crypto'] ) {
-
-	                // Browsers supporting crypto.getRandomValues.
-	                if ( crypto && crypto['getRandomValues'] ) {
-
-	                    a = crypto['getRandomValues']( new Uint32Array(n) );
-
-	                    for ( ; i < n; ) {
-	                        v = a[i];
-
-	                        // 0 <= v < 4294967296
-	                        // Probability that v >= 4.29e9, is 4967296 / 4294967296 = 0.00116 (1 in 865).
-	                        if ( v >= 4.29e9 ) {
-
-	                            a[i] = crypto['getRandomValues']( new Uint32Array(1) )[0];
-	                        } else {
-
-	                            // 0 <= v <= 4289999999
-	                            // 0 <= ( v % 1e7 ) <= 9999999
-	                            r[i++] = v % 1e7;
-	                        }
-	                    }
-
-	                // Node.js supporting crypto.randomBytes.
-	                } else if ( crypto && crypto['randomBytes'] ) {
-
-	                    // buffer
-	                    a = crypto['randomBytes']( n *= 4 );
-
-	                    for ( ; i < n; ) {
-
-	                        // 0 <= v < 2147483648
-	                        v = a[i] + ( a[i + 1] << 8 ) + ( a[i + 2] << 16 ) +
-	                            ( ( a[i + 3] & 0x7f ) << 24 );
-
-	                        // Probability that v >= 2.14e9, is 7483648 / 2147483648 = 0.0035 (1 in 286).
-	                        if ( v >= 2.14e9 ) {
-	                            crypto['randomBytes'](4).copy( a, i );
-	                        } else {
-
-	                            // 0 <= v <= 2139999999
-	                            // 0 <= ( v % 1e7 ) <= 9999999
-	                            r.push( v % 1e7 );
-	                            i += 4;
-	                        }
-	                    }
-	                    i = n / 4;
-
-	                } else {
-	                    ifExceptionsThrow( Decimal, 'crypto unavailable', crypto, 'random' );
-	                }
-	            }
-
-	            // Use Math.random: either Decimal.crypto is false or crypto is unavailable and errors is false.
-	            if (!i) {
-
-	                for ( ; i < n; ) {
-	                    r[i++] = Math.random() * 1e7 | 0;
-	                }
-	            }
-
-	            n = r[--i];
-	            dp %= LOGBASE;
-
-	            // Convert trailing digits to zeros according to dp.
-	            if ( n && dp ) {
-	                v = mathpow( 10, LOGBASE - dp );
-	                r[i] = ( n / v | 0 ) * v;
-	            }
-
-	            // Remove trailing elements which are zero.
-	            for ( ; r[i] === 0; i-- ) {
-	                r.pop();
-	            }
-
-	            // Zero?
-	            if ( i < 0 ) {
-	                r = [ n = 0 ];
-	            } else {
-	                n = -1;
-
-	                // Remove leading elements which are zero and adjust exponent accordingly.
-	                for ( ; r[0] === 0; ) {
-	                    r.shift();
-	                    n -= LOGBASE;
-	                }
-
-	                // Count the digits of the first element of r to determine leading zeros.
-	                for ( i = 1, v = r[0]; v >= 10; ) {
-	                    v /= 10;
-	                    i++;
-	                }
-
-	                // Adjust the exponent for leading zeros of the first element of r.
-	                if ( i < LOGBASE ) {
-	                    n -= LOGBASE - i;
-	                }
-	            }
-
-	            rand['e'] = n;
-	            rand['c'] = r;
-
-	            return rand;
-	        }
-
-
-	        /*
-	         * Return a new Decimal whose value is n round to an integer using rounding mode rounding.
-	         *
-	         * To emulate Math.round, set rounding to 7 (ROUND_HALF_CEIL).
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function round(n) {
-	            var x = new this(n);
-
-	            return rnd( x, x['e'] + 1, this['rounding'] );
-	        }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the sine of n.
-	         *
-	         * n {number|string|Decimal} A number given in radians.
-	         *
-	        function sin(n) { return new this( Math.sin(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is the square root of n.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	         */
-	        function sqrt(n) { return new this(n)['sqrt'](); }
-
-
-	        /*
-	         * Return a new Decimal whose value is the tangent of n.
-	         *
-	         * n {number|string|Decimal} A number given in radians.
-	         *
-	        function tan(n) { return new this( Math.tan(n) + '' ) }
-	         */
-
-
-	        /*
-	         * Return a new Decimal whose value is n truncated to an integer.
-	         *
-	         * n {number|string|Decimal}
-	         *
-	        function trunc(n) { return new this(n)['trunc']() }
-	         */
-
-
-	        /*
-	         * Create and return a Decimal constructor.
-	         *
-	         */
-	        function decimalFactory(obj) {
-
-	            /*
-	             * The Decimal constructor and exported function.
-	             * Create and return a new instance of a Decimal object.
-	             *
-	             * n {number|string|Decimal} A numeric value.
-	             * [b] {number} The base of n. Integer, 2 to 64 inclusive.
-	             *
-	             */
-	            function Decimal( n, b ) {
-	                var x = this;
-
-	                // Constructor called without new.
-	                if ( !( x instanceof Decimal ) ) {
-	                    ifExceptionsThrow( Decimal, 'Decimal called without new', n );
-
-	                    return new Decimal( n, b );
-	                }
-
-	                // Retain a reference to this Decimal constructor, and shadow
-	                // Decimal.prototype.constructor which points to Object.
-	                x['constructor'] = Decimal;
-
-	                // Duplicate.
-	                if ( n instanceof Decimal ) {
-
-	                    if ( b == null ) {
-	                        id = 0;
-	                        x['s'] = n['s'];
-	                        x['e'] = n['e'];
-	                        x['c'] = ( n = n['c'] ) ? n.slice() : n;
-
-	                        return x;
-	                    } else if ( b == 10 ) {
-
-	                        return rnd( new Decimal(n), Decimal['precision'], Decimal['rounding'] );
-	                    } else {
-	                        n += '';
-	                    }
-	                }
-
-	                return parseDecimal( Decimal, x, n, b );
-	            }
-
-
-	            /* ************************ CONSTRUCTOR DEFAULT PROPERTIES ************************** */
-
-	            /*
-	             These default values must be integers within the stated ranges (inclusive).
-	             Most of these values can be changed during run-time using Decimal.config.
-	             */
-
-	            /*
-	             The maximum number of significant digits of the result of a calculation or base
-	             conversion.
-	             E.g.  Decimal.config({ precision: 20 })
-	             */
-	            Decimal['precision'] = 20;                        // 1 to MAX_DIGITS
-
-	            /*
-	             The rounding mode used when rounding to precision.
-
-	             ROUND_UP         0 Away from zero.
-	             ROUND_DOWN       1 Towards zero.
-	             ROUND_CEIL       2 Towards +Infinity.
-	             ROUND_FLOOR      3 Towards -Infinity.
-	             ROUND_HALF_UP    4 Towards nearest neighbour. If equidistant, up.
-	             ROUND_HALF_DOWN  5 Towards nearest neighbour. If equidistant, down.
-	             ROUND_HALF_EVEN  6 Towards nearest neighbour. If equidistant, towards even neighbour.
-	             ROUND_HALF_CEIL  7 Towards nearest neighbour. If equidistant, towards +Infinity.
-	             ROUND_HALF_FLOOR 8 Towards nearest neighbour. If equidistant, towards -Infinity.
-
-	             E.g.
-	             Decimal.rounding = 4;
-	             Decimal.rounding = Decimal.ROUND_HALF_UP;
-	             */
-	            Decimal['rounding'] = 4;                          // 0 to 8
-
-	            /*
-	             The modulo mode used when calculating the modulus: a mod n.
-	             The quotient (q = a / n) is calculated according to the corresponding rounding mode.
-	             The remainder (r) is calculated as: r = a - n * q.
-
-	             UP         0 The remainder is positive if the dividend is negative, else is negative.
-	             DOWN       1 The remainder has the same sign as the dividend.
-	                          This modulo mode is commonly known as "truncated division" and matches
-	                          as closely as possible, the behaviour of JS remainder operator (a % n).
-	             FLOOR      3 The remainder has the same sign as the divisor (Python %).
-	             HALF_EVEN  6 This modulo mode implements the IEEE 754 remainder function.
-	             EUCLID     9 Euclidian division. q = sign(n) * floor(a / abs(n)).
-	                          The remainder is always positive.
-
-	             The above modes - truncated division, floored division, Euclidian division and IEEE 754
-	             remainder - are commonly used for the modulus operation. Although any other of the
-	             rounding modes can be used, they may not give useful results.
-	             */
-	            Decimal['modulo'] = 1;                            // 0 to 9
-
-	            // The exponent value at and beneath which toString returns exponential notation.
-	            // Number type: -7
-	            Decimal['toExpNeg'] = -7;                         // 0 to -EXP_LIMIT
-
-	            // The exponent value at and above which toString returns exponential notation.
-	            // Number type: 21
-	            Decimal['toExpPos'] = 21;                         // 0 to EXP_LIMIT
-
-	            // The minimum exponent value, beneath which underflow to zero occurs.
-	            // Number type: -324  (5e-324)
-	            Decimal['minE'] = -EXP_LIMIT;                     // -1 to -EXP_LIMIT
-
-	            // The maximum exponent value, above which overflow to Infinity occurs.
-	            // Number type:  308  (1.7976931348623157e+308)
-	            Decimal['maxE'] = EXP_LIMIT;                      // 1 to EXP_LIMIT
-
-	            // Whether Decimal Errors are ever thrown.
-	            Decimal['errors'] = true;                         // true/false
-
-	            // Whether to use cryptographically-secure random number generation, if available.
-	            Decimal['crypto'] = false;                        // true/false
-
-	            // Format specification for the Decimal.prototype.toFormat method
-	            Decimal.format = {
-	                decimalSeparator: '.',
-	                groupSeparator: ',',
-	                groupSize: 3,
-	                secondaryGroupSize: 0,
-	                fractionGroupSeparator: '\xA0',              // non-breaking space
-	                fractionGroupSize: 0
-	            };
-
-
-	            /* ********************** END OF CONSTRUCTOR DEFAULT PROPERTIES ********************* */
-
-
-	            Decimal.prototype = P;
-
-	            Decimal['ONE'] = new Decimal(1);
-
-	            /*
-	            // Pi to 80 s.d.
-	            Decimal['PI'] = new Decimal(
-	                '3.1415926535897932384626433832795028841971693993751058209749445923078164062862089'
-	            );
-	             */
-
-	            Decimal['ROUND_UP'] = 0;
-	            Decimal['ROUND_DOWN'] = 1;
-	            Decimal['ROUND_CEIL'] = 2;
-	            Decimal['ROUND_FLOOR'] = 3;
-	            Decimal['ROUND_HALF_UP'] = 4;
-	            Decimal['ROUND_HALF_DOWN'] = 5;
-	            Decimal['ROUND_HALF_EVEN'] = 6;
-	            Decimal['ROUND_HALF_CEIL'] = 7;
-	            Decimal['ROUND_HALF_FLOOR'] = 8;
-
-	            // modulo mode
-	            Decimal['EUCLID'] = 9;
-
-	            //Decimal['abs'] = abs;
-	            //Decimal['acos'] = acos;
-	            //Decimal['asin'] = asin;
-	            //Decimal['atan'] = atan;
-	            //Decimal['atan2'] = atan2;
-	            //Decimal['ceil'] = ceil;
-	            //Decimal['cos'] = cos;
-	            //Decimal['floor'] = floor;
-	            //Decimal['round'] = round;
-	            //Decimal['sin'] = sin;
-	            //Decimal['tan'] = tan;
-	            //Decimal['trunc'] = trunc;
-
-	            Decimal['config'] = config;
-	            Decimal['constructor'] = decimalFactory;
-	            Decimal['exp'] = exp;
-	            Decimal['ln'] = ln;
-	            Decimal['log'] = log;
-	            Decimal['max'] = max;
-	            Decimal['min'] = min;
-	            Decimal['pow'] = pow;
-	            Decimal['sqrt'] = sqrt;
-	            Decimal['random'] = random;
-
-	            if ( obj != null ) {
-	                Decimal['config'](obj);
-	            }
-
-	            return Decimal;
-	        }
-
-	        return decimalFactory();
-	    })();
-
-
-	    // Export.
-
-
-	    // AMD.
-	    if ( true ) {
-
-	        !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
-	            return decimal;
-	        }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-	    // Node and other environments that support module.exports.
-	    } else if ( typeof module != 'undefined' && module.exports ) {
-	        module.exports = decimal;
-
-	        if ( !crypto ) {
-
-	            try {
-	                crypto = require('crypto');
-	            } catch (e) {}
-	        }
-
-	    // Browser.
-	    } else {
-	        noConflict = global['Decimal'];
-
-	        decimal['noConflict'] = function () {
-	            global['Decimal'] = noConflict;
-
-	            return decimal;
-	        };
-
-	        global['Decimal'] = decimal;
-	    }
-	})(this);
-
-
-/***/ },
-/* 674 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(653);
-
-	var slice = _require.slice;
-
-	var _require2 = __webpack_require__(662);
-
-	var Hash160 = _require2.Hash160;
-
-	var ISO_REGEX = /^[A-Z0-9]{3}$/;
-	var HEX_REGEX = /^[A-F0-9]{40}$/;
-
-	function isoToBytes(iso) {
-	  var bytes = new Uint8Array(20);
-	  if (iso !== 'XRP') {
-	    var isoBytes = iso.split('').map(function (c) {
-	      return c.charCodeAt(0);
-	    });
-	    bytes.set(isoBytes, 12);
-	  }
-	  return bytes;
-	}
-
-	function isISOCode(val) {
-	  return val.length === 3; // ISO_REGEX.test(val);
-	}
-
-	function isHex(val) {
-	  return HEX_REGEX.test(val);
-	}
-
-	function isStringRepr(val) {
-	  return _.isString(val) && (isISOCode(val) || isHex(val));
-	}
-
-	function isBytesArray(val) {
-	  return val.length === 20;
-	}
-
-	function isValidRepr(val) {
-	  return isStringRepr(val) || isBytesArray(val);
-	}
-
-	function bytesFromRepr(val) {
-	  if (isValidRepr(val)) {
-	    // We assume at this point that we have an object with a length, either 3,
-	    // 20 or 40.
-	    return val.length === 3 ? isoToBytes(val) : val;
-	  }
-	  throw new Error('Unsupported Currency repr: ' + val);
-	}
-
-	var $uper = Hash160.prototype;
-	var Currency = makeClass({
-	  inherits: Hash160,
-	  getters: ['isNative', 'iso'],
-	  statics: {
-	    init: function init() {
-	      this.XRP = new this(new Uint8Array(20));
-	    },
-	    from: function from(val) {
-	      return val instanceof this ? val : new this(bytesFromRepr(val));
-	    }
-	  },
-	  Currency: function Currency(bytes) {
-	    Hash160.call(this, bytes);
-	    this.classify();
-	  },
-	  classify: function classify() {
-	    // We only have a non null iso() property available if the currency can be
-	    // losslessly represented by the 3 letter iso code. If none is available a
-	    // hex encoding of the full 20 bytes is the canonical representation.
-	    var onlyISO = true;
-
-	    var bytes = this._bytes;
-	    var code = slice(this._bytes, 12, 15, Array);
-	    var iso = code.map(function (c) {
-	      return String.fromCharCode(c);
-	    }).join('');
-
-	    for (var i = bytes.length - 1; i >= 0; i--) {
-	      if (bytes[i] !== 0 && !(i === 12 || i === 13 || i === 14)) {
-	        onlyISO = false;
-	        break;
-	      }
-	    }
-	    var lossLessISO = onlyISO && iso !== 'XRP' && ISO_REGEX.test(iso);
-	    this._isNative = onlyISO && _.isEqual(code, [0, 0, 0]);
-	    this._iso = this._isNative ? 'XRP' : lossLessISO ? iso : null;
-	  },
-	  toJSON: function toJSON() {
-	    if (this.iso()) {
-	      return this.iso();
-	    }
-	    return $uper.toJSON.call(this);
-	  }
-	});
-
-	module.exports = {
-	  Currency: Currency
-	};
-
-/***/ },
-/* 675 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(672);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(653);
-
-	var bytesToHex = _require.bytesToHex;
-	var parseBytes = _require.parseBytes;
-	var serializeUIntN = _require.serializeUIntN;
-
-	var _require2 = __webpack_require__(676);
-
-	var UInt = _require2.UInt;
-
-	var HEX_REGEX = /^[A-F0-9]{16}$/;
-
-	var UInt64 = makeClass({
-	  inherits: UInt,
-	  statics: { width: 8 },
-	  UInt64: function UInt64() {
-	    var arg = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
-
-	    var argType = typeof arg;
-	    if (argType === 'number') {
-	      assert(arg >= 0);
-	      this._bytes = new Uint8Array(8);
-	      this._bytes.set(serializeUIntN(arg, 4), 4);
-	    } else if (arg instanceof BN) {
-	      this._bytes = parseBytes(arg.toArray('be', 8), Uint8Array);
-	      this._toBN = arg;
-	    } else {
-	      if (argType === 'string') {
-	        if (!HEX_REGEX.test(arg)) {
-	          throw new Error(arg + ' is not a valid UInt64 hex string');
-	        }
-	      }
-	      this._bytes = parseBytes(arg, Uint8Array);
-	    }
-	    assert(this._bytes.length === 8);
-	  },
-	  toJSON: function toJSON() {
-	    return bytesToHex(this._bytes);
-	  },
-	  valueOf: function valueOf() {
-	    return this.toBN();
-	  },
-	  cached: {
-	    toBN: function toBN() {
-	      return new BN(this._bytes);
-	    }
-	  },
-	  toBytes: function toBytes() {
-	    return this._bytes;
-	  }
-	});
-
-	module.exports = {
-	  UInt64: UInt64
-	};
-
-/***/ },
-/* 676 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(672);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(664);
-
-	var Comparable = _require.Comparable;
-	var SerializedType = _require.SerializedType;
-
-	var _require2 = __webpack_require__(653);
-
-	var serializeUIntN = _require2.serializeUIntN;
-
-	var MAX_VALUES = [0, 255, 65535, 16777215, 4294967295];
-
-	function signum(a, b) {
-	  return a < b ? -1 : a === b ? 0 : 1;
-	}
-
-	var UInt = makeClass({
-	  mixins: [Comparable, SerializedType],
-	  UInt: function UInt() {
-	    var val = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
-
-	    var max = MAX_VALUES[this.constructor.width];
-	    if (val < 0 || !(val <= max)) {
-	      throw new Error(val + ' not in range 0 <= $val <= ' + max);
-	    }
-	    this.val = val;
-	  },
-	  statics: {
-	    width: 0,
-	    fromParser: function fromParser(parser) {
-	      var val = this.width > 4 ? parser.read(this.width) : parser.readUIntN(this.width);
-	      return new this(val);
-	    },
-	    from: function from(val) {
-	      return val instanceof this ? val : new this(val);
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    return this.val;
-	  },
-	  valueOf: function valueOf() {
-	    return this.val;
-	  },
-	  compareTo: function compareTo(other) {
-	    var thisValue = this.valueOf();
-	    var otherValue = other.valueOf();
-	    if (thisValue instanceof BN) {
-	      return otherValue instanceof BN ? thisValue.cmp(otherValue) : thisValue.cmpn(otherValue);
-	    } else if (otherValue instanceof BN) {
-	      return -other.compareTo(this);
-	    }
-	    assert(typeof otherValue === 'number');
-	    return signum(thisValue, otherValue);
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    sink.put(this.toBytes());
-	  },
-	  toBytes: function toBytes() {
-	    return serializeUIntN(this.val, this.constructor.width);
-	  }
-	});
-
-	module.exports = {
-	  UInt: UInt
-	};
-
-/***/ },
-/* 677 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(653);
-
-	var parseBytes = _require.parseBytes;
-
-	var _require2 = __webpack_require__(664);
-
-	var SerializedType = _require2.SerializedType;
-
-	var Blob = makeClass({
-	  mixins: SerializedType,
-	  Blob: function Blob(bytes) {
-	    if (bytes) {
-	      this._bytes = parseBytes(bytes, Uint8Array);
-	    } else {
-	      this._bytes = new Uint8Array(0);
-	    }
-	  },
-	  statics: {
-	    fromParser: function fromParser(parser, hint) {
-	      return new this(parser.read(hint));
-	    },
-	    from: function from(value) {
-	      if (value instanceof this) {
-	        return value;
-	      }
-	      return new this(value);
-	    }
-	  }
-	});
-
-	module.exports = {
-	  Blob: Blob
-	};
-
-/***/ },
-/* 678 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(663);
-
-	var Hash = _require.Hash;
-
-	var Hash128 = makeClass({
-	  inherits: Hash,
-	  statics: { width: 16 }
-	});
-
-	module.exports = {
-	  Hash128: Hash128
-	};
-
-/***/ },
-/* 679 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(663);
-
-	var Hash = _require.Hash;
-
-	var Hash256 = makeClass({
-	  inherits: Hash,
-	  statics: {
-	    width: 32,
-	    init: function init() {
-	      this.ZERO_256 = new this(new Uint8Array(this.width));
-	    }
-	  }
-	});
-
-	module.exports = {
-	  Hash256: Hash256
-	};
-
-/***/ },
-/* 680 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	/* eslint-disable no-unused-expressions */
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(664);
-
-	var SerializedType = _require.SerializedType;
-	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
-
-	var _require2 = __webpack_require__(674);
-
-	var Currency = _require2.Currency;
-
-	var _require3 = __webpack_require__(661);
-
-	var AccountID = _require3.AccountID;
-
-	var PATHSET_END_BYTE = 0x00;
-	var PATH_SEPARATOR_BYTE = 0xFF;
-	var TYPE_ACCOUNT = 0x01;
-	var TYPE_CURRENCY = 0x10;
-	var TYPE_ISSUER = 0x20;
-
-	var Hop = makeClass({
-	  statics: {
-	    from: function from(value) {
-	      if (value instanceof this) {
-	        return value;
-	      }
-	      var hop = new Hop();
-	      value.issuer && (hop.issuer = AccountID.from(value.issuer));
-	      value.account && (hop.account = AccountID.from(value.account));
-	      value.currency && (hop.currency = Currency.from(value.currency));
-	      return hop;
-	    },
-	    parse: function parse(parser, type) {
-	      var hop = new Hop();
-	      type & TYPE_ACCOUNT && (hop.account = AccountID.fromParser(parser));
-	      type & TYPE_CURRENCY && (hop.currency = Currency.fromParser(parser));
-	      type & TYPE_ISSUER && (hop.issuer = AccountID.fromParser(parser));
-	      return hop;
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    var type = this.type();
-	    var ret = {};
-	    type & TYPE_ACCOUNT && (ret.account = this.account.toJSON());
-	    type & TYPE_ISSUER && (ret.issuer = this.issuer.toJSON());
-	    type & TYPE_CURRENCY && (ret.currency = this.currency.toJSON());
-	    return ret;
-	  },
-	  type: function type() {
-	    var type = 0;
-	    this.issuer && (type += TYPE_ISSUER);
-	    this.account && (type += TYPE_ACCOUNT);
-	    this.currency && (type += TYPE_CURRENCY);
-	    return type;
-	  }
-	});
-
-	var Path = makeClass({
-	  inherits: Array,
-	  statics: {
-	    from: function from(value) {
-	      return ensureArrayLikeIs(Path, value).withChildren(Hop);
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    return this.map(function (k) {
-	      return k.toJSON();
-	    });
-	  }
-	});
-
-	var PathSet = makeClass({
-	  mixins: SerializedType,
-	  inherits: Array,
-	  statics: {
-	    from: function from(value) {
-	      return ensureArrayLikeIs(PathSet, value).withChildren(Path);
-	    },
-	    fromParser: function fromParser(parser) {
-	      var pathSet = new this();
-	      var path = undefined;
-	      while (!parser.end()) {
-	        var type = parser.readUInt8();
-	        if (type === PATHSET_END_BYTE) {
-	          break;
-	        }
-	        if (type === PATH_SEPARATOR_BYTE) {
-	          path = null;
-	          continue;
-	        }
-	        if (!path) {
-	          path = new Path();
-	          pathSet.push(path);
-	        }
-	        path.push(Hop.parse(parser, type));
-	      }
-	      return pathSet;
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    return this.map(function (k) {
-	      return k.toJSON();
-	    });
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    var n = 0;
-	    this.forEach(function (path) {
-	      if (n++ !== 0) {
-	        sink.put([PATH_SEPARATOR_BYTE]);
-	      }
-	      path.forEach(function (hop) {
-	        sink.put([hop.type()]);
-	        hop.account && hop.account.toBytesSink(sink);
-	        hop.currency && hop.currency.toBytesSink(sink);
-	        hop.issuer && hop.issuer.toBytesSink(sink);
-	      });
-	    });
-	    sink.put([PATHSET_END_BYTE]);
-	  }
-	});
-
-	module.exports = {
-	  PathSet: PathSet
-	};
-
-/***/ },
-/* 681 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(664);
-
-	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
-	var SerializedType = _require.SerializedType;
-
-	var _require2 = __webpack_require__(645);
-
-	var Field = _require2.Field;
-
-	var _require3 = __webpack_require__(682);
-
-	var STObject = _require3.STObject;
-	var ArrayEndMarker = Field.ArrayEndMarker;
-
-	var STArray = makeClass({
-	  mixins: SerializedType,
-	  inherits: Array,
-	  statics: {
-	    fromParser: function fromParser(parser) {
-	      var array = new STArray();
-	      while (!parser.end()) {
-	        var field = parser.readField();
-	        if (field === ArrayEndMarker) {
-	          break;
-	        }
-	        var outer = new STObject();
-	        outer[field] = parser.readFieldValue(field);
-	        array.push(outer);
-	      }
-	      return array;
-	    },
-	    from: function from(value) {
-	      return ensureArrayLikeIs(STArray, value).withChildren(STObject);
-	    }
-	  },
-	  toJSON: function toJSON() {
-	    return this.map(function (v) {
-	      return v.toJSON();
-	    });
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    this.forEach(function (so) {
-	      return so.toBytesSink(sink);
-	    });
-	  }
-	});
-
-	module.exports = {
-	  STArray: STArray
-	};
-
-/***/ },
-/* 682 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	// const assert = require('assert');
-
-	var _Object$keys = __webpack_require__(655)['default'];
-
-	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(645);
-
-	var Field = _require.Field;
-
-	var _require2 = __webpack_require__(665);
-
-	var BinarySerializer = _require2.BinarySerializer;
-	var ObjectEndMarker = Field.ObjectEndMarker;
-
-	var _require3 = __webpack_require__(664);
-
-	var SerializedType = _require3.SerializedType;
-
-	var STObject = makeClass({
-	  mixins: SerializedType,
-	  statics: {
-	    fromParser: function fromParser(parser, hint) {
-	      var end = typeof hint === 'number' ? parser.pos() + hint : null;
-	      var so = new this();
-	      while (!parser.end(end)) {
-	        var field = parser.readField();
-	        if (field === ObjectEndMarker) {
-	          break;
-	        }
-	        so[field] = parser.readFieldValue(field);
-	      }
-	      return so;
-	    },
-	    from: function from(value) {
-	      if (value instanceof this) {
-	        return value;
-	      }
-	      if (typeof value === 'object') {
-	        return _.transform(value, function (so, val, key) {
-	          var field = Field[key];
-	          if (field) {
-	            so[field] = field.associatedType.from(val);
-	          } else {
-	            so[key] = val;
-	          }
-	        }, new this());
-	      }
-	      throw new Error(value + ' is unsupported');
-	    }
-	  },
-	  fieldKeys: function fieldKeys() {
-	    return _Object$keys(this).map(function (k) {
-	      return Field[k];
-	    }).filter(Boolean);
-	  },
-	  toJSON: function toJSON() {
-	    return _.transform(this, function (result, value, key) {
-	      result[key] = value && value.toJSON ? value.toJSON() : value;
-	    });
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    var _this = this;
-
-	    var filter = arguments.length <= 1 || arguments[1] === undefined ? function () {
-	      return true;
-	    } : arguments[1];
-
-	    var serializer = new BinarySerializer(sink);
-	    var fields = this.fieldKeys();
-	    var sorted = _.sortBy(fields, 'ordinal');
-	    sorted.filter(filter).forEach(function (field) {
-	      var value = _this[field];
-	      if (!field.isSerialized) {
-	        return;
-	      }
-	      serializer.writeFieldAndValue(field, value);
-	    });
-	  }
-	});
-
-	module.exports = {
-	  STObject: STObject
-	};
-
-/***/ },
-/* 683 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(676);
-
-	var UInt = _require.UInt;
-
-	var UInt16 = makeClass({
-	  inherits: UInt,
-	  statics: { width: 2 }
-	});
-
-	module.exports = {
-	  UInt16: UInt16
-	};
-
-/***/ },
-/* 684 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(676);
-
-	var UInt = _require.UInt;
-
-	var UInt32 = makeClass({
-	  inherits: UInt,
-	  statics: { width: 4 }
-	});
-
-	module.exports = {
-	  UInt32: UInt32
-	};
-
-/***/ },
-/* 685 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(676);
-
-	var UInt = _require.UInt;
-
-	var UInt8 = makeClass({
-	  inherits: UInt,
-	  statics: { width: 1 }
-	});
-
-	module.exports = {
-	  UInt8: UInt8
-	};
-
-/***/ },
-/* 686 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(679);
-
-	var Hash256 = _require.Hash256;
-
-	var _require2 = __webpack_require__(664);
-
-	var ensureArrayLikeIs = _require2.ensureArrayLikeIs;
-	var SerializedType = _require2.SerializedType;
-
-	var Vector256 = makeClass({
-	  mixins: SerializedType,
-	  inherits: Array,
-	  statics: {
-	    fromParser: function fromParser(parser, hint) {
-	      var vector256 = new this();
-	      var bytes = hint !== null ? hint : parser.size() - parser.pos();
-	      var hashes = bytes / 32;
-	      for (var i = 0; i < hashes; i++) {
-	        vector256.push(Hash256.fromParser(parser));
-	      }
-	      return vector256;
-	    },
-	    from: function from(value) {
-	      return ensureArrayLikeIs(Vector256, value).withChildren(Hash256);
-	    }
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    this.forEach(function (h) {
-	      return h.toBytesSink(sink);
-	    });
-	  },
-	  toJSON: function toJSON() {
-	    return this.map(function (hash) {
-	      return hash.toJSON();
-	    });
-	  }
-	});
-
-	module.exports = {
-	  Vector256: Vector256
-	};
-
-/***/ },
-/* 687 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* eslint-disable func-style */
-
-	'use strict';
-
-	var types = __webpack_require__(660);
-
-	var _require = __webpack_require__(688);
-
-	var HashPrefix = _require.HashPrefix;
-
-	var _require2 = __webpack_require__(689);
-
-	var BinaryParser = _require2.BinaryParser;
-
-	var _require3 = __webpack_require__(665);
-
-	var BinarySerializer = _require3.BinarySerializer;
-	var BytesList = _require3.BytesList;
-
-	var _require4 = __webpack_require__(653);
-
-	var bytesToHex = _require4.bytesToHex;
-	var slice = _require4.slice;
-	var parseBytes = _require4.parseBytes;
-
-	var _require5 = __webpack_require__(690);
-
-	var sha512Half = _require5.sha512Half;
-	var transactionID = _require5.transactionID;
-
-	var makeParser = function makeParser(bytes) {
-	  return new BinaryParser(bytes);
-	};
-	var readJSON = function readJSON(parser) {
-	  return parser.readType(types.STObject).toJSON();
-	};
-	var binaryToJSON = function binaryToJSON(bytes) {
-	  return readJSON(makeParser(bytes));
-	};
-
-	function serializeObject(object) {
-	  var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-	  var prefix = opts.prefix;
-	  var suffix = opts.suffix;
-	  var _opts$signingFieldsOnly = opts.signingFieldsOnly;
-	  var signingFieldsOnly = _opts$signingFieldsOnly === undefined ? false : _opts$signingFieldsOnly;
-
-	  var bytesList = new BytesList();
-	  if (prefix) {
-	    bytesList.put(prefix);
-	  }
-	  var filter = signingFieldsOnly ? function (f) {
-	    return f.isSigningField;
-	  } : undefined;
-	  types.STObject.from(object).toBytesSink(bytesList, filter);
-	  if (suffix) {
-	    bytesList.put(suffix);
-	  }
-	  return bytesList.toBytes();
-	}
-
-	function signingData(tx) {
-	  var prefix = arguments.length <= 1 || arguments[1] === undefined ? HashPrefix.transactionSig : arguments[1];
-
-	  return serializeObject(tx, { prefix: prefix, signingFieldsOnly: true });
-	}
-
-	function multiSigningData(tx, signingAccount) {
-	  var prefix = HashPrefix.transactionMultiSig;
-	  var suffix = types.AccountID.from(signingAccount).toBytes();
-	  return serializeObject(tx, { prefix: prefix, suffix: suffix, signingFieldsOnly: true });
-	}
-
-	module.exports = {
-	  BinaryParser: BinaryParser,
-	  BinarySerializer: BinarySerializer,
-	  BytesList: BytesList,
-	  makeParser: makeParser,
-	  serializeObject: serializeObject,
-	  readJSON: readJSON,
-	  bytesToHex: bytesToHex,
-	  parseBytes: parseBytes,
-	  multiSigningData: multiSigningData,
-	  signingData: signingData,
-	  binaryToJSON: binaryToJSON,
-	  sha512Half: sha512Half,
-	  transactionID: transactionID,
-	  slice: slice
-	};
-
-/***/ },
-/* 688 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _require = __webpack_require__(653);
-
-	var serializeUIntN = _require.serializeUIntN;
-
-	function bytes(uint32) {
-	  return serializeUIntN(uint32, 4);
-	}
-
-	var HashPrefix = {
-	  transactionID: bytes(0x54584E00),
-	  // transaction plus metadata
-	  transaction: bytes(0x534E4400),
-	  // account state
-	  accountStateEntry: bytes(0x4D4C4E00),
-	  // inner node in tree
-	  innerNode: bytes(0x4D494E00),
-	  // ledger master data for signing
-	  ledgerHeader: bytes(0x4C575200),
-	  // inner transaction to sign
-	  transactionSig: bytes(0x53545800),
-	  // inner transaction to sign
-	  transactionMultiSig: bytes(0x534D5400),
-	  // validation for signing
-	  validation: bytes(0x56414C00),
-	  // proposal for signing
-	  proposal: bytes(0x50525000)
-	};
-
-	module.exports = {
-	  HashPrefix: HashPrefix
-	};
-
-/***/ },
-/* 689 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(645);
-
-	var Field = _require.Field;
-
-	var _require2 = __webpack_require__(653);
-
-	var slice = _require2.slice;
-	var parseBytes = _require2.parseBytes;
-
-	var BinaryParser = makeClass({
-	  BinaryParser: function BinaryParser(buf) {
-	    this._buf = parseBytes(buf, Uint8Array);
-	    this._length = this._buf.length;
-	    this._cursor = 0;
-	  },
-	  skip: function skip(n) {
-	    this._cursor += n;
-	  },
-	  read: function read(n) {
-	    var to = arguments.length <= 1 || arguments[1] === undefined ? Uint8Array : arguments[1];
-
-	    var start = this._cursor;
-	    var end = this._cursor + n;
-	    assert(end <= this._buf.length);
-	    this._cursor = end;
-	    return slice(this._buf, start, end, to);
-	  },
-	  readUIntN: function readUIntN(n) {
-	    return this.read(n, Array).reduce(function (a, b) {
-	      return a << 8 | b;
-	    }) >>> 0;
-	  },
-	  readUInt8: function readUInt8() {
-	    return this._buf[this._cursor++];
-	  },
-	  readUInt16: function readUInt16() {
-	    return this.readUIntN(2);
-	  },
-	  readUInt32: function readUInt32() {
-	    return this.readUIntN(4);
-	  },
-	  pos: function pos() {
-	    return this._cursor;
-	  },
-	  size: function size() {
-	    return this._buf.length;
-	  },
-	  end: function end(customEnd) {
-	    var cursor = this.pos();
-	    return cursor >= this._length || customEnd !== null && cursor >= customEnd;
-	  },
-	  readVL: function readVL() {
-	    return this.read(this.readVLLength());
-	  },
-	  readVLLength: function readVLLength() {
-	    var b1 = this.readUInt8();
-	    if (b1 <= 192) {
-	      return b1;
-	    } else if (b1 <= 240) {
-	      var b2 = this.readUInt8();
-	      return 193 + (b1 - 193) * 256 + b2;
-	    } else if (b1 <= 254) {
-	      var b2 = this.readUInt8();
-	      var b3 = this.readUInt8();
-	      return 12481 + (b1 - 241) * 65536 + b2 * 256 + b3;
-	    }
-	    throw new Error('Invalid varint length indicator');
-	  },
-	  readFieldOrdinal: function readFieldOrdinal() {
-	    var tagByte = this.readUInt8();
-	    var type = (tagByte & 0xF0) >>> 4 || this.readUInt8();
-	    var nth = tagByte & 0x0F || this.readUInt8();
-	    return type << 16 | nth;
-	  },
-	  readField: function readField() {
-	    return Field.from(this.readFieldOrdinal());
-	  },
-	  readType: function readType(type) {
-	    return type.fromParser(this);
-	  },
-	  typeForField: function typeForField(field) {
-	    return field.associatedType;
-	  },
-	  readFieldValue: function readFieldValue(field) {
-	    var kls = this.typeForField(field);
-	    if (!kls) {
-	      throw new Error('unsupported: (' + field.name + ', ' + field.type.name + ')');
-	    }
-	    var sizeHint = field.isVLEncoded ? this.readVLLength() : null;
-	    var value = kls.fromParser(this, sizeHint);
-	    if (value === undefined) {
-	      throw new Error('fromParser for (' + field.name + ', ' + field.type.name + ') -> undefined ');
-	    }
-	    return value;
-	  },
-	  readFieldAndValue: function readFieldAndValue() {
-	    var field = this.readField();
-	    return [field, this.readFieldValue(field)];
-	  }
-	});
-
-	module.exports = {
-	  BinaryParser: BinaryParser
-	};
-
-/***/ },
-/* 690 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(688);
-
-	var HashPrefix = _require.HashPrefix;
-
-	var _require2 = __webpack_require__(660);
-
-	var Hash256 = _require2.Hash256;
-
-	var _require3 = __webpack_require__(653);
-
-	var parseBytes = _require3.parseBytes;
-
-	var createHash = __webpack_require__(691);
-
-	var Sha512Half = makeClass({
-	  Sha512Half: function Sha512Half() {
-	    this.hash = createHash('sha512');
-	  },
-	  statics: {
-	    put: function put(bytes) {
-	      return new this().put(bytes);
-	    }
-	  },
-	  put: function put(bytes) {
-	    this.hash.update(parseBytes(bytes, Buffer));
-	    return this;
-	  },
-	  finish256: function finish256() {
-	    var bytes = this.hash.digest();
-	    return bytes.slice(0, 32);
-	  },
-	  finish: function finish() {
-	    return new Hash256(this.finish256());
-	  }
-	});
-
-	function sha512Half() {
-	  var hash = new Sha512Half();
-
-	  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-	    args[_key] = arguments[_key];
-	  }
-
-	  args.forEach(function (a) {
-	    return hash.put(a);
-	  });
-	  return parseBytes(hash.finish256(), Uint8Array);
-	}
-
-	function transactionID(serialized) {
-	  return new Hash256(sha512Half(HashPrefix.transactionID, serialized));
-	}
-
-	module.exports = {
-	  Sha512Half: Sha512Half,
-	  sha512Half: sha512Half,
-	  transactionID: transactionID
-	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 691 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-	var inherits = __webpack_require__(692)
-	var md5 = __webpack_require__(693)
-	var rmd160 = __webpack_require__(695)
-	var sha = __webpack_require__(696)
-
-	var Base = __webpack_require__(704)
-
-	function HashNoConstructor(hash) {
-	  Base.call(this, 'digest')
-
-	  this._hash = hash
-	  this.buffers = []
-	}
-
-	inherits(HashNoConstructor, Base)
-
-	HashNoConstructor.prototype._update = function (data) {
-	  this.buffers.push(data)
-	}
-
-	HashNoConstructor.prototype._final = function () {
-	  var buf = Buffer.concat(this.buffers)
-	  var r = this._hash(buf)
-	  this.buffers = null
-
-	  return r
-	}
-
-	function Hash(hash) {
-	  Base.call(this, 'digest')
-
-	  this._hash = hash
-	}
-
-	inherits(Hash, Base)
-
-	Hash.prototype._update = function (data) {
-	  this._hash.update(data)
-	}
-
-	Hash.prototype._final = function () {
-	  return this._hash.digest()
-	}
-
-	module.exports = function createHash (alg) {
-	  alg = alg.toLowerCase()
-	  if ('md5' === alg) return new HashNoConstructor(md5)
-	  if ('rmd160' === alg || 'ripemd160' === alg) return new HashNoConstructor(rmd160)
-
-	  return new Hash(sha(alg))
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 692 */
-/***/ function(module, exports) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 693 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	/*
-	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
-	 * Digest Algorithm, as defined in RFC 1321.
-	 * Version 2.1 Copyright (C) Paul Johnston 1999 - 2002.
-	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
-	 * Distributed under the BSD License
-	 * See http://pajhome.org.uk/crypt/md5 for more info.
-	 */
-
-	var helpers = __webpack_require__(694);
-
-	/*
-	 * Calculate the MD5 of an array of little-endian words, and a bit length
-	 */
-	function core_md5(x, len)
-	{
-	  /* append padding */
-	  x[len >> 5] |= 0x80 << ((len) % 32);
-	  x[(((len + 64) >>> 9) << 4) + 14] = len;
-
-	  var a =  1732584193;
-	  var b = -271733879;
-	  var c = -1732584194;
-	  var d =  271733878;
-
-	  for(var i = 0; i < x.length; i += 16)
-	  {
-	    var olda = a;
-	    var oldb = b;
-	    var oldc = c;
-	    var oldd = d;
-
-	    a = md5_ff(a, b, c, d, x[i+ 0], 7 , -680876936);
-	    d = md5_ff(d, a, b, c, x[i+ 1], 12, -389564586);
-	    c = md5_ff(c, d, a, b, x[i+ 2], 17,  606105819);
-	    b = md5_ff(b, c, d, a, x[i+ 3], 22, -1044525330);
-	    a = md5_ff(a, b, c, d, x[i+ 4], 7 , -176418897);
-	    d = md5_ff(d, a, b, c, x[i+ 5], 12,  1200080426);
-	    c = md5_ff(c, d, a, b, x[i+ 6], 17, -1473231341);
-	    b = md5_ff(b, c, d, a, x[i+ 7], 22, -45705983);
-	    a = md5_ff(a, b, c, d, x[i+ 8], 7 ,  1770035416);
-	    d = md5_ff(d, a, b, c, x[i+ 9], 12, -1958414417);
-	    c = md5_ff(c, d, a, b, x[i+10], 17, -42063);
-	    b = md5_ff(b, c, d, a, x[i+11], 22, -1990404162);
-	    a = md5_ff(a, b, c, d, x[i+12], 7 ,  1804603682);
-	    d = md5_ff(d, a, b, c, x[i+13], 12, -40341101);
-	    c = md5_ff(c, d, a, b, x[i+14], 17, -1502002290);
-	    b = md5_ff(b, c, d, a, x[i+15], 22,  1236535329);
-
-	    a = md5_gg(a, b, c, d, x[i+ 1], 5 , -165796510);
-	    d = md5_gg(d, a, b, c, x[i+ 6], 9 , -1069501632);
-	    c = md5_gg(c, d, a, b, x[i+11], 14,  643717713);
-	    b = md5_gg(b, c, d, a, x[i+ 0], 20, -373897302);
-	    a = md5_gg(a, b, c, d, x[i+ 5], 5 , -701558691);
-	    d = md5_gg(d, a, b, c, x[i+10], 9 ,  38016083);
-	    c = md5_gg(c, d, a, b, x[i+15], 14, -660478335);
-	    b = md5_gg(b, c, d, a, x[i+ 4], 20, -405537848);
-	    a = md5_gg(a, b, c, d, x[i+ 9], 5 ,  568446438);
-	    d = md5_gg(d, a, b, c, x[i+14], 9 , -1019803690);
-	    c = md5_gg(c, d, a, b, x[i+ 3], 14, -187363961);
-	    b = md5_gg(b, c, d, a, x[i+ 8], 20,  1163531501);
-	    a = md5_gg(a, b, c, d, x[i+13], 5 , -1444681467);
-	    d = md5_gg(d, a, b, c, x[i+ 2], 9 , -51403784);
-	    c = md5_gg(c, d, a, b, x[i+ 7], 14,  1735328473);
-	    b = md5_gg(b, c, d, a, x[i+12], 20, -1926607734);
-
-	    a = md5_hh(a, b, c, d, x[i+ 5], 4 , -378558);
-	    d = md5_hh(d, a, b, c, x[i+ 8], 11, -2022574463);
-	    c = md5_hh(c, d, a, b, x[i+11], 16,  1839030562);
-	    b = md5_hh(b, c, d, a, x[i+14], 23, -35309556);
-	    a = md5_hh(a, b, c, d, x[i+ 1], 4 , -1530992060);
-	    d = md5_hh(d, a, b, c, x[i+ 4], 11,  1272893353);
-	    c = md5_hh(c, d, a, b, x[i+ 7], 16, -155497632);
-	    b = md5_hh(b, c, d, a, x[i+10], 23, -1094730640);
-	    a = md5_hh(a, b, c, d, x[i+13], 4 ,  681279174);
-	    d = md5_hh(d, a, b, c, x[i+ 0], 11, -358537222);
-	    c = md5_hh(c, d, a, b, x[i+ 3], 16, -722521979);
-	    b = md5_hh(b, c, d, a, x[i+ 6], 23,  76029189);
-	    a = md5_hh(a, b, c, d, x[i+ 9], 4 , -640364487);
-	    d = md5_hh(d, a, b, c, x[i+12], 11, -421815835);
-	    c = md5_hh(c, d, a, b, x[i+15], 16,  530742520);
-	    b = md5_hh(b, c, d, a, x[i+ 2], 23, -995338651);
-
-	    a = md5_ii(a, b, c, d, x[i+ 0], 6 , -198630844);
-	    d = md5_ii(d, a, b, c, x[i+ 7], 10,  1126891415);
-	    c = md5_ii(c, d, a, b, x[i+14], 15, -1416354905);
-	    b = md5_ii(b, c, d, a, x[i+ 5], 21, -57434055);
-	    a = md5_ii(a, b, c, d, x[i+12], 6 ,  1700485571);
-	    d = md5_ii(d, a, b, c, x[i+ 3], 10, -1894986606);
-	    c = md5_ii(c, d, a, b, x[i+10], 15, -1051523);
-	    b = md5_ii(b, c, d, a, x[i+ 1], 21, -2054922799);
-	    a = md5_ii(a, b, c, d, x[i+ 8], 6 ,  1873313359);
-	    d = md5_ii(d, a, b, c, x[i+15], 10, -30611744);
-	    c = md5_ii(c, d, a, b, x[i+ 6], 15, -1560198380);
-	    b = md5_ii(b, c, d, a, x[i+13], 21,  1309151649);
-	    a = md5_ii(a, b, c, d, x[i+ 4], 6 , -145523070);
-	    d = md5_ii(d, a, b, c, x[i+11], 10, -1120210379);
-	    c = md5_ii(c, d, a, b, x[i+ 2], 15,  718787259);
-	    b = md5_ii(b, c, d, a, x[i+ 9], 21, -343485551);
-
-	    a = safe_add(a, olda);
-	    b = safe_add(b, oldb);
-	    c = safe_add(c, oldc);
-	    d = safe_add(d, oldd);
-	  }
-	  return Array(a, b, c, d);
-
-	}
-
-	/*
-	 * These functions implement the four basic operations the algorithm uses.
-	 */
-	function md5_cmn(q, a, b, x, s, t)
-	{
-	  return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s),b);
-	}
-	function md5_ff(a, b, c, d, x, s, t)
-	{
-	  return md5_cmn((b & c) | ((~b) & d), a, b, x, s, t);
-	}
-	function md5_gg(a, b, c, d, x, s, t)
-	{
-	  return md5_cmn((b & d) | (c & (~d)), a, b, x, s, t);
-	}
-	function md5_hh(a, b, c, d, x, s, t)
-	{
-	  return md5_cmn(b ^ c ^ d, a, b, x, s, t);
-	}
-	function md5_ii(a, b, c, d, x, s, t)
-	{
-	  return md5_cmn(c ^ (b | (~d)), a, b, x, s, t);
-	}
-
-	/*
-	 * Add integers, wrapping at 2^32. This uses 16-bit operations internally
-	 * to work around bugs in some JS interpreters.
-	 */
-	function safe_add(x, y)
-	{
-	  var lsw = (x & 0xFFFF) + (y & 0xFFFF);
-	  var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
-	  return (msw << 16) | (lsw & 0xFFFF);
-	}
-
-	/*
-	 * Bitwise rotate a 32-bit number to the left.
-	 */
-	function bit_rol(num, cnt)
-	{
-	  return (num << cnt) | (num >>> (32 - cnt));
-	}
-
-	module.exports = function md5(buf) {
-	  return helpers.hash(buf, core_md5, 16);
-	};
-
-/***/ },
-/* 694 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-	var intSize = 4;
-	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
-	var chrsz = 8;
-
-	function toArray(buf, bigEndian) {
-	  if ((buf.length % intSize) !== 0) {
-	    var len = buf.length + (intSize - (buf.length % intSize));
-	    buf = Buffer.concat([buf, zeroBuffer], len);
-	  }
-
-	  var arr = [];
-	  var fn = bigEndian ? buf.readInt32BE : buf.readInt32LE;
-	  for (var i = 0; i < buf.length; i += intSize) {
-	    arr.push(fn.call(buf, i));
-	  }
-	  return arr;
-	}
-
-	function toBuffer(arr, size, bigEndian) {
-	  var buf = new Buffer(size);
-	  var fn = bigEndian ? buf.writeInt32BE : buf.writeInt32LE;
-	  for (var i = 0; i < arr.length; i++) {
-	    fn.call(buf, arr[i], i * 4, true);
-	  }
-	  return buf;
-	}
-
-	function hash(buf, fn, hashSize, bigEndian) {
-	  if (!Buffer.isBuffer(buf)) buf = new Buffer(buf);
-	  var arr = fn(toArray(buf, bigEndian), buf.length * chrsz);
-	  return toBuffer(arr, hashSize, bigEndian);
-	}
-	exports.hash = hash;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 695 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
-	CryptoJS v3.1.2
-	code.google.com/p/crypto-js
-	(c) 2009-2013 by Jeff Mott. All rights reserved.
-	code.google.com/p/crypto-js/wiki/License
-	*/
-	/** @preserve
-	(c) 2012 by Cédric Mesnil. All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-	    - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-	    - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	*/
-
-	// constants table
-	var zl = [
-	  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-	  7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8,
-	  3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12,
-	  1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2,
-	  4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13
-	]
-
-	var zr = [
-	  5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12,
-	  6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2,
-	  15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13,
-	  8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14,
-	  12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11
-	]
-
-	var sl = [
-	  11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8,
-	  7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12,
-	  11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5,
-	  11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12,
-	  9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6
-	]
-
-	var sr = [
-	  8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6,
-	  9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11,
-	  9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5,
-	  15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8,
-	  8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
-	]
-
-	var hl = [0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E]
-	var hr = [0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000]
-
-	function bytesToWords (bytes) {
-	  var words = []
-	  for (var i = 0, b = 0; i < bytes.length; i++, b += 8) {
-	    words[b >>> 5] |= bytes[i] << (24 - b % 32)
-	  }
-	  return words
-	}
-
-	function wordsToBytes (words) {
-	  var bytes = []
-	  for (var b = 0; b < words.length * 32; b += 8) {
-	    bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF)
-	  }
-	  return bytes
-	}
-
-	function processBlock (H, M, offset) {
-	  // swap endian
-	  for (var i = 0; i < 16; i++) {
-	    var offset_i = offset + i
-	    var M_offset_i = M[offset_i]
-
-	    // Swap
-	    M[offset_i] = (
-	      (((M_offset_i << 8) | (M_offset_i >>> 24)) & 0x00ff00ff) |
-	      (((M_offset_i << 24) | (M_offset_i >>> 8)) & 0xff00ff00)
-	    )
-	  }
-
-	  // Working variables
-	  var al, bl, cl, dl, el
-	  var ar, br, cr, dr, er
-
-	  ar = al = H[0]
-	  br = bl = H[1]
-	  cr = cl = H[2]
-	  dr = dl = H[3]
-	  er = el = H[4]
-
-	  // computation
-	  var t
-	  for (i = 0; i < 80; i += 1) {
-	    t = (al + M[offset + zl[i]]) | 0
-	    if (i < 16) {
-	      t += f1(bl, cl, dl) + hl[0]
-	    } else if (i < 32) {
-	      t += f2(bl, cl, dl) + hl[1]
-	    } else if (i < 48) {
-	      t += f3(bl, cl, dl) + hl[2]
-	    } else if (i < 64) {
-	      t += f4(bl, cl, dl) + hl[3]
-	    } else {// if (i<80) {
-	      t += f5(bl, cl, dl) + hl[4]
-	    }
-	    t = t | 0
-	    t = rotl(t, sl[i])
-	    t = (t + el) | 0
-	    al = el
-	    el = dl
-	    dl = rotl(cl, 10)
-	    cl = bl
-	    bl = t
-
-	    t = (ar + M[offset + zr[i]]) | 0
-	    if (i < 16) {
-	      t += f5(br, cr, dr) + hr[0]
-	    } else if (i < 32) {
-	      t += f4(br, cr, dr) + hr[1]
-	    } else if (i < 48) {
-	      t += f3(br, cr, dr) + hr[2]
-	    } else if (i < 64) {
-	      t += f2(br, cr, dr) + hr[3]
-	    } else {// if (i<80) {
-	      t += f1(br, cr, dr) + hr[4]
-	    }
-
-	    t = t | 0
-	    t = rotl(t, sr[i])
-	    t = (t + er) | 0
-	    ar = er
-	    er = dr
-	    dr = rotl(cr, 10)
-	    cr = br
-	    br = t
-	  }
-
-	  // intermediate hash value
-	  t = (H[1] + cl + dr) | 0
-	  H[1] = (H[2] + dl + er) | 0
-	  H[2] = (H[3] + el + ar) | 0
-	  H[3] = (H[4] + al + br) | 0
-	  H[4] = (H[0] + bl + cr) | 0
-	  H[0] = t
-	}
-
-	function f1 (x, y, z) {
-	  return ((x) ^ (y) ^ (z))
-	}
-
-	function f2 (x, y, z) {
-	  return (((x) & (y)) | ((~x) & (z)))
-	}
-
-	function f3 (x, y, z) {
-	  return (((x) | (~(y))) ^ (z))
-	}
-
-	function f4 (x, y, z) {
-	  return (((x) & (z)) | ((y) & (~(z))))
-	}
-
-	function f5 (x, y, z) {
-	  return ((x) ^ ((y) | (~(z))))
-	}
-
-	function rotl (x, n) {
-	  return (x << n) | (x >>> (32 - n))
-	}
-
-	function ripemd160 (message) {
-	  var H = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
-
-	  if (typeof message === 'string') {
-	    message = new Buffer(message, 'utf8')
-	  }
-
-	  var m = bytesToWords(message)
-
-	  var nBitsLeft = message.length * 8
-	  var nBitsTotal = message.length * 8
-
-	  // Add padding
-	  m[nBitsLeft >>> 5] |= 0x80 << (24 - nBitsLeft % 32)
-	  m[(((nBitsLeft + 64) >>> 9) << 4) + 14] = (
-	    (((nBitsTotal << 8) | (nBitsTotal >>> 24)) & 0x00ff00ff) |
-	    (((nBitsTotal << 24) | (nBitsTotal >>> 8)) & 0xff00ff00)
-	  )
-
-	  for (var i = 0; i < m.length; i += 16) {
-	    processBlock(H, m, i)
-	  }
-
-	  // swap endian
-	  for (i = 0; i < 5; i++) {
-	    // shortcut
-	    var H_i = H[i]
-
-	    // Swap
-	    H[i] = (((H_i << 8) | (H_i >>> 24)) & 0x00ff00ff) |
-	      (((H_i << 24) | (H_i >>> 8)) & 0xff00ff00)
-	  }
-
-	  var digestbytes = wordsToBytes(H)
-	  return new Buffer(digestbytes)
-	}
-
-	module.exports = ripemd160
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 696 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var exports = module.exports = function SHA (algorithm) {
-	  algorithm = algorithm.toLowerCase()
-
-	  var Algorithm = exports[algorithm]
-	  if (!Algorithm) throw new Error(algorithm + ' is not supported (we accept pull requests)')
-
-	  return new Algorithm()
-	}
-
-	exports.sha = __webpack_require__(697)
-	exports.sha1 = __webpack_require__(699)
-	exports.sha224 = __webpack_require__(700)
-	exports.sha256 = __webpack_require__(701)
-	exports.sha384 = __webpack_require__(702)
-	exports.sha512 = __webpack_require__(703)
-
-
-/***/ },
-/* 697 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
-	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
-	 * in FIPS PUB 180-1
-	 * This source code is derived from sha1.js of the same repository.
-	 * The difference between SHA-0 and SHA-1 is just a bitwise rotate left
-	 * operation was added.
-	 */
-
-	var inherits = __webpack_require__(692)
-	var Hash = __webpack_require__(698)
-
-	var W = new Array(80)
-
-	function Sha () {
-	  this.init()
-	  this._w = W
-
-	  Hash.call(this, 64, 56)
-	}
-
-	inherits(Sha, Hash)
-
-	Sha.prototype.init = function () {
-	  this._a = 0x67452301 | 0
-	  this._b = 0xefcdab89 | 0
-	  this._c = 0x98badcfe | 0
-	  this._d = 0x10325476 | 0
-	  this._e = 0xc3d2e1f0 | 0
-
-	  return this
-	}
-
-	/*
-	 * Bitwise rotate a 32-bit number to the left.
-	 */
-	function rol (num, cnt) {
-	  return (num << cnt) | (num >>> (32 - cnt))
-	}
-
-	Sha.prototype._update = function (M) {
-	  var W = this._w
-
-	  var a = this._a
-	  var b = this._b
-	  var c = this._c
-	  var d = this._d
-	  var e = this._e
-
-	  var j = 0
-	  var k
-
-	  /*
-	   * SHA-1 has a bitwise rotate left operation. But, SHA is not
-	   * function calcW() { return rol(W[j - 3] ^ W[j -  8] ^ W[j - 14] ^ W[j - 16], 1) }
-	   */
-	  function calcW () { return W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16] }
-	  function loop (w, f) {
-	    W[j] = w
-
-	    var t = rol(a, 5) + f + e + w + k
-
-	    e = d
-	    d = c
-	    c = rol(b, 30)
-	    b = a
-	    a = t
-	    j++
-	  }
-
-	  k = 1518500249
-	  while (j < 16) loop(M.readInt32BE(j * 4), (b & c) | ((~b) & d))
-	  while (j < 20) loop(calcW(), (b & c) | ((~b) & d))
-	  k = 1859775393
-	  while (j < 40) loop(calcW(), b ^ c ^ d)
-	  k = -1894007588
-	  while (j < 60) loop(calcW(), (b & c) | (b & d) | (c & d))
-	  k = -899497514
-	  while (j < 80) loop(calcW(), b ^ c ^ d)
-
-	  this._a = (a + this._a) | 0
-	  this._b = (b + this._b) | 0
-	  this._c = (c + this._c) | 0
-	  this._d = (d + this._d) | 0
-	  this._e = (e + this._e) | 0
-	}
-
-	Sha.prototype._hash = function () {
-	  var H = new Buffer(20)
-
-	  H.writeInt32BE(this._a | 0, 0)
-	  H.writeInt32BE(this._b | 0, 4)
-	  H.writeInt32BE(this._c | 0, 8)
-	  H.writeInt32BE(this._d | 0, 12)
-	  H.writeInt32BE(this._e | 0, 16)
-
-	  return H
-	}
-
-	module.exports = Sha
-
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 698 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
-	function Hash (blockSize, finalSize) {
-	  this._block = new Buffer(blockSize)
-	  this._finalSize = finalSize
-	  this._blockSize = blockSize
-	  this._len = 0
-	  this._s = 0
-	}
-
-	Hash.prototype.update = function (data, enc) {
-	  if (typeof data === 'string') {
-	    enc = enc || 'utf8'
-	    data = new Buffer(data, enc)
-	  }
-
-	  var l = this._len += data.length
-	  var s = this._s || 0
-	  var f = 0
-	  var buffer = this._block
-
-	  while (s < l) {
-	    var t = Math.min(data.length, f + this._blockSize - (s % this._blockSize))
-	    var ch = (t - f)
-
-	    for (var i = 0; i < ch; i++) {
-	      buffer[(s % this._blockSize) + i] = data[i + f]
-	    }
-
-	    s += ch
-	    f += ch
-
-	    if ((s % this._blockSize) === 0) {
-	      this._update(buffer)
-	    }
-	  }
-	  this._s = s
-
-	  return this
-	}
-
-	Hash.prototype.digest = function (enc) {
-	  // Suppose the length of the message M, in bits, is l
-	  var l = this._len * 8
-
-	  // Append the bit 1 to the end of the message
-	  this._block[this._len % this._blockSize] = 0x80
-
-	  // and then k zero bits, where k is the smallest non-negative solution to the equation (l + 1 + k) === finalSize mod blockSize
-	  this._block.fill(0, this._len % this._blockSize + 1)
-
-	  if (l % (this._blockSize * 8) >= this._finalSize * 8) {
-	    this._update(this._block)
-	    this._block.fill(0)
-	  }
-
-	  // to this append the block which is equal to the number l written in binary
-	  // TODO: handle case where l is > Math.pow(2, 29)
-	  this._block.writeInt32BE(l, this._blockSize - 4)
-
-	  var hash = this._update(this._block) || this._hash()
-
-	  return enc ? hash.toString(enc) : hash
-	}
-
-	Hash.prototype._update = function () {
-	  throw new Error('_update must be implemented by subclass')
-	}
-
-	module.exports = Hash
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 699 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
-	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
-	 * in FIPS PUB 180-1
-	 * Version 2.1a Copyright Paul Johnston 2000 - 2002.
-	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
-	 * Distributed under the BSD License
-	 * See http://pajhome.org.uk/crypt/md5 for details.
-	 */
-
-	var inherits = __webpack_require__(692)
-	var Hash = __webpack_require__(698)
-
-	var W = new Array(80)
-
-	function Sha1 () {
-	  this.init()
-	  this._w = W
-
-	  Hash.call(this, 64, 56)
-	}
-
-	inherits(Sha1, Hash)
-
-	Sha1.prototype.init = function () {
-	  this._a = 0x67452301 | 0
-	  this._b = 0xefcdab89 | 0
-	  this._c = 0x98badcfe | 0
-	  this._d = 0x10325476 | 0
-	  this._e = 0xc3d2e1f0 | 0
-
-	  return this
-	}
-
-	/*
-	 * Bitwise rotate a 32-bit number to the left.
-	 */
-	function rol (num, cnt) {
-	  return (num << cnt) | (num >>> (32 - cnt))
-	}
-
-	Sha1.prototype._update = function (M) {
-	  var W = this._w
-
-	  var a = this._a
-	  var b = this._b
-	  var c = this._c
-	  var d = this._d
-	  var e = this._e
-
-	  var j = 0
-	  var k
-
-	  function calcW () { return rol(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16], 1) }
-	  function loop (w, f) {
-	    W[j] = w
-
-	    var t = rol(a, 5) + f + e + w + k
-
-	    e = d
-	    d = c
-	    c = rol(b, 30)
-	    b = a
-	    a = t
-	    j++
-	  }
-
-	  k = 1518500249
-	  while (j < 16) loop(M.readInt32BE(j * 4), (b & c) | ((~b) & d))
-	  while (j < 20) loop(calcW(), (b & c) | ((~b) & d))
-	  k = 1859775393
-	  while (j < 40) loop(calcW(), b ^ c ^ d)
-	  k = -1894007588
-	  while (j < 60) loop(calcW(), (b & c) | (b & d) | (c & d))
-	  k = -899497514
-	  while (j < 80) loop(calcW(), b ^ c ^ d)
-
-	  this._a = (a + this._a) | 0
-	  this._b = (b + this._b) | 0
-	  this._c = (c + this._c) | 0
-	  this._d = (d + this._d) | 0
-	  this._e = (e + this._e) | 0
-	}
-
-	Sha1.prototype._hash = function () {
-	  var H = new Buffer(20)
-
-	  H.writeInt32BE(this._a | 0, 0)
-	  H.writeInt32BE(this._b | 0, 4)
-	  H.writeInt32BE(this._c | 0, 8)
-	  H.writeInt32BE(this._d | 0, 12)
-	  H.writeInt32BE(this._e | 0, 16)
-
-	  return H
-	}
-
-	module.exports = Sha1
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 700 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
-	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
-	 * in FIPS 180-2
-	 * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
-	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
-	 *
-	 */
-
-	var inherits = __webpack_require__(692)
-	var Sha256 = __webpack_require__(701)
-	var Hash = __webpack_require__(698)
-
-	var W = new Array(64)
-
-	function Sha224 () {
-	  this.init()
-
-	  this._w = W // new Array(64)
-
-	  Hash.call(this, 64, 56)
-	}
-
-	inherits(Sha224, Sha256)
-
-	Sha224.prototype.init = function () {
-	  this._a = 0xc1059ed8 | 0
-	  this._b = 0x367cd507 | 0
-	  this._c = 0x3070dd17 | 0
-	  this._d = 0xf70e5939 | 0
-	  this._e = 0xffc00b31 | 0
-	  this._f = 0x68581511 | 0
-	  this._g = 0x64f98fa7 | 0
-	  this._h = 0xbefa4fa4 | 0
-
-	  return this
-	}
-
-	Sha224.prototype._hash = function () {
-	  var H = new Buffer(28)
-
-	  H.writeInt32BE(this._a, 0)
-	  H.writeInt32BE(this._b, 4)
-	  H.writeInt32BE(this._c, 8)
-	  H.writeInt32BE(this._d, 12)
-	  H.writeInt32BE(this._e, 16)
-	  H.writeInt32BE(this._f, 20)
-	  H.writeInt32BE(this._g, 24)
-
-	  return H
-	}
-
-	module.exports = Sha224
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 701 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
-	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
-	 * in FIPS 180-2
-	 * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
-	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
-	 *
-	 */
-
-	var inherits = __webpack_require__(692)
-	var Hash = __webpack_require__(698)
-
-	var K = [
-	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
-	  0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-	  0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
-	  0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
-	  0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
-	  0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-	  0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
-	  0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-	  0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
-	  0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-	  0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
-	  0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-	  0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
-	  0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-	  0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
-	  0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
-	]
-
-	var W = new Array(64)
-
-	function Sha256 () {
-	  this.init()
-
-	  this._w = W // new Array(64)
-
-	  Hash.call(this, 64, 56)
-	}
-
-	inherits(Sha256, Hash)
-
-	Sha256.prototype.init = function () {
-	  this._a = 0x6a09e667 | 0
-	  this._b = 0xbb67ae85 | 0
-	  this._c = 0x3c6ef372 | 0
-	  this._d = 0xa54ff53a | 0
-	  this._e = 0x510e527f | 0
-	  this._f = 0x9b05688c | 0
-	  this._g = 0x1f83d9ab | 0
-	  this._h = 0x5be0cd19 | 0
-
-	  return this
-	}
-
-	function Ch (x, y, z) {
-	  return z ^ (x & (y ^ z))
-	}
-
-	function Maj (x, y, z) {
-	  return (x & y) | (z & (x | y))
-	}
-
-	function Sigma0 (x) {
-	  return (x >>> 2 | x << 30) ^ (x >>> 13 | x << 19) ^ (x >>> 22 | x << 10)
-	}
-
-	function Sigma1 (x) {
-	  return (x >>> 6 | x << 26) ^ (x >>> 11 | x << 21) ^ (x >>> 25 | x << 7)
-	}
-
-	function Gamma0 (x) {
-	  return (x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)
-	}
-
-	function Gamma1 (x) {
-	  return (x >>> 17 | x << 15) ^ (x >>> 19 | x << 13) ^ (x >>> 10)
-	}
-
-	Sha256.prototype._update = function (M) {
-	  var W = this._w
-
-	  var a = this._a | 0
-	  var b = this._b | 0
-	  var c = this._c | 0
-	  var d = this._d | 0
-	  var e = this._e | 0
-	  var f = this._f | 0
-	  var g = this._g | 0
-	  var h = this._h | 0
-
-	  var j = 0
-
-	  function calcW () { return Gamma1(W[j - 2]) + W[j - 7] + Gamma0(W[j - 15]) + W[j - 16] }
-	  function loop (w) {
-	    W[j] = w
-
-	    var T1 = h + Sigma1(e) + Ch(e, f, g) + K[j] + w
-	    var T2 = Sigma0(a) + Maj(a, b, c)
-
-	    h = g
-	    g = f
-	    f = e
-	    e = d + T1
-	    d = c
-	    c = b
-	    b = a
-	    a = T1 + T2
-
-	    j++
-	  }
-
-	  while (j < 16) loop(M.readInt32BE(j * 4))
-	  while (j < 64) loop(calcW())
-
-	  this._a = (a + this._a) | 0
-	  this._b = (b + this._b) | 0
-	  this._c = (c + this._c) | 0
-	  this._d = (d + this._d) | 0
-	  this._e = (e + this._e) | 0
-	  this._f = (f + this._f) | 0
-	  this._g = (g + this._g) | 0
-	  this._h = (h + this._h) | 0
-	}
-
-	Sha256.prototype._hash = function () {
-	  var H = new Buffer(32)
-
-	  H.writeInt32BE(this._a, 0)
-	  H.writeInt32BE(this._b, 4)
-	  H.writeInt32BE(this._c, 8)
-	  H.writeInt32BE(this._d, 12)
-	  H.writeInt32BE(this._e, 16)
-	  H.writeInt32BE(this._f, 20)
-	  H.writeInt32BE(this._g, 24)
-	  H.writeInt32BE(this._h, 28)
-
-	  return H
-	}
-
-	module.exports = Sha256
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 702 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(692)
-	var SHA512 = __webpack_require__(703)
-	var Hash = __webpack_require__(698)
-
-	var W = new Array(160)
-
-	function Sha384 () {
-	  this.init()
-	  this._w = W
-
-	  Hash.call(this, 128, 112)
-	}
-
-	inherits(Sha384, SHA512)
-
-	Sha384.prototype.init = function () {
-	  this._a = 0xcbbb9d5d | 0
-	  this._b = 0x629a292a | 0
-	  this._c = 0x9159015a | 0
-	  this._d = 0x152fecd8 | 0
-	  this._e = 0x67332667 | 0
-	  this._f = 0x8eb44a87 | 0
-	  this._g = 0xdb0c2e0d | 0
-	  this._h = 0x47b5481d | 0
-
-	  this._al = 0xc1059ed8 | 0
-	  this._bl = 0x367cd507 | 0
-	  this._cl = 0x3070dd17 | 0
-	  this._dl = 0xf70e5939 | 0
-	  this._el = 0xffc00b31 | 0
-	  this._fl = 0x68581511 | 0
-	  this._gl = 0x64f98fa7 | 0
-	  this._hl = 0xbefa4fa4 | 0
-
-	  return this
-	}
-
-	Sha384.prototype._hash = function () {
-	  var H = new Buffer(48)
-
-	  function writeInt64BE (h, l, offset) {
-	    H.writeInt32BE(h, offset)
-	    H.writeInt32BE(l, offset + 4)
-	  }
-
-	  writeInt64BE(this._a, this._al, 0)
-	  writeInt64BE(this._b, this._bl, 8)
-	  writeInt64BE(this._c, this._cl, 16)
-	  writeInt64BE(this._d, this._dl, 24)
-	  writeInt64BE(this._e, this._el, 32)
-	  writeInt64BE(this._f, this._fl, 40)
-
-	  return H
-	}
-
-	module.exports = Sha384
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 703 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(692)
-	var Hash = __webpack_require__(698)
-
-	var K = [
-	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
-	  0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
-	  0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
-	  0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
-	  0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe,
-	  0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2,
-	  0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1,
-	  0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
-	  0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3,
-	  0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65,
-	  0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483,
-	  0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
-	  0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210,
-	  0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4,
-	  0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725,
-	  0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
-	  0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926,
-	  0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df,
-	  0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8,
-	  0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
-	  0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001,
-	  0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30,
-	  0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910,
-	  0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
-	  0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53,
-	  0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8,
-	  0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb,
-	  0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
-	  0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60,
-	  0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec,
-	  0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9,
-	  0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
-	  0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207,
-	  0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178,
-	  0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6,
-	  0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
-	  0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493,
-	  0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
-	  0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
-	  0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
-	]
-
-	var W = new Array(160)
-
-	function Sha512 () {
-	  this.init()
-	  this._w = W
-
-	  Hash.call(this, 128, 112)
-	}
-
-	inherits(Sha512, Hash)
-
-	Sha512.prototype.init = function () {
-	  this._a = 0x6a09e667 | 0
-	  this._b = 0xbb67ae85 | 0
-	  this._c = 0x3c6ef372 | 0
-	  this._d = 0xa54ff53a | 0
-	  this._e = 0x510e527f | 0
-	  this._f = 0x9b05688c | 0
-	  this._g = 0x1f83d9ab | 0
-	  this._h = 0x5be0cd19 | 0
-
-	  this._al = 0xf3bcc908 | 0
-	  this._bl = 0x84caa73b | 0
-	  this._cl = 0xfe94f82b | 0
-	  this._dl = 0x5f1d36f1 | 0
-	  this._el = 0xade682d1 | 0
-	  this._fl = 0x2b3e6c1f | 0
-	  this._gl = 0xfb41bd6b | 0
-	  this._hl = 0x137e2179 | 0
-
-	  return this
-	}
-
-	function Ch (x, y, z) {
-	  return z ^ (x & (y ^ z))
-	}
-
-	function Maj (x, y, z) {
-	  return (x & y) | (z & (x | y))
-	}
-
-	function Sigma0 (x, xl) {
-	  return (x >>> 28 | xl << 4) ^ (xl >>> 2 | x << 30) ^ (xl >>> 7 | x << 25)
-	}
-
-	function Sigma1 (x, xl) {
-	  return (x >>> 14 | xl << 18) ^ (x >>> 18 | xl << 14) ^ (xl >>> 9 | x << 23)
-	}
-
-	function Gamma0 (x, xl) {
-	  return (x >>> 1 | xl << 31) ^ (x >>> 8 | xl << 24) ^ (x >>> 7)
-	}
-
-	function Gamma0l (x, xl) {
-	  return (x >>> 1 | xl << 31) ^ (x >>> 8 | xl << 24) ^ (x >>> 7 | xl << 25)
-	}
-
-	function Gamma1 (x, xl) {
-	  return (x >>> 19 | xl << 13) ^ (xl >>> 29 | x << 3) ^ (x >>> 6)
-	}
-
-	function Gamma1l (x, xl) {
-	  return (x >>> 19 | xl << 13) ^ (xl >>> 29 | x << 3) ^ (x >>> 6 | xl << 26)
-	}
-
-	Sha512.prototype._update = function (M) {
-	  var W = this._w
-
-	  var a = this._a | 0
-	  var b = this._b | 0
-	  var c = this._c | 0
-	  var d = this._d | 0
-	  var e = this._e | 0
-	  var f = this._f | 0
-	  var g = this._g | 0
-	  var h = this._h | 0
-
-	  var al = this._al | 0
-	  var bl = this._bl | 0
-	  var cl = this._cl | 0
-	  var dl = this._dl | 0
-	  var el = this._el | 0
-	  var fl = this._fl | 0
-	  var gl = this._gl | 0
-	  var hl = this._hl | 0
-
-	  var i = 0
-	  var j = 0
-	  var Wi, Wil
-	  function calcW () {
-	    var x = W[j - 15 * 2]
-	    var xl = W[j - 15 * 2 + 1]
-	    var gamma0 = Gamma0(x, xl)
-	    var gamma0l = Gamma0l(xl, x)
-
-	    x = W[j - 2 * 2]
-	    xl = W[j - 2 * 2 + 1]
-	    var gamma1 = Gamma1(x, xl)
-	    var gamma1l = Gamma1l(xl, x)
-
-	    // W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
-	    var Wi7 = W[j - 7 * 2]
-	    var Wi7l = W[j - 7 * 2 + 1]
-
-	    var Wi16 = W[j - 16 * 2]
-	    var Wi16l = W[j - 16 * 2 + 1]
-
-	    Wil = gamma0l + Wi7l
-	    Wi = gamma0 + Wi7 + ((Wil >>> 0) < (gamma0l >>> 0) ? 1 : 0)
-	    Wil = Wil + gamma1l
-	    Wi = Wi + gamma1 + ((Wil >>> 0) < (gamma1l >>> 0) ? 1 : 0)
-	    Wil = Wil + Wi16l
-	    Wi = Wi + Wi16 + ((Wil >>> 0) < (Wi16l >>> 0) ? 1 : 0)
-	  }
-
-	  function loop () {
-	    W[j] = Wi
-	    W[j + 1] = Wil
-
-	    var maj = Maj(a, b, c)
-	    var majl = Maj(al, bl, cl)
-
-	    var sigma0h = Sigma0(a, al)
-	    var sigma0l = Sigma0(al, a)
-	    var sigma1h = Sigma1(e, el)
-	    var sigma1l = Sigma1(el, e)
-
-	    // t1 = h + sigma1 + ch + K[i] + W[i]
-	    var Ki = K[j]
-	    var Kil = K[j + 1]
-
-	    var ch = Ch(e, f, g)
-	    var chl = Ch(el, fl, gl)
-
-	    var t1l = hl + sigma1l
-	    var t1 = h + sigma1h + ((t1l >>> 0) < (hl >>> 0) ? 1 : 0)
-	    t1l = t1l + chl
-	    t1 = t1 + ch + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0)
-	    t1l = t1l + Kil
-	    t1 = t1 + Ki + ((t1l >>> 0) < (Kil >>> 0) ? 1 : 0)
-	    t1l = t1l + Wil
-	    t1 = t1 + Wi + ((t1l >>> 0) < (Wil >>> 0) ? 1 : 0)
-
-	    // t2 = sigma0 + maj
-	    var t2l = sigma0l + majl
-	    var t2 = sigma0h + maj + ((t2l >>> 0) < (sigma0l >>> 0) ? 1 : 0)
-
-	    h = g
-	    hl = gl
-	    g = f
-	    gl = fl
-	    f = e
-	    fl = el
-	    el = (dl + t1l) | 0
-	    e = (d + t1 + ((el >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
-	    d = c
-	    dl = cl
-	    c = b
-	    cl = bl
-	    b = a
-	    bl = al
-	    al = (t1l + t2l) | 0
-	    a = (t1 + t2 + ((al >>> 0) < (t1l >>> 0) ? 1 : 0)) | 0
-
-	    i++
-	    j += 2
-	  }
-
-	  while (i < 16) {
-	    Wi = M.readInt32BE(j * 4)
-	    Wil = M.readInt32BE(j * 4 + 4)
-
-	    loop()
-	  }
-
-	  while (i < 80) {
-	    calcW()
-	    loop()
-	  }
-
-	  this._al = (this._al + al) | 0
-	  this._bl = (this._bl + bl) | 0
-	  this._cl = (this._cl + cl) | 0
-	  this._dl = (this._dl + dl) | 0
-	  this._el = (this._el + el) | 0
-	  this._fl = (this._fl + fl) | 0
-	  this._gl = (this._gl + gl) | 0
-	  this._hl = (this._hl + hl) | 0
-
-	  this._a = (this._a + a + ((this._al >>> 0) < (al >>> 0) ? 1 : 0)) | 0
-	  this._b = (this._b + b + ((this._bl >>> 0) < (bl >>> 0) ? 1 : 0)) | 0
-	  this._c = (this._c + c + ((this._cl >>> 0) < (cl >>> 0) ? 1 : 0)) | 0
-	  this._d = (this._d + d + ((this._dl >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
-	  this._e = (this._e + e + ((this._el >>> 0) < (el >>> 0) ? 1 : 0)) | 0
-	  this._f = (this._f + f + ((this._fl >>> 0) < (fl >>> 0) ? 1 : 0)) | 0
-	  this._g = (this._g + g + ((this._gl >>> 0) < (gl >>> 0) ? 1 : 0)) | 0
-	  this._h = (this._h + h + ((this._hl >>> 0) < (hl >>> 0) ? 1 : 0)) | 0
-	}
-
-	Sha512.prototype._hash = function () {
-	  var H = new Buffer(64)
-
-	  function writeInt64BE (h, l, offset) {
-	    H.writeInt32BE(h, offset)
-	    H.writeInt32BE(l, offset + 4)
-	  }
-
-	  writeInt64BE(this._a, this._al, 0)
-	  writeInt64BE(this._b, this._bl, 8)
-	  writeInt64BE(this._c, this._cl, 16)
-	  writeInt64BE(this._d, this._dl, 24)
-	  writeInt64BE(this._e, this._el, 32)
-	  writeInt64BE(this._f, this._fl, 40)
-	  writeInt64BE(this._g, this._gl, 48)
-	  writeInt64BE(this._h, this._hl, 56)
-
-	  return H
-	}
-
-	module.exports = Sha512
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 704 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(365).Transform
-	var inherits = __webpack_require__(692)
-	var StringDecoder = __webpack_require__(375).StringDecoder
-	module.exports = CipherBase
-	inherits(CipherBase, Transform)
-	function CipherBase (hashMode) {
-	  Transform.call(this)
-	  this.hashMode = typeof hashMode === 'string'
-	  if (this.hashMode) {
-	    this[hashMode] = this._finalOrDigest
-	  } else {
-	    this.final = this._finalOrDigest
-	  }
-	  this._decoder = null
-	  this._encoding = null
-	}
-	CipherBase.prototype.update = function (data, inputEnc, outputEnc) {
-	  if (typeof data === 'string') {
-	    data = new Buffer(data, inputEnc)
-	  }
-	  var outData = this._update(data)
-	  if (this.hashMode) {
-	    return this
-	  }
-	  if (outputEnc) {
-	    outData = this._toString(outData, outputEnc)
-	  }
-	  return outData
-	}
-
-	CipherBase.prototype.setAutoPadding = function () {}
-
-	CipherBase.prototype.getAuthTag = function () {
-	  throw new Error('trying to get auth tag in unsupported state')
-	}
-
-	CipherBase.prototype.setAuthTag = function () {
-	  throw new Error('trying to set auth tag in unsupported state')
-	}
-
-	CipherBase.prototype.setAAD = function () {
-	  throw new Error('trying to set aad in unsupported state')
-	}
-
-	CipherBase.prototype._transform = function (data, _, next) {
-	  var err
-	  try {
-	    if (this.hashMode) {
-	      this._update(data)
-	    } else {
-	      this.push(this._update(data))
-	    }
-	  } catch (e) {
-	    err = e
-	  } finally {
-	    next(err)
-	  }
-	}
-	CipherBase.prototype._flush = function (done) {
-	  var err
-	  try {
-	    this.push(this._final())
-	  } catch (e) {
-	    err = e
-	  } finally {
-	    done(err)
-	  }
-	}
-	CipherBase.prototype._finalOrDigest = function (outputEnc) {
-	  var outData = this._final() || new Buffer('')
-	  if (outputEnc) {
-	    outData = this._toString(outData, outputEnc, true)
-	  }
-	  return outData
-	}
-
-	CipherBase.prototype._toString = function (value, enc, final) {
-	  if (!this._decoder) {
-	    this._decoder = new StringDecoder(enc)
-	    this._encoding = enc
-	  }
-	  if (this._encoding !== enc) {
-	    throw new Error('can\'t switch encodings')
-	  }
-	  var out = this._decoder.write(value)
-	  if (final) {
-	    out += this._decoder.end()
-	  }
-	  return out
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
-
-/***/ },
-/* 705 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(654);
-
-	var _require = __webpack_require__(660);
-
-	var Hash256 = _require.Hash256;
-
-	var _require2 = __webpack_require__(688);
-
-	var HashPrefix = _require2.HashPrefix;
-
-	var _require3 = __webpack_require__(690);
-
-	var Hasher = _require3.Sha512Half;
-
-	var ShaMapNode = makeClass({
-	  virtuals: {
-	    hashPrefix: function hashPrefix() {},
-	    isLeaf: function isLeaf() {},
-	    isInner: function isInner() {}
-	  },
-	  cached: {
-	    hash: function hash() {
-	      var hasher = Hasher.put(this.hashPrefix());
-	      this.toBytesSink(hasher);
-	      return hasher.finish();
-	    }
-	  }
-	});
-
-	var ShaMapLeaf = makeClass({
-	  inherits: ShaMapNode,
-	  ShaMapLeaf: function ShaMapLeaf(index, item) {
-	    ShaMapNode.call(this);
-	    this.index = index;
-	    this.item = item;
-	  },
-	  isLeaf: function isLeaf() {
-	    return true;
-	  },
-	  isInner: function isInner() {
-	    return false;
-	  },
-	  hashPrefix: function hashPrefix() {
-	    return this.item.hashPrefix();
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    this.item.toBytesSink(sink);
-	    this.index.toBytesSink(sink);
-	  }
-	});
-
-	var $uper = ShaMapNode.prototype;
-
-	var ShaMapInner = makeClass({
-	  inherits: ShaMapNode,
-	  ShaMapInner: function ShaMapInner() {
-	    var depth = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
-
-	    ShaMapNode.call(this);
-	    this.depth = depth;
-	    this.slotBits = 0;
-	    this.branches = Array(16);
-	  },
-	  isInner: function isInner() {
-	    return true;
-	  },
-	  isLeaf: function isLeaf() {
-	    return false;
-	  },
-	  hashPrefix: function hashPrefix() {
-	    return HashPrefix.innerNode;
-	  },
-	  setBranch: function setBranch(slot, branch) {
-	    this.slotBits = this.slotBits | 1 << slot;
-	    this.branches[slot] = branch;
-	  },
-	  empty: function empty() {
-	    return this.slotBits === 0;
-	  },
-	  hash: function hash() {
-	    if (this.empty()) {
-	      return Hash256.ZERO_256;
-	    }
-	    return $uper.hash.call(this);
-	  },
-	  toBytesSink: function toBytesSink(sink) {
-	    for (var i = 0; i < this.branches.length; i++) {
-	      var branch = this.branches[i];
-	      var hash = branch ? branch.hash() : Hash256.ZERO_256;
-	      hash.toBytesSink(sink);
-	    }
-	  },
-	  addItem: function addItem(index, item, leaf) {
-	    assert(index instanceof Hash256);
-	    var nibble = index.nibblet(this.depth);
-	    var existing = this.branches[nibble];
-	    if (!existing) {
-	      this.setBranch(nibble, leaf || new ShaMapLeaf(index, item));
-	    } else if (existing.isLeaf()) {
-	      var newInner = new ShaMapInner(this.depth + 1);
-	      newInner.addItem(existing.index, null, existing);
-	      newInner.addItem(index, item, leaf);
-	      this.setBranch(nibble, newInner);
-	    } else if (existing.isInner()) {
-	      existing.addItem(index, item, leaf);
-	    } else {
-	      assert(false);
-	    }
-	  }
-	});
-
-	var ShaMap = makeClass({
-	  inherits: ShaMapInner
-	});
-
-	module.exports = {
-	  ShaMap: ShaMap
-	};
-
-/***/ },
-/* 706 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var _toConsumableArray = __webpack_require__(667)['default'];
-
-	var _ = __webpack_require__(262);
-	var BN = __webpack_require__(672);
-	var assert = __webpack_require__(273);
-	var types = __webpack_require__(660);
-	var STObject = types.STObject;
-	var Hash256 = types.Hash256;
-
-	var _require = __webpack_require__(705);
-
-	var ShaMap = _require.ShaMap;
-
-	var _require2 = __webpack_require__(688);
-
-	var HashPrefix = _require2.HashPrefix;
-
-	var _require3 = __webpack_require__(690);
-
-	var Sha512Half = _require3.Sha512Half;
-
-	var _require4 = __webpack_require__(687);
-
-	var BinarySerializer = _require4.BinarySerializer;
-	var serializeObject = _require4.serializeObject;
-
-	function computeHash(itemizer, itemsJson) {
-	  var map = new ShaMap();
-	  itemsJson.forEach(function (item) {
-	    return map.addItem.apply(map, _toConsumableArray(itemizer(item)));
-	  });
-	  return map.hash();
-	}
-
-	function transactionItem(json) {
-	  assert(json.hash);
-	  var index = Hash256.from(json.hash);
-	  var item = {
-	    hashPrefix: function hashPrefix() {
-	      return HashPrefix.transaction;
-	    },
-	    toBytesSink: function toBytesSink(sink) {
-	      var serializer = new BinarySerializer(sink);
-	      serializer.writeLengthEncoded(STObject.from(json));
-	      serializer.writeLengthEncoded(STObject.from(json.metaData));
-	    }
-	  };
-	  return [index, item];
-	}
-
-	function entryItem(json) {
-	  var index = Hash256.from(json.index);
-	  var bytes = serializeObject(json);
-	  var item = {
-	    hashPrefix: function hashPrefix() {
-	      return HashPrefix.accountStateEntry;
-	    },
-	    toBytesSink: function toBytesSink(sink) {
-	      sink.put(bytes);
-	    }
-	  };
-	  return [index, item];
-	}
-
-	var transactionTreeHash = _.partial(computeHash, transactionItem);
-	var accountStateHash = _.partial(computeHash, entryItem);
-
-	function ledgerHash(header) {
-	  var hash = new Sha512Half();
-	  hash.put(HashPrefix.ledgerHeader);
-	  assert(header.parent_close_time !== undefined);
-	  assert(header.close_flags !== undefined);
-
-	  types.UInt32.from(header.ledger_index).toBytesSink(hash);
-	  types.UInt64.from(new BN(header.total_coins)).toBytesSink(hash);
-	  types.Hash256.from(header.parent_hash).toBytesSink(hash);
-	  types.Hash256.from(header.transaction_hash).toBytesSink(hash);
-	  types.Hash256.from(header.account_hash).toBytesSink(hash);
-	  types.UInt32.from(header.parent_close_time).toBytesSink(hash);
-	  types.UInt32.from(header.close_time).toBytesSink(hash);
-	  types.UInt8.from(header.close_time_resolution).toBytesSink(hash);
-	  types.UInt8.from(header.close_flags).toBytesSink(hash);
-	  return hash.finish();
-	}
-
-	module.exports = {
-	  accountStateHash: accountStateHash,
-	  transactionTreeHash: transactionTreeHash,
-	  ledgerHash: ledgerHash
-	};
-
-/***/ },
-/* 707 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var Decimal = __webpack_require__(673);
-
-	var _require = __webpack_require__(653);
-
-	var bytesToHex = _require.bytesToHex;
-	var slice = _require.slice;
-	var parseBytes = _require.parseBytes;
-
-	var _require2 = __webpack_require__(660);
-
-	var UInt64 = _require2.UInt64;
-
-	var BN = __webpack_require__(672);
-
-	module.exports = {
-	  encode: function encode(arg) {
-	    var quality = arg instanceof Decimal ? arg : new Decimal(arg);
-	    var exponent = quality.e - 15;
-	    var qualityString = quality.times('1e' + -exponent).abs().toString();
-	    var bytes = new UInt64(new BN(qualityString)).toBytes();
-	    bytes[0] = exponent + 100;
-	    return bytes;
-	  },
-	  decode: function decode(arg) {
-	    var bytes = slice(parseBytes(arg), -8);
-	    var exponent = bytes[0] - 100;
-	    var mantissa = new Decimal(bytesToHex(slice(bytes, 1)), 16);
-	    return mantissa.times('1e' + exponent);
-	  }
-	};
-
-/***/ },
-/* 708 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	/* eslint-disable func-style */
-
-	var _ = __webpack_require__(262);
-
-	var _require = __webpack_require__(660);
-
-	var AccountID = _require.AccountID;
-
-	var binary = __webpack_require__(687);
-	var serializeObject = binary.serializeObject;
-	var bytesToHex = binary.bytesToHex;
-	var multiSigningData = binary.multiSigningData;
-	var transactionID = binary.transactionID;
-	var signingData = binary.signingData;
-
-	var FULL_CANONICAL_SIGNATURE = 0x80000000;
-
-	var toHex = function toHex(v) {
-	  return bytesToHex(v);
-	};
-	var getSigner = function getSigner(o) {
-	  return AccountID.from(o.Signer.Account);
-	};
-	var signerComparator = function signerComparator(a, b) {
-	  return getSigner(a).compareTo(getSigner(b));
-	};
-
-	function setCanonicalSignatureFlag(tx_json) {
-	  tx_json.Flags |= FULL_CANONICAL_SIGNATURE;
-	  tx_json.Flags >>>= 0;
-	}
-
-	function serializedBundle(tx_json) {
-	  var serialized = serializeObject(tx_json);
-	  var hash = transactionID(serialized).toHex();
-	  var tx_blob = toHex(serialized);
-	  return { tx_json: tx_json, tx_blob: tx_blob, hash: hash };
-	}
-
-	function signFor(tx_json_, keyPair) {
-	  var signingAccount = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
-
-	  var tx_json = _.clone(tx_json_);
-	  tx_json.SigningPubKey = '';
-	  setCanonicalSignatureFlag(tx_json);
-	  var signerID = signingAccount || keyPair.id();
-	  var signature = keyPair.sign(multiSigningData(tx_json, signerID));
-	  var signer = {
-	    Signer: {
-	      SigningPubKey: toHex(keyPair.publicBytes()),
-	      TxnSignature: toHex(signature),
-	      Account: signerID
-	    }
-	  };
-
-	  var signers = tx_json.Signers = tx_json.Signers || [];
-	  signers.push(signer);
-	  signers.sort(signerComparator);
-
-	  return serializedBundle(tx_json);
-	}
-
-	function sign(tx_json_, keyPair) {
-	  var tx_json = _.clone(tx_json_);
-	  setCanonicalSignatureFlag(tx_json);
-
-	  tx_json.SigningPubKey = toHex(keyPair.publicBytes());
-	  tx_json.TxnSignature = toHex(keyPair.sign(signingData(tx_json)));
-
-	  return serializedBundle(tx_json);
-	}
-
-	module.exports = {
-	  signFor: signFor,
-	  sign: sign
-	};
-
-/***/ },
-/* 709 */
+/* 602 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -77976,14 +65095,14 @@ var ripple =
 
 
 /***/ },
-/* 710 */
+/* 603 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
 	var util = __webpack_require__(269);
-	var hashprefixes = __webpack_require__(709);
-	var sha512half = __webpack_require__(711);
+	var hashprefixes = __webpack_require__(602);
+	var sha512half = __webpack_require__(604);
 	var HEX_ZERO = '00000000000000000000000000000000' +
 	               '00000000000000000000000000000000';
 
@@ -78158,11 +65277,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 711 */
+/* 604 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var createHash = __webpack_require__(691);
+	var createHash = __webpack_require__(605);
 
 	// For a hash function, rippled uses SHA-512 and then truncates the result
 	// to the first 256 bytes. This algorithm, informally called SHA-512Half,
@@ -78177,7 +65296,1460 @@ var ripple =
 
 
 /***/ },
-/* 712 */
+/* 605 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+	var inherits = __webpack_require__(606)
+	var md5 = __webpack_require__(607)
+	var rmd160 = __webpack_require__(609)
+	var sha = __webpack_require__(610)
+
+	var Base = __webpack_require__(618)
+
+	function HashNoConstructor(hash) {
+	  Base.call(this, 'digest')
+
+	  this._hash = hash
+	  this.buffers = []
+	}
+
+	inherits(HashNoConstructor, Base)
+
+	HashNoConstructor.prototype._update = function (data) {
+	  this.buffers.push(data)
+	}
+
+	HashNoConstructor.prototype._final = function () {
+	  var buf = Buffer.concat(this.buffers)
+	  var r = this._hash(buf)
+	  this.buffers = null
+
+	  return r
+	}
+
+	function Hash(hash) {
+	  Base.call(this, 'digest')
+
+	  this._hash = hash
+	}
+
+	inherits(Hash, Base)
+
+	Hash.prototype._update = function (data) {
+	  this._hash.update(data)
+	}
+
+	Hash.prototype._final = function () {
+	  return this._hash.digest()
+	}
+
+	module.exports = function createHash (alg) {
+	  alg = alg.toLowerCase()
+	  if ('md5' === alg) return new HashNoConstructor(md5)
+	  if ('rmd160' === alg || 'ripemd160' === alg) return new HashNoConstructor(rmd160)
+
+	  return new Hash(sha(alg))
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 606 */
+/***/ function(module, exports) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
+
+/***/ },
+/* 607 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	/*
+	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
+	 * Digest Algorithm, as defined in RFC 1321.
+	 * Version 2.1 Copyright (C) Paul Johnston 1999 - 2002.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 * Distributed under the BSD License
+	 * See http://pajhome.org.uk/crypt/md5 for more info.
+	 */
+
+	var helpers = __webpack_require__(608);
+
+	/*
+	 * Calculate the MD5 of an array of little-endian words, and a bit length
+	 */
+	function core_md5(x, len)
+	{
+	  /* append padding */
+	  x[len >> 5] |= 0x80 << ((len) % 32);
+	  x[(((len + 64) >>> 9) << 4) + 14] = len;
+
+	  var a =  1732584193;
+	  var b = -271733879;
+	  var c = -1732584194;
+	  var d =  271733878;
+
+	  for(var i = 0; i < x.length; i += 16)
+	  {
+	    var olda = a;
+	    var oldb = b;
+	    var oldc = c;
+	    var oldd = d;
+
+	    a = md5_ff(a, b, c, d, x[i+ 0], 7 , -680876936);
+	    d = md5_ff(d, a, b, c, x[i+ 1], 12, -389564586);
+	    c = md5_ff(c, d, a, b, x[i+ 2], 17,  606105819);
+	    b = md5_ff(b, c, d, a, x[i+ 3], 22, -1044525330);
+	    a = md5_ff(a, b, c, d, x[i+ 4], 7 , -176418897);
+	    d = md5_ff(d, a, b, c, x[i+ 5], 12,  1200080426);
+	    c = md5_ff(c, d, a, b, x[i+ 6], 17, -1473231341);
+	    b = md5_ff(b, c, d, a, x[i+ 7], 22, -45705983);
+	    a = md5_ff(a, b, c, d, x[i+ 8], 7 ,  1770035416);
+	    d = md5_ff(d, a, b, c, x[i+ 9], 12, -1958414417);
+	    c = md5_ff(c, d, a, b, x[i+10], 17, -42063);
+	    b = md5_ff(b, c, d, a, x[i+11], 22, -1990404162);
+	    a = md5_ff(a, b, c, d, x[i+12], 7 ,  1804603682);
+	    d = md5_ff(d, a, b, c, x[i+13], 12, -40341101);
+	    c = md5_ff(c, d, a, b, x[i+14], 17, -1502002290);
+	    b = md5_ff(b, c, d, a, x[i+15], 22,  1236535329);
+
+	    a = md5_gg(a, b, c, d, x[i+ 1], 5 , -165796510);
+	    d = md5_gg(d, a, b, c, x[i+ 6], 9 , -1069501632);
+	    c = md5_gg(c, d, a, b, x[i+11], 14,  643717713);
+	    b = md5_gg(b, c, d, a, x[i+ 0], 20, -373897302);
+	    a = md5_gg(a, b, c, d, x[i+ 5], 5 , -701558691);
+	    d = md5_gg(d, a, b, c, x[i+10], 9 ,  38016083);
+	    c = md5_gg(c, d, a, b, x[i+15], 14, -660478335);
+	    b = md5_gg(b, c, d, a, x[i+ 4], 20, -405537848);
+	    a = md5_gg(a, b, c, d, x[i+ 9], 5 ,  568446438);
+	    d = md5_gg(d, a, b, c, x[i+14], 9 , -1019803690);
+	    c = md5_gg(c, d, a, b, x[i+ 3], 14, -187363961);
+	    b = md5_gg(b, c, d, a, x[i+ 8], 20,  1163531501);
+	    a = md5_gg(a, b, c, d, x[i+13], 5 , -1444681467);
+	    d = md5_gg(d, a, b, c, x[i+ 2], 9 , -51403784);
+	    c = md5_gg(c, d, a, b, x[i+ 7], 14,  1735328473);
+	    b = md5_gg(b, c, d, a, x[i+12], 20, -1926607734);
+
+	    a = md5_hh(a, b, c, d, x[i+ 5], 4 , -378558);
+	    d = md5_hh(d, a, b, c, x[i+ 8], 11, -2022574463);
+	    c = md5_hh(c, d, a, b, x[i+11], 16,  1839030562);
+	    b = md5_hh(b, c, d, a, x[i+14], 23, -35309556);
+	    a = md5_hh(a, b, c, d, x[i+ 1], 4 , -1530992060);
+	    d = md5_hh(d, a, b, c, x[i+ 4], 11,  1272893353);
+	    c = md5_hh(c, d, a, b, x[i+ 7], 16, -155497632);
+	    b = md5_hh(b, c, d, a, x[i+10], 23, -1094730640);
+	    a = md5_hh(a, b, c, d, x[i+13], 4 ,  681279174);
+	    d = md5_hh(d, a, b, c, x[i+ 0], 11, -358537222);
+	    c = md5_hh(c, d, a, b, x[i+ 3], 16, -722521979);
+	    b = md5_hh(b, c, d, a, x[i+ 6], 23,  76029189);
+	    a = md5_hh(a, b, c, d, x[i+ 9], 4 , -640364487);
+	    d = md5_hh(d, a, b, c, x[i+12], 11, -421815835);
+	    c = md5_hh(c, d, a, b, x[i+15], 16,  530742520);
+	    b = md5_hh(b, c, d, a, x[i+ 2], 23, -995338651);
+
+	    a = md5_ii(a, b, c, d, x[i+ 0], 6 , -198630844);
+	    d = md5_ii(d, a, b, c, x[i+ 7], 10,  1126891415);
+	    c = md5_ii(c, d, a, b, x[i+14], 15, -1416354905);
+	    b = md5_ii(b, c, d, a, x[i+ 5], 21, -57434055);
+	    a = md5_ii(a, b, c, d, x[i+12], 6 ,  1700485571);
+	    d = md5_ii(d, a, b, c, x[i+ 3], 10, -1894986606);
+	    c = md5_ii(c, d, a, b, x[i+10], 15, -1051523);
+	    b = md5_ii(b, c, d, a, x[i+ 1], 21, -2054922799);
+	    a = md5_ii(a, b, c, d, x[i+ 8], 6 ,  1873313359);
+	    d = md5_ii(d, a, b, c, x[i+15], 10, -30611744);
+	    c = md5_ii(c, d, a, b, x[i+ 6], 15, -1560198380);
+	    b = md5_ii(b, c, d, a, x[i+13], 21,  1309151649);
+	    a = md5_ii(a, b, c, d, x[i+ 4], 6 , -145523070);
+	    d = md5_ii(d, a, b, c, x[i+11], 10, -1120210379);
+	    c = md5_ii(c, d, a, b, x[i+ 2], 15,  718787259);
+	    b = md5_ii(b, c, d, a, x[i+ 9], 21, -343485551);
+
+	    a = safe_add(a, olda);
+	    b = safe_add(b, oldb);
+	    c = safe_add(c, oldc);
+	    d = safe_add(d, oldd);
+	  }
+	  return Array(a, b, c, d);
+
+	}
+
+	/*
+	 * These functions implement the four basic operations the algorithm uses.
+	 */
+	function md5_cmn(q, a, b, x, s, t)
+	{
+	  return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s),b);
+	}
+	function md5_ff(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn((b & c) | ((~b) & d), a, b, x, s, t);
+	}
+	function md5_gg(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn((b & d) | (c & (~d)), a, b, x, s, t);
+	}
+	function md5_hh(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn(b ^ c ^ d, a, b, x, s, t);
+	}
+	function md5_ii(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn(c ^ (b | (~d)), a, b, x, s, t);
+	}
+
+	/*
+	 * Add integers, wrapping at 2^32. This uses 16-bit operations internally
+	 * to work around bugs in some JS interpreters.
+	 */
+	function safe_add(x, y)
+	{
+	  var lsw = (x & 0xFFFF) + (y & 0xFFFF);
+	  var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+	  return (msw << 16) | (lsw & 0xFFFF);
+	}
+
+	/*
+	 * Bitwise rotate a 32-bit number to the left.
+	 */
+	function bit_rol(num, cnt)
+	{
+	  return (num << cnt) | (num >>> (32 - cnt));
+	}
+
+	module.exports = function md5(buf) {
+	  return helpers.hash(buf, core_md5, 16);
+	};
+
+/***/ },
+/* 608 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
+	var intSize = 4;
+	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
+	var chrsz = 8;
+
+	function toArray(buf, bigEndian) {
+	  if ((buf.length % intSize) !== 0) {
+	    var len = buf.length + (intSize - (buf.length % intSize));
+	    buf = Buffer.concat([buf, zeroBuffer], len);
+	  }
+
+	  var arr = [];
+	  var fn = bigEndian ? buf.readInt32BE : buf.readInt32LE;
+	  for (var i = 0; i < buf.length; i += intSize) {
+	    arr.push(fn.call(buf, i));
+	  }
+	  return arr;
+	}
+
+	function toBuffer(arr, size, bigEndian) {
+	  var buf = new Buffer(size);
+	  var fn = bigEndian ? buf.writeInt32BE : buf.writeInt32LE;
+	  for (var i = 0; i < arr.length; i++) {
+	    fn.call(buf, arr[i], i * 4, true);
+	  }
+	  return buf;
+	}
+
+	function hash(buf, fn, hashSize, bigEndian) {
+	  if (!Buffer.isBuffer(buf)) buf = new Buffer(buf);
+	  var arr = fn(toArray(buf, bigEndian), buf.length * chrsz);
+	  return toBuffer(arr, hashSize, bigEndian);
+	}
+	exports.hash = hash;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 609 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
+	CryptoJS v3.1.2
+	code.google.com/p/crypto-js
+	(c) 2009-2013 by Jeff Mott. All rights reserved.
+	code.google.com/p/crypto-js/wiki/License
+	*/
+	/** @preserve
+	(c) 2012 by Cédric Mesnil. All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+	    - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	    - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	*/
+
+	// constants table
+	var zl = [
+	  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	  7, 4, 13, 1, 10, 6, 15, 3, 12, 0, 9, 5, 2, 14, 11, 8,
+	  3, 10, 14, 4, 9, 15, 8, 1, 2, 7, 0, 6, 13, 11, 5, 12,
+	  1, 9, 11, 10, 0, 8, 12, 4, 13, 3, 7, 15, 14, 5, 6, 2,
+	  4, 0, 5, 9, 7, 12, 2, 10, 14, 1, 3, 8, 11, 6, 15, 13
+	]
+
+	var zr = [
+	  5, 14, 7, 0, 9, 2, 11, 4, 13, 6, 15, 8, 1, 10, 3, 12,
+	  6, 11, 3, 7, 0, 13, 5, 10, 14, 15, 8, 12, 4, 9, 1, 2,
+	  15, 5, 1, 3, 7, 14, 6, 9, 11, 8, 12, 2, 10, 0, 4, 13,
+	  8, 6, 4, 1, 3, 11, 15, 0, 5, 12, 2, 13, 9, 7, 10, 14,
+	  12, 15, 10, 4, 1, 5, 8, 7, 6, 2, 13, 14, 0, 3, 9, 11
+	]
+
+	var sl = [
+	  11, 14, 15, 12, 5, 8, 7, 9, 11, 13, 14, 15, 6, 7, 9, 8,
+	  7, 6, 8, 13, 11, 9, 7, 15, 7, 12, 15, 9, 11, 7, 13, 12,
+	  11, 13, 6, 7, 14, 9, 13, 15, 14, 8, 13, 6, 5, 12, 7, 5,
+	  11, 12, 14, 15, 14, 15, 9, 8, 9, 14, 5, 6, 8, 6, 5, 12,
+	  9, 15, 5, 11, 6, 8, 13, 12, 5, 12, 13, 14, 11, 8, 5, 6
+	]
+
+	var sr = [
+	  8, 9, 9, 11, 13, 15, 15, 5, 7, 7, 8, 11, 14, 14, 12, 6,
+	  9, 13, 15, 7, 12, 8, 9, 11, 7, 7, 12, 7, 6, 15, 13, 11,
+	  9, 7, 15, 11, 8, 6, 6, 14, 12, 13, 5, 14, 13, 13, 7, 5,
+	  15, 5, 8, 11, 14, 14, 6, 14, 6, 9, 12, 9, 12, 5, 15, 8,
+	  8, 5, 12, 9, 12, 5, 14, 6, 8, 13, 6, 5, 15, 13, 11, 11
+	]
+
+	var hl = [0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E]
+	var hr = [0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000]
+
+	function bytesToWords (bytes) {
+	  var words = []
+	  for (var i = 0, b = 0; i < bytes.length; i++, b += 8) {
+	    words[b >>> 5] |= bytes[i] << (24 - b % 32)
+	  }
+	  return words
+	}
+
+	function wordsToBytes (words) {
+	  var bytes = []
+	  for (var b = 0; b < words.length * 32; b += 8) {
+	    bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF)
+	  }
+	  return bytes
+	}
+
+	function processBlock (H, M, offset) {
+	  // swap endian
+	  for (var i = 0; i < 16; i++) {
+	    var offset_i = offset + i
+	    var M_offset_i = M[offset_i]
+
+	    // Swap
+	    M[offset_i] = (
+	      (((M_offset_i << 8) | (M_offset_i >>> 24)) & 0x00ff00ff) |
+	      (((M_offset_i << 24) | (M_offset_i >>> 8)) & 0xff00ff00)
+	    )
+	  }
+
+	  // Working variables
+	  var al, bl, cl, dl, el
+	  var ar, br, cr, dr, er
+
+	  ar = al = H[0]
+	  br = bl = H[1]
+	  cr = cl = H[2]
+	  dr = dl = H[3]
+	  er = el = H[4]
+
+	  // computation
+	  var t
+	  for (i = 0; i < 80; i += 1) {
+	    t = (al + M[offset + zl[i]]) | 0
+	    if (i < 16) {
+	      t += f1(bl, cl, dl) + hl[0]
+	    } else if (i < 32) {
+	      t += f2(bl, cl, dl) + hl[1]
+	    } else if (i < 48) {
+	      t += f3(bl, cl, dl) + hl[2]
+	    } else if (i < 64) {
+	      t += f4(bl, cl, dl) + hl[3]
+	    } else {// if (i<80) {
+	      t += f5(bl, cl, dl) + hl[4]
+	    }
+	    t = t | 0
+	    t = rotl(t, sl[i])
+	    t = (t + el) | 0
+	    al = el
+	    el = dl
+	    dl = rotl(cl, 10)
+	    cl = bl
+	    bl = t
+
+	    t = (ar + M[offset + zr[i]]) | 0
+	    if (i < 16) {
+	      t += f5(br, cr, dr) + hr[0]
+	    } else if (i < 32) {
+	      t += f4(br, cr, dr) + hr[1]
+	    } else if (i < 48) {
+	      t += f3(br, cr, dr) + hr[2]
+	    } else if (i < 64) {
+	      t += f2(br, cr, dr) + hr[3]
+	    } else {// if (i<80) {
+	      t += f1(br, cr, dr) + hr[4]
+	    }
+
+	    t = t | 0
+	    t = rotl(t, sr[i])
+	    t = (t + er) | 0
+	    ar = er
+	    er = dr
+	    dr = rotl(cr, 10)
+	    cr = br
+	    br = t
+	  }
+
+	  // intermediate hash value
+	  t = (H[1] + cl + dr) | 0
+	  H[1] = (H[2] + dl + er) | 0
+	  H[2] = (H[3] + el + ar) | 0
+	  H[3] = (H[4] + al + br) | 0
+	  H[4] = (H[0] + bl + cr) | 0
+	  H[0] = t
+	}
+
+	function f1 (x, y, z) {
+	  return ((x) ^ (y) ^ (z))
+	}
+
+	function f2 (x, y, z) {
+	  return (((x) & (y)) | ((~x) & (z)))
+	}
+
+	function f3 (x, y, z) {
+	  return (((x) | (~(y))) ^ (z))
+	}
+
+	function f4 (x, y, z) {
+	  return (((x) & (z)) | ((y) & (~(z))))
+	}
+
+	function f5 (x, y, z) {
+	  return ((x) ^ ((y) | (~(z))))
+	}
+
+	function rotl (x, n) {
+	  return (x << n) | (x >>> (32 - n))
+	}
+
+	function ripemd160 (message) {
+	  var H = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
+
+	  if (typeof message === 'string') {
+	    message = new Buffer(message, 'utf8')
+	  }
+
+	  var m = bytesToWords(message)
+
+	  var nBitsLeft = message.length * 8
+	  var nBitsTotal = message.length * 8
+
+	  // Add padding
+	  m[nBitsLeft >>> 5] |= 0x80 << (24 - nBitsLeft % 32)
+	  m[(((nBitsLeft + 64) >>> 9) << 4) + 14] = (
+	    (((nBitsTotal << 8) | (nBitsTotal >>> 24)) & 0x00ff00ff) |
+	    (((nBitsTotal << 24) | (nBitsTotal >>> 8)) & 0xff00ff00)
+	  )
+
+	  for (var i = 0; i < m.length; i += 16) {
+	    processBlock(H, m, i)
+	  }
+
+	  // swap endian
+	  for (i = 0; i < 5; i++) {
+	    // shortcut
+	    var H_i = H[i]
+
+	    // Swap
+	    H[i] = (((H_i << 8) | (H_i >>> 24)) & 0x00ff00ff) |
+	      (((H_i << 24) | (H_i >>> 8)) & 0xff00ff00)
+	  }
+
+	  var digestbytes = wordsToBytes(H)
+	  return new Buffer(digestbytes)
+	}
+
+	module.exports = ripemd160
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 610 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = function SHA (algorithm) {
+	  algorithm = algorithm.toLowerCase()
+
+	  var Algorithm = exports[algorithm]
+	  if (!Algorithm) throw new Error(algorithm + ' is not supported (we accept pull requests)')
+
+	  return new Algorithm()
+	}
+
+	exports.sha = __webpack_require__(611)
+	exports.sha1 = __webpack_require__(613)
+	exports.sha224 = __webpack_require__(614)
+	exports.sha256 = __webpack_require__(615)
+	exports.sha384 = __webpack_require__(616)
+	exports.sha512 = __webpack_require__(617)
+
+
+/***/ },
+/* 611 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-0, as defined
+	 * in FIPS PUB 180-1
+	 * This source code is derived from sha1.js of the same repository.
+	 * The difference between SHA-0 and SHA-1 is just a bitwise rotate left
+	 * operation was added.
+	 */
+
+	var inherits = __webpack_require__(606)
+	var Hash = __webpack_require__(612)
+
+	var W = new Array(80)
+
+	function Sha () {
+	  this.init()
+	  this._w = W
+
+	  Hash.call(this, 64, 56)
+	}
+
+	inherits(Sha, Hash)
+
+	Sha.prototype.init = function () {
+	  this._a = 0x67452301 | 0
+	  this._b = 0xefcdab89 | 0
+	  this._c = 0x98badcfe | 0
+	  this._d = 0x10325476 | 0
+	  this._e = 0xc3d2e1f0 | 0
+
+	  return this
+	}
+
+	/*
+	 * Bitwise rotate a 32-bit number to the left.
+	 */
+	function rol (num, cnt) {
+	  return (num << cnt) | (num >>> (32 - cnt))
+	}
+
+	Sha.prototype._update = function (M) {
+	  var W = this._w
+
+	  var a = this._a
+	  var b = this._b
+	  var c = this._c
+	  var d = this._d
+	  var e = this._e
+
+	  var j = 0
+	  var k
+
+	  /*
+	   * SHA-1 has a bitwise rotate left operation. But, SHA is not
+	   * function calcW() { return rol(W[j - 3] ^ W[j -  8] ^ W[j - 14] ^ W[j - 16], 1) }
+	   */
+	  function calcW () { return W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16] }
+	  function loop (w, f) {
+	    W[j] = w
+
+	    var t = rol(a, 5) + f + e + w + k
+
+	    e = d
+	    d = c
+	    c = rol(b, 30)
+	    b = a
+	    a = t
+	    j++
+	  }
+
+	  k = 1518500249
+	  while (j < 16) loop(M.readInt32BE(j * 4), (b & c) | ((~b) & d))
+	  while (j < 20) loop(calcW(), (b & c) | ((~b) & d))
+	  k = 1859775393
+	  while (j < 40) loop(calcW(), b ^ c ^ d)
+	  k = -1894007588
+	  while (j < 60) loop(calcW(), (b & c) | (b & d) | (c & d))
+	  k = -899497514
+	  while (j < 80) loop(calcW(), b ^ c ^ d)
+
+	  this._a = (a + this._a) | 0
+	  this._b = (b + this._b) | 0
+	  this._c = (c + this._c) | 0
+	  this._d = (d + this._d) | 0
+	  this._e = (e + this._e) | 0
+	}
+
+	Sha.prototype._hash = function () {
+	  var H = new Buffer(20)
+
+	  H.writeInt32BE(this._a | 0, 0)
+	  H.writeInt32BE(this._b | 0, 4)
+	  H.writeInt32BE(this._c | 0, 8)
+	  H.writeInt32BE(this._d | 0, 12)
+	  H.writeInt32BE(this._e | 0, 16)
+
+	  return H
+	}
+
+	module.exports = Sha
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 612 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
+	function Hash (blockSize, finalSize) {
+	  this._block = new Buffer(blockSize)
+	  this._finalSize = finalSize
+	  this._blockSize = blockSize
+	  this._len = 0
+	  this._s = 0
+	}
+
+	Hash.prototype.update = function (data, enc) {
+	  if (typeof data === 'string') {
+	    enc = enc || 'utf8'
+	    data = new Buffer(data, enc)
+	  }
+
+	  var l = this._len += data.length
+	  var s = this._s || 0
+	  var f = 0
+	  var buffer = this._block
+
+	  while (s < l) {
+	    var t = Math.min(data.length, f + this._blockSize - (s % this._blockSize))
+	    var ch = (t - f)
+
+	    for (var i = 0; i < ch; i++) {
+	      buffer[(s % this._blockSize) + i] = data[i + f]
+	    }
+
+	    s += ch
+	    f += ch
+
+	    if ((s % this._blockSize) === 0) {
+	      this._update(buffer)
+	    }
+	  }
+	  this._s = s
+
+	  return this
+	}
+
+	Hash.prototype.digest = function (enc) {
+	  // Suppose the length of the message M, in bits, is l
+	  var l = this._len * 8
+
+	  // Append the bit 1 to the end of the message
+	  this._block[this._len % this._blockSize] = 0x80
+
+	  // and then k zero bits, where k is the smallest non-negative solution to the equation (l + 1 + k) === finalSize mod blockSize
+	  this._block.fill(0, this._len % this._blockSize + 1)
+
+	  if (l % (this._blockSize * 8) >= this._finalSize * 8) {
+	    this._update(this._block)
+	    this._block.fill(0)
+	  }
+
+	  // to this append the block which is equal to the number l written in binary
+	  // TODO: handle case where l is > Math.pow(2, 29)
+	  this._block.writeInt32BE(l, this._blockSize - 4)
+
+	  var hash = this._update(this._block) || this._hash()
+
+	  return enc ? hash.toString(enc) : hash
+	}
+
+	Hash.prototype._update = function () {
+	  throw new Error('_update must be implemented by subclass')
+	}
+
+	module.exports = Hash
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 613 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
+	 * in FIPS PUB 180-1
+	 * Version 2.1a Copyright Paul Johnston 2000 - 2002.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 * Distributed under the BSD License
+	 * See http://pajhome.org.uk/crypt/md5 for details.
+	 */
+
+	var inherits = __webpack_require__(606)
+	var Hash = __webpack_require__(612)
+
+	var W = new Array(80)
+
+	function Sha1 () {
+	  this.init()
+	  this._w = W
+
+	  Hash.call(this, 64, 56)
+	}
+
+	inherits(Sha1, Hash)
+
+	Sha1.prototype.init = function () {
+	  this._a = 0x67452301 | 0
+	  this._b = 0xefcdab89 | 0
+	  this._c = 0x98badcfe | 0
+	  this._d = 0x10325476 | 0
+	  this._e = 0xc3d2e1f0 | 0
+
+	  return this
+	}
+
+	/*
+	 * Bitwise rotate a 32-bit number to the left.
+	 */
+	function rol (num, cnt) {
+	  return (num << cnt) | (num >>> (32 - cnt))
+	}
+
+	Sha1.prototype._update = function (M) {
+	  var W = this._w
+
+	  var a = this._a
+	  var b = this._b
+	  var c = this._c
+	  var d = this._d
+	  var e = this._e
+
+	  var j = 0
+	  var k
+
+	  function calcW () { return rol(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16], 1) }
+	  function loop (w, f) {
+	    W[j] = w
+
+	    var t = rol(a, 5) + f + e + w + k
+
+	    e = d
+	    d = c
+	    c = rol(b, 30)
+	    b = a
+	    a = t
+	    j++
+	  }
+
+	  k = 1518500249
+	  while (j < 16) loop(M.readInt32BE(j * 4), (b & c) | ((~b) & d))
+	  while (j < 20) loop(calcW(), (b & c) | ((~b) & d))
+	  k = 1859775393
+	  while (j < 40) loop(calcW(), b ^ c ^ d)
+	  k = -1894007588
+	  while (j < 60) loop(calcW(), (b & c) | (b & d) | (c & d))
+	  k = -899497514
+	  while (j < 80) loop(calcW(), b ^ c ^ d)
+
+	  this._a = (a + this._a) | 0
+	  this._b = (b + this._b) | 0
+	  this._c = (c + this._c) | 0
+	  this._d = (d + this._d) | 0
+	  this._e = (e + this._e) | 0
+	}
+
+	Sha1.prototype._hash = function () {
+	  var H = new Buffer(20)
+
+	  H.writeInt32BE(this._a | 0, 0)
+	  H.writeInt32BE(this._b | 0, 4)
+	  H.writeInt32BE(this._c | 0, 8)
+	  H.writeInt32BE(this._d | 0, 12)
+	  H.writeInt32BE(this._e | 0, 16)
+
+	  return H
+	}
+
+	module.exports = Sha1
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 614 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
+	 * in FIPS 180-2
+	 * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 *
+	 */
+
+	var inherits = __webpack_require__(606)
+	var Sha256 = __webpack_require__(615)
+	var Hash = __webpack_require__(612)
+
+	var W = new Array(64)
+
+	function Sha224 () {
+	  this.init()
+
+	  this._w = W // new Array(64)
+
+	  Hash.call(this, 64, 56)
+	}
+
+	inherits(Sha224, Sha256)
+
+	Sha224.prototype.init = function () {
+	  this._a = 0xc1059ed8 | 0
+	  this._b = 0x367cd507 | 0
+	  this._c = 0x3070dd17 | 0
+	  this._d = 0xf70e5939 | 0
+	  this._e = 0xffc00b31 | 0
+	  this._f = 0x68581511 | 0
+	  this._g = 0x64f98fa7 | 0
+	  this._h = 0xbefa4fa4 | 0
+
+	  return this
+	}
+
+	Sha224.prototype._hash = function () {
+	  var H = new Buffer(28)
+
+	  H.writeInt32BE(this._a, 0)
+	  H.writeInt32BE(this._b, 4)
+	  H.writeInt32BE(this._c, 8)
+	  H.writeInt32BE(this._d, 12)
+	  H.writeInt32BE(this._e, 16)
+	  H.writeInt32BE(this._f, 20)
+	  H.writeInt32BE(this._g, 24)
+
+	  return H
+	}
+
+	module.exports = Sha224
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 615 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
+	 * in FIPS 180-2
+	 * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 *
+	 */
+
+	var inherits = __webpack_require__(606)
+	var Hash = __webpack_require__(612)
+
+	var K = [
+	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
+	  0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
+	  0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
+	  0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
+	  0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
+	  0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
+	  0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
+	  0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
+	  0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
+	  0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
+	  0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
+	  0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
+	  0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
+	  0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
+	  0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
+	  0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
+	]
+
+	var W = new Array(64)
+
+	function Sha256 () {
+	  this.init()
+
+	  this._w = W // new Array(64)
+
+	  Hash.call(this, 64, 56)
+	}
+
+	inherits(Sha256, Hash)
+
+	Sha256.prototype.init = function () {
+	  this._a = 0x6a09e667 | 0
+	  this._b = 0xbb67ae85 | 0
+	  this._c = 0x3c6ef372 | 0
+	  this._d = 0xa54ff53a | 0
+	  this._e = 0x510e527f | 0
+	  this._f = 0x9b05688c | 0
+	  this._g = 0x1f83d9ab | 0
+	  this._h = 0x5be0cd19 | 0
+
+	  return this
+	}
+
+	function Ch (x, y, z) {
+	  return z ^ (x & (y ^ z))
+	}
+
+	function Maj (x, y, z) {
+	  return (x & y) | (z & (x | y))
+	}
+
+	function Sigma0 (x) {
+	  return (x >>> 2 | x << 30) ^ (x >>> 13 | x << 19) ^ (x >>> 22 | x << 10)
+	}
+
+	function Sigma1 (x) {
+	  return (x >>> 6 | x << 26) ^ (x >>> 11 | x << 21) ^ (x >>> 25 | x << 7)
+	}
+
+	function Gamma0 (x) {
+	  return (x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)
+	}
+
+	function Gamma1 (x) {
+	  return (x >>> 17 | x << 15) ^ (x >>> 19 | x << 13) ^ (x >>> 10)
+	}
+
+	Sha256.prototype._update = function (M) {
+	  var W = this._w
+
+	  var a = this._a | 0
+	  var b = this._b | 0
+	  var c = this._c | 0
+	  var d = this._d | 0
+	  var e = this._e | 0
+	  var f = this._f | 0
+	  var g = this._g | 0
+	  var h = this._h | 0
+
+	  var j = 0
+
+	  function calcW () { return Gamma1(W[j - 2]) + W[j - 7] + Gamma0(W[j - 15]) + W[j - 16] }
+	  function loop (w) {
+	    W[j] = w
+
+	    var T1 = h + Sigma1(e) + Ch(e, f, g) + K[j] + w
+	    var T2 = Sigma0(a) + Maj(a, b, c)
+
+	    h = g
+	    g = f
+	    f = e
+	    e = d + T1
+	    d = c
+	    c = b
+	    b = a
+	    a = T1 + T2
+
+	    j++
+	  }
+
+	  while (j < 16) loop(M.readInt32BE(j * 4))
+	  while (j < 64) loop(calcW())
+
+	  this._a = (a + this._a) | 0
+	  this._b = (b + this._b) | 0
+	  this._c = (c + this._c) | 0
+	  this._d = (d + this._d) | 0
+	  this._e = (e + this._e) | 0
+	  this._f = (f + this._f) | 0
+	  this._g = (g + this._g) | 0
+	  this._h = (h + this._h) | 0
+	}
+
+	Sha256.prototype._hash = function () {
+	  var H = new Buffer(32)
+
+	  H.writeInt32BE(this._a, 0)
+	  H.writeInt32BE(this._b, 4)
+	  H.writeInt32BE(this._c, 8)
+	  H.writeInt32BE(this._d, 12)
+	  H.writeInt32BE(this._e, 16)
+	  H.writeInt32BE(this._f, 20)
+	  H.writeInt32BE(this._g, 24)
+	  H.writeInt32BE(this._h, 28)
+
+	  return H
+	}
+
+	module.exports = Sha256
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 616 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(606)
+	var SHA512 = __webpack_require__(617)
+	var Hash = __webpack_require__(612)
+
+	var W = new Array(160)
+
+	function Sha384 () {
+	  this.init()
+	  this._w = W
+
+	  Hash.call(this, 128, 112)
+	}
+
+	inherits(Sha384, SHA512)
+
+	Sha384.prototype.init = function () {
+	  this._a = 0xcbbb9d5d | 0
+	  this._b = 0x629a292a | 0
+	  this._c = 0x9159015a | 0
+	  this._d = 0x152fecd8 | 0
+	  this._e = 0x67332667 | 0
+	  this._f = 0x8eb44a87 | 0
+	  this._g = 0xdb0c2e0d | 0
+	  this._h = 0x47b5481d | 0
+
+	  this._al = 0xc1059ed8 | 0
+	  this._bl = 0x367cd507 | 0
+	  this._cl = 0x3070dd17 | 0
+	  this._dl = 0xf70e5939 | 0
+	  this._el = 0xffc00b31 | 0
+	  this._fl = 0x68581511 | 0
+	  this._gl = 0x64f98fa7 | 0
+	  this._hl = 0xbefa4fa4 | 0
+
+	  return this
+	}
+
+	Sha384.prototype._hash = function () {
+	  var H = new Buffer(48)
+
+	  function writeInt64BE (h, l, offset) {
+	    H.writeInt32BE(h, offset)
+	    H.writeInt32BE(l, offset + 4)
+	  }
+
+	  writeInt64BE(this._a, this._al, 0)
+	  writeInt64BE(this._b, this._bl, 8)
+	  writeInt64BE(this._c, this._cl, 16)
+	  writeInt64BE(this._d, this._dl, 24)
+	  writeInt64BE(this._e, this._el, 32)
+	  writeInt64BE(this._f, this._fl, 40)
+
+	  return H
+	}
+
+	module.exports = Sha384
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 617 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(606)
+	var Hash = __webpack_require__(612)
+
+	var K = [
+	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
+	  0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
+	  0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
+	  0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
+	  0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe,
+	  0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2,
+	  0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1,
+	  0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
+	  0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3,
+	  0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65,
+	  0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483,
+	  0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
+	  0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210,
+	  0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4,
+	  0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725,
+	  0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
+	  0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926,
+	  0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df,
+	  0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8,
+	  0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
+	  0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001,
+	  0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30,
+	  0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910,
+	  0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
+	  0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53,
+	  0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8,
+	  0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb,
+	  0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
+	  0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60,
+	  0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec,
+	  0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9,
+	  0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
+	  0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207,
+	  0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178,
+	  0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6,
+	  0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
+	  0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493,
+	  0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
+	  0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
+	  0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
+	]
+
+	var W = new Array(160)
+
+	function Sha512 () {
+	  this.init()
+	  this._w = W
+
+	  Hash.call(this, 128, 112)
+	}
+
+	inherits(Sha512, Hash)
+
+	Sha512.prototype.init = function () {
+	  this._a = 0x6a09e667 | 0
+	  this._b = 0xbb67ae85 | 0
+	  this._c = 0x3c6ef372 | 0
+	  this._d = 0xa54ff53a | 0
+	  this._e = 0x510e527f | 0
+	  this._f = 0x9b05688c | 0
+	  this._g = 0x1f83d9ab | 0
+	  this._h = 0x5be0cd19 | 0
+
+	  this._al = 0xf3bcc908 | 0
+	  this._bl = 0x84caa73b | 0
+	  this._cl = 0xfe94f82b | 0
+	  this._dl = 0x5f1d36f1 | 0
+	  this._el = 0xade682d1 | 0
+	  this._fl = 0x2b3e6c1f | 0
+	  this._gl = 0xfb41bd6b | 0
+	  this._hl = 0x137e2179 | 0
+
+	  return this
+	}
+
+	function Ch (x, y, z) {
+	  return z ^ (x & (y ^ z))
+	}
+
+	function Maj (x, y, z) {
+	  return (x & y) | (z & (x | y))
+	}
+
+	function Sigma0 (x, xl) {
+	  return (x >>> 28 | xl << 4) ^ (xl >>> 2 | x << 30) ^ (xl >>> 7 | x << 25)
+	}
+
+	function Sigma1 (x, xl) {
+	  return (x >>> 14 | xl << 18) ^ (x >>> 18 | xl << 14) ^ (xl >>> 9 | x << 23)
+	}
+
+	function Gamma0 (x, xl) {
+	  return (x >>> 1 | xl << 31) ^ (x >>> 8 | xl << 24) ^ (x >>> 7)
+	}
+
+	function Gamma0l (x, xl) {
+	  return (x >>> 1 | xl << 31) ^ (x >>> 8 | xl << 24) ^ (x >>> 7 | xl << 25)
+	}
+
+	function Gamma1 (x, xl) {
+	  return (x >>> 19 | xl << 13) ^ (xl >>> 29 | x << 3) ^ (x >>> 6)
+	}
+
+	function Gamma1l (x, xl) {
+	  return (x >>> 19 | xl << 13) ^ (xl >>> 29 | x << 3) ^ (x >>> 6 | xl << 26)
+	}
+
+	Sha512.prototype._update = function (M) {
+	  var W = this._w
+
+	  var a = this._a | 0
+	  var b = this._b | 0
+	  var c = this._c | 0
+	  var d = this._d | 0
+	  var e = this._e | 0
+	  var f = this._f | 0
+	  var g = this._g | 0
+	  var h = this._h | 0
+
+	  var al = this._al | 0
+	  var bl = this._bl | 0
+	  var cl = this._cl | 0
+	  var dl = this._dl | 0
+	  var el = this._el | 0
+	  var fl = this._fl | 0
+	  var gl = this._gl | 0
+	  var hl = this._hl | 0
+
+	  var i = 0
+	  var j = 0
+	  var Wi, Wil
+	  function calcW () {
+	    var x = W[j - 15 * 2]
+	    var xl = W[j - 15 * 2 + 1]
+	    var gamma0 = Gamma0(x, xl)
+	    var gamma0l = Gamma0l(xl, x)
+
+	    x = W[j - 2 * 2]
+	    xl = W[j - 2 * 2 + 1]
+	    var gamma1 = Gamma1(x, xl)
+	    var gamma1l = Gamma1l(xl, x)
+
+	    // W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
+	    var Wi7 = W[j - 7 * 2]
+	    var Wi7l = W[j - 7 * 2 + 1]
+
+	    var Wi16 = W[j - 16 * 2]
+	    var Wi16l = W[j - 16 * 2 + 1]
+
+	    Wil = gamma0l + Wi7l
+	    Wi = gamma0 + Wi7 + ((Wil >>> 0) < (gamma0l >>> 0) ? 1 : 0)
+	    Wil = Wil + gamma1l
+	    Wi = Wi + gamma1 + ((Wil >>> 0) < (gamma1l >>> 0) ? 1 : 0)
+	    Wil = Wil + Wi16l
+	    Wi = Wi + Wi16 + ((Wil >>> 0) < (Wi16l >>> 0) ? 1 : 0)
+	  }
+
+	  function loop () {
+	    W[j] = Wi
+	    W[j + 1] = Wil
+
+	    var maj = Maj(a, b, c)
+	    var majl = Maj(al, bl, cl)
+
+	    var sigma0h = Sigma0(a, al)
+	    var sigma0l = Sigma0(al, a)
+	    var sigma1h = Sigma1(e, el)
+	    var sigma1l = Sigma1(el, e)
+
+	    // t1 = h + sigma1 + ch + K[i] + W[i]
+	    var Ki = K[j]
+	    var Kil = K[j + 1]
+
+	    var ch = Ch(e, f, g)
+	    var chl = Ch(el, fl, gl)
+
+	    var t1l = hl + sigma1l
+	    var t1 = h + sigma1h + ((t1l >>> 0) < (hl >>> 0) ? 1 : 0)
+	    t1l = t1l + chl
+	    t1 = t1 + ch + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0)
+	    t1l = t1l + Kil
+	    t1 = t1 + Ki + ((t1l >>> 0) < (Kil >>> 0) ? 1 : 0)
+	    t1l = t1l + Wil
+	    t1 = t1 + Wi + ((t1l >>> 0) < (Wil >>> 0) ? 1 : 0)
+
+	    // t2 = sigma0 + maj
+	    var t2l = sigma0l + majl
+	    var t2 = sigma0h + maj + ((t2l >>> 0) < (sigma0l >>> 0) ? 1 : 0)
+
+	    h = g
+	    hl = gl
+	    g = f
+	    gl = fl
+	    f = e
+	    fl = el
+	    el = (dl + t1l) | 0
+	    e = (d + t1 + ((el >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
+	    d = c
+	    dl = cl
+	    c = b
+	    cl = bl
+	    b = a
+	    bl = al
+	    al = (t1l + t2l) | 0
+	    a = (t1 + t2 + ((al >>> 0) < (t1l >>> 0) ? 1 : 0)) | 0
+
+	    i++
+	    j += 2
+	  }
+
+	  while (i < 16) {
+	    Wi = M.readInt32BE(j * 4)
+	    Wil = M.readInt32BE(j * 4 + 4)
+
+	    loop()
+	  }
+
+	  while (i < 80) {
+	    calcW()
+	    loop()
+	  }
+
+	  this._al = (this._al + al) | 0
+	  this._bl = (this._bl + bl) | 0
+	  this._cl = (this._cl + cl) | 0
+	  this._dl = (this._dl + dl) | 0
+	  this._el = (this._el + el) | 0
+	  this._fl = (this._fl + fl) | 0
+	  this._gl = (this._gl + gl) | 0
+	  this._hl = (this._hl + hl) | 0
+
+	  this._a = (this._a + a + ((this._al >>> 0) < (al >>> 0) ? 1 : 0)) | 0
+	  this._b = (this._b + b + ((this._bl >>> 0) < (bl >>> 0) ? 1 : 0)) | 0
+	  this._c = (this._c + c + ((this._cl >>> 0) < (cl >>> 0) ? 1 : 0)) | 0
+	  this._d = (this._d + d + ((this._dl >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
+	  this._e = (this._e + e + ((this._el >>> 0) < (el >>> 0) ? 1 : 0)) | 0
+	  this._f = (this._f + f + ((this._fl >>> 0) < (fl >>> 0) ? 1 : 0)) | 0
+	  this._g = (this._g + g + ((this._gl >>> 0) < (gl >>> 0) ? 1 : 0)) | 0
+	  this._h = (this._h + h + ((this._hl >>> 0) < (hl >>> 0) ? 1 : 0)) | 0
+	}
+
+	Sha512.prototype._hash = function () {
+	  var H = new Buffer(64)
+
+	  function writeInt64BE (h, l, offset) {
+	    H.writeInt32BE(h, offset)
+	    H.writeInt32BE(l, offset + 4)
+	  }
+
+	  writeInt64BE(this._a, this._al, 0)
+	  writeInt64BE(this._b, this._bl, 8)
+	  writeInt64BE(this._c, this._cl, 16)
+	  writeInt64BE(this._d, this._dl, 24)
+	  writeInt64BE(this._e, this._el, 32)
+	  writeInt64BE(this._f, this._fl, 40)
+	  writeInt64BE(this._g, this._gl, 48)
+	  writeInt64BE(this._h, this._hl, 56)
+
+	  return H
+	}
+
+	module.exports = Sha512
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 618 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(365).Transform
+	var inherits = __webpack_require__(606)
+	var StringDecoder = __webpack_require__(375).StringDecoder
+	module.exports = CipherBase
+	inherits(CipherBase, Transform)
+	function CipherBase (hashMode) {
+	  Transform.call(this)
+	  this.hashMode = typeof hashMode === 'string'
+	  if (this.hashMode) {
+	    this[hashMode] = this._finalOrDigest
+	  } else {
+	    this.final = this._finalOrDigest
+	  }
+	  this._decoder = null
+	  this._encoding = null
+	}
+	CipherBase.prototype.update = function (data, inputEnc, outputEnc) {
+	  if (typeof data === 'string') {
+	    data = new Buffer(data, inputEnc)
+	  }
+	  var outData = this._update(data)
+	  if (this.hashMode) {
+	    return this
+	  }
+	  if (outputEnc) {
+	    outData = this._toString(outData, outputEnc)
+	  }
+	  return outData
+	}
+
+	CipherBase.prototype.setAutoPadding = function () {}
+
+	CipherBase.prototype.getAuthTag = function () {
+	  throw new Error('trying to get auth tag in unsupported state')
+	}
+
+	CipherBase.prototype.setAuthTag = function () {
+	  throw new Error('trying to set auth tag in unsupported state')
+	}
+
+	CipherBase.prototype.setAAD = function () {
+	  throw new Error('trying to set aad in unsupported state')
+	}
+
+	CipherBase.prototype._transform = function (data, _, next) {
+	  var err
+	  try {
+	    if (this.hashMode) {
+	      this._update(data)
+	    } else {
+	      this.push(this._update(data))
+	    }
+	  } catch (e) {
+	    err = e
+	  } finally {
+	    next(err)
+	  }
+	}
+	CipherBase.prototype._flush = function (done) {
+	  var err
+	  try {
+	    this.push(this._final())
+	  } catch (e) {
+	    err = e
+	  } finally {
+	    done(err)
+	  }
+	}
+	CipherBase.prototype._finalOrDigest = function (outputEnc) {
+	  var outData = this._final() || new Buffer('')
+	  if (outputEnc) {
+	    outData = this._toString(outData, outputEnc, true)
+	  }
+	  return outData
+	}
+
+	CipherBase.prototype._toString = function (value, enc, final) {
+	  if (!this._decoder) {
+	    this._decoder = new StringDecoder(enc)
+	    this._encoding = enc
+	  }
+	  if (this._encoding !== enc) {
+	    throw new Error('can\'t switch encodings')
+	  }
+	  var out = this._decoder.write(value)
+	  if (final) {
+	    out += this._decoder.end()
+	  }
+	  return out
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
+
+/***/ },
+/* 619 */
 /***/ function(module, exports) {
 
 	/**
@@ -78204,7 +66776,7 @@ var ripple =
 	};
 
 /***/ },
-/* 713 */
+/* 620 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78216,7 +66788,7 @@ var ripple =
 	var utils = __webpack_require__(517);
 	var validate = utils.common.validate;
 
-	var parseAccountTrustline = __webpack_require__(714);
+	var parseAccountTrustline = __webpack_require__(621);
 
 	function currencyFilter(currency, trustline) {
 	  return currency === null || trustline.specification.currency === currency;
@@ -78258,7 +66830,7 @@ var ripple =
 	module.exports = getTrustlines;
 
 /***/ },
-/* 714 */
+/* 621 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78294,7 +66866,7 @@ var ripple =
 	module.exports = parseAccountTrustline;
 
 /***/ },
-/* 715 */
+/* 622 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78353,7 +66925,7 @@ var ripple =
 	module.exports = getBalances;
 
 /***/ },
-/* 716 */
+/* 623 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78418,7 +66990,7 @@ var ripple =
 	module.exports = getBalanceSheet;
 
 /***/ },
-/* 717 */
+/* 624 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78429,7 +67001,7 @@ var ripple =
 	var _ = __webpack_require__(262);
 	var BigNumber = __webpack_require__(267);
 	var utils = __webpack_require__(517);
-	var parsePathfind = __webpack_require__(718);
+	var parsePathfind = __webpack_require__(625);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var toRippledAmount = _utils$common.toRippledAmount;
@@ -78535,7 +67107,7 @@ var ripple =
 	module.exports = getPaths;
 
 /***/ },
-/* 718 */
+/* 625 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78585,7 +67157,7 @@ var ripple =
 	module.exports = parsePathfind;
 
 /***/ },
-/* 719 */
+/* 626 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78597,7 +67169,7 @@ var ripple =
 	var utils = __webpack_require__(517);
 	var validate = utils.common.validate;
 
-	var parseAccountOrder = __webpack_require__(720);
+	var parseAccountOrder = __webpack_require__(627);
 
 	function requestAccountOffers(connection, address, ledgerVersion, marker, limit) {
 	  return connection.request({
@@ -78634,13 +67206,13 @@ var ripple =
 	module.exports = getOrders;
 
 /***/ },
-/* 720 */
+/* 627 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var utils = __webpack_require__(519);
-	var flags = __webpack_require__(721).orderFlags;
+	var flags = __webpack_require__(628).orderFlags;
 	var parseAmount = __webpack_require__(526);
 	var BigNumber = __webpack_require__(267);
 
@@ -78682,7 +67254,7 @@ var ripple =
 	module.exports = parseAccountOrder;
 
 /***/ },
-/* 721 */
+/* 628 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -78709,7 +67281,7 @@ var ripple =
 	};
 
 /***/ },
-/* 722 */
+/* 629 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78721,7 +67293,7 @@ var ripple =
 	var utils = __webpack_require__(517);
 	var validate = utils.common.validate;
 
-	var parseOrderbookOrder = __webpack_require__(723);
+	var parseOrderbookOrder = __webpack_require__(630);
 
 	// account is to specify a "perspective", which affects which unfunded offers
 	// are returned
@@ -78796,14 +67368,14 @@ var ripple =
 	module.exports = getOrderbook;
 
 /***/ },
-/* 723 */
+/* 630 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var utils = __webpack_require__(519);
-	var flags = __webpack_require__(721).orderFlags;
+	var flags = __webpack_require__(628).orderFlags;
 	var parseAmount = __webpack_require__(526);
 
 	function parseOrderbookOrder(order) {
@@ -78842,7 +67414,7 @@ var ripple =
 	module.exports = parseOrderbookOrder;
 
 /***/ },
-/* 724 */
+/* 631 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78891,7 +67463,7 @@ var ripple =
 	module.exports = getSettings;
 
 /***/ },
-/* 725 */
+/* 632 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78934,7 +67506,7 @@ var ripple =
 	module.exports = getAccountInfo;
 
 /***/ },
-/* 726 */
+/* 633 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -78943,7 +67515,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 	var toRippledAmount = utils.common.toRippledAmount;
 	var paymentFlags = utils.common.txFlags.Payment;
@@ -79076,7 +67648,7 @@ var ripple =
 	// directly to the hot wallet
 
 /***/ },
-/* 727 */
+/* 634 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -79188,7 +67760,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 728 */
+/* 635 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79196,7 +67768,7 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 	var trustlineFlags = utils.common.txFlags.TrustSet;
 	var BigNumber = __webpack_require__(267);
@@ -79247,7 +67819,7 @@ var ripple =
 	module.exports = prepareTrustline;
 
 /***/ },
-/* 729 */
+/* 636 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79255,7 +67827,7 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var offerFlags = utils.common.txFlags.OfferCreate;
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
@@ -79301,7 +67873,7 @@ var ripple =
 	module.exports = prepareOrder;
 
 /***/ },
-/* 730 */
+/* 637 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79309,7 +67881,7 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 
 	function createOrderCancellationTransaction(account, sequence) {
@@ -79331,7 +67903,7 @@ var ripple =
 	module.exports = prepareOrderCancellation;
 
 /***/ },
-/* 731 */
+/* 638 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79340,7 +67912,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var iso8601ToRippleTime = _utils$common.iso8601ToRippleTime;
@@ -79386,7 +67958,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentCreation;
 
 /***/ },
-/* 732 */
+/* 639 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79395,7 +67967,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 
 	function createSuspendedPaymentExecutionTransaction(account, payment) {
@@ -79432,7 +68004,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentExecution;
 
 /***/ },
-/* 733 */
+/* 640 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79441,7 +68013,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 
 	function createSuspendedPaymentCancellationTransaction(account, payment) {
@@ -79468,7 +68040,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentCancellation;
 
 /***/ },
-/* 734 */
+/* 641 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -79477,14 +68049,14 @@ var ripple =
 
 	'use strict';
 
-	var _Object$keys = __webpack_require__(655)['default'];
+	var _Object$keys = __webpack_require__(548)['default'];
 
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
 	var BigNumber = __webpack_require__(267);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 	var AccountFlagIndices = utils.common.constants.AccountFlagIndices;
 	var AccountFields = utils.common.constants.AccountFields;
@@ -79583,16 +68155,16 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 735 */
+/* 642 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var keypairs = __webpack_require__(272);
 	var binary = __webpack_require__(536);
 
-	var _require = __webpack_require__(642);
+	var _require = __webpack_require__(601);
 
 	var computeBinaryTransactionHash = _require.computeBinaryTransactionHash;
 
@@ -79624,7 +68196,7 @@ var ripple =
 	module.exports = sign;
 
 /***/ },
-/* 736 */
+/* 643 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79633,7 +68205,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(727);
+	var utils = __webpack_require__(634);
 	var validate = utils.common.validate;
 
 	function isImmediateRejection(engineResult) {
@@ -79669,14 +68241,14 @@ var ripple =
 	module.exports = submit;
 
 /***/ },
-/* 737 */
+/* 644 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var common = __webpack_require__(265);
-	var hashes = __webpack_require__(642);
+	var hashes = __webpack_require__(601);
 
 	function convertLedgerHeader(header) {
 	  return {
@@ -79741,7 +68313,7 @@ var ripple =
 	module.exports = computeLedgerHash;
 
 /***/ },
-/* 738 */
+/* 645 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -79752,7 +68324,7 @@ var ripple =
 	var utils = __webpack_require__(517);
 	var validate = utils.common.validate;
 
-	var parseLedger = __webpack_require__(739);
+	var parseLedger = __webpack_require__(646);
 
 	function getLedger() {
 	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
@@ -79775,7 +68347,7 @@ var ripple =
 	module.exports = getLedger;
 
 /***/ },
-/* 739 */
+/* 646 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
