@@ -73,37 +73,37 @@ var ripple =
 	var _ = __webpack_require__(262);
 	var EventEmitter = __webpack_require__(264).EventEmitter;
 	var common = __webpack_require__(265);
-	var server = __webpack_require__(515);
+	var server = __webpack_require__(516);
 	var connect = server.connect;
 	var disconnect = server.disconnect;
 	var getServerInfo = server.getServerInfo;
 	var getFee = server.getFee;
 	var isConnected = server.isConnected;
 	var getLedgerVersion = server.getLedgerVersion;
-	var getTransaction = __webpack_require__(516);
-	var getTransactions = __webpack_require__(535);
-	var getTrustlines = __webpack_require__(620);
-	var getBalances = __webpack_require__(622);
-	var getBalanceSheet = __webpack_require__(623);
-	var getPaths = __webpack_require__(624);
-	var getOrders = __webpack_require__(626);
-	var getOrderbook = __webpack_require__(629);
-	var getSettings = __webpack_require__(631);
-	var getAccountInfo = __webpack_require__(632);
-	var preparePayment = __webpack_require__(633);
-	var prepareTrustline = __webpack_require__(635);
-	var prepareOrder = __webpack_require__(636);
-	var prepareOrderCancellation = __webpack_require__(637);
-	var prepareSuspendedPaymentCreation = __webpack_require__(638);
-	var prepareSuspendedPaymentExecution = __webpack_require__(639);
-	var prepareSuspendedPaymentCancellation = __webpack_require__(640);
-	var prepareSettings = __webpack_require__(641);
-	var sign = __webpack_require__(642);
-	var submit = __webpack_require__(643);
+	var getTransaction = __webpack_require__(517);
+	var getTransactions = __webpack_require__(536);
+	var getTrustlines = __webpack_require__(621);
+	var getBalances = __webpack_require__(623);
+	var getBalanceSheet = __webpack_require__(624);
+	var getPaths = __webpack_require__(625);
+	var getOrders = __webpack_require__(627);
+	var getOrderbook = __webpack_require__(630);
+	var getSettings = __webpack_require__(632);
+	var getAccountInfo = __webpack_require__(633);
+	var preparePayment = __webpack_require__(634);
+	var prepareTrustline = __webpack_require__(636);
+	var prepareOrder = __webpack_require__(637);
+	var prepareOrderCancellation = __webpack_require__(638);
+	var prepareSuspendedPaymentCreation = __webpack_require__(639);
+	var prepareSuspendedPaymentExecution = __webpack_require__(640);
+	var prepareSuspendedPaymentCancellation = __webpack_require__(641);
+	var prepareSettings = __webpack_require__(642);
+	var sign = __webpack_require__(643);
+	var submit = __webpack_require__(644);
 	var errors = __webpack_require__(265).errors;
 	var generateAddress = common.generateAddressAPI;
-	var computeLedgerHash = __webpack_require__(644);
-	var getLedger = __webpack_require__(645);
+	var computeLedgerHash = __webpack_require__(645);
+	var getLedger = __webpack_require__(646);
 
 	// prevent access to non-validated ledger versions
 
@@ -150,7 +150,7 @@ var ripple =
 	      if (_servers.length === 1) {
 	        this.connection = new RestrictedConnection(_servers[0], options);
 	        this.connection.on('ledgerClosed', function (message) {
-	          _this.emit('ledgerClosed', server.formatLedgerClose(message));
+	          _this.emit('ledger', server.formatLedgerClose(message));
 	        });
 	        this.connection.on('error', function (type, info) {
 	          _this.emit('error', type, info);
@@ -208,7 +208,7 @@ var ripple =
 	RippleAPI._PRIVATE = {
 	  validate: common.validate,
 	  RangeSet: __webpack_require__(351).RangeSet,
-	  ledgerUtils: __webpack_require__(517),
+	  ledgerUtils: __webpack_require__(518),
 	  schemaValidator: __webpack_require__(393)
 	};
 
@@ -19551,7 +19551,7 @@ var ripple =
 	  errors: __webpack_require__(268),
 	  validate: __webpack_require__(392),
 	  txFlags: __webpack_require__(391).txFlags,
-	  serverInfo: __webpack_require__(514),
+	  serverInfo: __webpack_require__(515),
 	  dropsToXrp: utils.dropsToXrp,
 	  xrpToDrops: utils.xrpToDrops,
 	  toRippledAmount: utils.toRippledAmount,
@@ -36497,8 +36497,11 @@ var ripple =
 
 	    _get(Object.getPrototypeOf(Connection.prototype), 'constructor', this).call(this);
 	    this._url = url;
-	    this._proxyURL = options.proxyURL;
+	    this._trace = options.trace;
+	    this._proxyURL = options.proxy;
+	    this._proxyAuthorization = options.proxyAuthorization;
 	    this._authorization = options.authorization;
+	    this._trustedCertificates = options.trustedCertificates;
 	    this._timeout = options.timeout || 20 * 1000;
 	    this._isReady = false;
 	    this._ws = null;
@@ -36534,6 +36537,9 @@ var ripple =
 	    key: '_onMessage',
 	    value: function _onMessage(message) {
 	      var parameters = undefined;
+	      if (this._trace) {
+	        console.log(message);
+	      }
 	      try {
 	        parameters = this._parseMessage(message);
 	      } catch (error) {
@@ -36552,6 +36558,7 @@ var ripple =
 	  }, {
 	    key: '_onUnexpectedClose',
 	    value: function _onUnexpectedClose() {
+	      this._ws = null;
 	      this._isReady = false;
 	      this.connect().then();
 	    }
@@ -36573,12 +36580,17 @@ var ripple =
 	    }
 	  }, {
 	    key: '_createWebSocket',
-	    value: function _createWebSocket(url, proxyURL, authorization) {
+	    value: function _createWebSocket(url, proxyURL, proxyAuthorization, authorization, trustedCertificates) {
 	      var options = {};
 	      if (proxyURL !== undefined) {
 	        var parsedURL = parseURL(url);
 	        var proxyOptions = parseURL(proxyURL);
 	        proxyOptions.secureEndpoint = parsedURL.protocol === 'wss:';
+	        proxyOptions.secureProxy = proxyOptions.protocol === 'https:';
+	        proxyOptions.auth = proxyAuthorization;
+	        if (trustedCertificates) {
+	          proxyOptions.ca = trustedCertificates;
+	        }
 	        var HttpsProxyAgent = undefined;
 	        try {
 	          HttpsProxyAgent = __webpack_require__(359);
@@ -36607,11 +36619,10 @@ var ripple =
 	        } else if (_this2._state === WebSocket.CONNECTING) {
 	          _this2._ws.once('open', resolve);
 	        } else {
-	          _this2._ws = _this2._createWebSocket(_this2._url, _this2._proxyURL, _this2._authorization);
+	          _this2._ws = _this2._createWebSocket(_this2._url, _this2._proxyURL, _this2._proxyAuthorization, _this2._authorization, _this2._trustedCertificates);
 	          _this2._ws.on('message', _this2._onMessage.bind(_this2));
-	          _this2._ws.once('close', function () {
-	            return _this2._onUnexpectedClose;
-	          });
+	          _this2._onUnexpectedCloseBound = _this2._onUnexpectedClose.bind(_this2);
+	          _this2._ws.once('close', _this2._onUnexpectedCloseBound);
 	          _this2._ws.once('open', function () {
 	            return _this2._onOpen().then(resolve, reject);
 	          });
@@ -36629,7 +36640,7 @@ var ripple =
 	        } else if (_this3._state === WebSocket.CLOSING) {
 	          _this3._ws.once('close', resolve);
 	        } else {
-	          _this3._ws.removeListener('close', _this3._onUnexpectedClose);
+	          _this3._ws.removeListener('close', _this3._onUnexpectedCloseBound);
 	          _this3._ws.once('close', function () {
 	            _this3._ws = null;
 	            _this3._isReady = false;
@@ -36685,6 +36696,9 @@ var ripple =
 	    value: function _send(message) {
 	      var _this6 = this;
 
+	      if (this._trace) {
+	        console.log(message);
+	      }
 	      return new _Promise(function (resolve, reject) {
 	        _this6._ws.send(message, undefined, function (error, result) {
 	          if (error) {
@@ -40752,12 +40766,8 @@ var ripple =
 
 	// NOTE: These type checking functions intentionally don't use `instanceof`
 	// because it is fragile and can be easily faked with `Object.create()`.
-
-	function isArray(arg) {
-	  if (Array.isArray) {
-	    return Array.isArray(arg);
-	  }
-	  return objectToString(arg) === '[object Array]';
+	function isArray(ar) {
+	  return Array.isArray(ar);
 	}
 	exports.isArray = isArray;
 
@@ -40797,7 +40807,7 @@ var ripple =
 	exports.isUndefined = isUndefined;
 
 	function isRegExp(re) {
-	  return objectToString(re) === '[object RegExp]';
+	  return isObject(re) && objectToString(re) === '[object RegExp]';
 	}
 	exports.isRegExp = isRegExp;
 
@@ -40807,12 +40817,13 @@ var ripple =
 	exports.isObject = isObject;
 
 	function isDate(d) {
-	  return objectToString(d) === '[object Date]';
+	  return isObject(d) && objectToString(d) === '[object Date]';
 	}
 	exports.isDate = isDate;
 
 	function isError(e) {
-	  return (objectToString(e) === '[object Error]' || e instanceof Error);
+	  return isObject(e) &&
+	      (objectToString(e) === '[object Error]' || e instanceof Error);
 	}
 	exports.isError = isError;
 
@@ -40831,12 +40842,14 @@ var ripple =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = Buffer.isBuffer;
+	function isBuffer(arg) {
+	  return Buffer.isBuffer(arg);
+	}
+	exports.isBuffer = isBuffer;
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
 	}
-
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
@@ -44126,7 +44139,7 @@ var ripple =
 
 	function loadSchemas() {
 	  // listed explicitly for webpack (instead of scanning schemas directory)
-	  var schemas = [__webpack_require__(432), __webpack_require__(433), __webpack_require__(434), __webpack_require__(435), __webpack_require__(436), __webpack_require__(437), __webpack_require__(438), __webpack_require__(439), __webpack_require__(440), __webpack_require__(441), __webpack_require__(442), __webpack_require__(443), __webpack_require__(444), __webpack_require__(445), __webpack_require__(446), __webpack_require__(447), __webpack_require__(448), __webpack_require__(449), __webpack_require__(450), __webpack_require__(451), __webpack_require__(452), __webpack_require__(453), __webpack_require__(454), __webpack_require__(455), __webpack_require__(456), __webpack_require__(457), __webpack_require__(458), __webpack_require__(459), __webpack_require__(460), __webpack_require__(461), __webpack_require__(462), __webpack_require__(463), __webpack_require__(464), __webpack_require__(465), __webpack_require__(466), __webpack_require__(467), __webpack_require__(468), __webpack_require__(469), __webpack_require__(470), __webpack_require__(471), __webpack_require__(472), __webpack_require__(473), __webpack_require__(474), __webpack_require__(475), __webpack_require__(476), __webpack_require__(477), __webpack_require__(478), __webpack_require__(479), __webpack_require__(480), __webpack_require__(481), __webpack_require__(482), __webpack_require__(483), __webpack_require__(484), __webpack_require__(485), __webpack_require__(486), __webpack_require__(487), __webpack_require__(488), __webpack_require__(489), __webpack_require__(490), __webpack_require__(491), __webpack_require__(492), __webpack_require__(493), __webpack_require__(494), __webpack_require__(495), __webpack_require__(496), __webpack_require__(497), __webpack_require__(498), __webpack_require__(499), __webpack_require__(500), __webpack_require__(501), __webpack_require__(502), __webpack_require__(503), __webpack_require__(504), __webpack_require__(505), __webpack_require__(506), __webpack_require__(507), __webpack_require__(508), __webpack_require__(509), __webpack_require__(510), __webpack_require__(511), __webpack_require__(512), __webpack_require__(513)];
+	  var schemas = [__webpack_require__(432), __webpack_require__(433), __webpack_require__(434), __webpack_require__(435), __webpack_require__(436), __webpack_require__(437), __webpack_require__(438), __webpack_require__(439), __webpack_require__(440), __webpack_require__(441), __webpack_require__(442), __webpack_require__(443), __webpack_require__(444), __webpack_require__(445), __webpack_require__(446), __webpack_require__(447), __webpack_require__(448), __webpack_require__(449), __webpack_require__(450), __webpack_require__(451), __webpack_require__(452), __webpack_require__(453), __webpack_require__(454), __webpack_require__(455), __webpack_require__(456), __webpack_require__(457), __webpack_require__(458), __webpack_require__(459), __webpack_require__(460), __webpack_require__(461), __webpack_require__(462), __webpack_require__(463), __webpack_require__(464), __webpack_require__(465), __webpack_require__(466), __webpack_require__(467), __webpack_require__(468), __webpack_require__(469), __webpack_require__(470), __webpack_require__(471), __webpack_require__(472), __webpack_require__(473), __webpack_require__(474), __webpack_require__(475), __webpack_require__(476), __webpack_require__(477), __webpack_require__(478), __webpack_require__(479), __webpack_require__(480), __webpack_require__(481), __webpack_require__(482), __webpack_require__(483), __webpack_require__(484), __webpack_require__(485), __webpack_require__(486), __webpack_require__(487), __webpack_require__(488), __webpack_require__(489), __webpack_require__(490), __webpack_require__(491), __webpack_require__(492), __webpack_require__(493), __webpack_require__(494), __webpack_require__(495), __webpack_require__(496), __webpack_require__(497), __webpack_require__(498), __webpack_require__(499), __webpack_require__(500), __webpack_require__(501), __webpack_require__(502), __webpack_require__(503), __webpack_require__(504), __webpack_require__(505), __webpack_require__(506), __webpack_require__(507), __webpack_require__(508), __webpack_require__(509), __webpack_require__(510), __webpack_require__(511), __webpack_require__(512), __webpack_require__(513), __webpack_require__(514)];
 	  var titles = _.map(schemas, function (schema) {
 	    return schema.title;
 	  });
@@ -48392,6 +48405,7 @@ var ripple =
 	module.exports = {
 		"$schema": "http://json-schema.org/draft-04/schema#",
 		"title": "memos",
+		"link": "transaction-memos",
 		"description": "Array of memos to attach to the transaction.",
 		"type": "array",
 		"items": {
@@ -48941,13 +48955,118 @@ var ripple =
 
 	module.exports = {
 		"$schema": "http://json-schema.org/draft-04/schema#",
+		"title": "settingsPlusMemos",
+		"type": "object",
+		"properties": {
+			"passwordSpent": {
+				"type": "boolean",
+				"description": "Indicates that the account has used its free SetRegularKey transaction."
+			},
+			"requireDestinationTag": {
+				"type": "boolean",
+				"description": "Requires incoming payments to specify a destination tag."
+			},
+			"requireAuthorization": {
+				"type": "boolean",
+				"description": "If set, this account must individually approve other users in order for those users to hold this account’s issuances."
+			},
+			"disallowIncomingXRP": {
+				"type": "boolean",
+				"description": "Indicates that client applications should not send XRP to this account. Not enforced by rippled."
+			},
+			"disableMasterKey": {
+				"type": "boolean",
+				"description": "Disallows use of the master key to sign transactions for this account."
+			},
+			"enableTransactionIDTracking": {
+				"type": "boolean",
+				"description": "Track the ID of this account’s most recent transaction."
+			},
+			"noFreeze": {
+				"type": "boolean",
+				"description": "Permanently give up the ability to freeze individual trust lines. This flag can never be disabled after being enabled."
+			},
+			"globalFreeze": {
+				"type": "boolean",
+				"description": "Freeze all assets issued by this account."
+			},
+			"defaultRipple": {
+				"type": "boolean",
+				"description": "Enable [rippling](https://ripple.com/knowledge_center/understanding-the-noripple-flag/) on this account’s trust lines by default. (New in [rippled 0.27.3](https://github.com/ripple/rippled/releases/tag/0.27.3))"
+			},
+			"emailHash": {
+				"description": "Hash of an email address to be used for generating an avatar image. Conventionally, clients use Gravatar to display this image. Use `null` to clear.",
+				"oneOf": [
+					{
+						"type": "null"
+					},
+					{
+						"$ref": "hash128"
+					}
+				]
+			},
+			"messageKey": {
+				"type": "string",
+				"description": "Public key for sending encrypted messages to this account. Conventionally, it should be a secp256k1 key, the same encryption that is used by the rest of Ripple."
+			},
+			"domain": {
+				"type": "string",
+				"description": " The domain that owns this account, as a hexadecimal string representing the ASCII for the domain in lowercase."
+			},
+			"transferRate": {
+				"description": " The fee to charge when users transfer this account’s issuances, represented as billionths of a unit. Use `null` to set no fee.",
+				"oneOf": [
+					{
+						"type": "null"
+					},
+					{
+						"type": "number",
+						"minimum": 1,
+						"maximum": 4.294967295
+					}
+				]
+			},
+			"regularKey": {
+				"oneOf": [
+					{
+						"$ref": "address"
+					},
+					{
+						"type": "null"
+					}
+				],
+				"description": "The public key of a new keypair, to use as the regular key to this account, as a base-58-encoded string in the same format as an account address. Use `null` to remove the regular key."
+			},
+			"memos": {
+				"$ref": "memos"
+			}
+		},
+		"additionalProperties": false
+	};
+
+/***/ },
+/* 465 */
+/***/ function(module, exports) {
+
+	module.exports = {
+		"$schema": "http://json-schema.org/draft-04/schema#",
 		"title": "settings",
 		"link": "settings",
-		"allOf": [
+		"$ref": "settingsPlusMemos",
+		"oneOf": [
 			{
-				"$ref": "getSettings"
+				"required": [
+					"memos"
+				],
+				"minProperties": 2,
+				"maxProperties": 2
 			},
 			{
+				"not": {
+					"required": [
+						"memos"
+					]
+				},
 				"minProperties": 1,
 				"maxProperties": 1
 			}
@@ -48955,7 +49074,7 @@ var ripple =
 	};
 
 /***/ },
-/* 465 */
+/* 466 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49004,7 +49123,7 @@ var ripple =
 	};
 
 /***/ },
-/* 466 */
+/* 467 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49033,7 +49152,7 @@ var ripple =
 	};
 
 /***/ },
-/* 467 */
+/* 468 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49045,6 +49164,9 @@ var ripple =
 			"orderSequence": {
 				"$ref": "sequence",
 				"description": "The [account sequence number](#account-sequence-number) of the order to cancel."
+			},
+			"memos": {
+				"$ref": "memos"
 			}
 		},
 		"required": [
@@ -49054,7 +49176,7 @@ var ripple =
 	};
 
 /***/ },
-/* 468 */
+/* 469 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49095,6 +49217,9 @@ var ripple =
 				"type": "string",
 				"format": "date-time",
 				"description": "Time after which the offer is no longer active, as an [ISO 8601 date-time](https://en.wikipedia.org/wiki/ISO_8601)."
+			},
+			"memos": {
+				"$ref": "memos"
 			}
 		},
 		"required": [
@@ -49113,7 +49238,7 @@ var ripple =
 	};
 
 /***/ },
-/* 469 */
+/* 470 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49157,7 +49282,7 @@ var ripple =
 	};
 
 /***/ },
-/* 470 */
+/* 471 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49200,7 +49325,7 @@ var ripple =
 	};
 
 /***/ },
-/* 471 */
+/* 472 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49240,6 +49365,9 @@ var ripple =
 			"frozen": {
 				"type": "boolean",
 				"description": "If true, the trustline is frozen, which means that funds can only be sent to the owner."
+			},
+			"memos": {
+				"$ref": "memos"
 			}
 		},
 		"required": [
@@ -49251,7 +49379,7 @@ var ripple =
 	};
 
 /***/ },
-/* 472 */
+/* 473 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49277,7 +49405,7 @@ var ripple =
 	};
 
 /***/ },
-/* 473 */
+/* 474 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49302,7 +49430,7 @@ var ripple =
 	};
 
 /***/ },
-/* 474 */
+/* 475 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49347,7 +49475,7 @@ var ripple =
 	};
 
 /***/ },
-/* 475 */
+/* 476 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49360,7 +49488,7 @@ var ripple =
 	};
 
 /***/ },
-/* 476 */
+/* 477 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49409,7 +49537,7 @@ var ripple =
 	};
 
 /***/ },
-/* 477 */
+/* 478 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49508,7 +49636,7 @@ var ripple =
 	};
 
 /***/ },
-/* 478 */
+/* 479 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49533,7 +49661,7 @@ var ripple =
 	};
 
 /***/ },
-/* 479 */
+/* 480 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49581,7 +49709,7 @@ var ripple =
 	};
 
 /***/ },
-/* 480 */
+/* 481 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49640,7 +49768,7 @@ var ripple =
 	};
 
 /***/ },
-/* 481 */
+/* 482 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49685,24 +49813,18 @@ var ripple =
 	};
 
 /***/ },
-/* 482 */
+/* 483 */
 /***/ function(module, exports) {
 
 	module.exports = {
 		"$schema": "http://json-schema.org/draft-04/schema#",
-		"title": "ledgerClosed",
-		"description": "A ledgerClosed event message",
+		"title": "ledgerEvent",
+		"description": "A ledger event message",
 		"type": "object",
 		"properties": {
-			"feeBase": {
-				"type": "integer",
-				"minimum": 0,
-				"description": "Base fee, in drops."
-			},
-			"feeReference": {
-				"type": "integer",
-				"minimum": 0,
-				"description": "Cost of the 'reference transaction' in 'fee units'."
+			"baseFeeXRP": {
+				"$ref": "value",
+				"description": "Base fee, in XRP."
 			},
 			"ledgerHash": {
 				"$ref": "hash256",
@@ -49717,14 +49839,12 @@ var ripple =
 				"format": "date-time",
 				"description": "The time at which this ledger closed."
 			},
-			"reserveBase": {
-				"type": "integer",
-				"minimum": 0,
+			"reserveBaseXRP": {
+				"$ref": "value",
 				"description": "The minimum reserve, in drops of XRP, that is required for an account."
 			},
-			"reserveIncrement": {
-				"type": "integer",
-				"minimum": 0,
+			"reserveIncrementXRP": {
+				"$ref": "value",
 				"description": "The increase in account reserve that is added for each item the account owns, such as offers or trust lines."
 			},
 			"transactionCount": {
@@ -49739,12 +49859,11 @@ var ripple =
 		},
 		"addtionalProperties": false,
 		"required": [
-			"feeBase",
-			"feeReference",
+			"baseFeeXRP",
 			"ledgerHash",
 			"ledgerTimestamp",
-			"reserveBase",
-			"reserveIncrement",
+			"reserveBaseXRP",
+			"reserveIncrementXRP",
 			"transactionCount",
 			"ledgerVersion",
 			"validatedLedgerVersions"
@@ -49752,7 +49871,7 @@ var ripple =
 	};
 
 /***/ },
-/* 483 */
+/* 484 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49785,7 +49904,7 @@ var ripple =
 	};
 
 /***/ },
-/* 484 */
+/* 485 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -49900,12 +50019,12 @@ var ripple =
 					"reserveBaseXRP": {
 						"type": "integer",
 						"minimum": 0,
-						"description": "Minimum amount of XRP (not drops) necessary for every account to keep in reserve."
+						"description": "Minimum amount of XRP necessary for every account to keep in reserve."
 					},
 					"reserveIncrementXRP": {
 						"type": "integer",
 						"minimum": 0,
-						"description": "Amount of XRP (not drops) added to the account reserve for each object an account is responsible for in the ledger."
+						"description": "Amount of XRP added to the account reserve for each object an account is responsible for in the ledger."
 					},
 					"ledgerVersion": {
 						"type": "integer",
@@ -49945,99 +50064,22 @@ var ripple =
 	};
 
 /***/ },
-/* 485 */
+/* 486 */
 /***/ function(module, exports) {
 
 	module.exports = {
 		"$schema": "http://json-schema.org/draft-04/schema#",
 		"title": "getSettings",
-		"type": "object",
-		"properties": {
-			"passwordSpent": {
-				"type": "boolean",
-				"description": "Indicates that the account has used its free SetRegularKey transaction."
-			},
-			"requireDestinationTag": {
-				"type": "boolean",
-				"description": "Requires incoming payments to specify a destination tag."
-			},
-			"requireAuthorization": {
-				"type": "boolean",
-				"description": "If set, this account must individually approve other users in order for those users to hold this account’s issuances."
-			},
-			"disallowIncomingXRP": {
-				"type": "boolean",
-				"description": "Indicates that client applications should not send XRP to this account. Not enforced by rippled."
-			},
-			"disableMasterKey": {
-				"type": "boolean",
-				"description": "Disallows use of the master key to sign transactions for this account."
-			},
-			"enableTransactionIDTracking": {
-				"type": "boolean",
-				"description": "Track the ID of this account’s most recent transaction."
-			},
-			"noFreeze": {
-				"type": "boolean",
-				"description": "Permanently give up the ability to freeze individual trust lines. This flag can never be disabled after being enabled."
-			},
-			"globalFreeze": {
-				"type": "boolean",
-				"description": "Freeze all assets issued by this account."
-			},
-			"defaultRipple": {
-				"type": "boolean",
-				"description": "Enable [rippling](https://ripple.com/knowledge_center/understanding-the-noripple-flag/) on this account’s trust lines by default. (New in [rippled 0.27.3](https://github.com/ripple/rippled/releases/tag/0.27.3))"
-			},
-			"emailHash": {
-				"description": "Hash of an email address to be used for generating an avatar image. Conventionally, clients use Gravatar to display this image. Use `null` to clear.",
-				"oneOf": [
-					{
-						"type": "null"
-					},
-					{
-						"$ref": "hash128"
-					}
-				]
-			},
-			"messageKey": {
-				"type": "string",
-				"description": "Public key for sending encrypted messages to this account. Conventionally, it should be a secp256k1 key, the same encryption that is used by the rest of Ripple."
-			},
-			"domain": {
-				"type": "string",
-				"description": " The domain that owns this account, as a hexadecimal string representing the ASCII for the domain in lowercase."
-			},
-			"transferRate": {
-				"description": " The fee to charge when users transfer this account’s issuances, represented as billionths of a unit. Use `null` to set no fee.",
-				"oneOf": [
-					{
-						"type": "null"
-					},
-					{
-						"type": "number",
-						"minimum": 1,
-						"maximum": 4.294967295
-					}
-				]
-			},
-			"regularKey": {
-				"oneOf": [
-					{
-						"$ref": "address"
-					},
-					{
-						"type": "null"
-					}
-				],
-				"description": "The public key of a new keypair, to use as the regular key to this account, as a base-58-encoded string in the same format as an account address. Use `null` to remove the regular key."
-			}
-		},
-		"additionalProperties": false
+		"$ref": "settingsPlusMemos",
+		"not": {
+			"required": [
+				"memos"
+			]
+		}
 	};
 
 /***/ },
-/* 486 */
+/* 487 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50105,7 +50147,7 @@ var ripple =
 	};
 
 /***/ },
-/* 487 */
+/* 488 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50169,7 +50211,7 @@ var ripple =
 	};
 
 /***/ },
-/* 488 */
+/* 489 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50310,7 +50352,7 @@ var ripple =
 	};
 
 /***/ },
-/* 489 */
+/* 490 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50323,7 +50365,7 @@ var ripple =
 	};
 
 /***/ },
-/* 490 */
+/* 491 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50364,7 +50406,7 @@ var ripple =
 				"state": {
 					"properties": {
 						"balance": {
-							"$ref": "value",
+							"$ref": "signedValue",
 							"description": "The balance on the trustline, representing which party owes the other and by how much."
 						}
 					},
@@ -50385,7 +50427,7 @@ var ripple =
 	};
 
 /***/ },
-/* 491 */
+/* 492 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50429,7 +50471,7 @@ var ripple =
 	};
 
 /***/ },
-/* 492 */
+/* 493 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50468,7 +50510,7 @@ var ripple =
 	};
 
 /***/ },
-/* 493 */
+/* 494 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50504,7 +50546,7 @@ var ripple =
 	};
 
 /***/ },
-/* 494 */
+/* 495 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50540,7 +50582,7 @@ var ripple =
 	};
 
 /***/ },
-/* 495 */
+/* 496 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50581,7 +50623,7 @@ var ripple =
 	};
 
 /***/ },
-/* 496 */
+/* 497 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50672,7 +50714,7 @@ var ripple =
 	};
 
 /***/ },
-/* 497 */
+/* 498 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50681,31 +50723,55 @@ var ripple =
 		"type": "object",
 		"properties": {
 			"trace": {
-				"type": "boolean"
+				"type": "boolean",
+				"description": "If true, log rippled requests and responses to stdout."
 			},
 			"feeCushion": {
-				"$ref": "value"
+				"type": "number",
+				"minimum": 1,
+				"description": "Factor to multiply estimated fee by to provide a cushion in case the required fee rises during submission of a transaction. Defaults to `1.2`."
 			},
 			"servers": {
 				"type": "array",
+				"description": "Array of rippled servers to connect to. Currently only one server is supported.",
 				"items": {
 					"type": "string",
+					"description": "URI for rippled websocket port. Must start with `wss://` or `ws://`.",
 					"format": "uri",
 					"pattern": "^wss?://"
 				}
 			},
 			"proxy": {
-				"format": "uri"
+				"format": "uri",
+				"description": "URI for HTTP/HTTPS proxy to use to connect to the rippled server."
+			},
+			"timeout": {
+				"type": "integer",
+				"description": "Timeout in milliseconds before considering a request to have failed.",
+				"minimum": 1
+			},
+			"proxyAuthorization": {
+				"type": "string",
+				"description": "Username and password for HTTP basic authentication to the proxy in the format **username:password**."
 			},
 			"authorization": {
-				"type": "string"
+				"type": "string",
+				"description": "Username and password for HTTP basic authentication to the rippled server in the format **username:password**."
+			},
+			"trustedCertificates": {
+				"type": "array",
+				"description": "Array of PEM-formatted SSL certificates to trust when connecting to a proxy. This is useful if you want to use a self-signed certificate on the proxy server. Note: Each element must contain a single certificate; concatenated certificates are not valid.",
+				"items": {
+					"type": "string",
+					"description": "A PEM-formatted SSL certificate to trust when connecting to a proxy."
+				}
 			}
 		},
 		"additionalProperties": false
 	};
 
 /***/ },
-/* 498 */
+/* 499 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50736,7 +50802,7 @@ var ripple =
 	};
 
 /***/ },
-/* 499 */
+/* 500 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50767,7 +50833,7 @@ var ripple =
 	};
 
 /***/ },
-/* 500 */
+/* 501 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50801,7 +50867,7 @@ var ripple =
 	};
 
 /***/ },
-/* 501 */
+/* 502 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50888,7 +50954,7 @@ var ripple =
 	};
 
 /***/ },
-/* 502 */
+/* 503 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50932,7 +50998,7 @@ var ripple =
 	};
 
 /***/ },
-/* 503 */
+/* 504 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50960,7 +51026,7 @@ var ripple =
 	};
 
 /***/ },
-/* 504 */
+/* 505 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -50988,7 +51054,7 @@ var ripple =
 	};
 
 /***/ },
-/* 505 */
+/* 506 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51016,7 +51082,7 @@ var ripple =
 	};
 
 /***/ },
-/* 506 */
+/* 507 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51028,9 +51094,9 @@ var ripple =
 				"$ref": "address",
 				"description": "The address of the account that is creating the transaction."
 			},
-			"sequence": {
-				"$ref": "sequence",
-				"description": "The account sequence number of the transaction that created the order to cancel."
+			"orderCancellation": {
+				"$ref": "orderCancellation",
+				"description": "The specification of the order cancellation to prepare."
 			},
 			"instructions": {
 				"$ref": "instructions"
@@ -51039,12 +51105,12 @@ var ripple =
 		"additionalProperties": false,
 		"required": [
 			"address",
-			"sequence"
+			"orderCancellation"
 		]
 	};
 
 /***/ },
-/* 507 */
+/* 508 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51072,7 +51138,7 @@ var ripple =
 	};
 
 /***/ },
-/* 508 */
+/* 509 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51100,7 +51166,7 @@ var ripple =
 	};
 
 /***/ },
-/* 509 */
+/* 510 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51128,7 +51194,7 @@ var ripple =
 	};
 
 /***/ },
-/* 510 */
+/* 511 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51156,7 +51222,7 @@ var ripple =
 	};
 
 /***/ },
-/* 511 */
+/* 512 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51176,7 +51242,7 @@ var ripple =
 	};
 
 /***/ },
-/* 512 */
+/* 513 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51202,7 +51268,7 @@ var ripple =
 	};
 
 /***/ },
-/* 513 */
+/* 514 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -51222,7 +51288,7 @@ var ripple =
 	};
 
 /***/ },
-/* 514 */
+/* 515 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -51273,7 +51339,7 @@ var ripple =
 	};
 
 /***/ },
-/* 515 */
+/* 516 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -51310,13 +51376,12 @@ var ripple =
 
 	function formatLedgerClose(ledgerClose) {
 	  return {
-	    feeBase: ledgerClose.fee_base,
-	    feeReference: ledgerClose.fee_ref,
+	    baseFeeXRP: common.dropsToXrp(ledgerClose.fee_base),
 	    ledgerHash: ledgerClose.ledger_hash,
 	    ledgerVersion: ledgerClose.ledger_index,
 	    ledgerTimestamp: common.rippleTimeToISO8601(ledgerClose.ledger_time),
-	    reserveBase: ledgerClose.reserve_base,
-	    reserveIncrement: ledgerClose.reserve_inc,
+	    reserveBaseXRP: common.dropsToXrp(ledgerClose.reserve_base),
+	    reserveIncrementXRP: common.dropsToXrp(ledgerClose.reserve_inc),
 	    transactionCount: ledgerClose.txn_count,
 	    validatedLedgerVersions: ledgerClose.validated_ledgers
 	  };
@@ -51333,7 +51398,7 @@ var ripple =
 	};
 
 /***/ },
-/* 516 */
+/* 517 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -51342,8 +51407,8 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
-	var parseTransaction = __webpack_require__(518);
+	var utils = __webpack_require__(518);
+	var parseTransaction = __webpack_require__(519);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var errors = _utils$common.errors;
@@ -51430,7 +51495,7 @@ var ripple =
 	module.exports = getTransaction;
 
 /***/ },
-/* 517 */
+/* 518 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -51550,21 +51615,21 @@ var ripple =
 	};
 
 /***/ },
-/* 518 */
+/* 519 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
-	var parsePayment = __webpack_require__(525);
-	var parseTrustline = __webpack_require__(527);
-	var parseOrder = __webpack_require__(528);
-	var parseOrderCancellation = __webpack_require__(529);
-	var parseSettings = __webpack_require__(530);
-	var parseSuspendedPaymentCreation = __webpack_require__(532);
-	var parseSuspendedPaymentExecution = __webpack_require__(533);
-	var parseSuspendedPaymentCancellation = __webpack_require__(534);
+	var utils = __webpack_require__(520);
+	var parsePayment = __webpack_require__(526);
+	var parseTrustline = __webpack_require__(528);
+	var parseOrder = __webpack_require__(529);
+	var parseOrderCancellation = __webpack_require__(530);
+	var parseSettings = __webpack_require__(531);
+	var parseSuspendedPaymentCreation = __webpack_require__(533);
+	var parseSuspendedPaymentExecution = __webpack_require__(534);
+	var parseSuspendedPaymentCancellation = __webpack_require__(535);
 
 	function parseTransactionType(type) {
 	  var mapping = {
@@ -51610,14 +51675,14 @@ var ripple =
 	module.exports = parseTransaction;
 
 /***/ },
-/* 519 */
+/* 520 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
 	'use strict';
 	var _ = __webpack_require__(262);
-	var transactionParser = __webpack_require__(520);
-	var utils = __webpack_require__(517);
+	var transactionParser = __webpack_require__(521);
+	var utils = __webpack_require__(518);
 	var BigNumber = __webpack_require__(267);
 
 	function adjustQualityForXRP(quality, takerGetsCurrency, takerPaysCurrency) {
@@ -51706,22 +51771,22 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 520 */
+/* 521 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports.parseBalanceChanges = __webpack_require__(521).parseBalanceChanges;
-	module.exports.parseOrderbookChanges = __webpack_require__(523).parseOrderbookChanges;
-	module.exports.getAffectedAccounts = __webpack_require__(522).getAffectedAccounts;
+	module.exports.parseBalanceChanges = __webpack_require__(522).parseBalanceChanges;
+	module.exports.parseOrderbookChanges = __webpack_require__(524).parseOrderbookChanges;
+	module.exports.getAffectedAccounts = __webpack_require__(523).getAffectedAccounts;
 
 
 /***/ },
-/* 521 */
+/* 522 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var _ = __webpack_require__(262);
 	var BigNumber = __webpack_require__(267);
-	var normalizeNodes = __webpack_require__(522).normalizeNodes;
-	var dropsToXRP = __webpack_require__(522).dropsToXRP;
+	var normalizeNodes = __webpack_require__(523).normalizeNodes;
+	var dropsToXRP = __webpack_require__(523).dropsToXRP;
 
 	function parseBalance(balance) {
 	  return new BigNumber(balance.value || balance);
@@ -51826,7 +51891,7 @@ var ripple =
 
 
 /***/ },
-/* 522 */
+/* 523 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -51911,15 +51976,15 @@ var ripple =
 
 
 /***/ },
-/* 523 */
+/* 524 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(522);
+	var utils = __webpack_require__(523);
 	var GlobalBigNumber = __webpack_require__(267);
 	var BigNumber = GlobalBigNumber.another({DECIMAL_PLACES: 40});
-	var parseQuality = __webpack_require__(524);
+	var parseQuality = __webpack_require__(525);
 
 	var lsfSell = 0x00020000;   // see "lsfSell" flag in rippled source code
 
@@ -52061,7 +52126,7 @@ var ripple =
 
 
 /***/ },
-/* 524 */
+/* 525 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -52093,15 +52158,15 @@ var ripple =
 
 
 /***/ },
-/* 525 */
+/* 526 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
-	var parseAmount = __webpack_require__(526);
+	var utils = __webpack_require__(520);
+	var parseAmount = __webpack_require__(527);
 	var txFlags = utils.txFlags;
 
 	function isPartialPayment(tx) {
@@ -52150,12 +52215,12 @@ var ripple =
 	module.exports = parsePayment;
 
 /***/ },
-/* 526 */
+/* 527 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
-	var utils = __webpack_require__(519);
+	var utils = __webpack_require__(520);
 
 	function parseAmount(amount) {
 	  if (typeof amount === 'string') {
@@ -52174,13 +52239,13 @@ var ripple =
 	module.exports = parseAmount;
 
 /***/ },
-/* 527 */
+/* 528 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
+	var utils = __webpack_require__(520);
 	var flags = utils.txFlags.TrustSet;
 	var BigNumber = __webpack_require__(267);
 
@@ -52219,14 +52284,14 @@ var ripple =
 	module.exports = parseTrustline;
 
 /***/ },
-/* 528 */
+/* 529 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
-	var parseAmount = __webpack_require__(526);
+	var utils = __webpack_require__(520);
+	var parseAmount = __webpack_require__(527);
 	var flags = utils.txFlags.OfferCreate;
 
 	function parseOrder(tx) {
@@ -52252,7 +52317,7 @@ var ripple =
 	module.exports = parseOrder;
 
 /***/ },
-/* 529 */
+/* 530 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -52269,15 +52334,15 @@ var ripple =
 	module.exports = parseOrderCancellation;
 
 /***/ },
-/* 530 */
+/* 531 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
-	var AccountFlags = __webpack_require__(519).constants.AccountFlags;
-	var parseFields = __webpack_require__(531);
+	var AccountFlags = __webpack_require__(520).constants.AccountFlags;
+	var parseFields = __webpack_require__(532);
 
 	function getAccountRootModifiedNode(tx) {
 	  var modifiedNodes = tx.meta.AffectedNodes.filter(function (node) {
@@ -52338,13 +52403,13 @@ var ripple =
 	module.exports = parseSettings;
 
 /***/ },
-/* 531 */
+/* 532 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
 	'use strict';
 	var BigNumber = __webpack_require__(267);
-	var AccountFields = __webpack_require__(519).constants.AccountFields;
+	var AccountFields = __webpack_require__(520).constants.AccountFields;
 
 	function parseField(info, value) {
 	  if (info.encoding === 'hex' && !info.length) {
@@ -52373,15 +52438,15 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 532 */
+/* 533 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
-	var parseAmount = __webpack_require__(526);
+	var utils = __webpack_require__(520);
+	var parseAmount = __webpack_require__(527);
 
 	function removeGenericCounterparty(amount, address) {
 	  return amount.counterparty === address ? _.omit(amount, 'counterparty') : amount;
@@ -52415,13 +52480,13 @@ var ripple =
 	module.exports = parseSuspendedPaymentCreation;
 
 /***/ },
-/* 533 */
+/* 534 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
+	var utils = __webpack_require__(520);
 
 	function parseSuspendedPaymentExecution(tx) {
 	  assert(tx.TransactionType === 'SuspendedPaymentFinish');
@@ -52439,13 +52504,13 @@ var ripple =
 	module.exports = parseSuspendedPaymentExecution;
 
 /***/ },
-/* 534 */
+/* 535 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var assert = __webpack_require__(273);
-	var utils = __webpack_require__(519);
+	var utils = __webpack_require__(520);
 
 	function parseSuspendedPaymentCancellation(tx) {
 	  assert(tx.TransactionType === 'SuspendedPaymentCancel');
@@ -52460,7 +52525,7 @@ var ripple =
 	module.exports = parseSuspendedPaymentCancellation;
 
 /***/ },
-/* 535 */
+/* 536 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -52470,15 +52535,15 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var binary = __webpack_require__(536);
+	var binary = __webpack_require__(537);
 
-	var _require = __webpack_require__(601);
+	var _require = __webpack_require__(602);
 
 	var computeTransactionHash = _require.computeTransactionHash;
 
-	var utils = __webpack_require__(517);
-	var parseTransaction = __webpack_require__(518);
-	var getTransaction = __webpack_require__(516);
+	var utils = __webpack_require__(518);
+	var parseTransaction = __webpack_require__(519);
+	var getTransaction = __webpack_require__(517);
 	var validate = utils.common.validate;
 
 	function parseBinaryTransaction(transaction) {
@@ -52499,9 +52564,6 @@ var ripple =
 	}
 
 	function counterpartyFilter(filters, tx) {
-	  if (!filters.counterparty) {
-	    return true;
-	  }
 	  if (tx.address === filters.counterparty || tx.specification && (tx.specification.destination && tx.specification.destination.address === filters.counterparty || tx.specification.counterparty === filters.counterparty)) {
 	    return true;
 	  }
@@ -52618,13 +52680,13 @@ var ripple =
 	module.exports = getTransactions;
 
 /***/ },
-/* 536 */
+/* 537 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var coreTypes = __webpack_require__(537);
+	var coreTypes = __webpack_require__(538);
 	var quality = coreTypes.quality;
 	var _coreTypes$binary = coreTypes.binary;
 	var bytesToHex = _coreTypes$binary.bytesToHex;
@@ -52674,28 +52736,28 @@ var ripple =
 	};
 
 /***/ },
-/* 537 */
+/* 538 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var _ = __webpack_require__(262);
-	var enums = __webpack_require__(538);
+	var enums = __webpack_require__(539);
 	var Field = enums.Field;
 
-	var types = __webpack_require__(553);
-	var binary = __webpack_require__(580);
+	var types = __webpack_require__(554);
+	var binary = __webpack_require__(581);
 
-	var _require = __webpack_require__(597);
+	var _require = __webpack_require__(598);
 
 	var ShaMap = _require.ShaMap;
 
-	var ledgerHashes = __webpack_require__(598);
-	var hashes = __webpack_require__(583);
-	var quality = __webpack_require__(599);
-	var signing = __webpack_require__(600);
+	var ledgerHashes = __webpack_require__(599);
+	var hashes = __webpack_require__(584);
+	var quality = __webpack_require__(600);
+	var signing = __webpack_require__(601);
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(582);
 
 	var HashPrefix = _require2.HashPrefix;
 
@@ -52711,23 +52773,23 @@ var ripple =
 	}, types);
 
 /***/ },
-/* 538 */
+/* 539 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _slicedToArray = __webpack_require__(539)['default'];
+	var _slicedToArray = __webpack_require__(540)['default'];
 
 	var assert = __webpack_require__(273);
 	var _ = __webpack_require__(262);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var parseBytes = _require.parseBytes;
 	var serializeUIntN = _require.serializeUIntN;
 
-	var makeClass = __webpack_require__(547);
-	var enums = __webpack_require__(552);
+	var makeClass = __webpack_require__(548);
+	var enums = __webpack_require__(553);
 
 	function transformWith(func, obj) {
 	  return _.transform(obj, func);
@@ -52858,14 +52920,14 @@ var ripple =
 	module.exports = Enums;
 
 /***/ },
-/* 539 */
+/* 540 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _getIterator = __webpack_require__(540)["default"];
+	var _getIterator = __webpack_require__(541)["default"];
 
-	var _isIterable = __webpack_require__(543)["default"];
+	var _isIterable = __webpack_require__(544)["default"];
 
 	exports["default"] = (function () {
 	  function sliceIterator(arr, i) {
@@ -52908,21 +52970,21 @@ var ripple =
 	exports.__esModule = true;
 
 /***/ },
-/* 540 */
+/* 541 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(541), __esModule: true };
+	module.exports = { "default": __webpack_require__(542), __esModule: true };
 
 /***/ },
-/* 541 */
+/* 542 */
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(49);
 	__webpack_require__(33);
-	module.exports = __webpack_require__(542);
+	module.exports = __webpack_require__(543);
 
 /***/ },
-/* 542 */
+/* 543 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var anObject = __webpack_require__(23)
@@ -52934,21 +52996,21 @@ var ripple =
 	};
 
 /***/ },
-/* 543 */
+/* 544 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = { "default": __webpack_require__(544), __esModule: true };
+	module.exports = { "default": __webpack_require__(545), __esModule: true };
 
 /***/ },
-/* 544 */
+/* 545 */
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(49);
 	__webpack_require__(33);
-	module.exports = __webpack_require__(545);
+	module.exports = __webpack_require__(546);
 
 /***/ },
-/* 545 */
+/* 546 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var classof   = __webpack_require__(54)
@@ -52962,7 +53024,7 @@ var ripple =
 	};
 
 /***/ },
-/* 546 */
+/* 547 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -53089,15 +53151,15 @@ var ripple =
 	};
 
 /***/ },
-/* 547 */
+/* 548 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _Object$keys = __webpack_require__(548)['default'];
+	var _Object$keys = __webpack_require__(549)['default'];
 
 	var _ = __webpack_require__(262);
-	var inherits = __webpack_require__(551);
+	var inherits = __webpack_require__(552);
 
 	function forEach(obj, func) {
 	  _Object$keys(obj || {}).forEach(function (k) {
@@ -53183,20 +53245,20 @@ var ripple =
 	};
 
 /***/ },
-/* 548 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(549), __esModule: true };
-
-/***/ },
 /* 549 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(550);
-	module.exports = __webpack_require__(13).Object.keys;
+	module.exports = { "default": __webpack_require__(550), __esModule: true };
 
 /***/ },
 /* 550 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(551);
+	module.exports = __webpack_require__(13).Object.keys;
+
+/***/ },
+/* 551 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 19.1.2.14 Object.keys(O)
@@ -53209,7 +53271,7 @@ var ripple =
 	});
 
 /***/ },
-/* 551 */
+/* 552 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -53238,7 +53300,7 @@ var ripple =
 
 
 /***/ },
-/* 552 */
+/* 553 */
 /***/ function(module, exports) {
 
 	module.exports = {
@@ -54882,71 +54944,71 @@ var ripple =
 	};
 
 /***/ },
-/* 553 */
+/* 554 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var enums = __webpack_require__(538);
+	var enums = __webpack_require__(539);
 	var Field = enums.Field;
 
-	var _require = __webpack_require__(554);
+	var _require = __webpack_require__(555);
 
 	var AccountID = _require.AccountID;
 
-	var _require2 = __webpack_require__(559);
+	var _require2 = __webpack_require__(560);
 
 	var Amount = _require2.Amount;
 
-	var _require3 = __webpack_require__(570);
+	var _require3 = __webpack_require__(571);
 
 	var Blob = _require3.Blob;
 
-	var _require4 = __webpack_require__(567);
+	var _require4 = __webpack_require__(568);
 
 	var Currency = _require4.Currency;
 
-	var _require5 = __webpack_require__(571);
+	var _require5 = __webpack_require__(572);
 
 	var Hash128 = _require5.Hash128;
 
-	var _require6 = __webpack_require__(555);
+	var _require6 = __webpack_require__(556);
 
 	var Hash160 = _require6.Hash160;
 
-	var _require7 = __webpack_require__(572);
+	var _require7 = __webpack_require__(573);
 
 	var Hash256 = _require7.Hash256;
 
-	var _require8 = __webpack_require__(573);
+	var _require8 = __webpack_require__(574);
 
 	var PathSet = _require8.PathSet;
 
-	var _require9 = __webpack_require__(574);
+	var _require9 = __webpack_require__(575);
 
 	var STArray = _require9.STArray;
 
-	var _require10 = __webpack_require__(575);
+	var _require10 = __webpack_require__(576);
 
 	var STObject = _require10.STObject;
 
-	var _require11 = __webpack_require__(576);
+	var _require11 = __webpack_require__(577);
 
 	var UInt16 = _require11.UInt16;
 
-	var _require12 = __webpack_require__(577);
+	var _require12 = __webpack_require__(578);
 
 	var UInt32 = _require12.UInt32;
 
-	var _require13 = __webpack_require__(568);
+	var _require13 = __webpack_require__(569);
 
 	var UInt64 = _require13.UInt64;
 
-	var _require14 = __webpack_require__(578);
+	var _require14 = __webpack_require__(579);
 
 	var UInt8 = _require14.UInt8;
 
-	var _require15 = __webpack_require__(579);
+	var _require15 = __webpack_require__(580);
 
 	var Vector256 = _require15.Vector256;
 
@@ -54979,19 +55041,19 @@ var ripple =
 	module.exports = coreTypes;
 
 /***/ },
-/* 554 */
+/* 555 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
 	var _require = __webpack_require__(320);
 
 	var decodeAccountID = _require.decodeAccountID;
 	var encodeAccountID = _require.encodeAccountID;
 
-	var _require2 = __webpack_require__(555);
+	var _require2 = __webpack_require__(556);
 
 	var Hash160 = _require2.Hash160;
 
@@ -55033,14 +55095,14 @@ var ripple =
 	};
 
 /***/ },
-/* 555 */
+/* 556 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(556);
+	var _require = __webpack_require__(557);
 
 	var Hash = _require.Hash;
 
@@ -55054,20 +55116,20 @@ var ripple =
 	};
 
 /***/ },
-/* 556 */
+/* 557 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(557);
+	var _require = __webpack_require__(558);
 
 	var Comparable = _require.Comparable;
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(546);
+	var _require2 = __webpack_require__(547);
 
 	var compareBytes = _require2.compareBytes;
 	var parseBytes = _require2.parseBytes;
@@ -55114,17 +55176,17 @@ var ripple =
 	};
 
 /***/ },
-/* 557 */
+/* 558 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var bytesToHex = _require.bytesToHex;
 	var slice = _require.slice;
 
-	var _require2 = __webpack_require__(558);
+	var _require2 = __webpack_require__(559);
 
 	var BytesList = _require2.BytesList;
 
@@ -55191,21 +55253,21 @@ var ripple =
 	};
 
 /***/ },
-/* 558 */
+/* 559 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var parseBytes = _require.parseBytes;
 	var bytesToHex = _require.bytesToHex;
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require2 = __webpack_require__(538);
+	var _require2 = __webpack_require__(539);
 
 	var Type = _require2.Type;
 	var Field = _require2.Field;
@@ -55314,38 +55376,38 @@ var ripple =
 	};
 
 /***/ },
-/* 559 */
+/* 560 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _toConsumableArray = __webpack_require__(560)['default'];
+	var _toConsumableArray = __webpack_require__(561)['default'];
 
-	var _bind = __webpack_require__(564)['default'];
+	var _bind = __webpack_require__(565)['default'];
 
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(565);
-	var Decimal = __webpack_require__(566);
-	var makeClass = __webpack_require__(547);
+	var BN = __webpack_require__(566);
+	var Decimal = __webpack_require__(567);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(557);
+	var _require = __webpack_require__(558);
 
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(546);
+	var _require2 = __webpack_require__(547);
 
 	var bytesToHex = _require2.bytesToHex;
 
-	var _require3 = __webpack_require__(567);
+	var _require3 = __webpack_require__(568);
 
 	var Currency = _require3.Currency;
 
-	var _require4 = __webpack_require__(554);
+	var _require4 = __webpack_require__(555);
 
 	var AccountID = _require4.AccountID;
 
-	var _require5 = __webpack_require__(568);
+	var _require5 = __webpack_require__(569);
 
 	var UInt64 = _require5.UInt64;
 
@@ -55470,12 +55532,12 @@ var ripple =
 	};
 
 /***/ },
-/* 560 */
+/* 561 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _Array$from = __webpack_require__(561)["default"];
+	var _Array$from = __webpack_require__(562)["default"];
 
 	exports["default"] = function (arr) {
 	  if (Array.isArray(arr)) {
@@ -55490,21 +55552,21 @@ var ripple =
 	exports.__esModule = true;
 
 /***/ },
-/* 561 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(562), __esModule: true };
-
-/***/ },
 /* 562 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(33);
-	__webpack_require__(563);
-	module.exports = __webpack_require__(13).Array.from;
+	module.exports = { "default": __webpack_require__(563), __esModule: true };
 
 /***/ },
 /* 563 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(33);
+	__webpack_require__(564);
+	module.exports = __webpack_require__(13).Array.from;
+
+/***/ },
+/* 564 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -55546,7 +55608,7 @@ var ripple =
 
 
 /***/ },
-/* 564 */
+/* 565 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -55555,7 +55617,7 @@ var ripple =
 	exports.__esModule = true;
 
 /***/ },
-/* 565 */
+/* 566 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {(function (module, exports) {
@@ -58009,7 +58071,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(263)(module)))
 
 /***/ },
-/* 566 */
+/* 567 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! decimal.js v4.0.3 https://github.com/MikeMcl/decimal.js/LICENCE */
@@ -62080,19 +62142,19 @@ var ripple =
 
 
 /***/ },
-/* 567 */
+/* 568 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var slice = _require.slice;
 
-	var _require2 = __webpack_require__(555);
+	var _require2 = __webpack_require__(556);
 
 	var Hash160 = _require2.Hash160;
 
@@ -62190,22 +62252,22 @@ var ripple =
 	};
 
 /***/ },
-/* 568 */
+/* 569 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(565);
-	var makeClass = __webpack_require__(547);
+	var BN = __webpack_require__(566);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var bytesToHex = _require.bytesToHex;
 	var parseBytes = _require.parseBytes;
 	var serializeUIntN = _require.serializeUIntN;
 
-	var _require2 = __webpack_require__(569);
+	var _require2 = __webpack_require__(570);
 
 	var UInt = _require2.UInt;
 
@@ -62256,21 +62318,21 @@ var ripple =
 	};
 
 /***/ },
-/* 569 */
+/* 570 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var BN = __webpack_require__(565);
-	var makeClass = __webpack_require__(547);
+	var BN = __webpack_require__(566);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(557);
+	var _require = __webpack_require__(558);
 
 	var Comparable = _require.Comparable;
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(546);
+	var _require2 = __webpack_require__(547);
 
 	var serializeUIntN = _require2.serializeUIntN;
 
@@ -62331,18 +62393,18 @@ var ripple =
 	};
 
 /***/ },
-/* 570 */
+/* 571 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var parseBytes = _require.parseBytes;
 
-	var _require2 = __webpack_require__(557);
+	var _require2 = __webpack_require__(558);
 
 	var SerializedType = _require2.SerializedType;
 
@@ -62373,14 +62435,14 @@ var ripple =
 	};
 
 /***/ },
-/* 571 */
+/* 572 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(556);
+	var _require = __webpack_require__(557);
 
 	var Hash = _require.Hash;
 
@@ -62394,14 +62456,14 @@ var ripple =
 	};
 
 /***/ },
-/* 572 */
+/* 573 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(556);
+	var _require = __webpack_require__(557);
 
 	var Hash = _require.Hash;
 
@@ -62420,24 +62482,24 @@ var ripple =
 	};
 
 /***/ },
-/* 573 */
+/* 574 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	/* eslint-disable no-unused-expressions */
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(557);
+	var _require = __webpack_require__(558);
 
 	var SerializedType = _require.SerializedType;
 	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
 
-	var _require2 = __webpack_require__(567);
+	var _require2 = __webpack_require__(568);
 
 	var Currency = _require2.Currency;
 
-	var _require3 = __webpack_require__(554);
+	var _require3 = __webpack_require__(555);
 
 	var AccountID = _require3.AccountID;
 
@@ -62553,23 +62615,23 @@ var ripple =
 	};
 
 /***/ },
-/* 574 */
+/* 575 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(557);
+	var _require = __webpack_require__(558);
 
 	var ensureArrayLikeIs = _require.ensureArrayLikeIs;
 	var SerializedType = _require.SerializedType;
 
-	var _require2 = __webpack_require__(538);
+	var _require2 = __webpack_require__(539);
 
 	var Field = _require2.Field;
 
-	var _require3 = __webpack_require__(575);
+	var _require3 = __webpack_require__(576);
 
 	var STObject = _require3.STObject;
 	var ArrayEndMarker = Field.ArrayEndMarker;
@@ -62612,28 +62674,28 @@ var ripple =
 	};
 
 /***/ },
-/* 575 */
+/* 576 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	// const assert = require('assert');
 
-	var _Object$keys = __webpack_require__(548)['default'];
+	var _Object$keys = __webpack_require__(549)['default'];
 
 	var _ = __webpack_require__(262);
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(538);
+	var _require = __webpack_require__(539);
 
 	var Field = _require.Field;
 
-	var _require2 = __webpack_require__(558);
+	var _require2 = __webpack_require__(559);
 
 	var BinarySerializer = _require2.BinarySerializer;
 	var ObjectEndMarker = Field.ObjectEndMarker;
 
-	var _require3 = __webpack_require__(557);
+	var _require3 = __webpack_require__(558);
 
 	var SerializedType = _require3.SerializedType;
 
@@ -62704,14 +62766,14 @@ var ripple =
 	};
 
 /***/ },
-/* 576 */
+/* 577 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(569);
+	var _require = __webpack_require__(570);
 
 	var UInt = _require.UInt;
 
@@ -62725,14 +62787,14 @@ var ripple =
 	};
 
 /***/ },
-/* 577 */
+/* 578 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(569);
+	var _require = __webpack_require__(570);
 
 	var UInt = _require.UInt;
 
@@ -62746,14 +62808,14 @@ var ripple =
 	};
 
 /***/ },
-/* 578 */
+/* 579 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(569);
+	var _require = __webpack_require__(570);
 
 	var UInt = _require.UInt;
 
@@ -62767,18 +62829,18 @@ var ripple =
 	};
 
 /***/ },
-/* 579 */
+/* 580 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(572);
+	var _require = __webpack_require__(573);
 
 	var Hash256 = _require.Hash256;
 
-	var _require2 = __webpack_require__(557);
+	var _require2 = __webpack_require__(558);
 
 	var ensureArrayLikeIs = _require2.ensureArrayLikeIs;
 	var SerializedType = _require2.SerializedType;
@@ -62817,35 +62879,35 @@ var ripple =
 	};
 
 /***/ },
-/* 580 */
+/* 581 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* eslint-disable func-style */
 
 	'use strict';
 
-	var types = __webpack_require__(553);
+	var types = __webpack_require__(554);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(582);
 
 	var HashPrefix = _require.HashPrefix;
 
-	var _require2 = __webpack_require__(582);
+	var _require2 = __webpack_require__(583);
 
 	var BinaryParser = _require2.BinaryParser;
 
-	var _require3 = __webpack_require__(558);
+	var _require3 = __webpack_require__(559);
 
 	var BinarySerializer = _require3.BinarySerializer;
 	var BytesList = _require3.BytesList;
 
-	var _require4 = __webpack_require__(546);
+	var _require4 = __webpack_require__(547);
 
 	var bytesToHex = _require4.bytesToHex;
 	var slice = _require4.slice;
 	var parseBytes = _require4.parseBytes;
 
-	var _require5 = __webpack_require__(583);
+	var _require5 = __webpack_require__(584);
 
 	var sha512Half = _require5.sha512Half;
 	var transactionID = _require5.transactionID;
@@ -62911,12 +62973,12 @@ var ripple =
 	};
 
 /***/ },
-/* 581 */
+/* 582 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var serializeUIntN = _require.serializeUIntN;
 
@@ -62949,19 +63011,19 @@ var ripple =
 	};
 
 /***/ },
-/* 582 */
+/* 583 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(538);
+	var _require = __webpack_require__(539);
 
 	var Field = _require.Field;
 
-	var _require2 = __webpack_require__(546);
+	var _require2 = __webpack_require__(547);
 
 	var slice = _require2.slice;
 	var parseBytes = _require2.parseBytes;
@@ -63063,26 +63125,26 @@ var ripple =
 	};
 
 /***/ },
-/* 583 */
+/* 584 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(581);
+	var _require = __webpack_require__(582);
 
 	var HashPrefix = _require.HashPrefix;
 
-	var _require2 = __webpack_require__(553);
+	var _require2 = __webpack_require__(554);
 
 	var Hash256 = _require2.Hash256;
 
-	var _require3 = __webpack_require__(546);
+	var _require3 = __webpack_require__(547);
 
 	var parseBytes = _require3.parseBytes;
 
-	var createHash = __webpack_require__(584);
+	var createHash = __webpack_require__(585);
 
 	var Sha512Half = makeClass({
 	  Sha512Half: function Sha512Half() {
@@ -63131,16 +63193,16 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 584 */
+/* 585 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-	var inherits = __webpack_require__(551)
-	var md5 = __webpack_require__(585)
-	var rmd160 = __webpack_require__(587)
-	var sha = __webpack_require__(588)
+	var inherits = __webpack_require__(552)
+	var md5 = __webpack_require__(586)
+	var rmd160 = __webpack_require__(588)
+	var sha = __webpack_require__(589)
 
-	var Base = __webpack_require__(596)
+	var Base = __webpack_require__(597)
 
 	function HashNoConstructor(hash) {
 	  Base.call(this, 'digest')
@@ -63190,7 +63252,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 585 */
+/* 586 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -63203,7 +63265,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(586);
+	var helpers = __webpack_require__(587);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -63351,7 +63413,7 @@ var ripple =
 	};
 
 /***/ },
-/* 586 */
+/* 587 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
@@ -63391,7 +63453,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 587 */
+/* 588 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -63608,7 +63670,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 588 */
+/* 589 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -63620,16 +63682,16 @@ var ripple =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(589)
-	exports.sha1 = __webpack_require__(591)
-	exports.sha224 = __webpack_require__(592)
-	exports.sha256 = __webpack_require__(593)
-	exports.sha384 = __webpack_require__(594)
-	exports.sha512 = __webpack_require__(595)
+	exports.sha = __webpack_require__(590)
+	exports.sha1 = __webpack_require__(592)
+	exports.sha224 = __webpack_require__(593)
+	exports.sha256 = __webpack_require__(594)
+	exports.sha384 = __webpack_require__(595)
+	exports.sha512 = __webpack_require__(596)
 
 
 /***/ },
-/* 589 */
+/* 590 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -63640,8 +63702,8 @@ var ripple =
 	 * operation was added.
 	 */
 
-	var inherits = __webpack_require__(551)
-	var Hash = __webpack_require__(590)
+	var inherits = __webpack_require__(552)
+	var Hash = __webpack_require__(591)
 
 	var W = new Array(80)
 
@@ -63736,7 +63798,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 590 */
+/* 591 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
@@ -63812,7 +63874,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 591 */
+/* 592 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -63824,8 +63886,8 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(551)
-	var Hash = __webpack_require__(590)
+	var inherits = __webpack_require__(552)
+	var Hash = __webpack_require__(591)
 
 	var W = new Array(80)
 
@@ -63915,7 +63977,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 592 */
+/* 593 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -63926,9 +63988,9 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(551)
-	var Sha256 = __webpack_require__(593)
-	var Hash = __webpack_require__(590)
+	var inherits = __webpack_require__(552)
+	var Sha256 = __webpack_require__(594)
+	var Hash = __webpack_require__(591)
 
 	var W = new Array(64)
 
@@ -63974,7 +64036,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 593 */
+/* 594 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -63985,8 +64047,8 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(551)
-	var Hash = __webpack_require__(590)
+	var inherits = __webpack_require__(552)
+	var Hash = __webpack_require__(591)
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -64122,12 +64184,12 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 594 */
+/* 595 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(551)
-	var SHA512 = __webpack_require__(595)
-	var Hash = __webpack_require__(590)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(552)
+	var SHA512 = __webpack_require__(596)
+	var Hash = __webpack_require__(591)
 
 	var W = new Array(160)
 
@@ -64185,11 +64247,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 595 */
+/* 596 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(551)
-	var Hash = __webpack_require__(590)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(552)
+	var Hash = __webpack_require__(591)
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -64458,11 +64520,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 596 */
+/* 597 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(365).Transform
-	var inherits = __webpack_require__(551)
+	var inherits = __webpack_require__(552)
 	var StringDecoder = __webpack_require__(375).StringDecoder
 	module.exports = CipherBase
 	inherits(CipherBase, Transform)
@@ -64555,23 +64617,23 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 597 */
+/* 598 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	var assert = __webpack_require__(273);
-	var makeClass = __webpack_require__(547);
+	var makeClass = __webpack_require__(548);
 
-	var _require = __webpack_require__(553);
+	var _require = __webpack_require__(554);
 
 	var Hash256 = _require.Hash256;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(582);
 
 	var HashPrefix = _require2.HashPrefix;
 
-	var _require3 = __webpack_require__(583);
+	var _require3 = __webpack_require__(584);
 
 	var Hasher = _require3.Sha512Half;
 
@@ -64681,33 +64743,33 @@ var ripple =
 	};
 
 /***/ },
-/* 598 */
+/* 599 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _toConsumableArray = __webpack_require__(560)['default'];
+	var _toConsumableArray = __webpack_require__(561)['default'];
 
 	var _ = __webpack_require__(262);
-	var BN = __webpack_require__(565);
+	var BN = __webpack_require__(566);
 	var assert = __webpack_require__(273);
-	var types = __webpack_require__(553);
+	var types = __webpack_require__(554);
 	var STObject = types.STObject;
 	var Hash256 = types.Hash256;
 
-	var _require = __webpack_require__(597);
+	var _require = __webpack_require__(598);
 
 	var ShaMap = _require.ShaMap;
 
-	var _require2 = __webpack_require__(581);
+	var _require2 = __webpack_require__(582);
 
 	var HashPrefix = _require2.HashPrefix;
 
-	var _require3 = __webpack_require__(583);
+	var _require3 = __webpack_require__(584);
 
 	var Sha512Half = _require3.Sha512Half;
 
-	var _require4 = __webpack_require__(580);
+	var _require4 = __webpack_require__(581);
 
 	var BinarySerializer = _require4.BinarySerializer;
 	var serializeObject = _require4.serializeObject;
@@ -64778,23 +64840,23 @@ var ripple =
 	};
 
 /***/ },
-/* 599 */
+/* 600 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var Decimal = __webpack_require__(566);
+	var Decimal = __webpack_require__(567);
 
-	var _require = __webpack_require__(546);
+	var _require = __webpack_require__(547);
 
 	var bytesToHex = _require.bytesToHex;
 	var slice = _require.slice;
 	var parseBytes = _require.parseBytes;
 
-	var _require2 = __webpack_require__(553);
+	var _require2 = __webpack_require__(554);
 
 	var UInt64 = _require2.UInt64;
 
-	var BN = __webpack_require__(565);
+	var BN = __webpack_require__(566);
 
 	module.exports = {
 	  encode: function encode(arg) {
@@ -64814,7 +64876,7 @@ var ripple =
 	};
 
 /***/ },
-/* 600 */
+/* 601 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64822,11 +64884,11 @@ var ripple =
 
 	var _ = __webpack_require__(262);
 
-	var _require = __webpack_require__(553);
+	var _require = __webpack_require__(554);
 
 	var AccountID = _require.AccountID;
 
-	var binary = __webpack_require__(580);
+	var binary = __webpack_require__(581);
 	var serializeObject = binary.serializeObject;
 	var bytesToHex = binary.bytesToHex;
 	var multiSigningData = binary.multiSigningData;
@@ -64896,18 +64958,18 @@ var ripple =
 	};
 
 /***/ },
-/* 601 */
+/* 602 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 	var BigNumber = __webpack_require__(267);
 	var decodeAddress = __webpack_require__(320).decodeAddress;
-	var binary = __webpack_require__(536);
-	var hashprefixes = __webpack_require__(602);
-	var SHAMap = __webpack_require__(603).SHAMap;
-	var SHAMapTreeNode = __webpack_require__(603).SHAMapTreeNode;
-	var ledgerspaces = __webpack_require__(619);
-	var sha512half = __webpack_require__(604);
+	var binary = __webpack_require__(537);
+	var hashprefixes = __webpack_require__(603);
+	var SHAMap = __webpack_require__(604).SHAMap;
+	var SHAMapTreeNode = __webpack_require__(604).SHAMapTreeNode;
+	var ledgerspaces = __webpack_require__(620);
+	var sha512half = __webpack_require__(605);
 
 	function hash(hex) {
 	  return sha512half(new Buffer(hex, 'hex'));
@@ -65058,7 +65120,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 602 */
+/* 603 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -65095,14 +65157,14 @@ var ripple =
 
 
 /***/ },
-/* 603 */
+/* 604 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
 
 	var util = __webpack_require__(269);
-	var hashprefixes = __webpack_require__(602);
-	var sha512half = __webpack_require__(604);
+	var hashprefixes = __webpack_require__(603);
+	var sha512half = __webpack_require__(605);
 	var HEX_ZERO = '00000000000000000000000000000000' +
 	               '00000000000000000000000000000000';
 
@@ -65277,11 +65339,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 604 */
+/* 605 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var createHash = __webpack_require__(605);
+	var createHash = __webpack_require__(606);
 
 	// For a hash function, rippled uses SHA-512 and then truncates the result
 	// to the first 256 bytes. This algorithm, informally called SHA-512Half,
@@ -65296,16 +65358,16 @@ var ripple =
 
 
 /***/ },
-/* 605 */
+/* 606 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
-	var inherits = __webpack_require__(606)
-	var md5 = __webpack_require__(607)
-	var rmd160 = __webpack_require__(609)
-	var sha = __webpack_require__(610)
+	var inherits = __webpack_require__(607)
+	var md5 = __webpack_require__(608)
+	var rmd160 = __webpack_require__(610)
+	var sha = __webpack_require__(611)
 
-	var Base = __webpack_require__(618)
+	var Base = __webpack_require__(619)
 
 	function HashNoConstructor(hash) {
 	  Base.call(this, 'digest')
@@ -65355,7 +65417,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 606 */
+/* 607 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -65384,7 +65446,7 @@ var ripple =
 
 
 /***/ },
-/* 607 */
+/* 608 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65397,7 +65459,7 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(608);
+	var helpers = __webpack_require__(609);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -65545,7 +65607,7 @@ var ripple =
 	};
 
 /***/ },
-/* 608 */
+/* 609 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {'use strict';
@@ -65585,7 +65647,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 609 */
+/* 610 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -65802,7 +65864,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 610 */
+/* 611 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -65814,16 +65876,16 @@ var ripple =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(611)
-	exports.sha1 = __webpack_require__(613)
-	exports.sha224 = __webpack_require__(614)
-	exports.sha256 = __webpack_require__(615)
-	exports.sha384 = __webpack_require__(616)
-	exports.sha512 = __webpack_require__(617)
+	exports.sha = __webpack_require__(612)
+	exports.sha1 = __webpack_require__(614)
+	exports.sha224 = __webpack_require__(615)
+	exports.sha256 = __webpack_require__(616)
+	exports.sha384 = __webpack_require__(617)
+	exports.sha512 = __webpack_require__(618)
 
 
 /***/ },
-/* 611 */
+/* 612 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -65834,8 +65896,8 @@ var ripple =
 	 * operation was added.
 	 */
 
-	var inherits = __webpack_require__(606)
-	var Hash = __webpack_require__(612)
+	var inherits = __webpack_require__(607)
+	var Hash = __webpack_require__(613)
 
 	var W = new Array(80)
 
@@ -65930,7 +65992,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 612 */
+/* 613 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
@@ -66006,7 +66068,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 613 */
+/* 614 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -66018,8 +66080,8 @@ var ripple =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(606)
-	var Hash = __webpack_require__(612)
+	var inherits = __webpack_require__(607)
+	var Hash = __webpack_require__(613)
 
 	var W = new Array(80)
 
@@ -66109,7 +66171,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 614 */
+/* 615 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -66120,9 +66182,9 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(606)
-	var Sha256 = __webpack_require__(615)
-	var Hash = __webpack_require__(612)
+	var inherits = __webpack_require__(607)
+	var Sha256 = __webpack_require__(616)
+	var Hash = __webpack_require__(613)
 
 	var W = new Array(64)
 
@@ -66168,7 +66230,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 615 */
+/* 616 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -66179,8 +66241,8 @@ var ripple =
 	 *
 	 */
 
-	var inherits = __webpack_require__(606)
-	var Hash = __webpack_require__(612)
+	var inherits = __webpack_require__(607)
+	var Hash = __webpack_require__(613)
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -66316,12 +66378,12 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 616 */
+/* 617 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(606)
-	var SHA512 = __webpack_require__(617)
-	var Hash = __webpack_require__(612)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(607)
+	var SHA512 = __webpack_require__(618)
+	var Hash = __webpack_require__(613)
 
 	var W = new Array(160)
 
@@ -66379,11 +66441,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 617 */
+/* 618 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(606)
-	var Hash = __webpack_require__(612)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(607)
+	var Hash = __webpack_require__(613)
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -66652,11 +66714,11 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 618 */
+/* 619 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(365).Transform
-	var inherits = __webpack_require__(606)
+	var inherits = __webpack_require__(607)
 	var StringDecoder = __webpack_require__(375).StringDecoder
 	module.exports = CipherBase
 	inherits(CipherBase, Transform)
@@ -66749,7 +66811,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 619 */
+/* 620 */
 /***/ function(module, exports) {
 
 	/**
@@ -66776,7 +66838,7 @@ var ripple =
 	};
 
 /***/ },
-/* 620 */
+/* 621 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -66785,10 +66847,10 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
-	var parseAccountTrustline = __webpack_require__(621);
+	var parseAccountTrustline = __webpack_require__(622);
 
 	function currencyFilter(currency, trustline) {
 	  return currency === null || trustline.specification.currency === currency;
@@ -66830,12 +66892,12 @@ var ripple =
 	module.exports = getTrustlines;
 
 /***/ },
-/* 621 */
+/* 622 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
-	var utils = __webpack_require__(519);
+	var utils = __webpack_require__(520);
 
 	// rippled 'account_lines' returns a different format for
 	// trustlines than 'tx'
@@ -66866,7 +66928,7 @@ var ripple =
 	module.exports = parseAccountTrustline;
 
 /***/ },
-/* 622 */
+/* 623 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -66874,7 +66936,7 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
 	function getTrustlineBalanceAmount(trustline) {
@@ -66925,7 +66987,7 @@ var ripple =
 	module.exports = getBalances;
 
 /***/ },
-/* 623 */
+/* 624 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -66936,7 +66998,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
 	function formatBalanceSheet(balanceSheet) {
@@ -66990,7 +67052,7 @@ var ripple =
 	module.exports = getBalanceSheet;
 
 /***/ },
-/* 624 */
+/* 625 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67000,8 +67062,8 @@ var ripple =
 
 	var _ = __webpack_require__(262);
 	var BigNumber = __webpack_require__(267);
-	var utils = __webpack_require__(517);
-	var parsePathfind = __webpack_require__(625);
+	var utils = __webpack_require__(518);
+	var parsePathfind = __webpack_require__(626);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var toRippledAmount = _utils$common.toRippledAmount;
@@ -67107,13 +67169,13 @@ var ripple =
 	module.exports = getPaths;
 
 /***/ },
-/* 625 */
+/* 626 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
-	var parseAmount = __webpack_require__(526);
+	var parseAmount = __webpack_require__(527);
 
 	function parsePaths(paths) {
 	  return paths.map(function (steps) {
@@ -67157,7 +67219,7 @@ var ripple =
 	module.exports = parsePathfind;
 
 /***/ },
-/* 626 */
+/* 627 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67166,10 +67228,10 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
-	var parseAccountOrder = __webpack_require__(627);
+	var parseAccountOrder = __webpack_require__(628);
 
 	function requestAccountOffers(connection, address, ledgerVersion, marker, limit) {
 	  return connection.request({
@@ -67206,14 +67268,14 @@ var ripple =
 	module.exports = getOrders;
 
 /***/ },
-/* 627 */
+/* 628 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
-	var utils = __webpack_require__(519);
-	var flags = __webpack_require__(628).orderFlags;
-	var parseAmount = __webpack_require__(526);
+	var utils = __webpack_require__(520);
+	var flags = __webpack_require__(629).orderFlags;
+	var parseAmount = __webpack_require__(527);
 	var BigNumber = __webpack_require__(267);
 
 	// TODO: remove this function once rippled provides quality directly
@@ -67254,7 +67316,7 @@ var ripple =
 	module.exports = parseAccountOrder;
 
 /***/ },
-/* 628 */
+/* 629 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -67281,7 +67343,7 @@ var ripple =
 	};
 
 /***/ },
-/* 629 */
+/* 630 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67290,10 +67352,10 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
-	var parseOrderbookOrder = __webpack_require__(630);
+	var parseOrderbookOrder = __webpack_require__(631);
 
 	// account is to specify a "perspective", which affects which unfunded offers
 	// are returned
@@ -67368,15 +67430,15 @@ var ripple =
 	module.exports = getOrderbook;
 
 /***/ },
-/* 630 */
+/* 631 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(519);
-	var flags = __webpack_require__(628).orderFlags;
-	var parseAmount = __webpack_require__(526);
+	var utils = __webpack_require__(520);
+	var flags = __webpack_require__(629).orderFlags;
+	var parseAmount = __webpack_require__(527);
 
 	function parseOrderbookOrder(order) {
 	  var direction = (order.Flags & flags.Sell) === 0 ? 'buy' : 'sell';
@@ -67414,7 +67476,7 @@ var ripple =
 	module.exports = parseOrderbookOrder;
 
 /***/ },
-/* 631 */
+/* 632 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67423,8 +67485,8 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(517);
-	var parseFields = __webpack_require__(531);
+	var utils = __webpack_require__(518);
+	var parseFields = __webpack_require__(532);
 	var validate = utils.common.validate;
 
 	var AccountFlags = utils.common.constants.AccountFlags;
@@ -67463,7 +67525,7 @@ var ripple =
 	module.exports = getSettings;
 
 /***/ },
-/* 632 */
+/* 633 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67472,7 +67534,7 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var removeUndefined = _utils$common.removeUndefined;
@@ -67506,7 +67568,7 @@ var ripple =
 	module.exports = getAccountInfo;
 
 /***/ },
-/* 633 */
+/* 634 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67515,15 +67577,15 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 	var toRippledAmount = utils.common.toRippledAmount;
 	var paymentFlags = utils.common.txFlags.Payment;
 	var ValidationError = utils.common.errors.ValidationError;
 
 	function isXRPToXRPPayment(payment) {
-	  var sourceCurrency = _.get(payment, 'source.maxAmount.currency');
-	  var destinationCurrency = _.get(payment, 'destination.amount.currency');
+	  var sourceCurrency = _.get(payment, 'source.maxAmount.currency', _.get(payment, 'source.amount.currency'));
+	  var destinationCurrency = _.get(payment, 'destination.amount.currency', _.get(payment, 'destination.minAmount.currency'));
 	  return sourceCurrency === 'XRP' && destinationCurrency === 'XRP';
 	}
 
@@ -67648,7 +67710,7 @@ var ripple =
 	// directly to the hot wallet
 
 /***/ },
-/* 634 */
+/* 635 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -67760,7 +67822,7 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 635 */
+/* 636 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67768,13 +67830,14 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(634);
+	var _ = __webpack_require__(262);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 	var trustlineFlags = utils.common.txFlags.TrustSet;
 	var BigNumber = __webpack_require__(267);
 
 	function convertQuality(quality) {
-	  return quality === undefined ? undefined : new BigNumber(quality).shift(9).truncated().toNumber();
+	  return new BigNumber(quality).shift(9).truncated().toNumber();
 	}
 
 	function createTrustlineTransaction(account, trustline) {
@@ -67805,6 +67868,9 @@ var ripple =
 	  if (trustline.frozen !== undefined) {
 	    txJSON.Flags |= trustline.frozen ? trustlineFlags.SetFreeze : trustlineFlags.ClearFreeze;
 	  }
+	  if (trustline.memos !== undefined) {
+	    txJSON.Memos = _.map(trustline.memos, utils.convertMemo);
+	  }
 	  return txJSON;
 	}
 
@@ -67819,7 +67885,7 @@ var ripple =
 	module.exports = prepareTrustline;
 
 /***/ },
-/* 636 */
+/* 637 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67827,7 +67893,8 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(634);
+	var _ = __webpack_require__(262);
+	var utils = __webpack_require__(635);
 	var offerFlags = utils.common.txFlags.OfferCreate;
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
@@ -67859,6 +67926,9 @@ var ripple =
 	  if (order.expirationTime !== undefined) {
 	    txJSON.Expiration = iso8601ToRippleTime(order.expirationTime);
 	  }
+	  if (order.memos !== undefined) {
+	    txJSON.Memos = _.map(order.memos, utils.convertMemo);
+	  }
 	  return txJSON;
 	}
 
@@ -67873,36 +67943,6 @@ var ripple =
 	module.exports = prepareOrder;
 
 /***/ },
-/* 637 */
-/***/ function(module, exports, __webpack_require__) {
-
-	
-	'use strict';
-
-	var _Promise = __webpack_require__(30)['default'];
-
-	var utils = __webpack_require__(634);
-	var validate = utils.common.validate;
-
-	function createOrderCancellationTransaction(account, sequence) {
-	  return {
-	    TransactionType: 'OfferCancel',
-	    Account: account,
-	    OfferSequence: sequence
-	  };
-	}
-
-	function prepareOrderCancellation(address, sequence) {
-	  var instructions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-
-	  validate.prepareOrderCancellation({ address: address, sequence: sequence, instructions: instructions });
-	  var txJSON = createOrderCancellationTransaction(address, sequence);
-	  return utils.prepareTransaction(txJSON, this, instructions);
-	}
-
-	module.exports = prepareOrderCancellation;
-
-/***/ },
 /* 638 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -67912,7 +67952,42 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
+	var validate = utils.common.validate;
+
+	function createOrderCancellationTransaction(account, orderCancellation) {
+	  var txJSON = {
+	    TransactionType: 'OfferCancel',
+	    Account: account,
+	    OfferSequence: orderCancellation.orderSequence
+	  };
+	  if (orderCancellation.memos !== undefined) {
+	    txJSON.Memos = _.map(orderCancellation.memos, utils.convertMemo);
+	  }
+	  return txJSON;
+	}
+
+	function prepareOrderCancellation(address, orderCancellation) {
+	  var instructions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
+	  validate.prepareOrderCancellation({ address: address, orderCancellation: orderCancellation, instructions: instructions });
+	  var txJSON = createOrderCancellationTransaction(address, orderCancellation);
+	  return utils.prepareTransaction(txJSON, this, instructions);
+	}
+
+	module.exports = prepareOrderCancellation;
+
+/***/ },
+/* 639 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	'use strict';
+
+	var _Promise = __webpack_require__(30)['default'];
+
+	var _ = __webpack_require__(262);
+	var utils = __webpack_require__(635);
 	var _utils$common = utils.common;
 	var validate = _utils$common.validate;
 	var iso8601ToRippleTime = _utils$common.iso8601ToRippleTime;
@@ -67958,7 +68033,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentCreation;
 
 /***/ },
-/* 639 */
+/* 640 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -67967,7 +68042,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 
 	function createSuspendedPaymentExecutionTransaction(account, payment) {
@@ -68004,7 +68079,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentExecution;
 
 /***/ },
-/* 640 */
+/* 641 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -68013,7 +68088,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 
 	function createSuspendedPaymentCancellationTransaction(account, payment) {
@@ -68040,7 +68115,7 @@ var ripple =
 	module.exports = prepareSuspendedPaymentCancellation;
 
 /***/ },
-/* 641 */
+/* 642 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -68049,14 +68124,14 @@ var ripple =
 
 	'use strict';
 
-	var _Object$keys = __webpack_require__(548)['default'];
+	var _Object$keys = __webpack_require__(549)['default'];
 
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
 	var assert = __webpack_require__(273);
 	var BigNumber = __webpack_require__(267);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 	var AccountFlagIndices = utils.common.constants.AccountFlagIndices;
 	var AccountFields = utils.common.constants.AccountFields;
@@ -68140,6 +68215,9 @@ var ripple =
 	  if (txJSON.TransferRate !== undefined) {
 	    txJSON.TransferRate = convertTransferRate(txJSON.TransferRate);
 	  }
+	  if (settings.memos !== undefined) {
+	    txJSON.Memos = _.map(settings.memos, utils.convertMemo);
+	  }
 	  return txJSON;
 	}
 
@@ -68155,16 +68233,16 @@ var ripple =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(276).Buffer))
 
 /***/ },
-/* 642 */
+/* 643 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var keypairs = __webpack_require__(272);
-	var binary = __webpack_require__(536);
+	var binary = __webpack_require__(537);
 
-	var _require = __webpack_require__(601);
+	var _require = __webpack_require__(602);
 
 	var computeBinaryTransactionHash = _require.computeBinaryTransactionHash;
 
@@ -68196,7 +68274,7 @@ var ripple =
 	module.exports = sign;
 
 /***/ },
-/* 643 */
+/* 644 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -68205,7 +68283,7 @@ var ripple =
 	var _Promise = __webpack_require__(30)['default'];
 
 	var _ = __webpack_require__(262);
-	var utils = __webpack_require__(634);
+	var utils = __webpack_require__(635);
 	var validate = utils.common.validate;
 
 	function isImmediateRejection(engineResult) {
@@ -68241,14 +68319,14 @@ var ripple =
 	module.exports = submit;
 
 /***/ },
-/* 644 */
+/* 645 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 	var common = __webpack_require__(265);
-	var hashes = __webpack_require__(601);
+	var hashes = __webpack_require__(602);
 
 	function convertLedgerHeader(header) {
 	  return {
@@ -68313,7 +68391,7 @@ var ripple =
 	module.exports = computeLedgerHash;
 
 /***/ },
-/* 645 */
+/* 646 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -68321,10 +68399,10 @@ var ripple =
 
 	var _Promise = __webpack_require__(30)['default'];
 
-	var utils = __webpack_require__(517);
+	var utils = __webpack_require__(518);
 	var validate = utils.common.validate;
 
-	var parseLedger = __webpack_require__(646);
+	var parseLedger = __webpack_require__(647);
 
 	function getLedger() {
 	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
@@ -68347,19 +68425,19 @@ var ripple =
 	module.exports = getLedger;
 
 /***/ },
-/* 646 */
+/* 647 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 	'use strict';
 	var _ = __webpack_require__(262);
 
-	var _require = __webpack_require__(519);
+	var _require = __webpack_require__(520);
 
 	var removeUndefined = _require.removeUndefined;
 	var rippleTimeToISO8601 = _require.rippleTimeToISO8601;
 
-	var parseTransaction = __webpack_require__(518);
+	var parseTransaction = __webpack_require__(519);
 
 	function parseTransactionWrapper(ledgerVersion, tx) {
 	  var transaction = _.assign({}, _.omit(tx, 'metaData'), { meta: tx.metaData });
