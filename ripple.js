@@ -36499,6 +36499,7 @@ var ripple =
 	    _classCallCheck(this, Connection);
 
 	    _get(Object.getPrototypeOf(Connection.prototype), 'constructor', this).call(this);
+	    this.setMaxListeners(Infinity);
 	    this._url = url;
 	    this._trace = options.trace;
 	    if (this._trace) {
@@ -36594,8 +36595,10 @@ var ripple =
 	        var proxyOptions = parseURL(proxyURL);
 	        proxyOptions.secureEndpoint = parsedURL.protocol === 'wss:';
 	        proxyOptions.secureProxy = proxyOptions.protocol === 'https:';
-	        proxyOptions.auth = proxyAuthorization;
-	        if (trustedCertificates) {
+	        if (proxyAuthorization !== undefined) {
+	          proxyOptions.auth = proxyAuthorization;
+	        }
+	        if (trustedCertificates !== undefined) {
 	          proxyOptions.ca = trustedCertificates;
 	        }
 	        var HttpsProxyAgent = undefined;
@@ -36610,7 +36613,11 @@ var ripple =
 	        var base64 = new Buffer(authorization).toString('base64');
 	        options.headers = { Authorization: 'Basic ' + base64 };
 	      }
-	      return new WebSocket(url, options);
+	      var websocket = new WebSocket(url, options);
+	      // we will have a listener for each outstanding request,
+	      // so we have to raise the limit (the default is 10)
+	      websocket.setMaxListeners(Infinity);
+	      return websocket;
 	    }
 	  }, {
 	    key: 'connect',
