@@ -72,7 +72,7 @@ var ripple =
 
 	var _get = __webpack_require__(2)['default'];
 
-	var _inherits = __webpack_require__(16)['default'];
+	var _inherits = __webpack_require__(18)['default'];
 
 	var _createClass = __webpack_require__(27)['default'];
 
@@ -369,12 +369,14 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// most Object methods by ES6 should accept primitives
+	var $export = __webpack_require__(12)
+	  , core    = __webpack_require__(14)
+	  , fails   = __webpack_require__(17);
 	module.exports = function(KEY, exec){
-	  var $def = __webpack_require__(12)
-	    , fn   = (__webpack_require__(14).Object || {})[KEY] || Object[KEY]
-	    , exp  = {};
+	  var fn  = (core.Object || {})[KEY] || Object[KEY]
+	    , exp = {};
 	  exp[KEY] = exec(fn);
-	  $def($def.S + $def.F * __webpack_require__(15)(function(){ fn(1); }), 'Object', exp);
+	  $export($export.S + $export.F * fails(function(){ fn(1); }), 'Object', exp);
 	};
 
 /***/ },
@@ -383,51 +385,50 @@ var ripple =
 
 	var global    = __webpack_require__(13)
 	  , core      = __webpack_require__(14)
+	  , ctx       = __webpack_require__(15)
 	  , PROTOTYPE = 'prototype';
-	var ctx = function(fn, that){
-	  return function(){
-	    return fn.apply(that, arguments);
-	  };
-	};
-	var $def = function(type, name, source){
-	  var key, own, out, exp
-	    , isGlobal = type & $def.G
-	    , isProto  = type & $def.P
-	    , target   = isGlobal ? global : type & $def.S
-	        ? global[name] : (global[name] || {})[PROTOTYPE]
-	    , exports  = isGlobal ? core : core[name] || (core[name] = {});
-	  if(isGlobal)source = name;
+
+	var $export = function(type, name, source){
+	  var IS_FORCED = type & $export.F
+	    , IS_GLOBAL = type & $export.G
+	    , IS_STATIC = type & $export.S
+	    , IS_PROTO  = type & $export.P
+	    , IS_BIND   = type & $export.B
+	    , IS_WRAP   = type & $export.W
+	    , exports   = IS_GLOBAL ? core : core[name] || (core[name] = {})
+	    , target    = IS_GLOBAL ? global : IS_STATIC ? global[name] : (global[name] || {})[PROTOTYPE]
+	    , key, own, out;
+	  if(IS_GLOBAL)source = name;
 	  for(key in source){
 	    // contains in native
-	    own = !(type & $def.F) && target && key in target;
+	    own = !IS_FORCED && target && key in target;
 	    if(own && key in exports)continue;
 	    // export native or passed
 	    out = own ? target[key] : source[key];
 	    // prevent global pollution for namespaces
-	    if(isGlobal && typeof target[key] != 'function')exp = source[key];
+	    exports[key] = IS_GLOBAL && typeof target[key] != 'function' ? source[key]
 	    // bind timers to global for call from export context
-	    else if(type & $def.B && own)exp = ctx(out, global);
+	    : IS_BIND && own ? ctx(out, global)
 	    // wrap global constructors for prevent change them in library
-	    else if(type & $def.W && target[key] == out)!function(C){
-	      exp = function(param){
+	    : IS_WRAP && target[key] == out ? (function(C){
+	      var F = function(param){
 	        return this instanceof C ? new C(param) : C(param);
 	      };
-	      exp[PROTOTYPE] = C[PROTOTYPE];
-	    }(out);
-	    else exp = isProto && typeof out == 'function' ? ctx(Function.call, out) : out;
-	    // export
-	    exports[key] = exp;
-	    if(isProto)(exports[PROTOTYPE] || (exports[PROTOTYPE] = {}))[key] = out;
+	      F[PROTOTYPE] = C[PROTOTYPE];
+	      return F;
+	    // make static versions for prototype methods
+	    })(out) : IS_PROTO && typeof out == 'function' ? ctx(Function.call, out) : out;
+	    if(IS_PROTO)(exports[PROTOTYPE] || (exports[PROTOTYPE] = {}))[key] = out;
 	  }
 	};
 	// type bitmap
-	$def.F = 1;  // forced
-	$def.G = 2;  // global
-	$def.S = 4;  // static
-	$def.P = 8;  // proto
-	$def.B = 16; // bind
-	$def.W = 32; // wrap
-	module.exports = $def;
+	$export.F = 1;  // forced
+	$export.G = 2;  // global
+	$export.S = 4;  // static
+	$export.P = 8;  // proto
+	$export.B = 16; // bind
+	$export.W = 32; // wrap
+	module.exports = $export;
 
 /***/ },
 /* 13 */
@@ -442,140 +443,15 @@ var ripple =
 /* 14 */
 /***/ function(module, exports) {
 
-	var core = module.exports = {version: '1.2.3'};
+	var core = module.exports = {version: '1.2.6'};
 	if(typeof __e == 'number')__e = core; // eslint-disable-line no-undef
 
 /***/ },
 /* 15 */
-/***/ function(module, exports) {
-
-	module.exports = function(exec){
-	  try {
-	    return !!exec();
-	  } catch(e){
-	    return true;
-	  }
-	};
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _Object$create = __webpack_require__(17)["default"];
-
-	var _Object$setPrototypeOf = __webpack_require__(19)["default"];
-
-	exports["default"] = function (subClass, superClass) {
-	  if (typeof superClass !== "function" && superClass !== null) {
-	    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-	  }
-
-	  subClass.prototype = _Object$create(superClass && superClass.prototype, {
-	    constructor: {
-	      value: subClass,
-	      enumerable: false,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	  if (superClass) _Object$setPrototypeOf ? _Object$setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-	};
-
-	exports.__esModule = true;
-
-/***/ },
-/* 17 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(18), __esModule: true };
-
-/***/ },
-/* 18 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var $ = __webpack_require__(5);
-	module.exports = function create(P, D){
-	  return $.create(P, D);
-	};
-
-/***/ },
-/* 19 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = { "default": __webpack_require__(20), __esModule: true };
-
-/***/ },
-/* 20 */
-/***/ function(module, exports, __webpack_require__) {
-
-	__webpack_require__(21);
-	module.exports = __webpack_require__(14).Object.setPrototypeOf;
-
-/***/ },
-/* 21 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// 19.1.3.19 Object.setPrototypeOf(O, proto)
-	var $def = __webpack_require__(12);
-	$def($def.S, 'Object', {setPrototypeOf: __webpack_require__(22).set});
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// Works with __proto__ only. Old v8 can't work with null proto objects.
-	/* eslint-disable no-proto */
-	var getDesc  = __webpack_require__(5).getDesc
-	  , isObject = __webpack_require__(23)
-	  , anObject = __webpack_require__(24);
-	var check = function(O, proto){
-	  anObject(O);
-	  if(!isObject(proto) && proto !== null)throw TypeError(proto + ": can't set as prototype!");
-	};
-	module.exports = {
-	  set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
-	    function(test, buggy, set){
-	      try {
-	        set = __webpack_require__(25)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
-	        set(test, []);
-	        buggy = !(test instanceof Array);
-	      } catch(e){ buggy = true; }
-	      return function setPrototypeOf(O, proto){
-	        check(O, proto);
-	        if(buggy)O.__proto__ = proto;
-	        else set(O, proto);
-	        return O;
-	      };
-	    }({}, false) : undefined),
-	  check: check
-	};
-
-/***/ },
-/* 23 */
-/***/ function(module, exports) {
-
-	module.exports = function(it){
-	  return typeof it === 'object' ? it !== null : typeof it === 'function';
-	};
-
-/***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObject = __webpack_require__(23);
-	module.exports = function(it){
-	  if(!isObject(it))throw TypeError(it + ' is not an object!');
-	  return it;
-	};
-
-/***/ },
-/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// optional / simple context binding
-	var aFunction = __webpack_require__(26);
+	var aFunction = __webpack_require__(16);
 	module.exports = function(fn, that, length){
 	  aFunction(fn);
 	  if(that === undefined)return fn;
@@ -596,11 +472,136 @@ var ripple =
 	};
 
 /***/ },
-/* 26 */
+/* 16 */
 /***/ function(module, exports) {
 
 	module.exports = function(it){
 	  if(typeof it != 'function')throw TypeError(it + ' is not a function!');
+	  return it;
+	};
+
+/***/ },
+/* 17 */
+/***/ function(module, exports) {
+
+	module.exports = function(exec){
+	  try {
+	    return !!exec();
+	  } catch(e){
+	    return true;
+	  }
+	};
+
+/***/ },
+/* 18 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _Object$create = __webpack_require__(19)["default"];
+
+	var _Object$setPrototypeOf = __webpack_require__(21)["default"];
+
+	exports["default"] = function (subClass, superClass) {
+	  if (typeof superClass !== "function" && superClass !== null) {
+	    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+	  }
+
+	  subClass.prototype = _Object$create(superClass && superClass.prototype, {
+	    constructor: {
+	      value: subClass,
+	      enumerable: false,
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+	  if (superClass) _Object$setPrototypeOf ? _Object$setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	};
+
+	exports.__esModule = true;
+
+/***/ },
+/* 19 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(20), __esModule: true };
+
+/***/ },
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var $ = __webpack_require__(5);
+	module.exports = function create(P, D){
+	  return $.create(P, D);
+	};
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = { "default": __webpack_require__(22), __esModule: true };
+
+/***/ },
+/* 22 */
+/***/ function(module, exports, __webpack_require__) {
+
+	__webpack_require__(23);
+	module.exports = __webpack_require__(14).Object.setPrototypeOf;
+
+/***/ },
+/* 23 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// 19.1.3.19 Object.setPrototypeOf(O, proto)
+	var $export = __webpack_require__(12);
+	$export($export.S, 'Object', {setPrototypeOf: __webpack_require__(24).set});
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Works with __proto__ only. Old v8 can't work with null proto objects.
+	/* eslint-disable no-proto */
+	var getDesc  = __webpack_require__(5).getDesc
+	  , isObject = __webpack_require__(25)
+	  , anObject = __webpack_require__(26);
+	var check = function(O, proto){
+	  anObject(O);
+	  if(!isObject(proto) && proto !== null)throw TypeError(proto + ": can't set as prototype!");
+	};
+	module.exports = {
+	  set: Object.setPrototypeOf || ('__proto__' in {} ? // eslint-disable-line
+	    function(test, buggy, set){
+	      try {
+	        set = __webpack_require__(15)(Function.call, getDesc(Object.prototype, '__proto__').set, 2);
+	        set(test, []);
+	        buggy = !(test instanceof Array);
+	      } catch(e){ buggy = true; }
+	      return function setPrototypeOf(O, proto){
+	        check(O, proto);
+	        if(buggy)O.__proto__ = proto;
+	        else set(O, proto);
+	        return O;
+	      };
+	    }({}, false) : undefined),
+	  check: check
+	};
+
+/***/ },
+/* 25 */
+/***/ function(module, exports) {
+
+	module.exports = function(it){
+	  return typeof it === 'object' ? it !== null : typeof it === 'function';
+	};
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObject = __webpack_require__(25);
+	module.exports = function(it){
+	  if(!isObject(it))throw TypeError(it + ' is not an object!');
 	  return it;
 	};
 
@@ -710,10 +711,10 @@ var ripple =
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// true  -> String#at
-	// false -> String#codePointAt
 	var toInteger = __webpack_require__(36)
 	  , defined   = __webpack_require__(10);
+	// true  -> String#at
+	// false -> String#codePointAt
 	module.exports = function(TO_STRING){
 	  return function(that, pos){
 	    var s = String(defined(that))
@@ -722,10 +723,9 @@ var ripple =
 	      , a, b;
 	    if(i < 0 || i >= l)return TO_STRING ? '' : undefined;
 	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l
-	      || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	        ? TO_STRING ? s.charAt(i) : a
-	        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+	      ? TO_STRING ? s.charAt(i) : a
+	      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
 	  };
 	};
 
@@ -745,54 +745,70 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var LIBRARY         = __webpack_require__(38)
-	  , $def            = __webpack_require__(12)
-	  , $redef          = __webpack_require__(39)
-	  , hide            = __webpack_require__(40)
-	  , has             = __webpack_require__(43)
-	  , SYMBOL_ITERATOR = __webpack_require__(44)('iterator')
-	  , Iterators       = __webpack_require__(47)
-	  , BUGGY           = !([].keys && 'next' in [].keys()) // Safari has buggy iterators w/o `next`
-	  , FF_ITERATOR     = '@@iterator'
-	  , KEYS            = 'keys'
-	  , VALUES          = 'values';
+	var LIBRARY        = __webpack_require__(38)
+	  , $export        = __webpack_require__(12)
+	  , redefine       = __webpack_require__(39)
+	  , hide           = __webpack_require__(40)
+	  , has            = __webpack_require__(43)
+	  , Iterators      = __webpack_require__(44)
+	  , $iterCreate    = __webpack_require__(45)
+	  , setToStringTag = __webpack_require__(46)
+	  , getProto       = __webpack_require__(5).getProto
+	  , ITERATOR       = __webpack_require__(47)('iterator')
+	  , BUGGY          = !([].keys && 'next' in [].keys()) // Safari has buggy iterators w/o `next`
+	  , FF_ITERATOR    = '@@iterator'
+	  , KEYS           = 'keys'
+	  , VALUES         = 'values';
+
 	var returnThis = function(){ return this; };
-	module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE){
-	  __webpack_require__(48)(Constructor, NAME, next);
-	  var createMethod = function(kind){
+
+	module.exports = function(Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED){
+	  $iterCreate(Constructor, NAME, next);
+	  var getMethod = function(kind){
+	    if(!BUGGY && kind in proto)return proto[kind];
 	    switch(kind){
 	      case KEYS: return function keys(){ return new Constructor(this, kind); };
 	      case VALUES: return function values(){ return new Constructor(this, kind); };
 	    } return function entries(){ return new Constructor(this, kind); };
 	  };
-	  var TAG      = NAME + ' Iterator'
-	    , proto    = Base.prototype
-	    , _native  = proto[SYMBOL_ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT]
-	    , _default = _native || createMethod(DEFAULT)
+	  var TAG        = NAME + ' Iterator'
+	    , DEF_VALUES = DEFAULT == VALUES
+	    , VALUES_BUG = false
+	    , proto      = Base.prototype
+	    , $native    = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT]
+	    , $default   = $native || getMethod(DEFAULT)
 	    , methods, key;
 	  // Fix native
-	  if(_native){
-	    var IteratorPrototype = __webpack_require__(5).getProto(_default.call(new Base));
+	  if($native){
+	    var IteratorPrototype = getProto($default.call(new Base));
 	    // Set @@toStringTag to native iterators
-	    __webpack_require__(49)(IteratorPrototype, TAG, true);
+	    setToStringTag(IteratorPrototype, TAG, true);
 	    // FF fix
-	    if(!LIBRARY && has(proto, FF_ITERATOR))hide(IteratorPrototype, SYMBOL_ITERATOR, returnThis);
+	    if(!LIBRARY && has(proto, FF_ITERATOR))hide(IteratorPrototype, ITERATOR, returnThis);
+	    // fix Array#{values, @@iterator}.name in V8 / FF
+	    if(DEF_VALUES && $native.name !== VALUES){
+	      VALUES_BUG = true;
+	      $default = function values(){ return $native.call(this); };
+	    }
 	  }
 	  // Define iterator
-	  if(!LIBRARY || FORCE)hide(proto, SYMBOL_ITERATOR, _default);
+	  if((!LIBRARY || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])){
+	    hide(proto, ITERATOR, $default);
+	  }
 	  // Plug for library
-	  Iterators[NAME] = _default;
+	  Iterators[NAME] = $default;
 	  Iterators[TAG]  = returnThis;
 	  if(DEFAULT){
 	    methods = {
-	      values:  DEFAULT == VALUES ? _default : createMethod(VALUES),
-	      keys:    IS_SET            ? _default : createMethod(KEYS),
-	      entries: DEFAULT != VALUES ? _default : createMethod('entries')
+	      values:  DEF_VALUES  ? $default : getMethod(VALUES),
+	      keys:    IS_SET      ? $default : getMethod(KEYS),
+	      entries: !DEF_VALUES ? $default : getMethod('entries')
 	    };
-	    if(FORCE)for(key in methods){
-	      if(!(key in proto))$redef(proto, key, methods[key]);
-	    } else $def($def.P + $def.F * BUGGY, NAME, methods);
+	    if(FORCED)for(key in methods){
+	      if(!(key in proto))redefine(proto, key, methods[key]);
+	    } else $export($export.P + $export.F * (BUGGY || VALUES_BUG), NAME, methods);
 	  }
+	  return methods;
 	};
 
 /***/ },
@@ -838,7 +854,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// Thank's IE8 for his funny defineProperty
-	module.exports = !__webpack_require__(15)(function(){
+	module.exports = !__webpack_require__(17)(function(){
 	  return Object.defineProperty({}, 'a', {get: function(){ return 7; }}).a != 7;
 	});
 
@@ -853,17 +869,54 @@ var ripple =
 
 /***/ },
 /* 44 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
-	var store  = __webpack_require__(45)('wks')
-	  , Symbol = __webpack_require__(13).Symbol;
-	module.exports = function(name){
-	  return store[name] || (store[name] =
-	    Symbol && Symbol[name] || (Symbol || __webpack_require__(46))('Symbol.' + name));
-	};
+	module.exports = {};
 
 /***/ },
 /* 45 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	var $              = __webpack_require__(5)
+	  , descriptor     = __webpack_require__(41)
+	  , setToStringTag = __webpack_require__(46)
+	  , IteratorPrototype = {};
+
+	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+	__webpack_require__(40)(IteratorPrototype, __webpack_require__(47)('iterator'), function(){ return this; });
+
+	module.exports = function(Constructor, NAME, next){
+	  Constructor.prototype = $.create(IteratorPrototype, {next: descriptor(1, next)});
+	  setToStringTag(Constructor, NAME + ' Iterator');
+	};
+
+/***/ },
+/* 46 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var def = __webpack_require__(5).setDesc
+	  , has = __webpack_require__(43)
+	  , TAG = __webpack_require__(47)('toStringTag');
+
+	module.exports = function(it, tag, stat){
+	  if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
+	};
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var store  = __webpack_require__(48)('wks')
+	  , uid    = __webpack_require__(49)
+	  , Symbol = __webpack_require__(13).Symbol;
+	module.exports = function(name){
+	  return store[name] || (store[name] =
+	    Symbol && Symbol[name] || (Symbol || uid)('Symbol.' + name));
+	};
+
+/***/ },
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var global = __webpack_require__(13)
@@ -874,7 +927,7 @@ var ripple =
 	};
 
 /***/ },
-/* 46 */
+/* 49 */
 /***/ function(module, exports) {
 
 	var id = 0
@@ -884,45 +937,11 @@ var ripple =
 	};
 
 /***/ },
-/* 47 */
-/***/ function(module, exports) {
-
-	module.exports = {};
-
-/***/ },
-/* 48 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	var $ = __webpack_require__(5)
-	  , IteratorPrototype = {};
-
-	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-	__webpack_require__(40)(IteratorPrototype, __webpack_require__(44)('iterator'), function(){ return this; });
-
-	module.exports = function(Constructor, NAME, next){
-	  Constructor.prototype = $.create(IteratorPrototype, {next: __webpack_require__(41)(1,next)});
-	  __webpack_require__(49)(Constructor, NAME + ' Iterator');
-	};
-
-/***/ },
-/* 49 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var def = __webpack_require__(5).setDesc
-	  , has = __webpack_require__(43)
-	  , TAG = __webpack_require__(44)('toStringTag');
-
-	module.exports = function(it, tag, stat){
-	  if(it && !has(it = stat ? it : it.prototype, TAG))def(it, TAG, {configurable: true, value: tag});
-	};
-
-/***/ },
 /* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(51);
-	var Iterators = __webpack_require__(47);
+	var Iterators = __webpack_require__(44);
 	Iterators.NodeList = Iterators.HTMLCollection = Iterators.Array;
 
 /***/ },
@@ -930,16 +949,16 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var setUnscope = __webpack_require__(52)
-	  , step       = __webpack_require__(53)
-	  , Iterators  = __webpack_require__(47)
-	  , toIObject  = __webpack_require__(7);
+	var addToUnscopables = __webpack_require__(52)
+	  , step             = __webpack_require__(53)
+	  , Iterators        = __webpack_require__(44)
+	  , toIObject        = __webpack_require__(7);
 
 	// 22.1.3.4 Array.prototype.entries()
 	// 22.1.3.13 Array.prototype.keys()
 	// 22.1.3.29 Array.prototype.values()
 	// 22.1.3.30 Array.prototype[@@iterator]()
-	__webpack_require__(37)(Array, 'Array', function(iterated, kind){
+	module.exports = __webpack_require__(37)(Array, 'Array', function(iterated, kind){
 	  this._t = toIObject(iterated); // target
 	  this._i = 0;                   // next index
 	  this._k = kind;                // kind
@@ -960,9 +979,9 @@ var ripple =
 	// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
 	Iterators.Arguments = Iterators.Array;
 
-	setUnscope('keys');
-	setUnscope('values');
-	setUnscope('entries');
+	addToUnscopables('keys');
+	addToUnscopables('values');
+	addToUnscopables('entries');
 
 /***/ },
 /* 52 */
@@ -986,21 +1005,19 @@ var ripple =
 	var $          = __webpack_require__(5)
 	  , LIBRARY    = __webpack_require__(38)
 	  , global     = __webpack_require__(13)
-	  , ctx        = __webpack_require__(25)
+	  , ctx        = __webpack_require__(15)
 	  , classof    = __webpack_require__(55)
-	  , $def       = __webpack_require__(12)
-	  , isObject   = __webpack_require__(23)
-	  , anObject   = __webpack_require__(24)
-	  , aFunction  = __webpack_require__(26)
+	  , $export    = __webpack_require__(12)
+	  , isObject   = __webpack_require__(25)
+	  , anObject   = __webpack_require__(26)
+	  , aFunction  = __webpack_require__(16)
 	  , strictNew  = __webpack_require__(56)
 	  , forOf      = __webpack_require__(57)
-	  , setProto   = __webpack_require__(22).set
+	  , setProto   = __webpack_require__(24).set
 	  , same       = __webpack_require__(62)
-	  , species    = __webpack_require__(63)
-	  , SPECIES    = __webpack_require__(44)('species')
-	  , speciesConstructor = __webpack_require__(64)
-	  , RECORD     = __webpack_require__(46)('record')
-	  , asap       = __webpack_require__(65)
+	  , SPECIES    = __webpack_require__(47)('species')
+	  , speciesConstructor = __webpack_require__(63)
+	  , asap       = __webpack_require__(64)
 	  , PROMISE    = 'Promise'
 	  , process    = global.process
 	  , isNode     = classof(process) == 'process'
@@ -1013,7 +1030,7 @@ var ripple =
 	  return P.resolve(test) === test;
 	};
 
-	var useNative = function(){
+	var USE_NATIVE = function(){
 	  var works = false;
 	  function P2(x){
 	    var self = new P(x);
@@ -1041,9 +1058,6 @@ var ripple =
 	}();
 
 	// helpers
-	var isPromise = function(it){
-	  return isObject(it) && (useNative ? classof(it) == 'Promise' : RECORD in it);
-	};
 	var sameConstructor = function(a, b){
 	  // library wrapper special case
 	  if(LIBRARY && a === P && b === Wrapper)return true;
@@ -1057,6 +1071,23 @@ var ripple =
 	  var then;
 	  return isObject(it) && typeof (then = it.then) == 'function' ? then : false;
 	};
+	var PromiseCapability = function(C){
+	  var resolve, reject;
+	  this.promise = new C(function($$resolve, $$reject){
+	    if(resolve !== undefined || reject !== undefined)throw TypeError('Bad Promise constructor');
+	    resolve = $$resolve;
+	    reject  = $$reject;
+	  });
+	  this.resolve = aFunction(resolve),
+	  this.reject  = aFunction(reject)
+	};
+	var perform = function(exec){
+	  try {
+	    exec();
+	  } catch(e){
+	    return {error: e};
+	  }
+	};
 	var notify = function(record, isReject){
 	  if(record.n)return;
 	  record.n = true;
@@ -1065,21 +1096,23 @@ var ripple =
 	    var value = record.v
 	      , ok    = record.s == 1
 	      , i     = 0;
-	    var run = function(react){
-	      var cb = ok ? react.ok : react.fail
-	        , ret, then;
+	    var run = function(reaction){
+	      var handler = ok ? reaction.ok : reaction.fail
+	        , resolve = reaction.resolve
+	        , reject  = reaction.reject
+	        , result, then;
 	      try {
-	        if(cb){
+	        if(handler){
 	          if(!ok)record.h = true;
-	          ret = cb === true ? value : cb(value);
-	          if(ret === react.P){
-	            react.rej(TypeError('Promise-chain cycle'));
-	          } else if(then = isThenable(ret)){
-	            then.call(ret, react.res, react.rej);
-	          } else react.res(ret);
-	        } else react.rej(value);
-	      } catch(err){
-	        react.rej(err);
+	          result = handler === true ? value : handler(value);
+	          if(result === reaction.promise){
+	            reject(TypeError('Promise-chain cycle'));
+	          } else if(then = isThenable(result)){
+	            then.call(result, resolve, reject);
+	          } else resolve(result);
+	        } else reject(value);
+	      } catch(e){
+	        reject(e);
 	      }
 	    };
 	    while(chain.length > i)run(chain[i++]); // variable length - can't use forEach
@@ -1101,14 +1134,14 @@ var ripple =
 	  });
 	};
 	var isUnhandled = function(promise){
-	  var record = promise[RECORD]
+	  var record = promise._d
 	    , chain  = record.a || record.c
 	    , i      = 0
-	    , react;
+	    , reaction;
 	  if(record.h)return false;
 	  while(chain.length > i){
-	    react = chain[i++];
-	    if(react.fail || !isUnhandled(react.P))return false;
+	    reaction = chain[i++];
+	    if(reaction.fail || !isUnhandled(reaction.promise))return false;
 	  } return true;
 	};
 	var $reject = function(value){
@@ -1128,6 +1161,7 @@ var ripple =
 	  record.d = true;
 	  record = record.r || record; // unwrap
 	  try {
+	    if(record.p === value)throw TypeError("Promise can't be resolved itself");
 	    if(then = isThenable(value)){
 	      asap(function(){
 	        var wrapper = {r: record, d: false}; // wrap
@@ -1148,11 +1182,11 @@ var ripple =
 	};
 
 	// constructor polyfill
-	if(!useNative){
+	if(!USE_NATIVE){
 	  // 25.4.3.1 Promise(executor)
 	  P = function Promise(executor){
 	    aFunction(executor);
-	    var record = {
+	    var record = this._d = {
 	      p: strictNew(this, P, PROMISE),         // <- promise
 	      c: [],                                  // <- awaiting reactions
 	      a: undefined,                           // <- checked in isUnhandled reactions
@@ -1162,29 +1196,22 @@ var ripple =
 	      h: false,                               // <- handled rejection
 	      n: false                                // <- notify
 	    };
-	    this[RECORD] = record;
 	    try {
 	      executor(ctx($resolve, record, 1), ctx($reject, record, 1));
 	    } catch(err){
 	      $reject.call(record, err);
 	    }
 	  };
-	  __webpack_require__(70)(P.prototype, {
+	  __webpack_require__(69)(P.prototype, {
 	    // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
 	    then: function then(onFulfilled, onRejected){
-	      var react = {
-	        ok:   typeof onFulfilled == 'function' ? onFulfilled : true,
-	        fail: typeof onRejected == 'function'  ? onRejected  : false
-	      };
-	      var promise = react.P = new (speciesConstructor(this, P))(function(res, rej){
-	        react.res = res;
-	        react.rej = rej;
-	      });
-	      aFunction(react.res);
-	      aFunction(react.rej);
-	      var record = this[RECORD];
-	      record.c.push(react);
-	      if(record.a)record.a.push(react);
+	      var reaction = new PromiseCapability(speciesConstructor(this, P))
+	        , promise  = reaction.promise
+	        , record   = this._d;
+	      reaction.ok   = typeof onFulfilled == 'function' ? onFulfilled : true;
+	      reaction.fail = typeof onRejected == 'function' && onRejected;
+	      record.c.push(reaction);
+	      if(record.a)record.a.push(reaction);
 	      if(record.s)notify(record, false);
 	      return promise;
 	    },
@@ -1195,54 +1222,72 @@ var ripple =
 	  });
 	}
 
-	// export
-	$def($def.G + $def.W + $def.F * !useNative, {Promise: P});
-	__webpack_require__(49)(P, PROMISE);
-	species(P);
-	species(Wrapper = __webpack_require__(14)[PROMISE]);
+	$export($export.G + $export.W + $export.F * !USE_NATIVE, {Promise: P});
+	__webpack_require__(46)(P, PROMISE);
+	__webpack_require__(70)(PROMISE);
+	Wrapper = __webpack_require__(14)[PROMISE];
 
 	// statics
-	$def($def.S + $def.F * !useNative, PROMISE, {
+	$export($export.S + $export.F * !USE_NATIVE, PROMISE, {
 	  // 25.4.4.5 Promise.reject(r)
 	  reject: function reject(r){
-	    return new this(function(res, rej){ rej(r); });
+	    var capability = new PromiseCapability(this)
+	      , $$reject   = capability.reject;
+	    $$reject(r);
+	    return capability.promise;
 	  }
 	});
-	$def($def.S + $def.F * (!useNative || testResolve(true)), PROMISE, {
+	$export($export.S + $export.F * (!USE_NATIVE || testResolve(true)), PROMISE, {
 	  // 25.4.4.6 Promise.resolve(x)
 	  resolve: function resolve(x){
-	    return isPromise(x) && sameConstructor(x.constructor, this)
-	      ? x : new this(function(res){ res(x); });
+	    // instanceof instead of internal slot check because we should fix it without replacement native Promise core
+	    if(x instanceof P && sameConstructor(x.constructor, this))return x;
+	    var capability = new PromiseCapability(this)
+	      , $$resolve  = capability.resolve;
+	    $$resolve(x);
+	    return capability.promise;
 	  }
 	});
-	$def($def.S + $def.F * !(useNative && __webpack_require__(71)(function(iter){
+	$export($export.S + $export.F * !(USE_NATIVE && __webpack_require__(71)(function(iter){
 	  P.all(iter)['catch'](function(){});
 	})), PROMISE, {
 	  // 25.4.4.1 Promise.all(iterable)
 	  all: function all(iterable){
-	    var C      = getConstructor(this)
-	      , values = [];
-	    return new C(function(res, rej){
+	    var C          = getConstructor(this)
+	      , capability = new PromiseCapability(C)
+	      , resolve    = capability.resolve
+	      , reject     = capability.reject
+	      , values     = [];
+	    var abrupt = perform(function(){
 	      forOf(iterable, false, values.push, values);
 	      var remaining = values.length
 	        , results   = Array(remaining);
 	      if(remaining)$.each.call(values, function(promise, index){
+	        var alreadyCalled = false;
 	        C.resolve(promise).then(function(value){
+	          if(alreadyCalled)return;
+	          alreadyCalled = true;
 	          results[index] = value;
-	          --remaining || res(results);
-	        }, rej);
+	          --remaining || resolve(results);
+	        }, reject);
 	      });
-	      else res(results);
+	      else resolve(results);
 	    });
+	    if(abrupt)reject(abrupt.error);
+	    return capability.promise;
 	  },
 	  // 25.4.4.4 Promise.race(iterable)
 	  race: function race(iterable){
-	    var C = getConstructor(this);
-	    return new C(function(res, rej){
+	    var C          = getConstructor(this)
+	      , capability = new PromiseCapability(C)
+	      , reject     = capability.reject;
+	    var abrupt = perform(function(){
 	      forOf(iterable, false, function(promise){
-	        C.resolve(promise).then(res, rej);
+	        C.resolve(promise).then(capability.resolve, reject);
 	      });
 	    });
+	    if(abrupt)reject(abrupt.error);
+	    return capability.promise;
 	  }
 	});
 
@@ -1252,7 +1297,7 @@ var ripple =
 
 	// getting tag from 19.1.3.6 Object.prototype.toString()
 	var cof = __webpack_require__(9)
-	  , TAG = __webpack_require__(44)('toStringTag')
+	  , TAG = __webpack_require__(47)('toStringTag')
 	  // ES3 wrong here
 	  , ARG = cof(function(){ return arguments; }()) == 'Arguments';
 
@@ -1280,10 +1325,10 @@ var ripple =
 /* 57 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var ctx         = __webpack_require__(25)
+	var ctx         = __webpack_require__(15)
 	  , call        = __webpack_require__(58)
 	  , isArrayIter = __webpack_require__(59)
-	  , anObject    = __webpack_require__(24)
+	  , anObject    = __webpack_require__(26)
 	  , toLength    = __webpack_require__(60)
 	  , getIterFn   = __webpack_require__(61);
 	module.exports = function(iterable, entries, fn, that){
@@ -1305,7 +1350,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// call something on iterator step with safe closing on error
-	var anObject = __webpack_require__(24);
+	var anObject = __webpack_require__(26);
 	module.exports = function(iterator, fn, value, entries){
 	  try {
 	    return entries ? fn(anObject(value)[0], value[1]) : fn(value);
@@ -1322,10 +1367,12 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// check on default Array iterator
-	var Iterators = __webpack_require__(47)
-	  , ITERATOR  = __webpack_require__(44)('iterator');
+	var Iterators  = __webpack_require__(44)
+	  , ITERATOR   = __webpack_require__(47)('iterator')
+	  , ArrayProto = Array.prototype;
+
 	module.exports = function(it){
-	  return (Iterators.Array || Array.prototype[ITERATOR]) === it;
+	  return it !== undefined && (Iterators.Array === it || ArrayProto[ITERATOR] === it);
 	};
 
 /***/ },
@@ -1344,8 +1391,8 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var classof   = __webpack_require__(55)
-	  , ITERATOR  = __webpack_require__(44)('iterator')
-	  , Iterators = __webpack_require__(47);
+	  , ITERATOR  = __webpack_require__(47)('iterator')
+	  , Iterators = __webpack_require__(44);
 	module.exports = __webpack_require__(14).getIteratorMethod = function(it){
 	  if(it != undefined)return it[ITERATOR]
 	    || it['@@iterator']
@@ -1356,6 +1403,7 @@ var ripple =
 /* 62 */
 /***/ function(module, exports) {
 
+	// 7.2.9 SameValue(x, y)
 	module.exports = Object.is || function is(x, y){
 	  return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
 	};
@@ -1364,50 +1412,38 @@ var ripple =
 /* 63 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-	var $       = __webpack_require__(5)
-	  , SPECIES = __webpack_require__(44)('species');
-	module.exports = function(C){
-	  if(__webpack_require__(42) && !(SPECIES in C))$.setDesc(C, SPECIES, {
-	    configurable: true,
-	    get: function(){ return this; }
-	  });
-	};
-
-/***/ },
-/* 64 */
-/***/ function(module, exports, __webpack_require__) {
-
 	// 7.3.20 SpeciesConstructor(O, defaultConstructor)
-	var anObject  = __webpack_require__(24)
-	  , aFunction = __webpack_require__(26)
-	  , SPECIES   = __webpack_require__(44)('species');
+	var anObject  = __webpack_require__(26)
+	  , aFunction = __webpack_require__(16)
+	  , SPECIES   = __webpack_require__(47)('species');
 	module.exports = function(O, D){
 	  var C = anObject(O).constructor, S;
 	  return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? D : aFunction(S);
 	};
 
 /***/ },
-/* 65 */
+/* 64 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var global    = __webpack_require__(13)
-	  , macrotask = __webpack_require__(66).set
+	  , macrotask = __webpack_require__(65).set
 	  , Observer  = global.MutationObserver || global.WebKitMutationObserver
 	  , process   = global.process
+	  , Promise   = global.Promise
 	  , isNode    = __webpack_require__(9)(process) == 'process'
 	  , head, last, notify;
 
 	var flush = function(){
-	  var parent, domain;
+	  var parent, domain, fn;
 	  if(isNode && (parent = process.domain)){
 	    process.domain = null;
 	    parent.exit();
 	  }
 	  while(head){
 	    domain = head.domain;
+	    fn     = head.fn;
 	    if(domain)domain.enter();
-	    head.fn.call(); // <- currently we use it only for Promise - try / catch not required
+	    fn(); // <- currently we use it only for Promise - try / catch not required
 	    if(domain)domain.exit();
 	    head = head.next;
 	  } last = undefined;
@@ -1426,6 +1462,11 @@ var ripple =
 	  new Observer(flush).observe(node, {characterData: true}); // eslint-disable-line no-new
 	  notify = function(){
 	    node.data = toggle = -toggle;
+	  };
+	// environments with maybe non-completely correct, but existent Promise
+	} else if(Promise && Promise.resolve){
+	  notify = function(){
+	    Promise.resolve().then(flush);
 	  };
 	// for other environments - macrotask based on:
 	// - setImmediate
@@ -1450,14 +1491,13 @@ var ripple =
 	};
 
 /***/ },
-/* 66 */
+/* 65 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-	var ctx                = __webpack_require__(25)
-	  , invoke             = __webpack_require__(67)
-	  , html               = __webpack_require__(68)
-	  , cel                = __webpack_require__(69)
+	var ctx                = __webpack_require__(15)
+	  , invoke             = __webpack_require__(66)
+	  , html               = __webpack_require__(67)
+	  , cel                = __webpack_require__(68)
 	  , global             = __webpack_require__(13)
 	  , process            = global.process
 	  , setTask            = global.setImmediate
@@ -1531,7 +1571,7 @@ var ripple =
 	};
 
 /***/ },
-/* 67 */
+/* 66 */
 /***/ function(module, exports) {
 
 	// fast apply, http://jsperf.lnkit.com/fast-apply/5
@@ -1552,16 +1592,16 @@ var ripple =
 	};
 
 /***/ },
-/* 68 */
+/* 67 */
 /***/ function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(13).document && document.documentElement;
 
 /***/ },
-/* 69 */
+/* 68 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(23)
+	var isObject = __webpack_require__(25)
 	  , document = __webpack_require__(13).document
 	  // in old IE typeof document.createElement is 'object'
 	  , is = isObject(document) && isObject(document.createElement);
@@ -1570,34 +1610,54 @@ var ripple =
 	};
 
 /***/ },
+/* 69 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var redefine = __webpack_require__(39);
+	module.exports = function(target, src){
+	  for(var key in src)redefine(target, key, src[key]);
+	  return target;
+	};
+
+/***/ },
 /* 70 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var $redef = __webpack_require__(39);
-	module.exports = function(target, src){
-	  for(var key in src)$redef(target, key, src[key]);
-	  return target;
+	'use strict';
+	var core        = __webpack_require__(14)
+	  , $           = __webpack_require__(5)
+	  , DESCRIPTORS = __webpack_require__(42)
+	  , SPECIES     = __webpack_require__(47)('species');
+
+	module.exports = function(KEY){
+	  var C = core[KEY];
+	  if(DESCRIPTORS && C && !C[SPECIES])$.setDesc(C, SPECIES, {
+	    configurable: true,
+	    get: function(){ return this; }
+	  });
 	};
 
 /***/ },
 /* 71 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var SYMBOL_ITERATOR = __webpack_require__(44)('iterator')
-	  , SAFE_CLOSING    = false;
+	var ITERATOR     = __webpack_require__(47)('iterator')
+	  , SAFE_CLOSING = false;
+
 	try {
-	  var riter = [7][SYMBOL_ITERATOR]();
+	  var riter = [7][ITERATOR]();
 	  riter['return'] = function(){ SAFE_CLOSING = true; };
 	  Array.from(riter, function(){ throw 2; });
 	} catch(e){ /* empty */ }
+
 	module.exports = function(exec, skipClosing){
 	  if(!skipClosing && !SAFE_CLOSING)return false;
 	  var safe = false;
 	  try {
 	    var arr  = [7]
-	      , iter = arr[SYMBOL_ITERATOR]();
+	      , iter = arr[ITERATOR]();
 	    iter.next = function(){ safe = true; };
-	    arr[SYMBOL_ITERATOR] = function(){ return iter; };
+	    arr[ITERATOR] = function(){ return iter; };
 	    exec(arr);
 	  } catch(e){ /* empty */ }
 	  return safe;
@@ -19679,13 +19739,13 @@ var ripple =
 /* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.0.8 https://github.com/MikeMcl/bignumber.js/LICENCE */
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.1.2 https://github.com/MikeMcl/bignumber.js/LICENCE */
 
 	;(function (global) {
 	    'use strict';
 
 	    /*
-	      bignumber.js v2.0.8
+	      bignumber.js v2.1.2
 	      A JavaScript library for arbitrary-precision arithmetic.
 	      https://github.com/MikeMcl/bignumber.js
 	      Copyright (c) 2015 Michael Mclaughlin <M8ch88l@gmail.com>
@@ -19693,7 +19753,8 @@ var ripple =
 	    */
 
 
-	    var BigNumber, crypto, parseNumeric,
+	    var BigNumber, parseNumeric,
+	        crypto = global.crypto,
 	        isNumeric = /^-?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i,
 	        mathceil = Math.ceil,
 	        mathfloor = Math.floor,
@@ -22365,7 +22426,7 @@ var ripple =
 	    // Node and other environments that support module.exports.
 	    } else if ( typeof module != 'undefined' && module.exports ) {
 	        module.exports = BigNumber;
-	        if ( !crypto ) try { crypto = require('crypto'); } catch (e) {}
+	        if ( !crypto ) try { crypto = require('cry' + 'pto'); } catch (e) {}
 
 	    // Browser.
 	    } else {
@@ -25384,38 +25445,8 @@ var ripple =
 /* 278 */
 /***/ function(module, exports) {
 
-	
-	/**
-	 * isArray
-	 */
-
-	var isArray = Array.isArray;
-
-	/**
-	 * toString
-	 */
-
-	var str = Object.prototype.toString;
-
-	/**
-	 * Whether or not the given `val`
-	 * is an array.
-	 *
-	 * example:
-	 *
-	 *        isArray([]);
-	 *        // > true
-	 *        isArray(arguments);
-	 *        // > false
-	 *        isArray('');
-	 *        // > false
-	 *
-	 * @param {mixed} val
-	 * @return {bool}
-	 */
-
-	module.exports = isArray || function (val) {
-	  return !! val && '[object Array]' == str.call(val);
+	module.exports = Array.isArray || function (arr) {
+	  return Object.prototype.toString.call(arr) == '[object Array]';
 	};
 
 
@@ -27972,7 +28003,7 @@ var ripple =
 		"_id": "elliptic@5.2.1",
 		"_shasum": "fa294b6563c6ddbc9ba3dc8594687ae840858f10",
 		"_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-5.2.1.tgz",
-		"_from": "https://registry.npmjs.org/elliptic/-/elliptic-5.2.1.tgz"
+		"_from": "elliptic@>=5.1.0 <6.0.0"
 	};
 
 /***/ },
@@ -36228,7 +36259,7 @@ var ripple =
 
 	var _get = __webpack_require__(2)['default'];
 
-	var _inherits = __webpack_require__(16)['default'];
+	var _inherits = __webpack_require__(18)['default'];
 
 	var _createClass = __webpack_require__(27)['default'];
 
@@ -36614,16 +36645,16 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// 20.1.2.3 Number.isInteger(number)
-	var $def = __webpack_require__(12);
+	var $export = __webpack_require__(12);
 
-	$def($def.S, 'Number', {isInteger: __webpack_require__(338)});
+	$export($export.S, 'Number', {isInteger: __webpack_require__(338)});
 
 /***/ },
 /* 338 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// 20.1.2.3 Number.isInteger(number)
-	var isObject = __webpack_require__(23)
+	var isObject = __webpack_require__(25)
 	  , floor    = Math.floor;
 	module.exports = function isInteger(it){
 	  return !isObject(it) && isFinite(it) && floor(it) === it;
@@ -36647,9 +36678,9 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// 19.1.3.1 Object.assign(target, source)
-	var $def = __webpack_require__(12);
+	var $export = __webpack_require__(12);
 
-	$def($def.S + $def.F, 'Object', {assign: __webpack_require__(342)});
+	$export($export.S + $export.F, 'Object', {assign: __webpack_require__(342)});
 
 /***/ },
 /* 342 */
@@ -36661,7 +36692,7 @@ var ripple =
 	  , IObject  = __webpack_require__(8);
 
 	// should work with symbols and should have deterministic property order (V8 bug)
-	module.exports = __webpack_require__(15)(function(){
+	module.exports = __webpack_require__(17)(function(){
 	  var a = Object.assign
 	    , A = {}
 	    , B = {}
@@ -38266,6 +38297,7 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(353);
+	__webpack_require__(33);
 	module.exports = __webpack_require__(14).Symbol;
 
 /***/ },
@@ -38277,19 +38309,19 @@ var ripple =
 	var $              = __webpack_require__(5)
 	  , global         = __webpack_require__(13)
 	  , has            = __webpack_require__(43)
-	  , SUPPORT_DESC   = __webpack_require__(42)
-	  , $def           = __webpack_require__(12)
-	  , $redef         = __webpack_require__(39)
-	  , $fails         = __webpack_require__(15)
-	  , shared         = __webpack_require__(45)
-	  , setTag         = __webpack_require__(49)
-	  , uid            = __webpack_require__(46)
-	  , wks            = __webpack_require__(44)
+	  , DESCRIPTORS    = __webpack_require__(42)
+	  , $export        = __webpack_require__(12)
+	  , redefine       = __webpack_require__(39)
+	  , $fails         = __webpack_require__(17)
+	  , shared         = __webpack_require__(48)
+	  , setToStringTag = __webpack_require__(46)
+	  , uid            = __webpack_require__(49)
+	  , wks            = __webpack_require__(47)
 	  , keyOf          = __webpack_require__(354)
 	  , $names         = __webpack_require__(355)
 	  , enumKeys       = __webpack_require__(356)
 	  , isArray        = __webpack_require__(357)
-	  , anObject       = __webpack_require__(24)
+	  , anObject       = __webpack_require__(26)
 	  , toIObject      = __webpack_require__(7)
 	  , createDesc     = __webpack_require__(41)
 	  , getDesc        = $.getDesc
@@ -38308,7 +38340,7 @@ var ripple =
 	  , ObjectProto    = Object.prototype;
 
 	// fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
-	var setSymbolDesc = SUPPORT_DESC && $fails(function(){
+	var setSymbolDesc = DESCRIPTORS && $fails(function(){
 	  return _create(setDesc({}, 'a', {
 	    get: function(){ return setDesc(this, 'a', {value: 7}).a; }
 	  })).a != 7;
@@ -38322,7 +38354,7 @@ var ripple =
 	var wrap = function(tag){
 	  var sym = AllSymbols[tag] = _create($Symbol.prototype);
 	  sym._k = tag;
-	  SUPPORT_DESC && setter && setSymbolDesc(ObjectProto, tag, {
+	  DESCRIPTORS && setter && setSymbolDesc(ObjectProto, tag, {
 	    configurable: true,
 	    set: function(value){
 	      if(has(this, HIDDEN) && has(this[HIDDEN], tag))this[HIDDEN][tag] = false;
@@ -38386,6 +38418,7 @@ var ripple =
 	  return result;
 	};
 	var $stringify = function stringify(it){
+	  if(it === undefined || isSymbol(it))return; // IE8 returns string on undefined
 	  var args = [it]
 	    , i    = 1
 	    , $$   = arguments
@@ -38414,7 +38447,7 @@ var ripple =
 	    if(isSymbol(this))throw TypeError('Symbol is not a constructor');
 	    return wrap(uid(arguments.length > 0 ? arguments[0] : undefined));
 	  };
-	  $redef($Symbol.prototype, 'toString', function toString(){
+	  redefine($Symbol.prototype, 'toString', function toString(){
 	    return this._k;
 	  });
 
@@ -38430,8 +38463,8 @@ var ripple =
 	  $.getNames   = $names.get = $getOwnPropertyNames;
 	  $.getSymbols = $getOwnPropertySymbols;
 
-	  if(SUPPORT_DESC && !__webpack_require__(38)){
-	    $redef(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
+	  if(DESCRIPTORS && !__webpack_require__(38)){
+	    redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
 	  }
 	}
 
@@ -38470,11 +38503,11 @@ var ripple =
 
 	setter = true;
 
-	$def($def.G + $def.W, {Symbol: $Symbol});
+	$export($export.G + $export.W, {Symbol: $Symbol});
 
-	$def($def.S, 'Symbol', symbolStatics);
+	$export($export.S, 'Symbol', symbolStatics);
 
-	$def($def.S + $def.F * !useNative, 'Object', {
+	$export($export.S + $export.F * !useNative, 'Object', {
 	  // 19.1.2.2 Object.create(O [, Properties])
 	  create: $create,
 	  // 19.1.2.4 Object.defineProperty(O, P, Attributes)
@@ -38490,14 +38523,14 @@ var ripple =
 	});
 
 	// 24.3.2 JSON.stringify(value [, replacer [, space]])
-	$JSON && $def($def.S + $def.F * (!useNative || buggyJSON), 'JSON', {stringify: $stringify});
+	$JSON && $export($export.S + $export.F * (!useNative || buggyJSON), 'JSON', {stringify: $stringify});
 
 	// 19.4.3.5 Symbol.prototype[@@toStringTag]
-	setTag($Symbol, 'Symbol');
+	setToStringTag($Symbol, 'Symbol');
 	// 20.2.1.9 Math[@@toStringTag]
-	setTag(Math, 'Math', true);
+	setToStringTag(Math, 'Math', true);
 	// 24.3.3 JSON[@@toStringTag]
-	setTag(global.JSON, 'JSON', true);
+	setToStringTag(global.JSON, 'JSON', true);
 
 /***/ },
 /* 354 */
@@ -38519,9 +38552,9 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-	var toString  = {}.toString
-	  , toIObject = __webpack_require__(7)
-	  , getNames  = __webpack_require__(5).getNames;
+	var toIObject = __webpack_require__(7)
+	  , getNames  = __webpack_require__(5).getNames
+	  , toString  = {}.toString;
 
 	var windowNames = typeof window == 'object' && Object.getOwnPropertyNames
 	  ? Object.getOwnPropertyNames(window) : [];
@@ -38576,7 +38609,7 @@ var ripple =
 
 	var _get = __webpack_require__(2)['default'];
 
-	var _inherits = __webpack_require__(16)['default'];
+	var _inherits = __webpack_require__(18)['default'];
 
 	var _createClass = __webpack_require__(27)['default'];
 
@@ -44866,6 +44899,7 @@ var ripple =
 	        if (res) {
 	          schema = res.schema;
 	          root = res.root;
+	          baseId = res.baseId;
 	        }
 	      }
 	    }
@@ -53069,7 +53103,7 @@ var ripple =
 /* 544 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var anObject = __webpack_require__(24)
+	var anObject = __webpack_require__(26)
 	  , get      = __webpack_require__(61);
 	module.exports = __webpack_require__(14).getIterator = function(it){
 	  var iterFn = get(it);
@@ -53096,11 +53130,11 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	var classof   = __webpack_require__(55)
-	  , ITERATOR  = __webpack_require__(44)('iterator')
-	  , Iterators = __webpack_require__(47);
+	  , ITERATOR  = __webpack_require__(47)('iterator')
+	  , Iterators = __webpack_require__(44);
 	module.exports = __webpack_require__(14).isIterable = function(it){
 	  var O = Object(it);
-	  return ITERATOR in O
+	  return O[ITERATOR] !== undefined
 	    || '@@iterator' in O
 	    || Iterators.hasOwnProperty(classof(O));
 	};
@@ -54243,6 +54277,17 @@ var ripple =
 					"nth": 9,
 					"isVLEncoded": false,
 					"bytes": "69",
+					"isSerialized": true,
+					"isSigningField": true,
+					"type": "Amount"
+				}
+			],
+			[
+				"DeliverMin",
+				{
+					"nth": 10,
+					"isVLEncoded": false,
+					"bytes": "6A",
 					"isSerialized": true,
 					"isSigningField": true,
 					"type": "Amount"
@@ -55652,14 +55697,14 @@ var ripple =
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
-	var ctx         = __webpack_require__(25)
-	  , $def        = __webpack_require__(12)
+	var ctx         = __webpack_require__(15)
+	  , $export     = __webpack_require__(12)
 	  , toObject    = __webpack_require__(343)
 	  , call        = __webpack_require__(58)
 	  , isArrayIter = __webpack_require__(59)
 	  , toLength    = __webpack_require__(60)
 	  , getIterFn   = __webpack_require__(61);
-	$def($def.S + $def.F * !__webpack_require__(71)(function(iter){ Array.from(iter); }), 'Array', {
+	$export($export.S + $export.F * !__webpack_require__(71)(function(iter){ Array.from(iter); }), 'Array', {
 	  // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
 	  from: function from(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
 	    var O       = toObject(arrayLike)
@@ -68613,7 +68658,7 @@ var ripple =
 
 	var _get = __webpack_require__(2)['default'];
 
-	var _inherits = __webpack_require__(16)['default'];
+	var _inherits = __webpack_require__(18)['default'];
 
 	var _createClass = __webpack_require__(27)['default'];
 
